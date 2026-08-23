@@ -480,3 +480,13 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Base SQLite de développement.
+# Les deux dernières lignes ne sont pas redondantes : SQLite crée des fichiers
+# annexes en mode WAL (-shm pour la mémoire partagée, -wal pour le journal), et
+# le motif "*.db" ne les couvre PAS - le nom complet est "jardo.db-wal", dont
+# l'extension est ".db-wal". C'est ce qui laissait deux fichiers non suivis dans
+# la première version du projet.
+*.db
+*.db-shm
+*.db-wal

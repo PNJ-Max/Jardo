@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Jardo.Api.Tests/Jardo.Api.Tests.csproj" />
+  <Project Path="Jardo.Api/Jardo.Api.csproj" />
+</Solution>

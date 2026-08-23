@@ -1,0 +1,217 @@
+@host = http://localhost:5015
+
+### ==========================================================================
+### ZONES
+### ==========================================================================
+
+### Liste des zones, avec compteur de plantes a arroser (le voyant de zone)
+GET {{host}}/api/zones
+Accept: application/json
+
+### Une zone par id
+GET {{host}}/api/zones/1
+Accept: application/json
+
+### Creer une zone
+POST {{host}}/api/zones
+Content-Type: application/json
+
+{
+  "name": "Bac a aromatiques",
+  "description": "Contre le mur sud, plein soleil."
+}
+
+### Modifier une zone (pas d'id dans le corps : il est dans l'URL)
+PUT {{host}}/api/zones/1
+Content-Type: application/json
+
+{
+  "name": "Potager principal",
+  "description": "Carre sud, tomates et courgettes."
+}
+
+### Supprimer une zone -- refuse si elle contient encore des plantes
+DELETE {{host}}/api/zones/1
+
+### Arroser TOUTE une zone : cree un enregistrement par plante active
+POST {{host}}/api/zones/2/waterings
+Content-Type: application/json
+
+{
+  "note": "Arrosage general de la serre"
+}
+
+### ==========================================================================
+### PLANTES
+### ==========================================================================
+
+### Toutes les plantes actives
+GET {{host}}/api/plants
+Accept: application/json
+
+### Les plantes d'une zone
+GET {{host}}/api/plants?zoneId=1
+Accept: application/json
+
+### Y compris les archivees (le radis du seed apparait ici)
+GET {{host}}/api/plants?includeArchived=true
+Accept: application/json
+
+### Une plante : noter wateringStatus, daysOverdue, nextWateringDate
+GET {{host}}/api/plants/1
+Accept: application/json
+
+### Creer une plante
+POST {{host}}/api/plants
+Content-Type: application/json
+
+{
+  "name": "Menthe",
+  "species": "Mentha spicata",
+  "plantedDate": "2026-05-01",
+  "wateringIntervalDays": 2,
+  "zoneId": 1
+}
+
+### Modifier une plante -- changer zoneId la deplace de zone
+PUT {{host}}/api/plants/1
+Content-Type: application/json
+
+{
+  "name": "Tomate cerise",
+  "species": "Solanum lycopersicum",
+  "plantedDate": "2026-05-01",
+  "wateringIntervalDays": 3,
+  "zoneId": 1
+}
+
+### Archiver (fin de saison) -- sort des calculs, garde l'historique
+POST {{host}}/api/plants/3/archive
+
+### Reactiver
+POST {{host}}/api/plants/3/unarchive
+
+### Supprimer definitivement (emporte arrosages et observations)
+DELETE {{host}}/api/plants/3
+
+### ==========================================================================
+### ARROSAGE
+### ==========================================================================
+
+### L'ECRAN D'ACCUEIL : ce qu'il faut arroser, le plus urgent d'abord
+GET {{host}}/api/watering/needed
+Accept: application/json
+
+### Arroser une plante -- corps vide = aujourd'hui, c'est le cas normal
+POST {{host}}/api/plants/1/waterings
+Content-Type: application/json
+
+{}
+
+### Arroser avec une date passee (saisie oubliee de la veille) et une note
+POST {{host}}/api/plants/1/waterings
+Content-Type: application/json
+
+{
+  "wateredAt": "2026-06-14",
+  "note": "Arrosage au pied, paillage remis"
+}
+
+### Historique d'arrosage d'une plante
+GET {{host}}/api/plants/1/waterings
+Accept: application/json
+
+### ==========================================================================
+### JOURNAL D'OBSERVATIONS
+### ==========================================================================
+
+### Le journal d'une plante
+GET {{host}}/api/plants/1/observations
+Accept: application/json
+
+### Ajouter une entree : note, mesure et probleme en une seule requete
+POST {{host}}/api/plants/1/observations
+Content-Type: application/json
+
+{
+  "note": "Premiers fruits rouges, port bien degage.",
+  "heightCm": 85,
+  "problemNote": "Quelques feuilles basses jaunies",
+  "treatment": "Feuilles retirees, arrosage au pied uniquement"
+}
+
+### Une note seule suffit
+POST {{host}}/api/plants/2/observations
+Content-Type: application/json
+
+{
+  "note": "Beaucoup de fleurs males cette semaine."
+}
+
+### Supprimer une entree de journal
+DELETE {{host}}/api/observations/1
+
+### ==========================================================================
+### LES CAS D'ERREUR -- a executer pour voir les reponses ProblemDetails
+### ==========================================================================
+
+### 404 : plante inexistante
+GET {{host}}/api/plants/9999
+
+### 400 : plante rattachee a une zone qui n'existe pas
+POST {{host}}/api/plants
+Content-Type: application/json
+
+{
+  "name": "Orpheline",
+  "wateringIntervalDays": 2,
+  "zoneId": 999
+}
+
+### 400 : nom de zone en doublon (contrainte d'unicite)
+POST {{host}}/api/zones
+Content-Type: application/json
+
+{
+  "name": "Potager"
+}
+
+### 400 : nom vide -- rejete par [Required], qui applique un Trim()
+POST {{host}}/api/zones
+Content-Type: application/json
+
+{
+  "name": "   "
+}
+
+### 400 : champ obligatoire absent -- validation automatique d'[ApiController]
+POST {{host}}/api/zones
+Content-Type: application/json
+
+{
+  "description": "Une zone sans nom"
+}
+
+### 400 : intervalle d'arrosage hors bornes (Range 1-365)
+POST {{host}}/api/plants
+Content-Type: application/json
+
+{
+  "name": "Cactus",
+  "wateringIntervalDays": 9000,
+  "zoneId": 1
+}
+
+### 400 : arrosage date dans le futur
+POST {{host}}/api/plants/1/waterings
+Content-Type: application/json
+
+{
+  "wateredAt": "2030-01-01"
+}
+
+### 400 : arroser une plante archivee
+POST {{host}}/api/plants/11/waterings
+Content-Type: application/json
+
+{}

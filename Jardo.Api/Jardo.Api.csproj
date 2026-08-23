@@ -4,6 +4,39 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Génère le fichier XML de documentation à partir des commentaires ///.
+         Deux usages : IntelliSense dans l'éditeur, et Swagger qui les affiche comme
+         description des endpoints (voir la configuration dans Program.cs). -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- CS1591 = "commentaire XML manquant sur un membre public visible".
+         Désactivé : documenter chaque propriété de DTO n'apporte rien, alors que
+         documenter les méthodes de service et les endpoints, si.
+
+         CS1573 = "un paramètre n'a pas de balise param alors que d'autres en ont".
+         Désactivé aussi, et c'est le plus utile des deux. Sans cela, dès qu'on documente
+         un seul paramètre d'une méthode, le compilateur exige de documenter AUSSI le
+         cancellationToken - présent sur une vingtaine de méthodes ici, et dont la
+         description serait invariablement "le jeton d'annulation". La règle pousserait à
+         écrire du commentaire vide pour satisfaire le compilateur, ce qui est exactement
+         l'inverse du but recherché. -->
+    <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+
+    <!-- Transforme les avertissements du compilateur en erreurs.
+         Radical mais sain : un avertissement ignoré est un bug qui attend son heure.
+         C'est aussi ce qui rend les deux exclusions ci-dessus nécessaires plutôt que
+         cosmétiques - sans elles, le projet ne compilerait pas. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
 
 </Project>
