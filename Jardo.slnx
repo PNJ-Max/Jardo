@@ -1,4 +1,12 @@
 <Solution>
-  <Project Path="Jardo.Api.Tests/Jardo.Api.Tests.csproj" />
+  <!-- L'ordre compte : Visual Studio prend le PREMIER projet de cette liste comme
+       projet de démarrage quand il n'en a pas encore mémorisé un pour la solution.
+       Jardo.Api doit donc rester en tête.
+
+       Attention, "dotnet sln add" retrie par chemin et remettrait Jardo.Api.Tests
+       devant : le tri est alphabétique sur le chemin, et "Jardo.Api.Tests/" passe
+       avant "Jardo.Api/" parce que le point (46) précède la barre oblique (47) en
+       ASCII. Si l'ordre se remet à l'envers un jour, c'est de là que ça vient. -->
   <Project Path="Jardo.Api/Jardo.Api.csproj" />
+  <Project Path="Jardo.Api.Tests/Jardo.Api.Tests.csproj" />
 </Solution>
