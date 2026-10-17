@@ -16,7 +16,7 @@ export function WateringBadge({ plant }: { plant: Plant }) {
     return <Badge color={colors.textMuted} text="Archivée" />;
   }
 
-  const { color } = wateringStyle[plant.wateringStatus];
+  const { color, background } = wateringStyle[plant.wateringStatus];
   const text =
     plant.wateringStatus === 'Overdue'
       ? `En retard de ${plant.daysOverdue} j`
@@ -24,12 +24,12 @@ export function WateringBadge({ plant }: { plant: Plant }) {
         ? "À arroser aujourd'hui"
         : `Prochain : ${formatDate(plant.nextWateringDate)}`;
 
-  return <Badge color={color} text={text} />;
+  return <Badge color={color} background={background} text={text} />;
 }
 
-function Badge({ color, text }: { color: string; text: string }) {
+function Badge({ color, background, text }: { color: string; background?: string; text: string }) {
   return (
-    <View style={[styles.badge, { borderColor: color }]}>
+    <View style={[styles.badge, { borderColor: color, backgroundColor: background }]}>
       <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={[styles.badgeText, { color }]}>{text}</Text>
     </View>
@@ -96,6 +96,6 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1E88E5',
+    backgroundColor: colors.water,
   },
 });

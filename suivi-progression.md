@@ -23,6 +23,9 @@ journal d'observations) et une app mobile qui la consomme.
   à arroser, zones, plantes, fiches, formulaires, observations.
 - **Le rendu ne plaît pas du tout.** Il sert de base fonctionnelle (navigation, appels
   API, formulaires) ; le visuel est à refaire.
+- Charte graphique arrêtée ([`docs/charte-graphique.md`](docs/charte-graphique.md)) : terre
+  cuite pour les actions, bleu eau pour « à arroser », jetons appliqués dans `theme.ts`.
+  Restent pour la refonte : polices, mode sombre, icône et splash.
 
 ## Lancer en local
 
