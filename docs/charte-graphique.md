@@ -7,7 +7,7 @@ téléphone.
 
 ## Intention
 
-Un potager, de la terre, des pots en terre cuite. L'app doit être chaleureuse et calme,
+Un jardin, de la terre, des pots en terre cuite. L'app doit être chaleureuse et calme,
 et se démarquer des applis de jardinage qui sont toutes vertes : le vert reste présent
 (sauge), mais l'accent est la terre cuite.
 
@@ -42,17 +42,18 @@ Contrastes calculés selon WCAG 2.1. Le seuil visé est 4,5:1 (AA, texte courant
 | `terracotta` | `#DB9558` | Décor | |
 | `sage` | `#97A87A` | Décor | |
 | `sagePale` | `#A8BBA3` | Décor | |
-| `success` | `#4E6040` | Arrosage à jour | 6,5:1 sur crème, 5,7:1 sur `successTint` |
+| `success` | `#4E6040` | Tâche à jour | 6,5:1 sur crème, 5,7:1 sur `successTint` |
 | `successTint` | `#E6EDDD` | Fond de pastille « OK » | |
 | `water` | `#3F6B85` | À arroser aujourd'hui, actions d'arrosage | 5,7:1 avec blanc, 4,8:1 sur `waterTint` |
 | `waterTint` | `#E1ECF2` | Fond de pastille « Aujourd'hui » | |
 | `danger` | `#A33A2A` | En retard, erreurs, suppression | 6,6:1 avec blanc, 5,2:1 sur `dangerTint` |
 | `dangerTint` | `#F6E0DA` | Fond de pastille « En retard » | |
 
-## Voyant d'arrosage
+## Voyant d'échéance
 
-Le voyant combine **toujours** couleur, icône et texte : il doit rester lisible sans
-distinguer les couleurs.
+Le voyant indique où en est une tâche du jardin ; l'arrosage, premier service, en est le
+premier cas et c'est lui que décrit le tableau. Il combine **toujours** couleur, icône et
+texte : il doit rester lisible sans distinguer les couleurs.
 
 | `wateringStatus` | Couleur (texte / fond) | Icône Ionicons | Texte |
 |---|---|---|---|

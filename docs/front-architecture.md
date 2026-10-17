@@ -1,6 +1,6 @@
 # Front Jardo : architecture
 
-Application mobile Android pour consulter et arroser son potager. Elle consomme l'API
+Application mobile Android pour gérer son jardin. Elle consomme l'API
 `Jardo.Api`, sans autre back-end.
 
 ## Décision : Expo (React Native + TypeScript)

@@ -2,11 +2,18 @@
 
 [![CI](https://github.com/PNJ-Max/Jardo/actions/workflows/ci.yml/badge.svg)](https://github.com/PNJ-Max/Jardo/actions/workflows/ci.yml)
 
-Application de suivi de potager : zones, plantes, arrosages et journal d'observations.
-Une API ASP.NET Core et une app Android (Expo) qui la consomme.
+Application de gestion du jardin. Potager, verger, petits fruits, bois de chauffage : on y
+organise ce que contient le jardin, on note ce qu'on y fait, et l'app rappelle ce qui est à
+faire. Une API ASP.NET Core et une app Android (Expo) qui la consomme.
 
-Le principe central est le **voyant d'arrosage** : chaque plante porte un intervalle en jours,
-et l'API calcule son état à partir du dernier arrosage enregistré.
+La [vision produit](docs/vision-produit.md) et le [modèle du domaine](docs/modele-domaine.md)
+décrivent la cible. Le code en est à la première étape : des zones, leurs plantes, un journal
+d'observations et un premier service, le rappel d'arrosage.
+
+## Premier service : le voyant d'arrosage
+
+Chaque plante porte un intervalle en jours, et l'API calcule son état à partir du dernier
+arrosage enregistré. Ce voyant s'étendra à toutes les tâches du jardin.
 
 | État | Signification |
 |---|---|
