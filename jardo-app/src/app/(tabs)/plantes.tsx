@@ -1,13 +1,15 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, StyleSheet, Switch, Text, View } from 'react-native';
+import { FlatList, Switch, Text, View } from 'react-native';
 
 import { usePlants } from '@/api/queries';
 import { PlantRow } from '@/components/plants';
 import { Empty, ErrorView, Fab, Loading, screenStyles } from '@/components/ui';
-import { colors, spacing } from '@/theme';
+import { createStyles, useTheme } from '@/theme';
 
 export default function PlantsScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [includeArchived, setIncludeArchived] = useState(false);
   const { data, error, isPending, refetch, isRefetching } = usePlants({ includeArchived });
 
@@ -43,7 +45,7 @@ export default function PlantsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles(({ colors, typography, spacing }) => ({
   filter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -51,5 +53,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
   },
-  filterLabel: { fontSize: 15, color: colors.text },
-});
+  filterLabel: { ...typography.body, color: colors.text },
+}));

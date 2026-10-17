@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import {
   useDeleteObservation,
@@ -18,7 +18,7 @@ import { Button, Card, ErrorView, Field, Loading, SectionTitle, screenStyles } f
 import { confirm, notify } from '@/lib/confirm';
 import { formatDate, isDateOnly, today } from '@/lib/dates';
 import { goBack } from '@/lib/navigation';
-import { colors, spacing } from '@/theme';
+import { createStyles, spacing, useTheme } from '@/theme';
 
 export default function PlantScreen() {
   const id = Number(useLocalSearchParams<{ id: string }>().id);
@@ -53,10 +53,12 @@ function PlantHeader({ plant }: { plant: Plant }) {
 }
 
 function InfoLine({ label, value, onPress }: { label: string; value: string; onPress?: () => void }) {
+  const styles = useStyles();
+
   return (
     <View style={styles.infoLine}>
       <Text style={styles.infoLabel}>{label}</Text>
-      <Text onPress={onPress} style={[styles.infoValue, onPress && { color: colors.primary }]}>
+      <Text onPress={onPress} style={[styles.infoValue, onPress && styles.infoValueLink]}>
         {value}
       </Text>
     </View>
@@ -68,6 +70,7 @@ function InfoLine({ label, value, onPress }: { label: string; value: string; onP
  * oubli. L'API refuse les dates futures et renvoie le message : on l'affiche.
  */
 function WaterAction({ plantId }: { plantId: number }) {
+  const styles = useStyles();
   const water = useWaterPlant();
   const [otherDate, setOtherDate] = useState<string | null>(null);
 
@@ -121,6 +124,8 @@ type JournalEntry =
 
 /** Arrosages et observations fusionnés dans une seule chronologie, du plus récent au plus ancien. */
 function Journal({ plantId }: { plantId: number }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const waterings = useWaterings(plantId);
   const observations = useObservations(plantId);
   const deleteObservation = useDeleteObservation();
@@ -186,6 +191,8 @@ function Journal({ plantId }: { plantId: number }) {
 }
 
 function ObservationText({ observation }: { observation: Observation }) {
+  const styles = useStyles();
+
   return (
     <>
       <Text style={styles.entryText}>{observation.note}</Text>
@@ -197,6 +204,7 @@ function ObservationText({ observation }: { observation: Observation }) {
 }
 
 function ManageActions({ plant }: { plant: Plant }) {
+  const styles = useStyles();
   const setArchived = useSetPlantArchived();
   const deletePlant = useDeletePlant();
 
@@ -245,15 +253,22 @@ function ManageActions({ plant }: { plant: Plant }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles(({ colors, fonts, typography, spacing }) => ({
   infoLine: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
-  infoLabel: { color: colors.textMuted, fontSize: 15 },
-  infoValue: { color: colors.text, fontSize: 15, fontWeight: '500', flexShrink: 1, textAlign: 'right' },
-  link: { color: colors.primary, textAlign: 'center', paddingVertical: spacing.xs },
-  muted: { color: colors.textMuted },
+  infoLabel: { ...typography.body, color: colors.textMuted },
+  infoValue: {
+    ...typography.body,
+    fontFamily: fonts.bodyMedium,
+    color: colors.text,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  infoValueLink: { color: colors.primary },
+  link: { ...typography.body, color: colors.primary, textAlign: 'center', paddingVertical: spacing.xs },
+  muted: { ...typography.body, color: colors.textMuted },
   actions: { flexDirection: 'row', gap: spacing.sm },
   action: { flex: 1 },
   entry: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
-  entryDate: { fontSize: 13, color: colors.textMuted, fontWeight: '600' },
-  entryText: { fontSize: 15, color: colors.text },
-});
+  entryDate: { ...typography.caption, fontFamily: fonts.bodySemiBold, color: colors.textMuted },
+  entryText: { ...typography.body, color: colors.text },
+}));

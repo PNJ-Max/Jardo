@@ -1,14 +1,15 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { useDeleteZone, usePlants, useWaterZone, useZone } from '@/api/queries';
 import { PlantRow } from '@/components/plants';
 import { Button, ErrorView, Loading, SectionTitle, screenStyles } from '@/components/ui';
 import { confirm, notify } from '@/lib/confirm';
 import { goBack } from '@/lib/navigation';
-import { colors, spacing } from '@/theme';
+import { createStyles } from '@/theme';
 
 export default function ZoneScreen() {
+  const styles = useStyles();
   const id = Number(useLocalSearchParams<{ id: string }>().id);
   const zone = useZone(id);
   const plants = usePlants({ zoneId: id });
@@ -90,9 +91,9 @@ export default function ZoneScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  description: { fontSize: 15, color: colors.textMuted },
-  muted: { color: colors.textMuted },
+const useStyles = createStyles(({ colors, typography, spacing }) => ({
+  description: { ...typography.body, color: colors.textMuted },
+  muted: { ...typography.body, color: colors.textMuted },
   actions: { flexDirection: 'row', gap: spacing.sm },
   action: { flex: 1 },
-});
+}));

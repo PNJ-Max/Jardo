@@ -1,22 +1,24 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import type { Plant } from '@/api/types';
 import { Card } from '@/components/ui';
 import { formatDate } from '@/lib/dates';
-import { colors, spacing, wateringStyle } from '@/theme';
+import { createStyles, useTheme } from '@/theme';
 
 /**
  * Le voyant d'arrosage. Il affiche tel quel ce que l'API a calculé : le front ne
  * refait jamais le calcul d'échéance, sinon les deux finiraient par diverger.
  */
 export function WateringBadge({ plant }: { plant: Plant }) {
+  const { colors, watering } = useTheme();
+
   if (plant.isArchived) {
     return <Badge color={colors.textMuted} text="Archivée" />;
   }
 
-  const { color, background } = wateringStyle[plant.wateringStatus];
+  const { color, background } = watering[plant.wateringStatus];
   const text =
     plant.wateringStatus === 'Overdue'
       ? `En retard de ${plant.daysOverdue} j`
@@ -28,6 +30,8 @@ export function WateringBadge({ plant }: { plant: Plant }) {
 }
 
 function Badge({ color, background, text }: { color: string; background?: string; text: string }) {
+  const styles = useStyles();
+
   return (
     <View style={[styles.badge, { borderColor: color, backgroundColor: background }]}>
       <View style={[styles.dot, { backgroundColor: color }]} />
@@ -45,6 +49,8 @@ type PlantRowProps = {
 };
 
 export function PlantRow({ plant, onWater, hideZone }: PlantRowProps) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const subtitle = [plant.species, hideZone ? null : plant.zoneName].filter(Boolean).join(' · ');
 
   return (
@@ -72,11 +78,11 @@ export function PlantRow({ plant, onWater, hideZone }: PlantRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles(({ colors, fonts, typography, spacing }) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   rowBody: { flex: 1, gap: spacing.xs },
-  name: { fontSize: 17, fontWeight: '600', color: colors.text },
-  subtitle: { fontSize: 14, color: colors.textMuted },
+  name: { ...typography.subtitle, color: colors.text },
+  subtitle: { ...typography.caption, color: colors.textMuted },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -89,7 +95,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  badgeText: { fontSize: 13, fontWeight: '600' },
+  badgeText: { ...typography.caption, fontFamily: fonts.bodySemiBold },
   waterButton: {
     width: 52,
     height: 52,
@@ -98,4 +104,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.water,
   },
-});
+}));

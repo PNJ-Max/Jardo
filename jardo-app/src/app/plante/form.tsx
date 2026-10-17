@@ -16,7 +16,7 @@ import {
 } from '@/components/ui';
 import { isDateOnly } from '@/lib/dates';
 import { goBack } from '@/lib/navigation';
-import { colors } from '@/theme';
+import { createStyles } from '@/theme';
 
 /**
  * Création ou modification d'une plante.
@@ -39,6 +39,7 @@ function EditPlant({ id }: { id: number }) {
 }
 
 function PlantForm({ plant, defaultZoneId }: { plant?: Plant; defaultZoneId?: number }) {
+  const styles = useStyles();
   const zones = useZones();
   const save = useSavePlant();
 
@@ -117,7 +118,7 @@ function PlantForm({ plant, defaultZoneId }: { plant?: Plant; defaultZoneId?: nu
       ) : zones.error ? (
         <ErrorView error={zones.error} onRetry={zones.refetch} />
       ) : zones.data.length === 0 ? (
-        <Text style={{ color: colors.danger }}>Créez d’abord une zone dans l’onglet Zones.</Text>
+        <Text style={styles.noZone}>Créez d’abord une zone dans l’onglet Zones.</Text>
       ) : (
         <ChipSelect
           label="Zone"
@@ -133,3 +134,7 @@ function PlantForm({ plant, defaultZoneId }: { plant?: Plant; defaultZoneId?: nu
     </ScrollView>
   );
 }
+
+const useStyles = createStyles(({ colors, typography }) => ({
+  noZone: { ...typography.body, color: colors.danger },
+}));
