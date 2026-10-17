@@ -14,8 +14,8 @@ publiable un jour sur le Play Store.
 **Backend `Jardo.Api` : MVP terminé.**
 - ASP.NET Core (.NET 10) + EF Core + SQLite, tests dans `Jardo.Api.Tests`.
 - Zones, plantes, arrosages, journal ; voyant d'arrosage calculé côté API.
-- Code écrit à l'origine comme support d'apprentissage : commentaires pédagogiques
-  à retirer (phase 1).
+- Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
+  évidente. README recentré sur le produit.
 
 **Front `jardo-app` : premier jet fonctionnel, visuel à refaire.**
 - Expo SDK 57 (React Native + TypeScript), Expo Router, TanStack Query.

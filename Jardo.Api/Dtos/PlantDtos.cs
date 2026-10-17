@@ -15,20 +15,16 @@ public class CreatePlantDto
 
     public DateOnly? PlantedDate { get; set; }
 
-    /// <summary>Jours entre deux arrosages. 2 pour une tomate, 7 pour un arbuste établi.</summary>
-    // Le maximum de 365 n'est pas arbitraire : au-delà, la valeur est presque
-    // certainement une erreur de saisie, et une borne haute évite les échéances absurdes.
+    /// <summary>Nombre de jours entre deux arrosages.</summary>
     [Range(1, 365)]
     public int WateringIntervalDays { get; set; } = 3;
 
-    /// <summary>Zone d'accueil. Son existence est vérifiée par le service.</summary>
     [Range(1, int.MaxValue)]
     public int ZoneId { get; set; }
 }
 
 /// <summary>
-/// Corps de requête pour modifier une plante. Le déplacement vers une autre zone
-/// est autorisé : il suffit de renvoyer un ZoneId différent.
+/// Corps de requête pour modifier une plante. Un ZoneId différent la déplace vers cette zone.
 /// </summary>
 public class UpdatePlantDto
 {
@@ -48,9 +44,7 @@ public class UpdatePlantDto
     public int ZoneId { get; set; }
 }
 
-/// <summary>
-/// Représentation d'une plante renvoyée par l'API, état d'arrosage compris.
-/// </summary>
+/// <summary>Représentation d'une plante renvoyée par l'API, état d'arrosage compris.</summary>
 public class PlantResponseDto
 {
     public int Id { get; set; }
@@ -62,15 +56,9 @@ public class PlantResponseDto
     public DateTimeOffset CreatedAt { get; set; }
 
     public int ZoneId { get; set; }
-
-    /// <summary>
-    /// Nom de la zone, recopié ici pour que le front puisse afficher « Tomate — Potager »
-    /// sans avoir à faire un second appel pour récupérer la zone.
-    /// </summary>
     public string ZoneName { get; set; } = string.Empty;
 
-    // --- Le voyant d'arrosage : recalculé à chaque lecture, jamais stocké ---
-
+    // Voyant d'arrosage : recalculé à chaque lecture, jamais stocké.
     public DateOnly? LastWateredAt { get; set; }
 
     public DateOnly NextWateringDate { get; set; }
@@ -78,23 +66,11 @@ public class PlantResponseDto
     /// <summary>Ok (vert), DueSoon (orange, échéance aujourd'hui), Overdue (rouge).</summary>
     public WateringStatus WateringStatus { get; set; }
 
-    /// <summary>Jours de retard, 0 si l'échéance n'est pas dépassée. Sert à trier par urgence.</summary>
+    /// <summary>Jours de retard, 0 si l'échéance n'est pas dépassée.</summary>
     public int DaysOverdue { get; set; }
 
-    /// <summary>
-    /// Raccourci de confort pour le front : faut-il allumer un voyant ?
-    /// Propriété calculée, donc pas de champ à maintenir en cohérence.
-    /// </summary>
     public bool NeedsWater => WateringStatus != Models.WateringStatus.Ok;
 
-    /// <summary>
-    /// Construit le DTO à partir de l'entité et de son état d'arrosage déjà calculé.
-    /// </summary>
-    /// <remarks>
-    /// L'état est passé en paramètre plutôt que calculé ici : ce mapping doit rester une
-    /// simple recopie de champs. Un mapping qui contient du calcul métier est un endroit
-    /// où personne ne pense à aller chercher un bug.
-    /// </remarks>
     public static PlantResponseDto FromEntity(Plant plant, WateringState state, string zoneName) => new()
     {
         Id = plant.Id,

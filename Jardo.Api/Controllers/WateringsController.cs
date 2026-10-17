@@ -7,16 +7,6 @@ namespace Jardo.Api.Controllers;
 /// <summary>
 /// Arrosages : ce qui a été fait, et ce qui reste à faire.
 /// </summary>
-/// <remarks>
-/// Contrôleur séparé de PlantsController alors que ses routes commencent par
-/// /api/plants. C'est délibéré : il regroupe ce qui relève d'IWateringService, là où
-/// PlantsController regroupe ce qui relève d'IPlantService. Un contrôleur par service
-/// plutôt qu'un contrôleur par préfixe d'URL — sinon PlantsController finirait par
-/// dépendre de trois services et par mélanger trois sujets.
-///
-/// Effet secondaire agréable : Swagger regroupe les endpoints par contrôleur, la
-/// documentation est donc déjà organisée par thème.
-/// </remarks>
 [ApiController]
 [Route("api")]
 [Produces("application/json")]
@@ -32,10 +22,6 @@ public class WateringsController : ControllerBase
     /// <summary>
     /// Les plantes à arroser aujourd'hui, les plus en retard d'abord.
     /// </summary>
-    /// <remarks>
-    /// C'est l'endpoint qui alimentera l'écran d'accueil de l'application : la réponse à
-    /// la seule question qui compte quand on ouvre l'app le matin.
-    /// </remarks>
     [HttpGet("watering/needed")]
     [ProducesResponseType<List<PlantResponseDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PlantResponseDto>>> GetPlantsNeedingWater(CancellationToken cancellationToken)
@@ -56,9 +42,8 @@ public class WateringsController : ControllerBase
     /// Enregistre l'arrosage d'une plante.
     /// </summary>
     /// <remarks>
-    /// Le corps de la requête est entièrement optionnel : un POST avec « {} » enregistre
-    /// un arrosage à la date du jour, ce qui est le cas d'usage courant. Une date passée
-    /// est acceptée (saisie oubliée de la veille), une date future est refusée.
+    /// Le corps est optionnel : « {} » enregistre un arrosage à la date du jour.
+    /// Une date passée est acceptée, une date future est refusée.
     /// </remarks>
     [HttpPost("plants/{plantId:int}/waterings")]
     [ProducesResponseType<WateringLogResponseDto>(StatusCodes.Status201Created)]
@@ -71,9 +56,7 @@ public class WateringsController : ControllerBase
     {
         var log = await _wateringService.WaterPlantAsync(plantId, dto, cancellationToken);
 
-        // CreatedAtAction pointe vers l'historique et non vers l'arrosage seul : il n'y a
-        // pas d'endpoint « un arrosage par son id », et il n'y a pas de raison d'en créer
-        // un que personne n'appellerait. On renvoie l'URL réellement utile.
+        // Location vers l'historique : il n'existe pas d'endpoint pour un arrosage seul.
         return CreatedAtAction(nameof(GetHistory), new { plantId }, log);
     }
 }

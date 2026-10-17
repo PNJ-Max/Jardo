@@ -25,10 +25,7 @@ public class ObservationService : IObservationService
         var observations = await _db.Observations
             .AsNoTracking()
             .Where(observation => observation.PlantId == plantId)
-            // Deux critères de tri, et le second compte : plusieurs observations peuvent
-            // porter la même date. Sans le tri secondaire sur l'Id, leur ordre serait
-            // laissé au bon vouloir de SQLite et pourrait changer d'un appel à l'autre.
-            // Un ordre instable dans une liste affichée est déroutant à l'usage.
+            // Le tri sur l'Id rend stable l'ordre des observations d'un même jour.
             .OrderByDescending(observation => observation.ObservedAt)
             .ThenByDescending(observation => observation.Id)
             .ToListAsync(cancellationToken);
@@ -46,7 +43,6 @@ public class ObservationService : IObservationService
         var today = _timeProvider.Today();
         var observedAt = dto.ObservedAt ?? today;
 
-        // Même raisonnement que pour l'arrosage : on n'observe pas dans le futur.
         if (observedAt > today)
         {
             throw new BusinessRuleException(

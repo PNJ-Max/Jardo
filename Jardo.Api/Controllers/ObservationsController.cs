@@ -34,9 +34,7 @@ public class ObservationsController : ControllerBase
     /// Ajoute une entrée au journal d'une plante.
     /// </summary>
     /// <remarks>
-    /// Une seule requête porte la note, la mesure de hauteur et le problème constaté,
-    /// parce que c'est ainsi qu'on les saisit : « 20 cm, feuilles jaunes, traité au savon
-    /// noir ». Seule la note est obligatoire.
+    /// Une même requête porte la note, la hauteur et le problème constaté ; seule la note est obligatoire.
     /// </remarks>
     [HttpPost("plants/{plantId:int}/observations")]
     [ProducesResponseType<ObservationResponseDto>(StatusCodes.Status201Created)]
@@ -55,12 +53,6 @@ public class ObservationsController : ControllerBase
     /// <summary>
     /// Supprime une entrée du journal.
     /// </summary>
-    /// <remarks>
-    /// Route à la racine (/api/observations/{id}) et non sous la plante : l'identifiant
-    /// d'une observation suffit à la désigner. Exiger /api/plants/3/observations/12
-    /// obligerait à vérifier que l'observation 12 appartient bien à la plante 3, un
-    /// contrôle sans valeur pour l'utilisateur.
-    /// </remarks>
     [HttpDelete("observations/{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
