@@ -17,14 +17,17 @@ publiable un jour sur le Play Store.
 - Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
   évidente. README recentré sur le produit.
 
-**Front `jardo-app` : premier jet fonctionnel, visuel à refaire.**
+**Front `jardo-app` : premier jet fonctionnel, fondations UI posées, écrans à refaire.**
 - Expo SDK 57 (React Native + TypeScript), Expo Router, TanStack Query.
 - Tous les écrans du MVP existent et sont branchés sur l'API.
 - Charte graphique arrêtée ([`docs/charte-graphique.md`](docs/charte-graphique.md)) : terre
-  cuite pour les actions, bleu eau pour « à arroser ». Restent pour la phase 2 : polices
-  et mode sombre.
+  cuite pour les actions, bleu eau pour « à arroser ».
 - Icône et splash faits : pousse en pot sur fond crème, icône adaptative Android avec
   version monochrome, splash clair et sombre, favicon. Sources SVG dans `jardo-app/assets/source/`.
+- Fondations UI : thème clair / sombre qui suit le téléphone (`src/theme/`, `useTheme`,
+  `createStyles`), polices Fraunces et Inter avec échelle typographique, composants de base
+  découpés dans `src/components/ui/`, dépendances inutiles du template retirées.
+- Restent : refonte des écrans d'après les maquettes, sélecteur de date.
 - Pas de tests.
 
 **Organisation** : une session Claude par tâche, sur sa propre branche, livrée par PR ;

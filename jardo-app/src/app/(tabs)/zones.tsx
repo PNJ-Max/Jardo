@@ -1,11 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 
 import { useZones } from '@/api/queries';
 import type { Zone } from '@/api/types';
 import { Card, Empty, ErrorView, Fab, Loading, screenStyles } from '@/components/ui';
-import { colors, spacing, wateringStyle } from '@/theme';
+import { createStyles, useTheme } from '@/theme';
 
 export default function ZonesScreen() {
   const { data, error, isPending, refetch, isRefetching } = useZones();
@@ -30,6 +30,8 @@ export default function ZonesScreen() {
 }
 
 function ZoneRow({ zone }: { zone: Zone }) {
+  const { colors, watering } = useTheme();
+  const styles = useStyles();
   const needsWater = zone.plantsNeedingWater > 0;
 
   return (
@@ -43,22 +45,22 @@ function ZoneRow({ zone }: { zone: Zone }) {
 
       {/* Le voyant de zone : le compteur calculé par l'API, sans charger les plantes. */}
       {needsWater ? (
-        <View style={[styles.counter, { backgroundColor: wateringStyle.Overdue.color }]}>
+        <View style={styles.counter}>
           <Ionicons name="water" size={14} color={colors.primaryText} />
           <Text style={styles.counterText}>{zone.plantsNeedingWater}</Text>
         </View>
       ) : (
-        <Ionicons name="checkmark-circle" size={24} color={wateringStyle.Ok.color} />
+        <Ionicons name="checkmark-circle" size={24} color={watering.Ok.color} />
       )}
     </Card>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles(({ colors, watering, fonts, typography, spacing }) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   body: { flex: 1, gap: 2 },
-  name: { fontSize: 17, fontWeight: '600', color: colors.text },
-  meta: { fontSize: 14, color: colors.textMuted },
+  name: { ...typography.subtitle, color: colors.text },
+  meta: { ...typography.caption, color: colors.textMuted },
   counter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -66,6 +68,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
+    backgroundColor: watering.Overdue.color,
   },
-  counterText: { color: colors.primaryText, fontWeight: '700' },
-});
+  counterText: { ...typography.caption, fontFamily: fonts.bodySemiBold, color: colors.primaryText },
+}));

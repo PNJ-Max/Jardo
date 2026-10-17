@@ -34,7 +34,8 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Données serveur | **TanStack Query** | Cache, rechargement, états chargement/erreur, mises à jour optimistes |
 | Client API | `fetch` + types écrits à la main (`src/api/types.ts`) | `openapi-typescript` n'accepte pas encore TypeScript 6 |
 | Formulaires | `useState` + validation légère, erreurs de l'API sous les champs | Suffisant pour 3 formulaires |
-| Style | `StyleSheet` + `src/theme.ts` | Aucune dépendance ; jetons décrits dans la [charte graphique](charte-graphique.md) |
+| Style | `StyleSheet` + `src/theme/` (`useTheme`, `createStyles`) | Aucune dépendance ; suit le mode clair / sombre du téléphone ; jetons décrits dans la [charte graphique](charte-graphique.md) |
+| Polices | `@expo-google-fonts/fraunces` et `/inter` + `expo-font` | Chargées au démarrage, écran de démarrage maintenu jusque-là |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
 | Notifications (plus tard) | `expo-notifications` | Rappel d'arrosage local |
 
@@ -56,9 +57,10 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   ├── plante/form.tsx       création / modification (?id= ou ?zoneId=)
 │   └── plante/observation.tsx
 ├── src/api/                  client fetch, hooks TanStack Query, types
-├── src/components/           ui.tsx (briques de base), plants.tsx (voyant, ligne plante)
+├── src/components/ui/        briques de base (boutons, carte, champs, états d'écran)
+├── src/components/plants.tsx voyant d'arrosage, ligne plante
 ├── src/lib/                  dates, confirmations, navigation
-├── src/theme.ts              couleurs et espacements
+├── src/theme/                palettes clair / sombre, typographie, useTheme, createStyles
 └── app.json                  configuration Expo
 ```
 

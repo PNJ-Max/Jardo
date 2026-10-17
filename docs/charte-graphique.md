@@ -1,7 +1,9 @@
 # Charte graphique
 
-Les jetons de couleur, d'espacement et de rayon sont dans [`jardo-app/src/theme.ts`](../jardo-app/src/theme.ts).
-Aucun écran ne code de couleur en dur : tout passe par ce fichier.
+Les jetons de couleur, de typographie, d'espacement et de rayon sont dans
+[`jardo-app/src/theme/`](../jardo-app/src/theme/index.ts). Aucun écran ne code de couleur en
+dur : tout passe par `useTheme()` ou `createStyles()`, qui suivent le mode clair / sombre du
+téléphone.
 
 ## Intention
 
@@ -60,16 +62,24 @@ distinguer les couleurs.
 
 ## Typographie
 
-- Titres : **Fraunces** (serif chaleureuse).
-- Corps : **Inter**.
-- Chargées via `@expo-google-fonts` en phase 2 ; d'ici là, police système.
+- Titres : **Fraunces** (serif chaleureuse), graisse SemiBold.
+- Corps : **Inter**, en Regular, Medium et SemiBold.
+- Chargées au démarrage par `@expo-google-fonts/fraunces` et `@expo-google-fonts/inter` ;
+  l'écran de démarrage reste affiché jusque-là. Si le chargement échoue, l'app démarre avec
+  la police système.
 
-| Usage | Taille |
-|---|---|
-| Titre | 22 |
-| Sous-titre | 17 |
-| Corps | 15 |
-| Légende | 13 |
+Échelle exposée par `theme.typography` (à étaler dans un style : `...typography.body`) :
+
+| Jeton | Usage | Police | Taille / interligne |
+|---|---|---|---|
+| `title` | Titre d'écran | Fraunces SemiBold | 22 / 28 |
+| `subtitle` | Nom d'une plante ou d'une zone, titre d'état vide, en-têtes | Fraunces SemiBold | 17 / 22 |
+| `body` | Corps de texte, boutons, champs | Inter Regular | 15 / 21 |
+| `caption` | Légendes, pastilles, messages sous les champs | Inter Regular | 13 / 18 |
+
+Pour mettre en valeur, on change de famille, jamais de `fontWeight` (Android et le web
+synthétiseraient un faux gras) : `{ ...typography.body, fontFamily: fonts.bodySemiBold }`.
+Familles disponibles dans `theme.fonts` : `heading`, `body`, `bodyMedium`, `bodySemiBold`.
 
 ## Formes et espacements
 
@@ -102,21 +112,26 @@ la silhouette doit rester lisible à 48 dp.
 
 ## Mode sombre
 
-Valeurs arrêtées, câblage en phase 2. Contrastes mesurés sur le fond et sur la carte.
+L'app suit le réglage du téléphone (`userInterfaceStyle: "automatic"`). Contrastes mesurés
+sur le fond et sur la carte. Les couleurs de décor (`terracotta`, `sage`, `sagePale`) sont
+les mêmes dans les deux modes.
 
-| Rôle | Valeur | Contraste |
+| Jeton | Valeur | Contraste |
 |---|---|---|
-| Fond | `#1C211A` | |
-| Carte | `#262C23` | |
-| Texte | `#EEEADB` | 13,6:1 / 11,9:1 |
-| Texte secondaire | `#A9AE9C` | 7,2:1 / 6,3:1 |
-| Primaire | `#DB9558`, texte `#2A1A0E` | 6,8:1 |
-| Eau | `#7FB0CC` | 7:1 / 6,1:1 |
-| En retard | `#E8826F` | 6,1:1 / 5,4:1 |
-| OK | `#A8BBA3` | 8:1 / 7:1 |
+| `background` | `#1C211A` | |
+| `card` | `#262C23` | |
+| `border` | `#3A4234` | |
+| `text` | `#EEEADB` | 13,6:1 / 11,9:1 |
+| `textMuted` | `#A9AE9C` | 7,2:1 / 6,3:1 |
+| `primary` | `#DB9558` | 6,8:1 avec `primaryText` |
+| `primaryText` | `#2A1A0E` | 7,2:1 sur `water`, 6,3:1 sur `danger` |
+| `water` | `#7FB0CC` | 7:1 / 6,1:1, 5,6:1 sur `waterTint` |
+| `waterTint` | `#22323B` | |
+| `danger` | `#E8826F` | 6,1:1 / 5,4:1, 5,2:1 sur `dangerTint` |
+| `dangerTint` | `#3D2622` | |
+| `success` | `#A8BBA3` | 8:1 / 7:1, 5,8:1 sur `successTint` |
+| `successTint` | `#2F3A2A` | |
 
 ## À faire en phase 2
 
 - Icône de l'app et splash screen.
-- Chargement des polices Fraunces et Inter.
-- Câblage du mode sombre.
