@@ -4,13 +4,11 @@ namespace Jardo.Api.Services;
 
 /// <summary>
 /// Enregistrement des arrosages et calcul du voyant.
-/// C'est le service qui porte la logique métier centrale du projet.
-/// </summary>
+///</summary>
 public interface IWateringService
 {
     /// <summary>
-    /// Les plantes dont l'arrosage est dû aujourd'hui ou en retard, les plus urgentes
-    /// d'abord. C'est la requête qui alimentera l'écran d'accueil.
+    /// Les plantes dont l'arrosage est dû aujourd'hui ou en retard, les plus urgentes d'abord.
     /// </summary>
     Task<List<PlantResponseDto>> GetPlantsNeedingWaterAsync(CancellationToken cancellationToken = default);
 

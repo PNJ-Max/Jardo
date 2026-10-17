@@ -8,17 +8,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Jardo.Api.Tests;
 
-/// <summary>
-/// Tests de WateringService : ce que le calculateur pur ne peut pas couvrir, parce que
-/// cela dépend de la base — filtrage des plantes archivées, tri, écriture des arrosages.
-/// </summary>
 public class WateringServiceTests
 {
     private static readonly DateOnly Today = new(2026, 6, 15);
 
-    /// <summary>
-    /// Construit le service avec une base neuve et une horloge figée au 15 juin 2026.
-    /// </summary>
     private static (WateringService Service, GardenDbContext Db, TestDatabase Database) CreateService()
     {
         var database = new TestDatabase();
@@ -26,17 +19,11 @@ public class WateringServiceTests
         var service = new WateringService(
             database.Context,
             new FakeTimeProvider(Today),
-            // NullLogger : on ne teste pas la journalisation, mais le service en exige
-            // un. C'est l'implémentation officielle « qui ne fait rien », préférable à
-            // un logger simulé qu'il faudrait configurer.
             NullLogger<WateringService>.Instance);
 
         return (service, database.Context, database);
     }
 
-    /// <summary>
-    /// Crée une zone avec des plantes, et éventuellement un arrosage par plante.
-    /// </summary>
     private static async Task<Zone> SeedZoneAsync(
         GardenDbContext db,
         string zoneName,
@@ -86,9 +73,6 @@ public class WateringServiceTests
 
             var needingWater = await service.GetPlantsNeedingWaterAsync();
 
-            // C'est la raison d'être de l'archivage : une plante de la saison passée ne
-            // doit plus jamais réclamer d'eau, même si son échéance est dépassée depuis
-            // des mois. Sans ce filtre, la liste se remplirait de plantes mortes.
             Assert.Single(needingWater);
             Assert.Equal("Tomate", needingWater[0].Name);
         }
@@ -107,9 +91,6 @@ public class WateringServiceTests
 
             var needingWater = await service.GetPlantsNeedingWaterAsync();
 
-            // L'ordre est le contrat de l'endpoint : l'écran d'accueil affiche cette
-            // liste telle quelle, sans retrier. Le tri se fait en mémoire (DaysOverdue
-            // n'existe pas en base), ce test garantit qu'il est bien appliqué.
             Assert.Equal(
                 new[] { "Tres en retard", "Moyennement", "Peu en retard" },
                 needingWater.Select(plant => plant.Name).ToArray());
@@ -128,8 +109,6 @@ public class WateringServiceTests
 
             var needingWater = await service.GetPlantsNeedingWaterAsync();
 
-            // Seule celle dont l'échéance tombe aujourd'hui remonte : DueSoon compte
-            // comme « à arroser », Ok non.
             Assert.Single(needingWater);
             Assert.Equal("Echeance aujourdhui", needingWater[0].Name);
             Assert.Equal(WateringStatus.DueSoon, needingWater[0].WateringStatus);
@@ -162,8 +141,6 @@ public class WateringServiceTests
 
             var dto = new CreateWateringDto { WateredAt = Today.AddDays(1) };
 
-            // Une date future repousserait l'échéance et ferait disparaître la plante de
-            // la liste pendant des jours, sans explication visible.
             await Assert.ThrowsAsync<BusinessRuleException>(
                 () => service.WaterPlantAsync(plantId, dto));
         }
@@ -178,7 +155,6 @@ public class WateringServiceTests
             await SeedZoneAsync(db, "Potager", ("Tomate", 2, null, false));
             var plantId = await db.Plants.Select(plant => plant.Id).FirstAsync();
 
-            // Cas réel : on saisit le soir un arrosage fait la veille.
             var dto = new CreateWateringDto { WateredAt = Today.AddDays(-1) };
 
             var log = await service.WaterPlantAsync(plantId, dto);
@@ -228,9 +204,6 @@ public class WateringServiceTests
             Assert.Equal(2, result.PlantsWatered);
             Assert.Equal("Serre", result.ZoneName);
 
-            // Vérification côté base : c'est bien un enregistrement par plante, et non
-            // un enregistrement « de zone ». C'est ce qui permet à chaque plante de
-            // garder son propre historique, même si elle change de zone plus tard.
             var logs = await db.WateringLogs.ToListAsync();
             Assert.Equal(2, logs.Count);
             Assert.All(logs, log => Assert.Equal(Today, log.WateredAt));
@@ -247,12 +220,10 @@ public class WateringServiceTests
                 ("Concombre", 2, 10, false),
                 ("Aubergine", 3, 15, false));
 
-            // Les deux sont très en retard avant l'arrosage.
             Assert.Equal(2, (await service.GetPlantsNeedingWaterAsync()).Count);
 
             await service.WaterZoneAsync(zone.Id, new CreateWateringDto());
 
-            // Et plus aucune après : c'est le bout-en-bout de la logique métier.
             Assert.Empty(await service.GetPlantsNeedingWaterAsync());
         }
     }

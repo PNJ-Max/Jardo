@@ -30,14 +30,8 @@ public class WateringService : IWateringService
             .SelectWithWatering()
             .ToListAsync(cancellationToken);
 
-        // Le filtrage et le tri se font en mémoire, et c'est inévitable : l'état
-        // d'arrosage n'existe pas en base, il est calculé. Aucune clause WHERE SQL ne
-        // peut porter sur « DaysOverdue ».
-        //
-        // Ce serait un problème d'échelle sur des centaines de milliers de lignes — il
-        // faudrait alors stocker l'échéance et la recalculer à l'écriture. Sur un potager
-        // de quelques dizaines de plantes, c'est parfaitement adapté, et ça évite d'avoir
-        // à maintenir une colonne dérivée cohérente.
+        // Filtre et tri en mémoire : l'état d'arrosage est calculé, pas stocké. Suffisant pour
+        // quelques dizaines de plantes.
         return rows
             .Select(row => row.ToDto(today))
             .Where(dto => dto.NeedsWater)
@@ -105,19 +99,13 @@ public class WateringService : IWateringService
         var wateredAt = ResolveWateringDate(dto.WateredAt);
         var note = Text.Optional(dto.Note);
 
-        // On ne charge que les identifiants : créer un WateringLog ne demande rien d'autre
-        // de la plante, et rapatrier les entités complètes serait du gaspillage.
         var plantIds = await _db.Plants
             .AsNoTracking()
             .Where(plant => plant.ZoneId == zoneId && !plant.IsArchived)
             .Select(plant => plant.Id)
             .ToListAsync(cancellationToken);
 
-        // Un enregistrement par plante, et non un enregistrement « de zone ».
-        //
-        // C'est la décision structurante de cette méthode : l'historique reste attaché à
-        // la plante, seul niveau où le calcul d'échéance a un sens. Conséquence agréable —
-        // une plante déplacée vers une autre zone emporte son historique avec elle.
+        // Un enregistrement par plante : l'historique reste attaché à la plante, même déplacée de zone.
         var logs = plantIds
             .Select(plantId => new WateringLog
             {
@@ -129,9 +117,7 @@ public class WateringService : IWateringService
 
         _db.WateringLogs.AddRange(logs);
 
-        // Un seul SaveChangesAsync pour toutes les lignes : EF Core les regroupe dans une
-        // seule transaction. Soit toute la zone est arrosée, soit rien ne l'est — on ne
-        // peut pas se retrouver avec la moitié des plantes enregistrées.
+        // Un seul SaveChanges (donc une transaction) : toute la zone est arrosée, ou aucune plante.
         await _db.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Zone {ZoneName} arrosée le {Date} : {Count} plante(s).",
@@ -146,23 +132,12 @@ public class WateringService : IWateringService
         };
     }
 
-    /// <summary>
-    /// Détermine la date d'arrosage à enregistrer, et refuse le futur.
-    /// </summary>
-    /// <remarks>
-    /// Une date d'arrosage dans le futur n'est pas un cas d'usage, c'est une faute de
-    /// saisie — et elle est nuisible : elle repousserait l'échéance et ferait disparaître
-    /// la plante de la liste des plantes à arroser pendant des jours, sans qu'on comprenne
-    /// pourquoi. Mieux vaut refuser franchement.
-    ///
-    /// Le passé, lui, est autorisé : on saisit souvent le soir un arrosage fait le matin,
-    /// ou on rattrape une saisie oubliée de la veille.
-    /// </remarks>
+    // Une date future est refusée : elle repousserait l'échéance et masquerait la plante de la
+    // liste « à arroser ». Le passé est accepté (saisie tardive).
     private DateOnly ResolveWateringDate(DateOnly? requested)
     {
         var today = _timeProvider.Today();
 
-        // Rien de fourni : c'est le cas normal, « je viens d'arroser ».
         if (requested is null)
         {
             return today;

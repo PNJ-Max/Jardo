@@ -5,13 +5,6 @@ namespace Jardo.Api.Services;
 /// <summary>
 /// Gestion des zones du potager.
 /// </summary>
-/// <remarks>
-/// Pourquoi une interface alors qu'il n'y aura jamais qu'une implémentation ?
-/// Pas pour « pouvoir changer d'implémentation un jour » — cet argument est presque
-/// toujours théorique. La vraie raison est qu'elle donne, en un seul écran, la liste
-/// exhaustive de ce qu'on peut faire avec les zones, sans avoir à lire le corps des
-/// méthodes. C'est le contrat, séparé de la mécanique.
-/// </remarks>
 public interface IZoneService
 {
     /// <summary>Toutes les zones, triées par nom, avec leurs compteurs de plantes.</summary>

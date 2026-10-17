@@ -5,26 +5,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Jardo.Api.Data;
 
 /// <summary>
-/// Remplit la base avec un potager d'exemple, pour pouvoir manipuler l'API dès le
-/// premier lancement.
+/// Remplit la base avec un potager d'exemple. Les dates sont relatives à aujourd'hui
+/// pour qu'il y ait toujours des plantes en retard d'arrosage.
 /// </summary>
-/// <remarks>
-/// Les dates sont calculées <b>relativement à aujourd'hui</b> et non écrites en dur.
-/// C'est ce qui permet d'avoir toujours des plantes en retard d'arrosage, quel que soit
-/// le jour où on lance le projet. Avec des dates fixes, tout serait « en retard de
-/// 400 jours » au bout d'un an, et le jeu de données ne montrerait plus rien.
-/// </remarks>
 public static class DbSeeder
 {
-    /// <summary>
-    /// Insère les données d'exemple si la base est vide.
-    /// </summary>
-    /// <remarks>
-    /// Le test « la base est vide » rend l'opération idempotente : on peut relancer
-    /// l'application autant de fois qu'on veut sans dupliquer le potager. Sans ce test,
-    /// chaque démarrage ajouterait trois zones de plus — et le troisième échouerait sur
-    /// la contrainte d'unicité des noms.
-    /// </remarks>
     public static async Task SeedAsync(GardenDbContext db, TimeProvider timeProvider, CancellationToken cancellationToken = default)
     {
         if (await db.Zones.AnyAsync(cancellationToken))
@@ -35,8 +20,6 @@ public static class DbSeeder
         var today = timeProvider.Today();
         var now = timeProvider.GetUtcNow();
 
-        // Fonction locale : raccourci de lecture pour « il y a N jours ».
-        // Écrire today.AddDays(-4) partout serait correct mais moins parlant que Ago(4).
         DateOnly Ago(int days) => today.AddDays(-days);
 
         var potager = new Zone
@@ -62,16 +45,9 @@ public static class DbSeeder
 
         db.Zones.AddRange(potager, serre, verger);
 
-        // Premier enregistrement : nécessaire pour que les zones reçoivent leur Id,
-        // attribué par SQLite. Sans cela, les plantes créées juste après auraient un
-        // ZoneId à 0 et l'insertion échouerait sur la clé étrangère.
-        //
-        // C'est le seul endroit du projet où l'on enchaîne deux SaveChangesAsync, et
-        // c'est pour cette raison précise.
+        // Enregistrement intermédiaire : les plantes ont besoin des Id générés pour les zones.
         await db.SaveChangesAsync(cancellationToken);
 
-        // Fonction locale de construction, pour ne pas répéter dix fois les mêmes
-        // affectations. Les paramètres nommés à l'appel gardent la lisibilité.
         Plant NewPlant(Zone zone, string name, string? species, int intervalDays, int plantedDaysAgo)
             => new()
             {
@@ -84,24 +60,20 @@ public static class DbSeeder
                 CreatedAt = now
             };
 
-        // --- Le potager ---
         var tomate = NewPlant(potager, "Tomate cerise", "Solanum lycopersicum", 2, 45);
         var courgette = NewPlant(potager, "Courgette", "Cucurbita pepo", 3, 40);
         var salade = NewPlant(potager, "Laitue", "Lactuca sativa", 1, 20);
         var basilic = NewPlant(potager, "Basilic", "Ocimum basilicum", 2, 30);
         var poivron = NewPlant(potager, "Poivron", "Capsicum annuum", 3, 50);
 
-        // --- La serre ---
         var concombre = NewPlant(serre, "Concombre", "Cucumis sativus", 2, 35);
         var aubergine = NewPlant(serre, "Aubergine", "Solanum melongena", 3, 10);
 
-        // --- Le verger ---
         var framboisier = NewPlant(verger, "Framboisier", "Rubus idaeus", 7, 400);
         var pommier = NewPlant(verger, "Pommier", "Malus domestica", 14, 1200);
         var groseillier = NewPlant(verger, "Groseillier", "Ribes rubrum", 7, 3);
 
-        // Une plante archivée, pour vérifier qu'elle est bien exclue des calculs
-        // d'arrosage et de la liste par défaut.
+        // Plante archivée : exclue des calculs d'arrosage et de la liste par défaut.
         var radis = NewPlant(potager, "Radis (printemps)", "Raphanus sativus", 1, 120);
         radis.IsArchived = true;
 
@@ -113,17 +85,11 @@ public static class DbSeeder
 
         await db.SaveChangesAsync(cancellationToken);
 
-        // --- Les arrosages ---
-        //
-        // Chaque date est choisie pour produire un état précis. L'échéance étant
-        // « dernier arrosage + intervalle », le commentaire indique le résultat attendu :
-        // c'est ce qui permet de vérifier d'un coup d'oeil que le calcul est correct.
+        // Chaque date produit un état précis ; le commentaire de ligne donne l'échéance obtenue.
         WateringLog Watering(Plant plant, int daysAgo, string? note = null)
             => new() { PlantId = plant.Id, WateredAt = Ago(daysAgo), Note = note };
 
         db.WateringLogs.AddRange(
-            // Un peu d'historique sur la tomate, pour que l'endpoint d'historique
-            // renvoie plus d'une ligne.
             Watering(tomate, 8),
             Watering(tomate, 6, "Paillage ajouté au pied."),
             Watering(tomate, 4),                       // + 2 j  -> en retard de 2 jours
@@ -136,14 +102,10 @@ public static class DbSeeder
             Watering(pommier, 20, "Arrosage de reprise après la sécheresse.")
             // + 14 j -> en retard de 6 jours
 
-            // Volontairement absentes : aubergine et groseillier n'ont aucun arrosage.
-            // Le calcul repart donc de leur date de plantation.
-            //   - aubergine : plantée il y a 10 j, intervalle 3 -> en retard de 7 jours
-            //   - groseillier : planté il y a 3 j, intervalle 7 -> à jour
-            // C'est ce cas-là qui vérifie le repli sur PlantedDate.
+            // Aubergine (en retard de 7 j) et groseillier (à jour) n'ont aucun arrosage :
+            // l'échéance repart de la date de plantation.
         );
 
-        // --- Le journal ---
         db.Observations.AddRange(
             new Observation
             {

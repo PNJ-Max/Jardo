@@ -24,9 +24,6 @@ public class PlantsController : ControllerBase
     /// </summary>
     /// <param name="zoneId">Ne garder que les plantes de cette zone.</param>
     /// <param name="includeArchived">Inclure les plantes archivées (faux par défaut).</param>
-    // [FromQuery] est explicite alors qu'ASP.NET Core le déduirait tout seul pour des
-    // types simples. C'est écrit pour que la lecture du code suffise à savoir d'où vient
-    // la valeur, sans avoir à connaître les règles implicites de liaison de modèle.
     [HttpGet]
     [ProducesResponseType<List<PlantResponseDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PlantResponseDto>>> GetPlants(
@@ -77,12 +74,7 @@ public class PlantsController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Une plante archivée sort des calculs d'arrosage et de la liste par défaut, mais
-    /// conserve tout son historique. C'est le geste à préférer à la suppression en fin
-    /// de saison.
-    ///
-    /// Pourquoi POST et non PUT : ce n'est pas le remplacement d'une ressource, c'est
-    /// le déclenchement d'une action sur une ressource existante. PUT signifierait
-    /// « voici la nouvelle version complète de cette plante ».
+    /// conserve tout son historique.
     /// </remarks>
     [HttpPost("{id:int}/archive")]
     [ProducesResponseType<PlantResponseDto>(StatusCodes.Status200OK)]
@@ -103,8 +95,7 @@ public class PlantsController : ControllerBase
     /// Supprime définitivement une plante, avec ses arrosages et ses observations.
     /// </summary>
     /// <remarks>
-    /// À réserver aux erreurs de saisie. Pour une plante en fin de vie, utiliser
-    /// l'archivage, qui préserve l'historique de la saison.
+    /// À réserver aux erreurs de saisie ; pour une plante en fin de vie, utiliser l'archivage.
     /// </remarks>
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

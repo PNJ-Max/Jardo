@@ -39,11 +39,8 @@ public interface IPlantService
 
     /// <summary>
     /// Supprime définitivement une plante, ainsi que ses arrosages et observations.
+    /// Pour une plante en fin de vie, préférer <see cref="SetArchivedAsync"/>.
     /// </summary>
-    /// <remarks>
-    /// À réserver aux erreurs de saisie. Pour une plante en fin de vie, préférer
-    /// <see cref="SetArchivedAsync"/> qui préserve l'historique de la saison.
-    /// </remarks>
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);
 }
