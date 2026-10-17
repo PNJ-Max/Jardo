@@ -20,7 +20,10 @@ publiable un jour sur le Play Store.
 **Front `jardo-app` : premier jet fonctionnel, visuel à refaire.**
 - Expo SDK 57 (React Native + TypeScript), Expo Router, TanStack Query.
 - Tous les écrans du MVP existent et sont branchés sur l'API.
-- Pas de charte graphique, pas de tests.
+- Charte graphique arrêtée ([`docs/charte-graphique.md`](docs/charte-graphique.md)) : terre
+  cuite pour les actions, bleu eau pour « à arroser ». Restent pour la phase 2 : polices,
+  mode sombre, icône et splash.
+- Pas de tests.
 
 **Organisation** : une session Claude par tâche, sur sa propre branche, livrée par PR ;
 une conversation « QG » planifie, rédige les prompts et relit les PR.
@@ -32,7 +35,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 **Phase 1 : en parallèle**
 - A. Nettoyage professionnel de l'API (commentaires, README).
-- B. Charte graphique : 2-3 directions, choix, puis `docs/charte-graphique.md` et `theme.ts`.
+- B. Charte graphique : 2-3 directions, choix, puis `docs/charte-graphique.md` et `theme.ts`. Fait.
 
 **Phase 2 : refonte du front**
 - Application de la charte, composants, mode sombre, icône et splash, sélecteur de date,

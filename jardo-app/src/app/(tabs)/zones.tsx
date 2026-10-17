@@ -44,7 +44,7 @@ function ZoneRow({ zone }: { zone: Zone }) {
       {/* Le voyant de zone : le compteur calculé par l'API, sans charger les plantes. */}
       {needsWater ? (
         <View style={[styles.counter, { backgroundColor: wateringStyle.Overdue.color }]}>
-          <Ionicons name="water" size={14} color="#fff" />
+          <Ionicons name="water" size={14} color={colors.primaryText} />
           <Text style={styles.counterText}>{zone.plantsNeedingWater}</Text>
         </View>
       ) : (
@@ -67,5 +67,5 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
   },
-  counterText: { color: '#fff', fontWeight: '700' },
+  counterText: { color: colors.primaryText, fontWeight: '700' },
 });

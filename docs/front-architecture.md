@@ -34,7 +34,7 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Données serveur | **TanStack Query** | Cache, rechargement, états chargement/erreur, mises à jour optimistes |
 | Client API | `fetch` + types écrits à la main (`src/api/types.ts`) | `openapi-typescript` n'accepte pas encore TypeScript 6 |
 | Formulaires | `useState` + validation légère, erreurs de l'API sous les champs | Suffisant pour 3 formulaires |
-| Style | `StyleSheet` + `src/theme.ts` | Aucune dépendance ; la charte viendra plus tard |
+| Style | `StyleSheet` + `src/theme.ts` | Aucune dépendance ; jetons décrits dans la [charte graphique](charte-graphique.md) |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
 | Notifications (plus tard) | `expo-notifications` | Rappel d'arrosage local |
 

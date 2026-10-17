@@ -163,7 +163,7 @@ function Journal({ plantId }: { plantId: number }) {
             <Ionicons
               name={entry.kind === 'watering' ? 'water' : 'document-text-outline'}
               size={20}
-              color={entry.kind === 'watering' ? '#1E88E5' : colors.primary}
+              color={entry.kind === 'watering' ? colors.water : colors.primary}
             />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>

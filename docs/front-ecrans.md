@@ -56,11 +56,12 @@ Navigation : 3 onglets en bas (À arroser · Zones · Plantes), plus des écrans
 
 | `wateringStatus` | Couleur | Texte |
 |---|---|---|
-| `Ok` | vert | « Prochain arrosage le {date} » |
-| `DueSoon` | orange | « À arroser aujourd'hui » |
-| `Overdue` | rouge | « En retard de {daysOverdue} j » |
+| `Ok` | sauge foncée | « Prochain arrosage le {date} » |
+| `DueSoon` | bleu eau | « À arroser aujourd'hui » |
+| `Overdue` | brique | « En retard de {daysOverdue} j » |
 
 Ne pas se reposer sur la couleur seule : on ajoute toujours le texte ou une icône (accessibilité).
+Valeurs, icônes et contrastes : [charte graphique](charte-graphique.md#voyant-darrosage).
 
 ## Plus tard (hors MVP)
 

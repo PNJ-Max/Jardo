@@ -1,0 +1,103 @@
+# Charte graphique
+
+Les jetons de couleur, d'espacement et de rayon sont dans [`jardo-app/src/theme.ts`](../jardo-app/src/theme.ts).
+Aucun écran ne code de couleur en dur : tout passe par ce fichier.
+
+## Intention
+
+Un potager, de la terre, des pots en terre cuite. L'app doit être chaleureuse et calme,
+et se démarquer des applis de jardinage qui sont toutes vertes : le vert reste présent
+(sauge), mais l'accent est la terre cuite.
+
+## Palette d'origine
+
+Palette source (Color Hunt) :
+
+| Couleur | Valeur | Contraste sur crème |
+|---|---|---|
+| Terre cuite | `#DB9558` | 2,4:1 |
+| Crème | `#FCF9EA` | (fond) |
+| Sauge | `#97A87A` | 2,4:1 |
+| Sauge pâle | `#A8BBA3` | 1,9:1 |
+
+Aucune n'atteint 4,5:1 sur la crème. Ces couleurs sont donc réservées aux fonds, aux
+pastilles et aux illustrations, **jamais au texte ni aux icônes porteuses de sens**.
+Les couleurs de texte et d'action sont des teintes foncées tirées de cette palette.
+
+## Jetons du thème clair
+
+Contrastes calculés selon WCAG 2.1. Le seuil visé est 4,5:1 (AA, texte courant).
+
+| Jeton | Valeur | Rôle | Contraste |
+|---|---|---|---|
+| `background` | `#FCF9EA` | Fond des écrans (crème) | |
+| `card` | `#FFFFFF` | Fond des cartes | |
+| `border` | `#E7E2CC` | Bordures, séparateurs | |
+| `text` | `#2F3A28` | Texte principal | 11,3:1 sur crème, 12:1 sur blanc |
+| `textMuted` | `#6B7360` | Texte secondaire | 4,7:1 sur crème, 5:1 sur blanc |
+| `primary` | `#9E5B28` | Actions : boutons, liens, onglet actif | 5,3:1 avec blanc, 5:1 sur crème |
+| `primaryText` | `#FFFFFF` | Texte et icônes sur `primary`, `water`, `danger` | |
+| `terracotta` | `#DB9558` | Décor | |
+| `sage` | `#97A87A` | Décor | |
+| `sagePale` | `#A8BBA3` | Décor | |
+| `success` | `#4E6040` | Arrosage à jour | 6,5:1 sur crème, 5,7:1 sur `successTint` |
+| `successTint` | `#E6EDDD` | Fond de pastille « OK » | |
+| `water` | `#3F6B85` | À arroser aujourd'hui, actions d'arrosage | 5,7:1 avec blanc, 4,8:1 sur `waterTint` |
+| `waterTint` | `#E1ECF2` | Fond de pastille « Aujourd'hui » | |
+| `danger` | `#A33A2A` | En retard, erreurs, suppression | 6,6:1 avec blanc, 5,2:1 sur `dangerTint` |
+| `dangerTint` | `#F6E0DA` | Fond de pastille « En retard » | |
+
+## Voyant d'arrosage
+
+Le voyant combine **toujours** couleur, icône et texte : il doit rester lisible sans
+distinguer les couleurs.
+
+| `wateringStatus` | Couleur (texte / fond) | Icône Ionicons | Texte |
+|---|---|---|---|
+| `Ok` | `success` / `successTint` (sauge foncée) | `checkmark-circle-outline` | « Prochain : {date} » |
+| `DueSoon` | `water` / `waterTint` (bleu eau) | `water-outline` | « À arroser aujourd'hui » |
+| `Overdue` | `danger` / `dangerTint` (brique) | `warning-outline` | « En retard de {n} j » |
+
+## Typographie
+
+- Titres : **Fraunces** (serif chaleureuse).
+- Corps : **Inter**.
+- Chargées via `@expo-google-fonts` en phase 2 ; d'ici là, police système.
+
+| Usage | Taille |
+|---|---|
+| Titre | 22 |
+| Sous-titre | 17 |
+| Corps | 15 |
+| Légende | 13 |
+
+## Formes et espacements
+
+- Rayon des cartes, champs et boutons : 12.
+- Pastilles et boutons ronds : entièrement arrondis.
+- Espacements : 4 / 8 / 16 / 24 (`spacing.xs` à `spacing.lg`).
+
+## Icônes
+
+`@expo/vector-icons` (Ionicons), style contour (variantes `-outline`).
+
+## Mode sombre
+
+Valeurs arrêtées, câblage en phase 2. Contrastes mesurés sur le fond et sur la carte.
+
+| Rôle | Valeur | Contraste |
+|---|---|---|
+| Fond | `#1C211A` | |
+| Carte | `#262C23` | |
+| Texte | `#EEEADB` | 13,6:1 / 11,9:1 |
+| Texte secondaire | `#A9AE9C` | 7,2:1 / 6,3:1 |
+| Primaire | `#DB9558`, texte `#2A1A0E` | 6,8:1 |
+| Eau | `#7FB0CC` | 7:1 / 6,1:1 |
+| En retard | `#E8826F` | 6,1:1 / 5,4:1 |
+| OK | `#A8BBA3` | 8:1 / 7:1 |
+
+## À faire en phase 2
+
+- Icône de l'app et splash screen.
+- Chargement des polices Fraunces et Inter.
+- Câblage du mode sombre.
