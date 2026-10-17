@@ -112,8 +112,8 @@ SQL y passerait sans erreur pour échouer en production.
 
 ## Suite prévue
 
-1. **Front Angular en PWA** — installable sur l'écran d'accueil du téléphone, écrans
-   mobile-first, voyant coloré.
+1. **Front mobile Expo (React Native)** — app Android native, écrans mobile-first, voyant
+   coloré. Architecture, écrans et roadmap dans [`docs/`](docs/front-architecture.md).
 2. Stades de croissance (semé → planté → en fleur → récolté) et ajustement météo de
    l'arrosage via Open-Meteo.
 3. Photos sur les observations.

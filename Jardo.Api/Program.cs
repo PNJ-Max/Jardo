@@ -68,21 +68,24 @@ builder.Services.AddScoped<IObservationService, ObservationService>();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-// CORS : indispensable dès que le front Angular arrivera.
+// CORS : nécessaire pour le front Expo lancé en mode web (npm run web).
 //
-// Le navigateur interdit par défaut à une page servie par localhost:4200 d'appeler
+// Le navigateur interdit par défaut à une page servie par localhost:8081 d'appeler
 // une API sur localhost:5015 — ports différents, donc origines différentes. Ce
 // n'est pas un problème de l'API mais une protection du navigateur, et c'est à
 // l'API de déclarer explicitement qui a le droit de l'appeler.
 //
+// L'app installée sur téléphone n'est pas concernée : CORS n'existe que dans les
+// navigateurs. Cette politique ne sert donc qu'au développement.
+//
 // On nomme les origines autorisées plutôt que d'utiliser AllowAnyOrigin : une API
 // ouverte à tout le monde n'est acceptable que le temps d'une démonstration.
-const string AngularDevPolicy = "AngularDev";
+const string FrontDevPolicy = "FrontDev";
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(AngularDevPolicy, policy => policy
-        .WithOrigins("http://localhost:4200", "https://localhost:4200")
+    options.AddPolicy(FrontDevPolicy, policy => policy
+        .WithOrigins("http://localhost:8081")
         .AllowAnyHeader()
         .AllowAnyMethod());
 });
@@ -134,7 +137,7 @@ if (app.Environment.IsDevelopment())
         options.DocumentTitle = "Jardo API";
     });
 
-    app.UseCors(AngularDevPolicy);
+    app.UseCors(FrontDevPolicy);
 }
 
 // Volontairement ABSENTS de ce pipeline, et c'est une décision :
