@@ -91,6 +91,25 @@ Familles disponibles dans `theme.fonts` : `heading`, `body`, `bodyMedium`, `body
 
 `@expo/vector-icons` (Ionicons), style contour (variantes `-outline`).
 
+### Icône de l'app
+
+Une pousse de deux feuilles dans un pot en terre cuite, sur fond crème. Pas de texte :
+la silhouette doit rester lisible à 48 dp.
+
+| Élément | Couleur |
+|---|---|
+| Fond (icône adaptative, splash clair) | `#FCF9EA` crème |
+| Bord du pot | `#9E5B28` |
+| Corps du pot | `#DB9558` terre cuite |
+| Tige et grande feuille | `#4E6040` (`#A8BBA3` sur le splash sombre) |
+| Petite feuille | `#97A87A` sauge |
+| Fond du splash sombre | `#1C211A` |
+
+- Sources SVG dans [`jardo-app/assets/source/`](../jardo-app/assets/source/), avec la commande de régénération des PNG.
+- Le motif reste dans la zone de sécurité des icônes adaptatives (cercle de 66 dp sur le calque de 108 dp) :
+  aucun masque de lanceur ne le rogne.
+- L'icône monochrome (icônes thématiques Android 13+) reprend la silhouette, avec un jour entre le bord et le corps du pot.
+
 ## Mode sombre
 
 L'app suit le réglage du téléphone (`userInterfaceStyle: "automatic"`). Contrastes mesurés
