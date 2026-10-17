@@ -30,6 +30,10 @@ publiable un jour sur le Play Store.
 - Restent : refonte des écrans d'après les maquettes, sélecteur de date.
 - Pas de tests.
 
+**CI** : GitHub Actions (`.github/workflows/ci.yml`) sur chaque PR vers `main` et chaque push
+sur `main`. Job API (build + tests) et job front (lint + typecheck), lancés selon les fichiers
+modifiés ; un job ignoré est « skipped », la PR reste fusionnable.
+
 **Organisation** : une session Claude par tâche, sur sa propre branche, livrée par PR ;
 une conversation « QG » planifie, rédige les prompts et relit les PR.
 
@@ -47,7 +51,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   retrait des dépendances inutiles.
 
 **Phase 3 : qualité**
-- CI GitHub Actions, types du front générés depuis l'OpenAPI, tests du front.
+- Types du front générés depuis l'OpenAPI, tests du front.
 
 **Phase 4 : vers le Play Store**
 - Test sur téléphone (Expo Go), API hébergée en HTTPS + authentification, build EAS,

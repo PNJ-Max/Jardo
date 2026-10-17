@@ -1,5 +1,7 @@
 # Jardo
 
+[![CI](https://github.com/PNJ-Max/Jardo/actions/workflows/ci.yml/badge.svg)](https://github.com/PNJ-Max/Jardo/actions/workflows/ci.yml)
+
 Application de suivi de potager : zones, plantes, arrosages et journal d'observations.
 Une API ASP.NET Core et une app Android (Expo) qui la consomme.
 
