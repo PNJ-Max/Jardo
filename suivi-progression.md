@@ -21,8 +21,10 @@ publiable un jour sur le Play Store.
 - Expo SDK 57 (React Native + TypeScript), Expo Router, TanStack Query.
 - Tous les écrans du MVP existent et sont branchés sur l'API.
 - Charte graphique arrêtée ([`docs/charte-graphique.md`](docs/charte-graphique.md)) : terre
-  cuite pour les actions, bleu eau pour « à arroser ». Restent pour la phase 2 : polices,
-  mode sombre, icône et splash.
+  cuite pour les actions, bleu eau pour « à arroser ». Restent pour la phase 2 : polices
+  et mode sombre.
+- Icône et splash faits : pousse en pot sur fond crème, icône adaptative Android avec
+  version monochrome, splash clair et sombre, favicon. Sources SVG dans `jardo-app/assets/source/`.
 - Pas de tests.
 
 **Organisation** : une session Claude par tâche, sur sa propre branche, livrée par PR ;
