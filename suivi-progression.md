@@ -5,13 +5,20 @@ détail technique dans le [README](README.md) et dans [`docs/`](docs/front-archi
 
 ## Le projet
 
-App Android de suivi de potager (zones, plantes, arrosages, journal d'observations) :
-une API ASP.NET Core et une app Expo qui la consomme. Objectif : une vraie app,
-publiable un jour sur le Play Store.
+App Android de gestion du jardin (potager, verger, petits fruits, bois de chauffage…) :
+une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce que contient
+le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
+app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
 ## Où on en est (17/10/2026)
 
-**Backend `Jardo.Api` : MVP terminé.**
+**Vision produit arrêtée.** Jardo passe du suivi d'arrosage à la gestion du jardin :
+[`docs/vision-produit.md`](docs/vision-produit.md) et proposition de modèle
+[`docs/modele-domaine.md`](docs/modele-domaine.md) (jardin, espaces typés, zones, éléments,
+journal d'interventions, tâches). Le code suit encore l'ancien modèle. La refonte des écrans
+est suspendue jusqu'à la nouvelle API et aux maquettes revues.
+
+**Backend `Jardo.Api` : premier MVP (arrosage) terminé, à faire évoluer vers le nouveau modèle.**
 - ASP.NET Core (.NET 10) + EF Core + SQLite, tests dans `Jardo.Api.Tests`.
 - Zones, plantes, arrosages, journal ; voyant d'arrosage calculé côté API.
 - Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
@@ -27,7 +34,8 @@ publiable un jour sur le Play Store.
 - Fondations UI : thème clair / sombre qui suit le téléphone (`src/theme/`, `useTheme`,
   `createStyles`), polices Fraunces et Inter avec échelle typographique, composants de base
   découpés dans `src/components/ui/`, dépendances inutiles du template retirées.
-- Restent : refonte des écrans d'après les maquettes, sélecteur de date.
+- Maquettes des écrans actuels faites dans Claude Design, à revoir pour la nouvelle vision.
+- Restent : sélecteur de date, puis refonte des écrans sur le nouveau modèle.
 - Pas de tests.
 
 **CI** : GitHub Actions (`.github/workflows/ci.yml`) sur chaque PR vers `main` et chaque push
@@ -46,16 +54,34 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 - A. Nettoyage professionnel de l'API (commentaires, README).
 - B. Charte graphique : 2-3 directions, choix, puis `docs/charte-graphique.md` et `theme.ts`. Fait.
 
-**Phase 2 : refonte du front**
-- Application de la charte, composants, mode sombre, icône et splash, sélecteur de date,
-  retrait des dépendances inutiles.
+**Phase 2 : fondations du front**
+- Application de la charte, composants, mode sombre, icône et splash, retrait des
+  dépendances inutiles. Fait. Reste le sélecteur de date.
 
-**Phase 3 : qualité**
+**Phase 3 : vision et modèle du jardin**
+- Vision produit et proposition de modèle du domaine. Fait.
+- API, une PR par étape ([détail](docs/modele-domaine.md#stratégie-de-migration)) :
+  1. jardin, espaces typés, zones, plantes avec variété et quantité ;
+  2. journal d'interventions unifié ;
+  3. tâches récurrentes et calculateur d'échéance générique (l'arrosage en devient une) ;
+  4. tas de bois.
+
+**Phase 4 : écrans du nouveau MVP**
+- Maquettes revues pour la nouvelle vision.
+- Refonte des écrans : onglets Jardin (accueil) · Aujourd'hui · Journal, espaces, fiches,
+  formulaires avec sélecteur de date.
+
+**Phase 5 : qualité**
+- CI GitHub Actions. Fait.
 - Types du front générés depuis l'OpenAPI, tests du front.
 
-**Phase 4 : vers le Play Store**
+**Phase 6 : après le MVP**
+- Carte isométrique dans l'onglet Jardin (premier chantier), notifications, récoltes chiffrées, photos,
+  catalogue d'espèces, autres types d'espaces, météo, foyer partagé.
+
+**Phase 7 : vers le Play Store**
 - Test sur téléphone (Expo Go), API hébergée en HTTPS + authentification, build EAS,
-  notifications, photos, stades de croissance, météo, fiche Play Store.
+  fiche Play Store.
 
 ## À décider
 

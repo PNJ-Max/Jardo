@@ -1,7 +1,13 @@
 # Jardo
 
-App Android de suivi de potager : zones, plantes, arrosages, journal d'observations.
+App Android de gestion du jardin : potager, verger, petits fruits, bois de chauffage… On y
+organise ce que contient le jardin, on note ce qu'on y fait, et l'app rappelle ce qui est à
+faire. L'arrosage est le premier de ces rappels, pas le cœur de l'app.
 Objectif : une vraie app, publiable un jour sur le Play Store.
+
+Vision : [`docs/vision-produit.md`](docs/vision-produit.md). Modèle cible :
+[`docs/modele-domaine.md`](docs/modele-domaine.md). Le code implémente encore l'ancien modèle
+`Zone → Plant`, centré sur l'arrosage ; il migre par étapes.
 
 - `Jardo.Api/` : API ASP.NET Core (.NET 10), EF Core + SQLite. Tests dans `Jardo.Api.Tests/` (xUnit, SQLite en mémoire).
 - `jardo-app/` : front Expo (React Native + TypeScript), Expo Router, TanStack Query. Règles Expo dans `jardo-app/AGENTS.md`.
