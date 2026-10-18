@@ -13,9 +13,9 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 ## Où on en est (18/10/2026)
 
 **Étude de la carte du jardin validée** ([`docs/etude-carte-potager.md`](docs/etude-carte-potager.md),
-avec un prototype cliquable). Scène modèle « maison mitoyenne », espaces cliquables, pastilles
-de tâches, nuit en mode sombre ; rendu recommandé avec Skia, à confirmer par un essai sur
-téléphone. Données propres à la carte dans une table `GardenMapSlot`. Réalisation en phase 6,
+avec un prototype cliquable). Scène modèle « maison mitoyenne », espaces cliquables (serre
+comprise), ni liste ni voyant, nuit en mode sombre ; rendu recommandé avec Skia, à confirmer
+par un essai sur téléphone. Données propres à la carte dans une table `GardenMapSlot`. Réalisation en phase 6,
 en six étapes.
 
 **Vision produit arrêtée.** Jardo passe du suivi d'arrosage à la gestion du jardin :

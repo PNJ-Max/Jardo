@@ -14,10 +14,14 @@ village de Clash of Clans », mais sobre et conforme à la [charte](charte-graph
 espace typé du jardin y est dessiné à sa place : la maison, le verger, les petits fruits, le
 potager et ses carrés, la serre, le bois de chauffage.
 
-- Toucher un élément ouvre l'écran de l'espace, ou de la zone pour un carré ou la serre.
-- Une pastille signale les tâches dues de chaque espace.
+- Toucher un élément ouvre l'écran de l'espace, ou de la zone pour un carré du potager.
+- La carte ne porte ni liste ni voyant : les tâches dues, arrosage compris, vivent dans
+  l'onglet Aujourd'hui.
 - La carte se zoome et se déplace à deux doigts, passe à la nuit en mode sombre et s'anime
   discrètement.
+
+La carte n'est pas dans le MVP : l'onglet Jardin y est la liste des espaces. Juste après, la
+carte remplace cette liste dans le même onglet.
 
 ## Décisions
 
@@ -25,17 +29,19 @@ potager et ses carrés, la serre, le bois de chauffage.
 |---|---|
 | Construction du jardin | **Scène modèle.** Deux ou trois modèles de maison et de jardin, choisis à la configuration de l'app. Au départ, un seul : « maison mitoyenne, jardin en longueur ». Pas d'éditeur libre. |
 | Variantes | Certains emplacements se règlent à la configuration : potager de 1 à 4 carrés, serre ou non. |
-| Élément touché | Ouvre un **espace** (verger, petits fruits, potager, bois). Un carré ou la serre ouvre une **zone** du potager. Maison, terrasse, cabanon et clôture sont du décor. |
-| Zone sans emplacement | Listée dans une bande « Hors carte » sous la carte, et toujours accessible depuis son espace. |
-| Style | 2D axonométrique illustrée : une maquette posée sur un socle de terre, dans la palette de la charte. |
+| Élément touché | Ouvre un **espace** (verger, petits fruits, potager, serre, bois). Un carré du potager ouvre une **zone**. Maison, terrasse, cabanon et clôture sont du décor. |
+| Ce qui est dessiné | Les espaces, pas chaque sujet : « 3 pommiers » est un seul élément de quantité 3, et le Verger garde le même dessin. |
+| Espace ou zone sans emplacement | Listé dans une bande « Hors carte » sous la carte, et toujours accessible depuis l'onglet Jardin. |
+| Style | 2D axonométrique illustrée : une maquette posée sur un socle, dans la palette de la charte. |
+| Fond | Sobre : socle neutre, comme une maquette d'architecte, et fond gris neutre en mode sombre. Variante à affiner. |
 | Angle | **Dans l'axe du jardin** : rotation de 20°, plongée de 50°. Le jardin monte dans l'écran et remplit un téléphone tenu en portrait. |
 | Visuels | SVG dessinés sur mesure (voir [Source des visuels](#source-des-visuels)). |
-| Tâches | Une **pastille par espace** (par zone au zoom) : icône et nombre de tâches dues, brique s'il y a du retard, bleu eau sinon. Elle suit la règle du voyant : jamais la couleur seule. |
-| Étiquettes | Le nom des espaces est toujours affiché, celui des zones à partir d'un zoom de ×1,45. Les étiquettes sont aussi des cibles de toucher. |
+| Tâches | **Ni liste ni voyant** sur la carte (arbitrage du 18/10, validé par Maxime). Les tâches dues vivent dans l'onglet Aujourd'hui. |
+| Étiquettes | Le nom des espaces est toujours affiché, celui des carrés à partir d'un zoom de ×1,45. Les étiquettes sont aussi des cibles de toucher et de clavier. |
 | Zoom et déplacement | Pincer pour zoomer (×0,8 à ×5), glisser pour se déplacer, double-tap pour zoomer, bouton pour recentrer. |
 | Mode sombre | La scène passe à la nuit : fenêtres et lampes allumées, lucioles. |
 | Animations | Balancement léger des feuillages, rebond de l'élément touché, lucioles la nuit. Coupées si le téléphone demande de réduire les animations. |
-| Navigation | La carte est le contenu de l'onglet Jardin. Un bouton bascule vers la liste des espaces (l'écran Jardin du MVP), qui reste la voie accessible aux lecteurs d'écran. |
+| Navigation | Onglets Jardin · Aujourd'hui · Journal. La carte est le contenu de l'onglet Jardin, l'accueil. Un bouton de l'en-tête affiche la liste des espaces (l'écran Jardin du MVP), qui reste la voie accessible aux lecteurs d'écran. |
 | Saisons | Plus tard. |
 
 ## Options écartées
@@ -55,8 +61,10 @@ potager et ses carrés, la serre, le bois de chauffage.
   incertains selon l'outil.
 - **Une section « fruitiers » à part, un élément par arbre** : remplacée par les espaces typés
   de la vision. Le pommier est un élément de l'espace Verger, que la carte ouvre.
-- **Voyant d'arrosage par élément**, demandé par le premier brief : remplacé par la pastille de
-  tâches, l'arrosage n'étant plus qu'une tâche parmi d'autres.
+- **Pastilles de tâches dues sur la carte** : essayées dans le prototype, puis écartées par
+  l'arbitrage du 18/10. La carte sert à se repérer et à naviguer, l'onglet Aujourd'hui liste
+  les tâches. Le voyant d'arrosage par élément du premier brief tombe pour la même raison.
+- **Socle vert** (première version du prototype) : jugé trop lourd, remplacé par un socle neutre.
 
 ## Rendu : comparatif technique
 
@@ -115,8 +123,11 @@ la même clé. Modèle `terraced-long` (maison mitoyenne, jardin en longueur) :
 | `small-fruit` | Rang le long du mur droit | Un espace `SmallFruit` |
 | `vegetable` | Parcelle du fond | Un espace `VegetableGarden` |
 | `bed-1` à `bed-4` | Carrés en bois de la parcelle | Une zone d'un espace `VegetableGarden` |
-| `greenhouse` | Serre | Une zone d'un espace `VegetableGarden`, ou plus tard un espace « serre » |
+| `greenhouse` | Serre | Un espace `Greenhouse` |
 | `firewood` | Abri à bois | Un espace `Firewood` |
+
+`Greenhouse` est le cinquième type d'espace du MVP, ajouté par le QG le 18/10, en plus de
+ceux du modèle du domaine.
 
 ### Données stockées
 
@@ -139,20 +150,20 @@ table.
 - Migration `AddGardenMap` : la colonne et la table. `DbSeeder` affecte les emplacements du
   jardin d'exemple.
 - `GET /api/garden/map` : `{ layout, slots: [{ slotKey, spaceId, spaceName, spaceKind, zoneId,
-  zoneName, dueCount, overdueCount }] }`. Tout ce qu'il faut pour dessiner, en un appel. Les
-  compteurs viennent du calculateur d'échéance (étape 3 du modèle du domaine).
+  zoneName }] }`. Tout ce qu'il faut pour dessiner, en un appel ; les espaces sans emplacement
+  se lisent dans `GET` des espaces.
 - `PUT /api/garden/map` : remplace le modèle et les affectations en une transaction (réglages
   de la carte).
 - Plus tard, `POST /api/garden/map/setup` : l'assistant du premier lancement crée les espaces
   et les zones des emplacements choisis, puis les affecte, en une transaction.
 - Front : types dans `src/api/types.ts`, un hook `useGardenMap()` (TanStack Query).
 - Tests xUnit : clé inconnue, cible incompatible, zone d'un autre espace, emplacement déjà
-  pris, cascade, compteurs.
+  pris, cascade.
 
 ## Étapes livrables
 
 Prérequis : l'étape 1 du [modèle du domaine](modele-domaine.md#stratégie-de-migration) (jardin,
-espaces, zones), et les écrans du nouveau MVP. Les pastilles attendent l'étape 3 (tâches).
+espaces, zones, avec le type `Greenhouse`), et les écrans du nouveau MVP.
 
 | # | Étape | Côté | Contenu | Ordre de grandeur |
 |---|---|---|---|---|
@@ -160,7 +171,7 @@ espaces, zones), et les écrans du nouveau MVP. Les pastilles attendent l'étape
 | 2 | API de la carte | API | `Garden.MapLayout`, `GardenMapSlot`, catalogue, migration, seeder, `GET` et `PUT`, tests | 1 j |
 | 3 | Essai technique | Front | Skia et react-native-svg sur téléphone Android et dans le navigateur ; décision écrite | 0,5 à 1 j |
 | 4 | Carte v1 | Front | Rendu dans l'onglet Jardin, toucher vers espace ou zone, zoom et déplacement, étiquettes, « Hors carte », bascule vers la liste, nuit | 4 à 6 j |
-| 5 | Pastilles et animations | API et front | Compteurs de tâches dans `GET /api/garden/map`, pastilles, animations, réduction des animations | 1 à 2 j |
+| 5 | Animations | Front | Balancement des feuillages, rebond au toucher, lucioles la nuit, réduction des animations | 1 j |
 | 6 | Assistant de configuration | API et front | Choix du modèle et des variantes au premier lancement, `POST /api/garden/map/setup` | 2 à 3 j |
 
 Ordres de grandeur : jours de travail d'une session, relecture comprise, hors allers-retours de
@@ -174,26 +185,27 @@ d'espaces (serre, poulailler…) avec leurs emplacements et leurs dessins, un é
 [Carte du jardin Jardo](https://claude.ai/artifact/1UtTDmxnhgMPHBJpNL4gNS), page HTML autonome.
 
 - Le jardin d'exemple actuel de l'API, réparti dans les espaces du modèle du domaine : Potager
-  (Carré 1 et Serre), Verger (pommier), Petits fruits (framboisiers, groseillier). Le tas de bois
-  et les carrés 2 à 4 sont des exemples.
+  (Carré 1), Serre (concombre, aubergine), Verger (pommier), Petits fruits (framboisiers,
+  groseillier). Le tas de bois et les carrés 2 à 4 sont des exemples.
 - Toucher un élément affiche ce qu'il ouvrirait. Depuis le Potager, on descend dans ses zones.
-- Réglages : thème (jour et nuit), angle de vue, pastilles, nombre de carrés, serre, étiquettes,
-  animations.
+- Réglages : thème (jour et nuit), angle de vue, fond (sobre ou socle vert), nombre de carrés,
+  serre, étiquettes, animations.
 - La scène y est générée par programme à partir de volumes simples, pour changer l'angle et les
   variantes en direct. Ce n'est pas le code de l'app.
 
 ## Écarts avec le premier brief
 
 - **Accueil.** Le brief voulait une carte qui réponde à « qu'est-ce que j'arrose aujourd'hui ? ».
-  Avec la vision produit, elle montre où en est le jardin et où il y a du travail.
-- **Voyant d'arrosage** sur chaque élément : remplacé par une pastille de tâches par espace.
+  Avec la vision produit, elle montre le jardin et ses espaces ; les tâches du jour sont dans
+  l'onglet Aujourd'hui.
+- **Voyant d'arrosage** sur chaque élément : abandonné, la carte ne porte aucun voyant.
 - **Section « fruitiers »** : c'est l'espace Verger.
 
 ## Points ouverts
 
-- Couleur et icône de « à faire aujourd'hui » pour les tâches autres que l'arrosage, à trancher
-  avec les maquettes ([écrans](front-ecrans.md#voyant-déchéance--code-visuel)). La pastille les
-  reprendra ; le prototype utilise le bleu eau.
+- Fond de la scène : la variante sobre est à affiner avec Maxime (teinte du socle, fond en mode
+  sombre).
+- Type d'espace `Greenhouse` : à reporter dans le [modèle du domaine](modele-domaine.md).
 - Poids réel de Skia dans l'APK et de CanvasKit sur le web : à mesurer à l'étape 3.
 - La carte n'est pas à l'échelle du vrai jardin, conformément à la vision (« pas de plan au
   centimètre »).
