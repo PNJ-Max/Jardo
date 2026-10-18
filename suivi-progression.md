@@ -21,10 +21,12 @@ suspendue jusqu'à la nouvelle API et aux maquettes revues.
 **Backend `Jardo.Api` : migration vers le nouveau modèle, étape 1 sur 4 faite.**
 - ASP.NET Core (.NET 10) + EF Core + SQLite, tests dans `Jardo.Api.Tests`.
 - Étape 1, jardin et espaces : un jardin unique (créé par la migration), des espaces typés
-  (potager, verger, petits fruits, bois de chauffage) archivables, des zones rattachées à un
+  (potager, verger, petits fruits, serre, bois de chauffage) archivables, des zones rattachées à un
   espace, et `Plant` devenue sous-type de `GardenItem` (TPH) avec variété, quantité et unité,
-  dates de semis et de plantation. Règles : zone du même espace que l'élément, pas de plante
-  dans un espace bois de chauffage, noms uniques (espace dans le jardin, zone dans l'espace).
+  dates de semis et de plantation ; une plante est un sujet seul ou un groupe de sujets
+  identiques (« 3 pommiers Golden »). Règles : zone du même espace que l'élément, pas de plante
+  dans un espace bois de chauffage, quantité positive et entière en pieds, noms uniques
+  (espace dans le jardin, zone dans l'espace).
   Endpoints `/api/garden`, `/api/spaces`, `/api/spaces/{id}/zones`, `/api/zones/{id}`,
   `/api/plants?spaceId=&zoneId=`. Le seeder crée un jardin d'exemple complet.
 - Arrosages, observations et voyant d'arrosage inchangés, en attendant le journal (étape 2)

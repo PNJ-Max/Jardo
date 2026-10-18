@@ -32,7 +32,7 @@ Accept: application/json
 GET {{host}}/api/spaces/1
 Accept: application/json
 
-### Creer un espace -- kind : VegetableGarden, Orchard, SmallFruit, Firewood
+### Creer un espace -- kind : VegetableGarden, Orchard, SmallFruit, Firewood, Greenhouse
 POST {{host}}/api/spaces
 Content-Type: application/json
 
@@ -157,6 +157,36 @@ Content-Type: application/json
   "spaceId": 2
 }
 
+### Creer un groupe d'arbres identiques suivis ensemble : une seule plante de quantite 3
+POST {{host}}/api/plants
+Content-Type: application/json
+
+{
+  "name": "Cognassiers",
+  "species": "Cydonia oblonga",
+  "variety": "Champion",
+  "quantity": 3,
+  "quantityUnit": "Plants",
+  "wateringIntervalDays": 14,
+  "spaceId": 2
+}
+
+### Creer un semis sur la tablette de la serre (zone 7)
+POST {{host}}/api/plants
+Content-Type: application/json
+
+{
+  "name": "Tomates de semis",
+  "species": "Solanum lycopersicum",
+  "variety": "Saint-Pierre",
+  "quantity": 24,
+  "quantityUnit": "Plants",
+  "sownDate": "2026-03-15",
+  "wateringIntervalDays": 1,
+  "spaceId": 5,
+  "zoneId": 7
+}
+
 ### Modifier une plante -- changer spaceId / zoneId la deplace
 PUT {{host}}/api/plants/1
 Content-Type: application/json
@@ -271,7 +301,7 @@ Content-Type: application/json
 
 {
   "name": "Concombre",
-  "spaceId": 5
+  "spaceId": 6
 }
 
 ### 400 : un potager qui contient des plantes ne peut pas devenir bois de chauffage
@@ -317,6 +347,17 @@ Content-Type: application/json
 
 {
   "name": "   "
+}
+
+### 400 : un nombre de pieds est entier (2,5 m2 ou 1,5 rang sont acceptes)
+POST {{host}}/api/plants
+Content-Type: application/json
+
+{
+  "name": "Fraisiers",
+  "quantity": 2.5,
+  "quantityUnit": "Plants",
+  "spaceId": 3
 }
 
 ### 400 : intervalle d'arrosage hors bornes (Range 1-365)

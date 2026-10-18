@@ -36,8 +36,8 @@ propriétaire et les membres se rattacheront au jardin).
 Appartient à un jardin. Nom, description, `Kind`, archivage.
 
 `Kind` au MVP : `VegetableGarden` (potager), `Orchard` (verger), `SmallFruit` (petits fruits),
-`Firewood` (bois de chauffage). Plus tard : serre, aromatiques, massifs, pelouse, compost,
-poulailler… Le type décide des éléments qu'on peut y ajouter (pas de culture dans un espace
+`Greenhouse` (serre, découpée si besoin en tablettes ou bacs), `Firewood` (bois de chauffage).
+Plus tard : aromatiques, massifs, pelouse, compost, poulailler… Le type décide des éléments qu'on peut y ajouter (pas de culture dans un espace
 bois), des types d'intervention et de tâche proposés, et de l'icône.
 
 Les données de la carte isométrique (position, emprise, type visuel) relèvent de l'étude qui
@@ -59,10 +59,13 @@ Héritage **TPH** (une table, une colonne discriminante) : le journal et les tâ
 pointer vers une seule table, et SQLite s'en accommode sans jointure. Deux types au MVP :
 
 - **Plant** : culture, arbre ou arbuste. Espèce et variété en texte libre, quantité et unité
-  (pieds, rangs, m² ; 1 pour un arbre), date de semis, date de plantation. Une culture de
-  potager est archivée en fin de saison : l'historique par carré reste consultable. Un arbre
-  fruitier est une `Plant` de quantité 1 dans un verger ; le comportement propre au verger
-  vient du type d'espace, pas d'une entité à part.
+  (pieds, rangs, m²), date de semis, date de plantation. Une `Plant` est un sujet seul ou un
+  groupe de sujets identiques suivis ensemble, au choix de l'utilisateur, quel que soit le type
+  d'espace : « 3 pommiers Golden » est une `Plant` de quantité 3 pieds, « 1 ligne de carottes »
+  une `Plant` de quantité 1 rang, et le pommier qu'on veut suivre seul une `Plant` de quantité
+  1. La quantité est strictement positive ; en pieds, elle est entière. Une culture de potager
+  est archivée en fin de saison : l'historique par carré reste consultable. Le comportement
+  propre au verger vient du type d'espace, pas d'une entité à part.
 - **WoodPile** (tas de bois) : essence, volume initial en stères, longueur des bûches, date de
   coupe, durée de séchage en mois. Calculés à la lecture, jamais stockés : le **stock
   restant** (volume initial − consommations notées au journal) et l'**état de séchage**

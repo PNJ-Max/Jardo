@@ -18,7 +18,7 @@ public class SaveSpaceDto
 
     // Nullable pour qu'un type absent soit refusé au lieu de valoir VegetableGarden ;
     // EnumDataType refuse les valeurs numériques hors énumération.
-    /// <summary>VegetableGarden, Orchard, SmallFruit ou Firewood.</summary>
+    /// <summary>VegetableGarden, Orchard, SmallFruit, Firewood ou Greenhouse.</summary>
     [Required]
     [EnumDataType(typeof(SpaceKind))]
     public SpaceKind? Kind { get; set; }

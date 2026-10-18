@@ -130,6 +130,13 @@ public class PlantService : IPlantService
 
     private static void Apply(SavePlantDto dto, Plant plant)
     {
+        if (!dto.QuantityUnit.Accepts(dto.Quantity))
+        {
+            throw new BusinessRuleException(
+                $"La quantité {dto.Quantity} ne convient pas : elle doit être positive, " +
+                "et un nombre de pieds est entier.");
+        }
+
         plant.Name = Text.Required(dto.Name, "Nom");
         plant.Species = Text.Optional(dto.Species);
         plant.Variety = Text.Optional(dto.Variety);

@@ -97,6 +97,7 @@ public class PlantServiceTests : IDisposable
     [InlineData(SpaceKind.VegetableGarden)]
     [InlineData(SpaceKind.Orchard)]
     [InlineData(SpaceKind.SmallFruit)]
+    [InlineData(SpaceKind.Greenhouse)]
     public async Task Les_autres_types_despace_accueillent_des_plantes(SpaceKind kind)
     {
         var space = await _database.Context.AddSpaceAsync("Espace", kind);
@@ -104,6 +105,46 @@ public class PlantServiceTests : IDisposable
         var plant = await _service.CreateAsync(NewPlant(space.Id));
 
         Assert.Equal(space.Id, plant.SpaceId);
+    }
+
+    [Fact]
+    public async Task Un_groupe_darbres_identiques_est_une_seule_plante()
+    {
+        var verger = await _database.Context.AddSpaceAsync("Verger", SpaceKind.Orchard);
+        var dto = NewPlant(verger.Id);
+        dto.Name = "Pommiers";
+        dto.Quantity = 3;
+        dto.QuantityUnit = QuantityUnit.Plants;
+
+        var plant = await _service.CreateAsync(dto);
+
+        Assert.Equal(3, plant.Quantity);
+    }
+
+    [Fact]
+    public async Task Un_nombre_de_pieds_non_entier_est_refuse()
+    {
+        var potager = await _database.Context.AddSpaceAsync("Potager");
+        var dto = NewPlant(potager.Id);
+        dto.Quantity = 2.5;
+        dto.QuantityUnit = QuantityUnit.Plants;
+
+        await Assert.ThrowsAsync<BusinessRuleException>(() => _service.CreateAsync(dto));
+    }
+
+    [Theory]
+    [InlineData(QuantityUnit.Rows)]
+    [InlineData(QuantityUnit.SquareMeters)]
+    public async Task Une_quantite_fractionnaire_est_acceptee_en_rangs_ou_en_m2(QuantityUnit unit)
+    {
+        var potager = await _database.Context.AddSpaceAsync("Potager");
+        var dto = NewPlant(potager.Id);
+        dto.Quantity = 1.5;
+        dto.QuantityUnit = unit;
+
+        var plant = await _service.CreateAsync(dto);
+
+        Assert.Equal(1.5, plant.Quantity);
     }
 
     [Fact]

@@ -8,7 +8,8 @@ public enum SpaceKind
     VegetableGarden = 0,
     Orchard = 1,
     SmallFruit = 2,
-    Firewood = 3
+    Firewood = 3,
+    Greenhouse = 4
 }
 
 public static class SpaceKindExtensions
@@ -22,6 +23,7 @@ public static class SpaceKindExtensions
         SpaceKind.Orchard => "verger",
         SpaceKind.SmallFruit => "petits fruits",
         SpaceKind.Firewood => "bois de chauffage",
+        SpaceKind.Greenhouse => "serre",
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
     };
 }

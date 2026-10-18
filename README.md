@@ -8,7 +8,7 @@ faire. Une API ASP.NET Core et une app Android (Expo) qui la consomme.
 
 La [vision produit](docs/vision-produit.md) et le [modèle du domaine](docs/modele-domaine.md)
 décrivent la cible. L'API en est à la première étape de la migration : un jardin, ses espaces
-typés (potager, verger, petits fruits, bois de chauffage), leurs zones et leurs plantes, plus un
+typés (potager, verger, petits fruits, serre, bois de chauffage), leurs zones et leurs plantes, plus un
 journal d'observations et un premier service, le rappel d'arrosage.
 
 ## Premier service : le voyant d'arrosage

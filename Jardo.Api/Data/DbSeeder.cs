@@ -6,7 +6,7 @@ namespace Jardo.Api.Data;
 
 /// <summary>
 /// Remplit la base avec un jardin d'exemple : un potager en carrés, un verger, des petits fruits
-/// par rang et un espace bois de chauffage, encore vide. Les dates sont relatives à aujourd'hui
+/// par rang, une serre et un espace bois de chauffage, encore vide. Les dates sont relatives à aujourd'hui
 /// pour qu'il y ait toujours des plantes en retard d'arrosage.
 /// </summary>
 public static class DbSeeder
@@ -45,7 +45,9 @@ public static class DbSeeder
             "Le long de la clôture est, deux rangs palissés.");
         var bois = NewSpace("Bois de chauffage", SpaceKind.Firewood,
             "Abri ouvert contre le mur nord du garage.");
-        var serre = NewSpace("Serre tunnel", SpaceKind.VegetableGarden,
+        var serre = NewSpace("Serre", SpaceKind.Greenhouse,
+            "Serre en polycarbonate de 12 m², contre le garage.");
+        var tunnel = NewSpace("Serre tunnel", SpaceKind.Greenhouse,
             "Bâche déchirée par la grêle de juin, démontée.", isArchived: true);
 
         Zone NewZone(Space space, string name, string? description = null)
@@ -57,9 +59,11 @@ public static class DbSeeder
         var carre4 = NewZone(potager, "Carré 4", "Feuilles et poireaux.");
         var rang1 = NewZone(petitsFruits, "Rang 1", "Framboisiers.");
         var rang2 = NewZone(petitsFruits, "Rang 2", "Groseilliers et cassissiers.");
+        var tablette = NewZone(serre, "Tablette", "Semis et jeunes plants.");
+        var bac = NewZone(serre, "Bac de pleine terre");
 
-        db.Spaces.AddRange(potager, verger, petitsFruits, bois, serre);
-        db.Zones.AddRange(carre1, carre2, carre3, carre4, rang1, rang2);
+        db.Spaces.AddRange(potager, verger, petitsFruits, bois, serre, tunnel);
+        db.Zones.AddRange(carre1, carre2, carre3, carre4, rang1, rang2, tablette, bac);
 
         // Enregistrements par étape : en un seul SaveChanges, EF Core réordonne les insertions et
         // les identifiants ne suivent plus l'ordre du code, dont dépend Jardo.Api.http.
@@ -108,8 +112,9 @@ public static class DbSeeder
         var rhubarbe = NewPlant(potager, null, "Rhubarbe", "Rheum rhabarbarum", null,
             1, QuantityUnit.Plants, 7, null, 900);
 
-        var pommier = NewPlant(verger, null, "Pommier", "Malus domestica", "Reine des reinettes",
-            1, QuantityUnit.Plants, 14, null, 1200);
+        // Trois arbres identiques suivis ensemble ; les autres arbres du verger sont suivis seuls.
+        var pommiers = NewPlant(verger, null, "Pommiers", "Malus domestica", "Golden",
+            3, QuantityUnit.Plants, 14, null, 1200);
         var poirier = NewPlant(verger, null, "Poirier", "Pyrus communis", "Conférence",
             1, QuantityUnit.Plants, 14, null, 1100);
         var cerisier = NewPlant(verger, null, "Cerisier", "Prunus avium", "Burlat",
@@ -124,13 +129,21 @@ public static class DbSeeder
         var cassissiers = NewPlant(petitsFruits, rang2, "Cassissiers", "Ribes nigrum", "Noir de Bourgogne",
             2, QuantityUnit.Plants, 7, null, 600);
 
+        var piments = NewPlant(serre, tablette, "Piments", "Capsicum annuum", "Espelette",
+            12, QuantityUnit.Plants, 1, 15, null);
+        var concombres = NewPlant(serre, bac, "Concombres", "Cucumis sativus", "Marketmore",
+            3, QuantityUnit.Plants, 2, null, 35);
+        var aubergines = NewPlant(serre, bac, "Aubergines", "Solanum melongena", "Violette de Barbentane",
+            2, QuantityUnit.Plants, 3, null, 10);
+
         // Culture finie : archivée, elle reste dans l'historique du carré 2.
         radis.IsArchived = true;
 
         db.Plants.AddRange(
             tomates, basilic, carottes, radis, courgettes, laitues, poireaux, rhubarbe,
-            pommier, poirier, cerisier, prunier,
-            framboisiers, groseilliers, cassissiers);
+            pommiers, poirier, cerisier, prunier,
+            framboisiers, groseilliers, cassissiers,
+            piments, concombres, aubergines);
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -148,15 +161,17 @@ public static class DbSeeder
             Watering(laitues, 1),                      // + 1 j  -> échéance aujourd'hui
             Watering(poireaux, 2),                     // + 4 j  -> à jour
             Watering(rhubarbe, 3),                     // + 7 j  -> à jour
-            Watering(pommier, 20, "Arrosage de reprise après la sécheresse."),
+            Watering(pommiers, 20, "Arrosage de reprise après la sécheresse."),
                                                        // + 14 j -> en retard de 6 jours
             Watering(poirier, 10),                     // + 14 j -> à jour
             Watering(cerisier, 14),                    // + 14 j -> échéance aujourd'hui
             Watering(framboisiers, 2),                 // + 7 j  -> à jour
-            Watering(cassissiers, 9)                   // + 7 j  -> en retard de 2 jours
+            Watering(cassissiers, 9),                  // + 7 j  -> en retard de 2 jours
+            Watering(piments, 1),                      // + 1 j  -> échéance aujourd'hui
+            Watering(concombres, 1)                    // + 2 j  -> à jour
 
-            // Prunier (à jour) et groseilliers (à jour) n'ont aucun arrosage :
-            // l'échéance repart de la date de plantation.
+            // Prunier (à jour), groseilliers (à jour) et aubergines (en retard de 7 jours)
+            // n'ont aucun arrosage : l'échéance repart de la date de plantation.
         );
 
         db.Observations.AddRange(
@@ -184,7 +199,7 @@ public static class DbSeeder
             },
             new Observation
             {
-                Plant = pommier,
+                Plant = pommiers,
                 ObservedAt = Ago(15),
                 Note = "Belle charge cette année, quelques fruits éclaircis."
             },
