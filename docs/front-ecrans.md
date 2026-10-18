@@ -7,16 +7,19 @@ et le détail visuel par les maquettes revues.
 > Le code actuel implémente encore la version précédente, centrée sur l'arrosage : onglets
 > À arroser · Zones · Plantes. Il sera refait sur ce document.
 
-Question centrale de l'app : **« qu'est-ce qu'il y a à faire au jardin ? »** Le premier écran
-y répond sans aucune navigation.
+Navigation : 3 onglets en bas (**Jardin** · **Aujourd'hui** · **Journal**), plus des écrans de
+détail. L'accueil est **Jardin** : on ouvre l'app sur son jardin, pas sur une liste de corvées.
 
-Navigation : 3 onglets en bas (**Aujourd'hui** · **Jardin** · **Journal**), plus des écrans de
-détail.
+Juste après le MVP, la carte isométrique du jardin remplace la liste des espaces dans l'onglet
+Jardin : chaque espace y est dessiné, et le toucher ouvre l'espace. La carte ne porte ni liste
+ni voyant ; les tâches restent dans Aujourd'hui. Son rendu fait l'objet d'une étude séparée.
 
-Après le MVP, la carte isométrique du jardin devient l'accueil : chaque espace y est dessiné,
-avec ses tâches dues en pastille. Son rendu fait l'objet d'une étude séparée.
+## 1. Jardin (onglet d'accueil)
 
-## 1. Aujourd'hui (onglet d'accueil)
+- Liste des espaces, avec leur type (icône) et le nombre de tâches dues.
+- Bouton « + » pour créer un espace, en choisissant son type.
+
+## 2. Aujourd'hui
 
 - Tâches dues aujourd'hui ou en retard, tous espaces et toutes catégories, les plus en retard
   d'abord ; puis « cette semaine ».
@@ -26,10 +29,6 @@ avec ses tâches dues en pastille. Son rendu fait l'objet d'une étude séparée
 - Tirer vers le bas pour rafraîchir.
 - **État vide :** « Rien à faire aujourd'hui 🌱 », c'est le résultat qu'on veut voir.
 
-## 2. Jardin
-
-- Liste des espaces, avec leur type (icône) et le nombre de tâches dues.
-- Bouton « + » pour créer un espace, en choisissant son type.
 
 ## 3. Espace
 
@@ -94,5 +93,5 @@ Valeurs, icônes et contrastes : [charte graphique](charte-graphique.md#voyant-d
 
 ## Plus tard (hors MVP)
 
-Carte isométrique en accueil, notifications des tâches dues, récoltes chiffrées et bilans,
+Carte isométrique dans l'onglet Jardin, notifications des tâches dues, récoltes chiffrées et bilans,
 photos sur le journal, catalogue d'espèces, météo.

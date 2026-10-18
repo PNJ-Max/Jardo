@@ -68,14 +68,15 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 **Phase 4 : écrans du nouveau MVP**
 - Maquettes revues pour la nouvelle vision.
-- Refonte des écrans : accueil « Aujourd'hui au jardin », espaces, fiches, journal.
+- Refonte des écrans : onglets Jardin (accueil) · Aujourd'hui · Journal, espaces, fiches,
+  formulaires avec sélecteur de date.
 
 **Phase 5 : qualité**
 - CI GitHub Actions. Fait.
 - Types du front générés depuis l'OpenAPI, tests du front.
 
 **Phase 6 : après le MVP**
-- Carte isométrique du jardin comme accueil, notifications, récoltes chiffrées, photos,
+- Carte isométrique dans l'onglet Jardin (premier chantier), notifications, récoltes chiffrées, photos,
   catalogue d'espèces, autres types d'espaces, météo, foyer partagé.
 
 **Phase 7 : vers le Play Store**

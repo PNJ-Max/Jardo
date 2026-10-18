@@ -68,11 +68,13 @@ d'espèces avec périodes de semis et tâches de saison suggérées, rotation de
 
 ## Accueil et carte
 
-Au MVP, l'accueil est **« Aujourd'hui au jardin »** : les tâches dues, toutes catégories, et
-un accès aux espaces.
+L'accueil est l'onglet **Jardin** : la vue d'ensemble de ce que contient le jardin. Au MVP,
+c'est la liste des espaces. Les tâches dues, toutes catégories, ont leur propre onglet
+**Aujourd'hui**.
 
-L'accueil envisagé ensuite est une **carte isométrique du jardin**, un « village vu d'en
-haut » où chaque espace est dessiné à sa place. Une étude séparée en définit le rendu et les
+Juste après le MVP, la liste des espaces laisse la place à une **carte isométrique du
+jardin**, un « village vu d'en haut » où chaque espace est dessiné à sa place. La carte montre
+le jardin, pas les tâches : ni liste ni voyant dessus. Une étude séparée en définit le rendu et les
 données propres (position, emprise, type visuel). La structure métier décrite ici n'en dépend
 pas.
 
@@ -83,13 +85,13 @@ pas.
 - Cultures, arbres et arbustes (saisie libre), tas de bois.
 - Journal d'interventions unifié.
 - Tâches récurrentes ou ponctuelles, avec voyant d'échéance ; l'arrosage en est un cas.
-- Accueil « Aujourd'hui au jardin », navigation par espaces, journal du jardin.
+- Navigation Jardin (accueil, liste des espaces) · Aujourd'hui (tâches dues) · Journal.
 
 ## Étapes suivantes
 
 Dans l'ordre envisagé, à re-prioriser au fil de l'eau :
 
-1. Carte isométrique comme accueil.
+1. Carte isométrique dans l'onglet Jardin, à la place de la liste des espaces.
 2. Notifications locales des tâches dues.
 3. Récoltes chiffrées, bilans par saison et par culture ; photos sur le journal.
 4. Catalogue d'espèces : périodes de semis, intervalles par défaut, tâches de saison
