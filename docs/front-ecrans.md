@@ -11,8 +11,9 @@ Navigation : 3 onglets en bas (**Jardin** · **Aujourd'hui** · **Journal**), pl
 détail. L'accueil est **Jardin** : on ouvre l'app sur son jardin, pas sur une liste de corvées.
 
 Juste après le MVP, la carte isométrique du jardin remplace la liste des espaces dans l'onglet
-Jardin : chaque espace y est dessiné, et le toucher ouvre l'espace. La carte ne porte ni liste
-ni voyant ; les tâches restent dans Aujourd'hui. Son rendu fait l'objet d'une étude séparée.
+Jardin : chaque espace y est dessiné, et le toucher ouvre l'espace. Une pastille par espace
+signale ses tâches dues ; la liste des espaces reste accessible par un bouton. Détail dans
+l'[étude de la carte](etude-carte-potager.md).
 
 ## 1. Jardin (onglet d'accueil)
 

@@ -10,7 +10,13 @@ une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce q
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (17/10/2026)
+## Où on en est (18/10/2026)
+
+**Étude de la carte du jardin validée** ([`docs/etude-carte-potager.md`](docs/etude-carte-potager.md),
+avec un prototype cliquable). Scène modèle « maison mitoyenne », espaces cliquables, pastilles
+de tâches, nuit en mode sombre ; rendu recommandé avec Skia, à confirmer par un essai sur
+téléphone. Données propres à la carte dans une table `GardenMapSlot`. Réalisation en phase 6,
+en six étapes.
 
 **Vision produit arrêtée.** Jardo passe du suivi d'arrosage à la gestion du jardin :
 [`docs/vision-produit.md`](docs/vision-produit.md) et proposition de modèle
@@ -76,7 +82,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 - Types du front générés depuis l'OpenAPI, tests du front.
 
 **Phase 6 : après le MVP**
-- Carte isométrique dans l'onglet Jardin (premier chantier), notifications, récoltes chiffrées, photos,
+- Carte isométrique dans l'onglet Jardin (premier chantier, [étapes](docs/etude-carte-potager.md#étapes-livrables)),
+  notifications, récoltes chiffrées, photos,
   catalogue d'espèces, autres types d'espaces, météo, foyer partagé.
 
 **Phase 7 : vers le Play Store**
