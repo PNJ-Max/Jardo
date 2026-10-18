@@ -10,17 +10,27 @@ une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce q
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (17/10/2026)
+## Où on en est (18/10/2026)
 
 **Vision produit arrêtée.** Jardo passe du suivi d'arrosage à la gestion du jardin :
 [`docs/vision-produit.md`](docs/vision-produit.md) et proposition de modèle
 [`docs/modele-domaine.md`](docs/modele-domaine.md) (jardin, espaces typés, zones, éléments,
-journal d'interventions, tâches). Le code suit encore l'ancien modèle. La refonte des écrans
-est suspendue jusqu'à la nouvelle API et aux maquettes revues.
+journal d'interventions, tâches). L'API y migre par étapes. La refonte des écrans est
+suspendue jusqu'à la nouvelle API et aux maquettes revues.
 
-**Backend `Jardo.Api` : premier MVP (arrosage) terminé, à faire évoluer vers le nouveau modèle.**
+**Backend `Jardo.Api` : migration vers le nouveau modèle, étape 1 sur 4 faite.**
 - ASP.NET Core (.NET 10) + EF Core + SQLite, tests dans `Jardo.Api.Tests`.
-- Zones, plantes, arrosages, journal ; voyant d'arrosage calculé côté API.
+- Étape 1, jardin et espaces : un jardin unique (créé par la migration), des espaces typés
+  (potager, verger, petits fruits, bois de chauffage) archivables, des zones rattachées à un
+  espace, et `Plant` devenue sous-type de `GardenItem` (TPH) avec variété, quantité et unité,
+  dates de semis et de plantation. Règles : zone du même espace que l'élément, pas de plante
+  dans un espace bois de chauffage, noms uniques (espace dans le jardin, zone dans l'espace).
+  Endpoints `/api/garden`, `/api/spaces`, `/api/spaces/{id}/zones`, `/api/zones/{id}`,
+  `/api/plants?spaceId=&zoneId=`. Le seeder crée un jardin d'exemple complet.
+- Arrosages, observations et voyant d'arrosage inchangés, en attendant le journal (étape 2)
+  et les tâches (étape 3).
+- Le front actuel ne suit plus l'API (zones sans espace, `CreatePlantDto` disparu) : il sera
+  refait sur le nouveau modèle.
 - Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
   évidente. README recentré sur le produit.
 
@@ -61,7 +71,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 **Phase 3 : vision et modèle du jardin**
 - Vision produit et proposition de modèle du domaine. Fait.
 - API, une PR par étape ([détail](docs/modele-domaine.md#stratégie-de-migration)) :
-  1. jardin, espaces typés, zones, plantes avec variété et quantité ;
+  1. jardin, espaces typés, zones, plantes avec variété et quantité. Fait ;
   2. journal d'interventions unifié ;
   3. tâches récurrentes et calculateur d'échéance générique (l'arrosage en devient une) ;
   4. tas de bois.

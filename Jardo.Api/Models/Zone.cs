@@ -1,11 +1,15 @@
 namespace Jardo.Api.Models;
 
 /// <summary>
-/// Une zone du potager : un carré, une plate-bande, une serre…
+/// Subdivision facultative d'un espace : un carré, une planche, un rang.
 /// </summary>
 public class Zone
 {
     public int Id { get; set; }
+
+    public int SpaceId { get; set; }
+
+    public Space Space { get; set; } = null!;
 
     public string Name { get; set; } = string.Empty;
 
@@ -13,5 +17,5 @@ public class Zone
 
     public DateTimeOffset CreatedAt { get; set; }
 
-    public ICollection<Plant> Plants { get; set; } = new List<Plant>();
+    public ICollection<GardenItem> Items { get; set; } = new List<GardenItem>();
 }

@@ -19,6 +19,7 @@ public class PlantService : IPlantService
     }
 
     public async Task<List<PlantResponseDto>> GetAllAsync(
+        int? spaceId = null,
         int? zoneId = null,
         bool includeArchived = false,
         CancellationToken cancellationToken = default)
@@ -27,6 +28,11 @@ public class PlantService : IPlantService
 
         var query = _db.Plants.AsNoTracking().AsQueryable();
 
+        if (spaceId.HasValue)
+        {
+            query = query.Where(plant => plant.SpaceId == spaceId.Value);
+        }
+
         if (zoneId.HasValue)
         {
             query = query.Where(plant => plant.ZoneId == zoneId.Value);
@@ -34,11 +40,12 @@ public class PlantService : IPlantService
 
         if (!includeArchived)
         {
-            query = query.Where(plant => !plant.IsArchived);
+            query = query.Where(plant => !plant.IsArchived && !plant.Space.IsArchived);
         }
 
         var rows = await query
-            .OrderBy(plant => plant.Zone.Name)
+            .OrderBy(plant => plant.Space.Name)
+            .ThenBy(plant => plant.Zone!.Name)
             .ThenBy(plant => plant.Name)
             .SelectWithWatering()
             .ToListAsync(cancellationToken);
@@ -60,44 +67,39 @@ public class PlantService : IPlantService
         return row.ToDto(today);
     }
 
-    public async Task<PlantResponseDto> CreateAsync(CreatePlantDto dto, CancellationToken cancellationToken = default)
+    public async Task<PlantResponseDto> CreateAsync(SavePlantDto dto, CancellationToken cancellationToken = default)
     {
-        var zoneName = await GetZoneNameOrThrowAsync(dto.ZoneId, cancellationToken);
+        await EnsurePlacementIsValidAsync(dto.SpaceId, dto.ZoneId, isNewToSpace: true, cancellationToken);
 
         var plant = new Plant
         {
-            Name = Text.Required(dto.Name, "Nom"),
-            Species = Text.Optional(dto.Species),
-            PlantedDate = dto.PlantedDate,
-            WateringIntervalDays = dto.WateringIntervalDays,
+            SpaceId = dto.SpaceId,
             ZoneId = dto.ZoneId,
             IsArchived = false,
             CreatedAt = _timeProvider.GetUtcNow()
         };
 
+        Apply(dto, plant);
+
         _db.Plants.Add(plant);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var state = WateringCalculator.Calculate(
-            plant.WateringIntervalDays,
-            lastWateredAt: null,
-            plant.PlantedDate,
-            _timeProvider.Today());
-
-        return PlantResponseDto.FromEntity(plant, state, zoneName);
+        return await GetByIdAsync(plant.Id, cancellationToken);
     }
 
-    public async Task<PlantResponseDto> UpdateAsync(int id, UpdatePlantDto dto, CancellationToken cancellationToken = default)
+    public async Task<PlantResponseDto> UpdateAsync(int id, SavePlantDto dto, CancellationToken cancellationToken = default)
     {
         var plant = await _db.Plants.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             ?? throw NotFoundException.For("Plant", id);
 
-        await GetZoneNameOrThrowAsync(dto.ZoneId, cancellationToken);
+        await EnsurePlacementIsValidAsync(
+            dto.SpaceId,
+            dto.ZoneId,
+            isNewToSpace: dto.SpaceId != plant.SpaceId,
+            cancellationToken);
 
-        plant.Name = Text.Required(dto.Name, "Nom");
-        plant.Species = Text.Optional(dto.Species);
-        plant.PlantedDate = dto.PlantedDate;
-        plant.WateringIntervalDays = dto.WateringIntervalDays;
+        Apply(dto, plant);
+        plant.SpaceId = dto.SpaceId;
         plant.ZoneId = dto.ZoneId;
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -126,20 +128,59 @@ public class PlantService : IPlantService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    // 400 et non 404 : la ressource demandée est la plante, c'est le ZoneId du corps qui est invalide.
-    private async Task<string> GetZoneNameOrThrowAsync(int zoneId, CancellationToken cancellationToken)
+    private static void Apply(SavePlantDto dto, Plant plant)
     {
-        var zoneName = await _db.Zones
-            .AsNoTracking()
-            .Where(zone => zone.Id == zoneId)
-            .Select(zone => zone.Name)
-            .FirstOrDefaultAsync(cancellationToken);
+        plant.Name = Text.Required(dto.Name, "Nom");
+        plant.Species = Text.Optional(dto.Species);
+        plant.Variety = Text.Optional(dto.Variety);
+        plant.Quantity = dto.Quantity;
+        plant.QuantityUnit = dto.QuantityUnit;
+        plant.SownDate = dto.SownDate;
+        plant.PlantedDate = dto.PlantedDate;
+        plant.WateringIntervalDays = dto.WateringIntervalDays;
+    }
 
-        if (zoneName is null)
+    // 400 et non 404 : la ressource demandée est la plante, ce sont les identifiants du corps qui
+    // sont invalides. Un espace archivé garde ses plantes mais n'en reçoit plus de nouvelles.
+    private async Task EnsurePlacementIsValidAsync(
+        int spaceId,
+        int? zoneId,
+        bool isNewToSpace,
+        CancellationToken cancellationToken)
+    {
+        var space = await _db.Spaces
+            .AsNoTracking()
+            .FirstOrDefaultAsync(candidate => candidate.Id == spaceId, cancellationToken)
+            ?? throw new BusinessRuleException($"L'espace {spaceId} n'existe pas.");
+
+        if (!space.Kind.AcceptsPlants())
         {
-            throw new BusinessRuleException($"La zone {zoneId} n'existe pas.");
+            throw new BusinessRuleException(
+                $"L'espace « {space.Name} » est un espace {space.Kind.Label()} : il n'accueille pas de plantes.");
         }
 
-        return zoneName;
+        if (isNewToSpace && space.IsArchived)
+        {
+            throw new BusinessRuleException(
+                $"L'espace « {space.Name} » est archivé : réactivez-le avant d'y ajouter une plante.");
+        }
+
+        if (zoneId is null)
+        {
+            return;
+        }
+
+        var zoneSpaceId = await _db.Zones
+            .AsNoTracking()
+            .Where(zone => zone.Id == zoneId.Value)
+            .Select(zone => (int?)zone.SpaceId)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new BusinessRuleException($"La zone {zoneId} n'existe pas.");
+
+        if (zoneSpaceId != spaceId)
+        {
+            throw new BusinessRuleException(
+                $"La zone {zoneId} n'appartient pas à l'espace « {space.Name} ».");
+        }
     }
 }

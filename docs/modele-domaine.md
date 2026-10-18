@@ -1,9 +1,9 @@
 # Modèle du domaine : proposition
 
-Proposition conceptuelle qui traduit la [vision produit](vision-produit.md). Ce n'est pas
-encore du code : l'API implémente toujours le modèle `Zone → Plant` décrit plus bas. Les noms
-d'entités sont ceux qu'aura le code (en anglais) ; les champs listés sont indicatifs et seront
-arrêtés dans chaque PR.
+Proposition conceptuelle qui traduit la [vision produit](vision-produit.md). L'API
+l'implémente par étapes (voir [Stratégie de migration](#stratégie-de-migration)) : l'étape 1,
+jardin, espaces, zones et plantes, est faite. Les noms d'entités sont ceux du code (en
+anglais) ; les champs listés sont indicatifs et sont arrêtés dans chaque PR.
 
 ## Vue d'ensemble
 

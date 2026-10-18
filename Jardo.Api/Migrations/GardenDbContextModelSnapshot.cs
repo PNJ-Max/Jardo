@@ -17,6 +17,74 @@ namespace Jardo.Api.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
 
+            modelBuilder.Entity("Jardo.Api.Models.Garden", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Gardens");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Mon jardin"
+                        });
+                });
+
+            modelBuilder.Entity("Jardo.Api.Models.GardenItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SpaceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ZoneId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZoneId");
+
+                    b.HasIndex("SpaceId", "IsArchived");
+
+                    b.ToTable("GardenItems", (string)null);
+
+                    b.HasDiscriminator<string>("ItemType").HasValue("GardenItem");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("Jardo.Api.Models.Observation", b =>
                 {
                     b.Property<int>("Id")
@@ -53,7 +121,7 @@ namespace Jardo.Api.Migrations
                     b.ToTable("Observations");
                 });
 
-            modelBuilder.Entity("Jardo.Api.Models.Plant", b =>
+            modelBuilder.Entity("Jardo.Api.Models.Space", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -62,32 +130,32 @@ namespace Jardo.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("GardenId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsArchived")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateOnly?>("PlantedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Species")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("WateringIntervalDays")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ZoneId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ZoneId", "IsArchived");
+                    b.HasIndex("GardenId", "Name")
+                        .IsUnique();
 
-                    b.ToTable("Plants");
+                    b.ToTable("Spaces");
                 });
 
             modelBuilder.Entity("Jardo.Api.Models.WateringLog", b =>
@@ -132,12 +200,65 @@ namespace Jardo.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("SpaceId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("SpaceId", "Name")
                         .IsUnique();
 
                     b.ToTable("Zones");
+                });
+
+            modelBuilder.Entity("Jardo.Api.Models.Plant", b =>
+                {
+                    b.HasBaseType("Jardo.Api.Models.GardenItem");
+
+                    b.Property<DateOnly?>("PlantedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Quantity")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("QuantityUnit")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("SownDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Species")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Variety")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("WateringIntervalDays")
+                        .HasColumnType("INTEGER");
+
+                    b.HasDiscriminator().HasValue("Plant");
+                });
+
+            modelBuilder.Entity("Jardo.Api.Models.GardenItem", b =>
+                {
+                    b.HasOne("Jardo.Api.Models.Space", "Space")
+                        .WithMany("Items")
+                        .HasForeignKey("SpaceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Jardo.Api.Models.Zone", "Zone")
+                        .WithMany("Items")
+                        .HasForeignKey("ZoneId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Space");
+
+                    b.Navigation("Zone");
                 });
 
             modelBuilder.Entity("Jardo.Api.Models.Observation", b =>
@@ -151,15 +272,15 @@ namespace Jardo.Api.Migrations
                     b.Navigation("Plant");
                 });
 
-            modelBuilder.Entity("Jardo.Api.Models.Plant", b =>
+            modelBuilder.Entity("Jardo.Api.Models.Space", b =>
                 {
-                    b.HasOne("Jardo.Api.Models.Zone", "Zone")
-                        .WithMany("Plants")
-                        .HasForeignKey("ZoneId")
+                    b.HasOne("Jardo.Api.Models.Garden", "Garden")
+                        .WithMany("Spaces")
+                        .HasForeignKey("GardenId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Zone");
+                    b.Navigation("Garden");
                 });
 
             modelBuilder.Entity("Jardo.Api.Models.WateringLog", b =>
@@ -173,16 +294,39 @@ namespace Jardo.Api.Migrations
                     b.Navigation("Plant");
                 });
 
+            modelBuilder.Entity("Jardo.Api.Models.Zone", b =>
+                {
+                    b.HasOne("Jardo.Api.Models.Space", "Space")
+                        .WithMany("Zones")
+                        .HasForeignKey("SpaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Space");
+                });
+
+            modelBuilder.Entity("Jardo.Api.Models.Garden", b =>
+                {
+                    b.Navigation("Spaces");
+                });
+
+            modelBuilder.Entity("Jardo.Api.Models.Space", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("Zones");
+                });
+
+            modelBuilder.Entity("Jardo.Api.Models.Zone", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("Jardo.Api.Models.Plant", b =>
                 {
                     b.Navigation("Observations");
 
                     b.Navigation("WateringLogs");
-                });
-
-            modelBuilder.Entity("Jardo.Api.Models.Zone", b =>
-                {
-                    b.Navigation("Plants");
                 });
 #pragma warning restore 612, 618
         }
