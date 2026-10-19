@@ -119,4 +119,34 @@ public class SpaceServiceTests : IDisposable
 
         Assert.False(await _database.Context.Zones.AnyAsync());
     }
+
+    [Fact]
+    public async Task Un_espace_compte_ses_taches_dues_hors_elements_archives()
+    {
+        var potager = await _database.Context.AddSpaceAsync("Potager");
+        var verger = await _database.Context.AddSpaceAsync("Verger", SpaceKind.Orchard);
+        var tomate = await _database.Context.AddPlantAsync(potager, null, "Tomate");
+        var radis = await _database.Context.AddPlantAsync(potager, null, "Radis", isArchived: true);
+        var dueToday = new DateOnly(2026, 6, 15);
+        var tomorrow = new DateOnly(2026, 6, 16);
+        await _database.Context.AddTaskAsync(JournalEntryKind.Watering, TaskRecurrence.Once, dueToday, potager, item: tomate);
+        await _database.Context.AddTaskAsync(JournalEntryKind.Watering, TaskRecurrence.Once, dueToday, potager, item: radis);
+        await _database.Context.AddTaskAsync(JournalEntryKind.Pruning, TaskRecurrence.Once, dueToday, potager);
+        await _database.Context.AddTaskAsync(JournalEntryKind.Pruning, TaskRecurrence.Once, tomorrow, verger);
+
+        var spaces = await _service.GetAllAsync();
+
+        Assert.Equal(new[] { 2, 0 }, spaces.Select(space => space.DueTaskCount).ToArray());
+    }
+
+    [Fact]
+    public async Task Un_espace_dont_les_taches_ne_conviennent_pas_au_nouveau_type_ne_peut_pas_en_changer()
+    {
+        var potager = await _database.Context.AddSpaceAsync("Potager");
+        await _database.Context.AddTaskAsync(
+            JournalEntryKind.Watering, TaskRecurrence.EveryNDays, new DateOnly(2026, 6, 1), potager, intervalDays: 2);
+
+        await Assert.ThrowsAsync<BusinessRuleException>(() => _service.UpdateAsync(
+            potager.Id, new SaveSpaceDto { Name = "Potager", Kind = SpaceKind.Firewood }));
+    }
 }

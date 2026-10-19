@@ -75,7 +75,7 @@ public class PlantServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Deplacer_une_plante_deplace_son_journal()
+    public async Task Deplacer_une_plante_deplace_son_journal_et_ses_taches()
     {
         var serre = await _database.Context.AddSpaceAsync("Serre", SpaceKind.Greenhouse);
         var tablette = await _database.Context.AddZoneAsync(serre, "Tablette");
@@ -84,6 +84,7 @@ public class PlantServiceTests : IDisposable
         var plant = await _database.Context.AddPlantAsync(serre, tablette, "Tomates de semis");
         await _database.Context.AddEntryAsync(JournalEntryKind.Sowing, new DateOnly(2026, 3, 15), serre, item: plant);
         var zoneEntry = await _database.Context.AddEntryAsync(JournalEntryKind.Watering, new DateOnly(2026, 6, 14), serre, tablette);
+        await _database.Context.AddTaskAsync(JournalEntryKind.Watering, TaskRecurrence.EveryNDays, new DateOnly(2026, 6, 1), serre, item: plant, intervalDays: 1);
 
         await _service.UpdateAsync(plant.Id, NewPlant(potager.Id, carre.Id));
 
@@ -91,7 +92,9 @@ public class PlantServiceTests : IDisposable
         var sowing = Assert.Single(entries, entry => entry.ItemId == plant.Id);
         Assert.Equal((potager.Id, carre.Id), (sowing.SpaceId, sowing.ZoneId));
         Assert.Equal(tablette.Id, Assert.Single(entries, entry => entry.Id == zoneEntry.Id).ZoneId);
-        Assert.Null((await _service.GetByIdAsync(plant.Id)).LastWateredAt);
+
+        var task = Assert.Single(await _database.Context.GardenTasks.AsNoTracking().ToListAsync());
+        Assert.Equal((potager.Id, carre.Id), (task.SpaceId, task.ZoneId));
     }
 
     [Fact]

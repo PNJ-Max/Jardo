@@ -6,9 +6,9 @@ namespace Jardo.Api.Data;
 
 /// <summary>
 /// Remplit la base avec un jardin d'exemple : un potager en carrés, un verger, des petits fruits
-/// par rang, une serre et un espace bois de chauffage, encore vide ; et quelques semaines de
-/// journal. Les dates sont relatives à aujourd'hui pour qu'il y ait toujours des plantes en retard
-/// d'arrosage.
+/// par rang, une serre et un espace bois de chauffage, encore vide ; quelques semaines de journal
+/// et des tâches. Les dates sont relatives à aujourd'hui pour qu'il y ait toujours des tâches à
+/// jour, à faire aujourd'hui et en retard.
 /// </summary>
 public static class DbSeeder
 {
@@ -78,7 +78,6 @@ public static class DbSeeder
             string? variety,
             double quantity,
             QuantityUnit unit,
-            int intervalDays,
             int? sownDaysAgo,
             int? plantedDaysAgo)
             => new()
@@ -90,52 +89,51 @@ public static class DbSeeder
                 Variety = variety,
                 Quantity = quantity,
                 QuantityUnit = unit,
-                WateringIntervalDays = intervalDays,
                 SownDate = sownDaysAgo is null ? null : Ago(sownDaysAgo.Value),
                 PlantedDate = plantedDaysAgo is null ? null : Ago(plantedDaysAgo.Value),
                 CreatedAt = now
             };
 
         var tomates = NewPlant(potager, carre1, "Tomates", "Solanum lycopersicum", "Cœur de bœuf",
-            6, QuantityUnit.Plants, 2, 100, 45);
+            6, QuantityUnit.Plants, 100, 45);
         var basilic = NewPlant(potager, carre1, "Basilic", "Ocimum basilicum", "Grand vert",
-            4, QuantityUnit.Plants, 2, null, 30);
+            4, QuantityUnit.Plants, null, 30);
         var carottes = NewPlant(potager, carre2, "Carottes", "Daucus carota", "Nantaise",
-            2, QuantityUnit.Rows, 3, 60, null);
+            2, QuantityUnit.Rows, 60, null);
         var radis = NewPlant(potager, carre2, "Radis de printemps", "Raphanus sativus", "National",
-            1, QuantityUnit.Rows, 1, 150, null);
+            1, QuantityUnit.Rows, 150, null);
         var courgettes = NewPlant(potager, carre3, "Courgettes", "Cucurbita pepo", "Black Beauty",
-            2, QuantityUnit.Plants, 3, null, 40);
+            2, QuantityUnit.Plants, null, 40);
         var laitues = NewPlant(potager, carre4, "Laitues", "Lactuca sativa", "Batavia blonde",
-            12, QuantityUnit.Plants, 1, null, 20);
+            12, QuantityUnit.Plants, null, 20);
         var poireaux = NewPlant(potager, carre4, "Poireaux", "Allium porrum", "Bleu de Solaise",
-            1.5, QuantityUnit.SquareMeters, 4, 120, 50);
+            1.5, QuantityUnit.SquareMeters, 120, 50);
         var rhubarbe = NewPlant(potager, null, "Rhubarbe", "Rheum rhabarbarum", null,
-            1, QuantityUnit.Plants, 7, null, 900);
+            1, QuantityUnit.Plants, null, 900);
 
         // Trois arbres identiques suivis ensemble ; les autres arbres du verger sont suivis seuls.
         var pommiers = NewPlant(verger, null, "Pommiers", "Malus domestica", "Golden",
-            3, QuantityUnit.Plants, 14, null, 1200);
+            3, QuantityUnit.Plants, null, 1200);
         var poirier = NewPlant(verger, null, "Poirier", "Pyrus communis", "Conférence",
-            1, QuantityUnit.Plants, 14, null, 1100);
+            1, QuantityUnit.Plants, null, 1100);
         var cerisier = NewPlant(verger, null, "Cerisier", "Prunus avium", "Burlat",
-            1, QuantityUnit.Plants, 14, null, 800);
+            1, QuantityUnit.Plants, null, 800);
         var prunier = NewPlant(verger, null, "Prunier", "Prunus domestica", "Reine-Claude dorée",
-            1, QuantityUnit.Plants, 14, null, 10);
+            1, QuantityUnit.Plants, null, 10);
 
         var framboisiers = NewPlant(petitsFruits, rang1, "Framboisiers", "Rubus idaeus", "Heritage",
-            8, QuantityUnit.Plants, 7, null, 400);
+            8, QuantityUnit.Plants, null, 400);
         var groseilliers = NewPlant(petitsFruits, rang2, "Groseilliers", "Ribes rubrum", "Jonkheer van Tets",
-            3, QuantityUnit.Plants, 7, null, 3);
+            3, QuantityUnit.Plants, null, 3);
         var cassissiers = NewPlant(petitsFruits, rang2, "Cassissiers", "Ribes nigrum", "Noir de Bourgogne",
-            2, QuantityUnit.Plants, 7, null, 600);
+            2, QuantityUnit.Plants, null, 600);
 
         var piments = NewPlant(serre, tablette, "Piments", "Capsicum annuum", "Espelette",
-            12, QuantityUnit.Plants, 1, 15, null);
+            12, QuantityUnit.Plants, 15, null);
         var concombres = NewPlant(serre, bac, "Concombres", "Cucumis sativus", "Marketmore",
-            3, QuantityUnit.Plants, 2, null, 35);
+            3, QuantityUnit.Plants, null, 35);
         var aubergines = NewPlant(serre, bac, "Aubergines", "Solanum melongena", "Violette de Barbentane",
-            2, QuantityUnit.Plants, 3, null, 10);
+            2, QuantityUnit.Plants, null, 10);
 
         // Culture finie : archivée, elle reste dans l'historique du carré 2.
         radis.IsArchived = true;
@@ -179,8 +177,7 @@ public static class DbSeeder
         const JournalEntryKind Watering = JournalEntryKind.Watering;
 
         // Arrosages : la plupart sont notés sur une zone ou un espace et valent pour leurs plantes.
-        // Les plus anciens font l'historique ; les derniers de chaque cible produisent chacun un état
-        // précis, donné en commentaire.
+        // Les derniers de chaque cible fixent l'état des tâches d'arrosage, donné plus bas.
         db.JournalEntries.AddRange(
             Entry(Watering, 25, potager, note: "Grand arrosage de tout le potager au jet."),
             Entry(Watering, 14, potager, carre1),
@@ -192,35 +189,19 @@ public static class DbSeeder
             Entry(Watering, 7, serre, tablette),
             Entry(Watering, 6, potager, carre1, note: "Paillage ajouté au pied des tomates."),
             Entry(Watering, 6, potager, carre2),
-
-            // Tomates (+ 2 j) : en retard de 2 jours.
             Entry(Watering, 4, potager, carre1),
-            // Basilic (+ 2 j) : à jour, malgré le carré arrosé il y a 4 jours.
             Entry(Watering, 0, potager, item: basilic),
-            // Carottes (+ 3 j) : échéance aujourd'hui.
             Entry(Watering, 3, potager, carre2),
-            // Courgettes (+ 3 j) : en retard de 2 jours.
             Entry(Watering, 5, potager, item: courgettes),
-            // Laitues (+ 1 j) : échéance aujourd'hui ; poireaux (+ 4 j) : à jour.
             Entry(Watering, 1, potager, carre4),
-            // Rhubarbe (+ 7 j) : à jour.
             Entry(Watering, 3, potager, item: rhubarbe),
-            // Pommiers (+ 14 j) : en retard de 6 jours. Le prunier, planté depuis, part de sa
-            // plantation : à jour.
             Entry(Watering, 20, verger, note: "Arrosage de reprise après la sécheresse."),
-            // Poirier (+ 14 j) : à jour.
             Entry(Watering, 10, verger, item: poirier),
-            // Cerisier (+ 14 j) : échéance aujourd'hui.
             Entry(Watering, 14, verger, item: cerisier),
-            // Framboisiers (+ 7 j) : à jour.
             Entry(Watering, 2, petitsFruits, rang1),
-            // Cassissiers (+ 7 j) : en retard de 2 jours. Les groseilliers, plantés depuis : à jour.
             Entry(Watering, 9, petitsFruits, rang2),
-            // Piments (+ 1 j) : échéance aujourd'hui.
             Entry(Watering, 1, serre, tablette),
-            // Aubergines (+ 3 j) : en retard de 2 jours.
             Entry(Watering, 5, serre, bac),
-            // Concombres (+ 2 j) : à jour.
             Entry(Watering, 1, serre, item: concombres)
         );
 
@@ -270,6 +251,76 @@ public static class DbSeeder
                 note: "Reprise correcte, premières feuilles.", heightCm: 35),
             Entry(JournalEntryKind.Harvest, 1, potager, item: tomates,
                 note: "Premières cœur de bœuf.", quantity: 2.5, unit: MeasureUnit.Kilograms)
+        );
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        GardenTask NewTask(
+            JournalEntryKind kind,
+            TaskRecurrence recurrence,
+            DateOnly startDate,
+            Space space,
+            Zone? zone = null,
+            Plant? item = null,
+            int? intervalDays = null,
+            string? title = null)
+            => new()
+            {
+                Kind = kind,
+                Recurrence = recurrence,
+                StartDate = startDate,
+                IntervalDays = intervalDays,
+                Title = title,
+                Space = space,
+                Zone = zone ?? item?.Zone,
+                Item = item,
+                CreatedAt = now
+            };
+
+        GardenTask WateringTask(Space space, Zone? zone = null, Plant? item = null, int everyDays = 1, int startedDaysAgo = 60, string? title = null)
+            => NewTask(JournalEntryKind.Watering, TaskRecurrence.EveryNDays, Ago(startedDaysAgo), space, zone, item, everyDays, title);
+
+        // L'état de chaque tâche, d'après le journal ci-dessus, est donné en commentaire.
+        db.GardenTasks.AddRange(
+            // En retard de 2 jours : le carré 1 a été arrosé il y a 4 jours.
+            WateringTask(potager, item: tomates, everyDays: 2, startedDaysAgo: 45),
+            // À jour : arrosé ce matin, malgré le carré arrosé il y a 4 jours.
+            WateringTask(potager, item: basilic, everyDays: 2, startedDaysAgo: 30),
+            // À faire aujourd'hui.
+            WateringTask(potager, item: carottes, everyDays: 3),
+            // En retard de 2 jours.
+            WateringTask(potager, item: courgettes, everyDays: 3, startedDaysAgo: 40),
+            // Tout le carré 4, tous les jours : à faire aujourd'hui.
+            WateringTask(potager, carre4, startedDaysAgo: 20, title: "Laitues et poireaux"),
+            // À jour, prochain arrosage dans 4 jours.
+            WateringTask(potager, item: rhubarbe, everyDays: 7),
+            // En retard de 6 jours : l'arrosage de tout le verger date de 20 jours.
+            WateringTask(verger, item: pommiers, everyDays: 14),
+            // En retard de 3 jours : la tâche part d'une semaine après la plantation, et l'arrosage
+            // du verger, plus ancien, n'y change rien.
+            WateringTask(verger, item: prunier, everyDays: 7, startedDaysAgo: 3, title: "Arrosage de reprise"),
+            // En retard de 2 jours.
+            WateringTask(petitsFruits, rang2, everyDays: 7),
+            // À faire aujourd'hui.
+            WateringTask(serre, tablette, startedDaysAgo: 15),
+            // En retard de 3 jours : l'arrosage des seuls concombres, hier, n'arrose pas le bac.
+            WateringTask(serre, bac, everyDays: 2, startedDaysAgo: 35),
+            // En retard de 4 jours.
+            NewTask(JournalEntryKind.Other, TaskRecurrence.EveryNDays, Ago(60), potager,
+                intervalDays: 14, title: "Désherber les allées"),
+            // À jour presque toute l'année : la taille en vert d'il y a 35 jours compte, même en retard,
+            // pour le dernier 1er février passé ; elle ne fait pas celui qui vient.
+            NewTask(JournalEntryKind.Pruning, TaskRecurrence.Yearly, new DateOnly(today.Year, 2, 1), verger,
+                title: "Taille d'hiver"),
+            // En retard de 10 jours : jamais faite.
+            NewTask(JournalEntryKind.Fertilizing, TaskRecurrence.Yearly, Ago(10), petitsFruits,
+                title: "Compost au pied des arbustes"),
+            // À jour, prévue dans 6 jours.
+            NewTask(JournalEntryKind.Treatment, TaskRecurrence.Once, today.AddDays(6), potager, item: courgettes,
+                title: "Renouveler le purin de prêle"),
+            // Faite : plantés il y a 3 jours.
+            NewTask(JournalEntryKind.Planting, TaskRecurrence.Once, Ago(5), petitsFruits, item: groseilliers,
+                title: "Planter les groseilliers")
         );
 
         await db.SaveChangesAsync(cancellationToken);

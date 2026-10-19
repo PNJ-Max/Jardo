@@ -4,10 +4,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Jardo.Api.Services;
 
 /// <summary>
-/// La dernière date d'un type d'intervention pour chaque élément, selon la règle du journal : une
-/// entrée sur une zone vaut pour chaque élément de la zone, une entrée sur un espace pour chaque
-/// élément de l'espace. « Arroser le carré 2 » compte comme arrosage de chaque plante du carré.
-/// L'élément est pris là où il se trouve au moment de la lecture.
+/// La dernière date d'un type d'intervention pour une cible, selon la règle du journal : une
+/// entrée sur une zone vaut pour la zone et chacun de ses éléments, une entrée sur un espace pour
+/// tout ce qu'il contient. « Arroser le carré 2 » compte comme arrosage de chaque plante du carré ;
+/// arroser une plante, en revanche, n'arrose pas son carré. L'élément est pris là où il se trouve
+/// au moment de la lecture.
 /// </summary>
 public sealed class LatestInterventions
 {
@@ -51,7 +52,8 @@ public sealed class LatestInterventions
         return latest;
     }
 
-    public DateOnly? ForItem(int itemId, int spaceId, int? zoneId)
+    /// <summary>Pour un espace, une de ses zones, ou un de ses éléments avec la zone où il se trouve.</summary>
+    public DateOnly? ForTarget(int spaceId, int? zoneId, int? itemId)
     {
         DateOnly? Find(Dictionary<int, DateOnly> dates, int? key)
             => key is { } value && dates.TryGetValue(value, out var date) ? date : null;

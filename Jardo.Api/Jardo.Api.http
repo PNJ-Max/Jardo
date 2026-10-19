@@ -20,7 +20,7 @@ Content-Type: application/json
 ### ESPACES
 ### ==========================================================================
 
-### Liste des espaces actifs, avec nombre de zones et d'elements actifs
+### Liste des espaces actifs, avec nombre de zones, d'elements actifs et de taches dues
 GET {{host}}/api/spaces
 Accept: application/json
 
@@ -52,7 +52,7 @@ Content-Type: application/json
   "kind": "Orchard"
 }
 
-### Archiver un espace -- ses plantes sortent des calculs d'arrosage
+### Archiver un espace -- ses taches ne sont plus dues
 POST {{host}}/api/spaces/2/archive
 
 ### Reactiver
@@ -65,7 +65,7 @@ DELETE {{host}}/api/spaces/4
 ### ZONES (dans un espace)
 ### ==========================================================================
 
-### Les zones d'un espace, avec compteur de plantes a arroser
+### Les zones d'un espace, avec leur nombre d'elements actifs
 GET {{host}}/api/spaces/1/zones
 Accept: application/json
 
@@ -94,14 +94,6 @@ Content-Type: application/json
 ### Supprimer une zone -- refuse si elle contient encore des elements
 DELETE {{host}}/api/zones/1
 
-### Arroser TOUTE une zone : une seule entree au journal, qui vaut pour chaque plante du carre
-POST {{host}}/api/zones/1/waterings
-Content-Type: application/json
-
-{
-  "note": "Arrosage general du carre"
-}
-
 ### ==========================================================================
 ### PLANTES
 ### ==========================================================================
@@ -122,7 +114,7 @@ Accept: application/json
 GET {{host}}/api/plants?includeArchived=true
 Accept: application/json
 
-### Une plante : noter wateringStatus, daysOverdue, nextWateringDate
+### Une plante
 GET {{host}}/api/plants/1
 Accept: application/json
 
@@ -137,7 +129,6 @@ Content-Type: application/json
   "quantity": 2,
   "quantityUnit": "Rows",
   "sownDate": "2026-05-10",
-  "wateringIntervalDays": 3,
   "spaceId": 1,
   "zoneId": 3
 }
@@ -153,7 +144,6 @@ Content-Type: application/json
   "quantity": 1,
   "quantityUnit": "Plants",
   "plantedDate": "2025-11-20",
-  "wateringIntervalDays": 14,
   "spaceId": 2
 }
 
@@ -167,7 +157,6 @@ Content-Type: application/json
   "variety": "Champion",
   "quantity": 3,
   "quantityUnit": "Plants",
-  "wateringIntervalDays": 14,
   "spaceId": 2
 }
 
@@ -182,7 +171,6 @@ Content-Type: application/json
   "quantity": 24,
   "quantityUnit": "Plants",
   "sownDate": "2026-03-15",
-  "wateringIntervalDays": 1,
   "spaceId": 5,
   "zoneId": 7
 }
@@ -198,43 +186,145 @@ Content-Type: application/json
   "quantity": 8,
   "quantityUnit": "Plants",
   "plantedDate": "2026-05-01",
-  "wateringIntervalDays": 3,
   "spaceId": 1,
   "zoneId": 1
 }
 
-### Archiver (fin de saison) -- sort des calculs, garde l'historique
+### Archiver (fin de saison) -- ses taches ne sont plus dues, l'historique reste
 POST {{host}}/api/plants/3/archive
 
 ### Reactiver
 POST {{host}}/api/plants/3/unarchive
 
-### Supprimer definitivement (emporte son journal)
+### Supprimer definitivement (emporte son journal et ses taches)
 DELETE {{host}}/api/plants/3
 
 ### ==========================================================================
-### ARROSAGE
+### TACHES
+### kind : les types du journal (Watering, Pruning, Treatment...)
+### recurrence : EveryNDays (avec intervalDays), Yearly, Once
+### status : Ok, DueSoon (aujourd'hui), Overdue (avec daysOverdue)
 ### ==========================================================================
 
-### Ce qu'il faut arroser, le plus urgent d'abord. Un arrosage note sur la zone
-### ou sur tout l'espace d'une plante compte comme le sien.
-GET {{host}}/api/watering/needed
+### Ecran Aujourd'hui : les taches dues, toutes categories, les plus en retard d'abord
+GET {{host}}/api/tasks/due
 Accept: application/json
 
-### Arroser une plante -- corps vide = aujourd'hui, c'est le cas normal
-POST {{host}}/api/plants/1/waterings
+### Cette semaine : les dues, plus celles des six prochains jours
+GET {{host}}/api/tasks/due?horizon=Week
+Accept: application/json
+
+### Toutes les taches du jardin, faites comprises
+GET {{host}}/api/tasks
+Accept: application/json
+
+### Les taches d'un element : les siennes, celles de sa zone et de son espace
+GET {{host}}/api/tasks?itemId=1
+Accept: application/json
+
+### Les taches d'une zone : les siennes, celles de ses elements et de tout l'espace
+GET {{host}}/api/tasks?zoneId=4
+Accept: application/json
+
+### Les taches d'un espace
+GET {{host}}/api/tasks?spaceId=2
+Accept: application/json
+
+### Une tache, avec son echeance (lastDoneOn, nextDueDate, status, daysOverdue)
+GET {{host}}/api/tasks/13
+Accept: application/json
+
+### Arroser une plante tous les 3 jours, a partir d'aujourd'hui
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "kind": "Watering",
+  "recurrence": "EveryNDays",
+  "intervalDays": 3,
+  "startDate": "2026-10-19",
+  "spaceId": 1,
+  "itemId": 5
+}
+
+### Arroser tout un carre tous les 2 jours : un arrosage note sur le carre ou sur
+### tout le potager la fait ; arroser une seule plante du carre, non
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "kind": "Watering",
+  "recurrence": "EveryNDays",
+  "intervalDays": 2,
+  "startDate": "2026-10-19",
+  "spaceId": 1,
+  "zoneId": 2
+}
+
+### Chaque annee : traiter le verger chaque 15 novembre. Ce qui est fait jusqu'a
+### 30 jours avant compte pour l'annee.
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "kind": "Treatment",
+  "title": "Traitement d'hiver a la bouillie bordelaise",
+  "recurrence": "Yearly",
+  "startDate": "2026-11-15",
+  "spaceId": 2
+}
+
+### Une seule fois : close des qu'une entree du meme type existe a sa date ou apres
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "kind": "Sowing",
+  "title": "Semer les feves",
+  "recurrence": "Once",
+  "startDate": "2026-11-05",
+  "spaceId": 1,
+  "zoneId": 2
+}
+
+### Modifier une tache (remplacement complet, cible et rythme compris)
+PUT {{host}}/api/tasks/1
+Content-Type: application/json
+
+{
+  "kind": "Watering",
+  "title": "Arroser au pied",
+  "recurrence": "EveryNDays",
+  "intervalDays": 3,
+  "startDate": "2026-09-04",
+  "spaceId": 1,
+  "itemId": 1
+}
+
+### Fait : note l'intervention au journal aujourd'hui, sur la cible de la tache,
+### et renvoie la tache recalculee. Corps vide = aujourd'hui, c'est le cas normal.
+POST {{host}}/api/tasks/1/done
 Content-Type: application/json
 
 {}
 
-### Arroser avec une date passee (saisie oubliee de la veille) et une note
-POST {{host}}/api/plants/1/waterings
+### Fait a une date passee (saisie oubliee de la veille), avec une note
+POST {{host}}/api/tasks/9/done
 Content-Type: application/json
 
 {
-  "wateredAt": "2026-10-18",
+  "date": "2026-10-18",
   "note": "Arrosage au pied, paillage remis"
 }
+
+### Fait en avance sur une tache ponctuelle : elle est ramenee a ce jour et close
+POST {{host}}/api/tasks/15/done
+Content-Type: application/json
+
+{}
+
+### Supprimer une tache (le journal n'est pas touche)
+DELETE {{host}}/api/tasks/16
 
 ### ==========================================================================
 ### JOURNAL D'INTERVENTIONS
@@ -439,29 +529,63 @@ Content-Type: application/json
   "spaceId": 3
 }
 
-### 400 : intervalle d'arrosage hors bornes (Range 1-365)
-POST {{host}}/api/plants
+### 400 : tache tous les N jours sans son nombre de jours
+POST {{host}}/api/tasks
 Content-Type: application/json
 
 {
-  "name": "Cactus",
-  "wateringIntervalDays": 9000,
+  "kind": "Watering",
+  "recurrence": "EveryNDays",
+  "startDate": "2026-10-19",
   "spaceId": 1
 }
 
-### 400 : arrosage date dans le futur
-POST {{host}}/api/plants/1/waterings
+### 400 : nombre de jours hors bornes (Range 1-365)
+POST {{host}}/api/tasks
 Content-Type: application/json
 
 {
-  "wateredAt": "2030-01-01"
+  "kind": "Watering",
+  "recurrence": "EveryNDays",
+  "intervalDays": 9000,
+  "startDate": "2026-10-19",
+  "spaceId": 1
 }
 
-### 400 : arroser une plante archivee (le radis du seed)
-POST {{host}}/api/plants/4/waterings
+### 400 : tache Other sans titre
+POST {{host}}/api/tasks
 Content-Type: application/json
 
-{}
+{
+  "kind": "Other",
+  "recurrence": "Once",
+  "startDate": "2026-10-25",
+  "spaceId": 1
+}
+
+### 400 : tache sur une plante archivee (le radis du seed)
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "kind": "Watering",
+  "recurrence": "EveryNDays",
+  "intervalDays": 2,
+  "startDate": "2026-10-19",
+  "spaceId": 1,
+  "itemId": 4
+}
+
+### 400 : Fait date dans le futur
+POST {{host}}/api/tasks/1/done
+Content-Type: application/json
+
+{
+  "date": "2030-01-01"
+}
+
+### 400 : les taches se lisent pour une seule cible
+GET {{host}}/api/tasks?spaceId=1&itemId=1
 
 ### 400 : entree de journal datee dans le futur
 POST {{host}}/api/journal

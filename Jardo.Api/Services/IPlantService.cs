@@ -8,7 +8,7 @@ namespace Jardo.Api.Services;
 public interface IPlantService
 {
     /// <summary>
-    /// Liste les plantes, avec leur voyant d'arrosage.
+    /// Liste les plantes.
     /// </summary>
     /// <param name="spaceId">Ne garder que les plantes de cet espace. Null = tous les espaces.</param>
     /// <param name="zoneId">Ne garder que les plantes de cette zone. Null = toutes les zones.</param>
@@ -34,21 +34,21 @@ public interface IPlantService
 
     /// <summary>
     /// Modifie une plante. Permet aussi de la déplacer vers un autre espace ou une autre zone ; ses
-    /// entrées de journal la suivent.
+    /// entrées de journal et ses tâches la suivent.
     /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>
     /// <exception cref="Infrastructure.BusinessRuleException">Mêmes règles qu'à la création.</exception>
     Task<PlantResponseDto> UpdateAsync(int id, SavePlantDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Archive ou réactive une plante. Une plante archivée sort des calculs d'arrosage
+    /// Archive ou réactive une plante. Une plante archivée sort des tâches dues
     /// mais conserve tout son historique.
     /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>
     Task<PlantResponseDto> SetArchivedAsync(int id, bool isArchived, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Supprime définitivement une plante, ainsi que ses entrées de journal.
+    /// Supprime définitivement une plante, ainsi que ses entrées de journal et ses tâches.
     /// Pour une plante en fin de vie, préférer <see cref="SetArchivedAsync"/>.
     /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>

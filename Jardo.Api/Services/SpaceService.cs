@@ -26,8 +26,33 @@ public class SpaceService : ISpaceService
             space.Zones.Count,
             space.Items.Count(item => !item.IsArchived)));
 
-    private static SpaceResponseDto ToDto(SpaceWithCounts row)
-        => SpaceResponseDto.FromEntity(row.Space, row.ZoneCount, row.ItemCount);
+    private static SpaceResponseDto ToDto(SpaceWithCounts row, Dictionary<int, int> dueTaskCounts)
+        => SpaceResponseDto.FromEntity(
+            row.Space,
+            row.ZoneCount,
+            row.ItemCount,
+            dueTaskCounts.GetValueOrDefault(row.Space.Id));
+
+    // L'échéance n'est pas stockée : il faut la calculer pour chaque tâche avant de compter.
+    private async Task<Dictionary<int, int>> CountDueTasksAsync(List<int> spaceIds, CancellationToken cancellationToken)
+    {
+        var rows = await _db.GardenTasks
+            .AsNoTracking()
+            .Active()
+            .Where(task => spaceIds.Contains(task.SpaceId))
+            .SelectWithNames()
+            .ToListAsync(cancellationToken);
+
+        var tasks = await rows.ToDtosAsync(
+            _db.JournalEntries.Where(entry => spaceIds.Contains(entry.SpaceId)),
+            _timeProvider.Today(),
+            cancellationToken);
+
+        return tasks
+            .Where(task => task.Status is not DueStatus.Ok)
+            .GroupBy(task => task.SpaceId)
+            .ToDictionary(group => group.Key, group => group.Count());
+    }
 
     public async Task<List<SpaceResponseDto>> GetAllAsync(bool includeArchived = false, CancellationToken cancellationToken = default)
     {
@@ -39,8 +64,9 @@ public class SpaceService : ISpaceService
         }
 
         var rows = await Project(source.OrderBy(space => space.Name)).ToListAsync(cancellationToken);
+        var dueTaskCounts = await CountDueTasksAsync(rows.Select(row => row.Space.Id).ToList(), cancellationToken);
 
-        return rows.Select(ToDto).ToList();
+        return rows.Select(row => ToDto(row, dueTaskCounts)).ToList();
     }
 
     public async Task<SpaceResponseDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -52,7 +78,7 @@ public class SpaceService : ISpaceService
         var row = await Project(source).FirstOrDefaultAsync(cancellationToken)
             ?? throw NotFoundException.For("Space", id);
 
-        return ToDto(row);
+        return ToDto(row, await CountDueTasksAsync([id], cancellationToken));
     }
 
     public async Task<SpaceResponseDto> CreateAsync(SaveSpaceDto dto, CancellationToken cancellationToken = default)
@@ -73,7 +99,7 @@ public class SpaceService : ISpaceService
         _db.Spaces.Add(space);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return SpaceResponseDto.FromEntity(space, zoneCount: 0, itemCount: 0);
+        return SpaceResponseDto.FromEntity(space, zoneCount: 0, itemCount: 0, dueTaskCount: 0);
     }
 
     public async Task<SpaceResponseDto> UpdateAsync(int id, SaveSpaceDto dto, CancellationToken cancellationToken = default)
@@ -106,12 +132,18 @@ public class SpaceService : ISpaceService
                 .Distinct()
                 .ToListAsync(cancellationToken);
 
-            var refused = journalKinds.Where(entryKind => !entryKind.IsAllowedIn(kind)).ToList();
+            var taskKinds = await _db.GardenTasks
+                .Where(task => task.SpaceId == id)
+                .Select(task => task.Kind)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            var refused = journalKinds.Union(taskKinds).Where(entryKind => !entryKind.IsAllowedIn(kind)).ToList();
 
             if (refused.Count > 0)
             {
                 throw new BusinessRuleException(
-                    $"Le journal de l'espace « {space.Name} » contient des entrées " +
+                    $"Le journal ou les tâches de l'espace « {space.Name} » contiennent des interventions " +
                     $"« {string.Join(" », « ", refused.Select(entryKind => entryKind.Label()))} », " +
                     $"qu'un espace {kind.Label()} n'accueille pas.");
             }

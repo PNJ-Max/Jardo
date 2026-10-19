@@ -43,7 +43,6 @@ public static class TestData
         Space space,
         Zone? zone,
         string name,
-        int wateringIntervalDays = 3,
         bool isArchived = false)
     {
         var plant = new Plant
@@ -51,7 +50,6 @@ public static class TestData
             SpaceId = space.Id,
             ZoneId = zone?.Id,
             Name = name,
-            WateringIntervalDays = wateringIntervalDays,
             IsArchived = isArchived,
             CreatedAt = DateTimeOffset.UnixEpoch
         };
@@ -83,5 +81,35 @@ public static class TestData
         db.JournalEntries.Add(entry);
         await db.SaveChangesAsync();
         return entry;
+    }
+
+    /// <summary>Une tâche sur l'élément si donné, sinon sur la zone, sinon sur tout l'espace.</summary>
+    public static async Task<GardenTask> AddTaskAsync(
+        this GardenDbContext db,
+        JournalEntryKind kind,
+        TaskRecurrence recurrence,
+        DateOnly startDate,
+        Space space,
+        Zone? zone = null,
+        GardenItem? item = null,
+        int? intervalDays = null,
+        string? title = null)
+    {
+        var task = new GardenTask
+        {
+            Kind = kind,
+            Recurrence = recurrence,
+            StartDate = startDate,
+            IntervalDays = intervalDays,
+            Title = title,
+            SpaceId = space.Id,
+            ZoneId = item is null ? zone?.Id : item.ZoneId,
+            ItemId = item?.Id,
+            CreatedAt = DateTimeOffset.UnixEpoch
+        };
+
+        db.GardenTasks.Add(task);
+        await db.SaveChangesAsync();
+        return task;
     }
 }
