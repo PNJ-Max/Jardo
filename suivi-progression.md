@@ -45,16 +45,16 @@ suspendue jusqu'à la nouvelle API et aux maquettes revues.
 **Front `jardo-app` : premier jet fonctionnel, fondations UI posées, écrans à refaire.**
 - Expo SDK 57 (React Native + TypeScript), Expo Router, TanStack Query.
 - Tous les écrans du MVP existent et sont branchés sur l'API.
-- Charte graphique arrêtée ([`docs/charte-graphique.md`](docs/charte-graphique.md)) : terre
-  cuite pour les actions, bleu eau pour « à arroser ».
+- Charte v2 validée le 19/10 ([`docs/charte-graphique.md`](docs/charte-graphique.md)) : verts en
+  clair, sarcelle en sombre, police Nunito. Appliquée au thème : toute l’app
+  en profite sans toucher aux écrans.
 - Icône et splash faits : pousse en pot sur fond crème, icône adaptative Android avec
   version monochrome, splash clair et sombre, favicon. Sources SVG dans `jardo-app/assets/source/`.
 - Fondations UI : thème clair / sombre qui suit le téléphone (`src/theme/`, `useTheme`,
-  `createStyles`), polices Fraunces et Inter avec échelle typographique, composants de base
+  `createStyles`), échelle typographique, composants de base
   découpés dans `src/components/ui/`, dépendances inutiles du template retirées.
-- Maquettes v2 et Design System publiés dans Claude Design pour la nouvelle vision, mais non
-  validés : charte, typographie, boutons et mode sombre ne convainquent pas. Le MVP se construit
-  sur la charte actuelle ; le design est repris juste après.
+- Maquettes v2 et Design System (Claude Design) antérieurs à la charte v2 : non validés. Boutons,
+  icône, splash et « une interface plus vivante » sont repris en phase 6.
 - Restent : sélecteur de date, puis refonte des écrans sur le nouveau modèle.
 - Pas de tests.
 

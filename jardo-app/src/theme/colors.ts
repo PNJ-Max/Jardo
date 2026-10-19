@@ -11,9 +11,9 @@ export type Colors = {
   primary: string;
   /** Texte et icônes posés sur `primary`, `water` ou `danger`. */
   primaryText: string;
-  terracotta: string;
-  sage: string;
-  sagePale: string;
+  /** Décor uniquement (illustrations, pastilles de fond) : jamais pour du texte. */
+  leaf: string;
+  leafPale: string;
   success: string;
   successTint: string;
   water: string;
@@ -22,44 +22,40 @@ export type Colors = {
   dangerTint: string;
 };
 
-// Couleurs de la palette d'origine : trop claires pour du texte, réservées au décor.
-const decor = {
-  terracotta: '#DB9558',
-  sage: '#97A87A',
-  sagePale: '#A8BBA3',
-};
-
 export const palettes: Record<ColorScheme, Colors> = {
   light: {
-    background: '#FCF9EA',
+    background: '#F6FAF6',
     card: '#FFFFFF',
-    border: '#E7E2CC',
-    text: '#2F3A28',
-    textMuted: '#6B7360',
-    primary: '#9E5B28',
+    border: '#D7EAD8',
+    text: '#173B1A',
+    textMuted: '#4D6B50',
+    primary: '#1B5E20',
     primaryText: '#FFFFFF',
-    ...decor,
-    success: '#4E6040',
-    successTint: '#E6EDDD',
-    water: '#3F6B85',
-    waterTint: '#E1ECF2',
+    leaf: '#66BB6A',
+    leafPale: '#A5D6A7',
+    success: '#1B5E20',
+    successTint: '#E8F5E9',
+    water: '#2F6690',
+    waterTint: '#E3EEF6',
     danger: '#A33A2A',
     dangerTint: '#F6E0DA',
   },
+  // Les aplats y sont clairs : le texte posé dessus est le fond sarcelle, et non du blanc.
   dark: {
-    background: '#1C211A',
-    card: '#262C23',
-    border: '#3A4234',
-    text: '#EEEADB',
-    textMuted: '#A9AE9C',
-    primary: '#DB9558',
-    primaryText: '#2A1A0E',
-    ...decor,
-    success: '#A8BBA3',
-    successTint: '#2F3A2A',
+    background: '#092328',
+    card: '#0F3A3C',
+    border: '#12544F',
+    text: '#E8F5E9',
+    textMuted: '#8BBB92',
+    primary: '#8BBB92',
+    primaryText: '#092328',
+    leaf: '#2A835F',
+    leafPale: '#12544F',
+    success: '#8BBB92',
+    successTint: '#123F3E',
     water: '#7FB0CC',
-    waterTint: '#22323B',
+    waterTint: '#133B4C',
     danger: '#E8826F',
-    dangerTint: '#3D2622',
+    dangerTint: '#4A2620',
   },
 };
