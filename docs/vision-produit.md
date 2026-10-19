@@ -22,7 +22,7 @@ production, rendements, traçabilité) en feraient un autre produit.
 
 ```
 Jardin
-└── Espaces typés : potager, verger, petits fruits, bois de chauffage…
+└── Espaces typés : potager, verger, petits fruits, serre, bois de chauffage…
     └── Zones, facultatives : carré, planche, rang
         └── Éléments suivis : cultures, arbres, arbustes, tas de bois
 ```
@@ -34,7 +34,8 @@ Jardin
 - Une **zone** découpe un espace quand c'est utile : les carrés du potager, un rang de
   framboisiers. Un verger peut s'en passer.
 - Un **élément** est ce qu'on suit : une culture (« 2 rangs de carottes »), un arbre
-  fruitier, un framboisier, un tas de bois.
+  fruitier, un framboisier, un tas de bois. Des sujets identiques peuvent se suivre ensemble
+  (« 3 pommiers Golden ») ou un par un, au choix.
 
 Le modèle détaillé est dans [`modele-domaine.md`](modele-domaine.md).
 
@@ -43,8 +44,9 @@ Le modèle détaillé est dans [`modele-domaine.md`](modele-domaine.md).
 | Espace | Éléments | Ce qu'on suit |
 |---|---|---|
 | Potager | Cultures : espèce, variété, quantité (pieds, rangs, m²) | Semis, plantation, arrosage, traitements, récoltes, fin de culture ; historique par carré d'une saison à l'autre |
-| Verger | Arbres fruitiers, un par un | Variété, date de plantation, tailles, traitements, récoltes, sur plusieurs années |
+| Verger | Arbres fruitiers, seuls ou par groupe de sujets identiques | Variété, date de plantation, tailles, traitements, récoltes, sur plusieurs années |
 | Petits fruits | Arbustes et buissons (framboisiers, groseilliers…) | Comme le verger, souvent par rang |
+| Serre | Cultures et semis, comme au potager ; zones par tablette ou par bac | Semis, repiquage, arrosage (pas de pluie sous abri), traitements, récoltes |
 | Bois de chauffage | Tas de bois | Essence, volume en stères, date de coupe, séchage (« prêt à brûler » à partir de quand), consommation et stock restant |
 
 Pour tous les types : un **journal d'interventions** daté et des **tâches** qui reviennent.
@@ -80,7 +82,7 @@ pas.
 
 ## MVP
 
-- Un jardin, ses espaces typés : potager, verger, petits fruits, bois de chauffage.
+- Un jardin, ses espaces typés : potager, verger, petits fruits, serre, bois de chauffage.
 - Zones dans les espaces.
 - Cultures, arbres et arbustes (saisie libre), tas de bois.
 - Journal d'interventions unifié.
@@ -96,7 +98,7 @@ Dans l'ordre envisagé, à re-prioriser au fil de l'eau :
 3. Récoltes chiffrées, bilans par saison et par culture ; photos sur le journal.
 4. Catalogue d'espèces : périodes de semis, intervalles par défaut, tâches de saison
    proposées. Rotation des cultures par carré.
-5. Autres types d'espaces : serre, aromatiques, massifs, pelouse, compost, poulailler…
+5. Autres types d'espaces : aromatiques, massifs, pelouse, compost, poulailler…
 6. Météo : la pluie décale l'arrosage, alertes de gel.
 7. Foyer partagé (qui a fait quoi) et plusieurs jardins.
 8. Publication : API hébergée, authentification, build et fiche Play Store.

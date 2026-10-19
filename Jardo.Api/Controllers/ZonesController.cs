@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace Jardo.Api.Controllers;
 
 /// <summary>
-/// Les zones du potager : carrés, plates-bandes, serre.
+/// Les zones d'un espace : carrés, planches, rangs.
 /// </summary>
 [ApiController]
-[Route("api/zones")]
+[Route("api")]
 [Produces("application/json")]
 public class ZonesController : ControllerBase
 {
@@ -22,54 +22,57 @@ public class ZonesController : ControllerBase
     }
 
     /// <summary>
-    /// Liste toutes les zones, avec le nombre de plantes et le nombre de plantes à arroser.
+    /// Les zones d'un espace, avec leur nombre d'éléments et de plantes à arroser.
     /// </summary>
-    [HttpGet]
+    [HttpGet("spaces/{spaceId:int}/zones")]
     [ProducesResponseType<List<ZoneResponseDto>>(StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<ZoneResponseDto>>> GetZones(CancellationToken cancellationToken)
-        => await _zoneService.GetAllAsync(cancellationToken);
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<ZoneResponseDto>>> GetZones(int spaceId, CancellationToken cancellationToken)
+        => await _zoneService.GetBySpaceAsync(spaceId, cancellationToken);
 
     /// <summary>
     /// Récupère une zone par son identifiant.
     /// </summary>
-    [HttpGet("{id:int}", Name = nameof(GetZone))]
+    [HttpGet("zones/{id:int}", Name = nameof(GetZone))]
     [ProducesResponseType<ZoneResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ZoneResponseDto>> GetZone(int id, CancellationToken cancellationToken)
         => await _zoneService.GetByIdAsync(id, cancellationToken);
 
     /// <summary>
-    /// Crée une zone. Le nom doit être unique.
+    /// Crée une zone dans un espace. Le nom doit être unique dans l'espace.
     /// </summary>
-    [HttpPost]
+    [HttpPost("spaces/{spaceId:int}/zones")]
     [ProducesResponseType<ZoneResponseDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ZoneResponseDto>> CreateZone(
-        CreateZoneDto dto,
+        int spaceId,
+        SaveZoneDto dto,
         CancellationToken cancellationToken)
     {
-        var zone = await _zoneService.CreateAsync(dto, cancellationToken);
+        var zone = await _zoneService.CreateAsync(spaceId, dto, cancellationToken);
 
         return CreatedAtAction(nameof(GetZone), new { id = zone.Id }, zone);
     }
 
     /// <summary>
-    /// Modifie une zone existante.
+    /// Modifie une zone existante. Elle reste dans son espace.
     /// </summary>
-    [HttpPut("{id:int}")]
+    [HttpPut("zones/{id:int}")]
     [ProducesResponseType<ZoneResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ZoneResponseDto>> UpdateZone(
         int id,
-        UpdateZoneDto dto,
+        SaveZoneDto dto,
         CancellationToken cancellationToken)
         => await _zoneService.UpdateAsync(id, dto, cancellationToken);
 
     /// <summary>
-    /// Supprime une zone. Refusé si elle contient encore des plantes.
+    /// Supprime une zone. Refusé si elle contient encore des éléments.
     /// </summary>
-    [HttpDelete("{id:int}")]
+    [HttpDelete("zones/{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -86,7 +89,7 @@ public class ZonesController : ControllerBase
     /// <remarks>
     /// Un enregistrement est créé par plante, pour que chacune garde son propre historique.
     /// </remarks>
-    [HttpPost("{id:int}/waterings")]
+    [HttpPost("zones/{id:int}/waterings")]
     [ProducesResponseType<ZoneWateringResultDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

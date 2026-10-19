@@ -1,32 +1,26 @@
 namespace Jardo.Api.Models;
 
 /// <summary>
-/// Une plante cultivée dans une zone ; porte la fréquence d'arrosage.
+/// Une culture, un arbre ou un arbuste. Un pommier et un rang de carottes sont tous deux des
+/// plantes : ce qui les distingue vient du type de leur espace. Une plante est un sujet seul ou
+/// un groupe de sujets identiques suivis ensemble (« 3 pommiers Golden »), au choix de l'utilisateur.
 /// </summary>
-public class Plant
+public class Plant : GardenItem
 {
-    public int Id { get; set; }
-
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>Nom botanique, optionnel.</summary>
+    /// <summary>Espèce en texte libre, nom courant ou botanique.</summary>
     public string? Species { get; set; }
+
+    public string? Variety { get; set; }
+
+    public double Quantity { get; set; } = 1;
+
+    public QuantityUnit QuantityUnit { get; set; }
+
+    public DateOnly? SownDate { get; set; }
 
     public DateOnly? PlantedDate { get; set; }
 
     public int WateringIntervalDays { get; set; }
-
-    /// <summary>
-    /// Archivée plutôt que supprimée en fin de saison, pour conserver l'historique.
-    /// Une plante archivée est exclue des calculs d'arrosage.
-    /// </summary>
-    public bool IsArchived { get; set; }
-
-    public DateTimeOffset CreatedAt { get; set; }
-
-    public int ZoneId { get; set; }
-
-    public Zone Zone { get; set; } = null!;
 
     public ICollection<WateringLog> WateringLogs { get; set; } = new List<WateringLog>();
 

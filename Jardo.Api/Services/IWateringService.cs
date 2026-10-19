@@ -9,6 +9,7 @@ public interface IWateringService
 {
     /// <summary>
     /// Les plantes dont l'arrosage est dû aujourd'hui ou en retard, les plus urgentes d'abord.
+    /// Les plantes archivées et celles des espaces archivés n'y figurent jamais.
     /// </summary>
     Task<List<PlantResponseDto>> GetPlantsNeedingWaterAsync(CancellationToken cancellationToken = default);
 
