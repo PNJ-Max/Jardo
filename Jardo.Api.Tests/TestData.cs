@@ -60,4 +60,28 @@ public static class TestData
         await db.SaveChangesAsync();
         return plant;
     }
+
+    /// <summary>Une entrée sur l'élément si donné, sinon sur la zone, sinon sur tout l'espace.</summary>
+    public static async Task<JournalEntry> AddEntryAsync(
+        this GardenDbContext db,
+        JournalEntryKind kind,
+        DateOnly date,
+        Space space,
+        Zone? zone = null,
+        GardenItem? item = null)
+    {
+        var entry = new JournalEntry
+        {
+            Kind = kind,
+            Date = date,
+            SpaceId = space.Id,
+            ZoneId = item is null ? zone?.Id : item.ZoneId,
+            ItemId = item?.Id,
+            CreatedAt = DateTimeOffset.UnixEpoch
+        };
+
+        db.JournalEntries.Add(entry);
+        await db.SaveChangesAsync();
+        return entry;
+    }
 }

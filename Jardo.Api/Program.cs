@@ -25,7 +25,7 @@ builder.Services.AddScoped<ISpaceService, SpaceService>();
 builder.Services.AddScoped<IZoneService, ZoneService>();
 builder.Services.AddScoped<IPlantService, PlantService>();
 builder.Services.AddScoped<IWateringService, WateringService>();
-builder.Services.AddScoped<IObservationService, ObservationService>();
+builder.Services.AddScoped<IJournalService, JournalService>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -48,7 +48,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Jardo API",
         Version = "v1",
-        Description = "Gestion du jardin : espaces, zones, plantes, arrosages et journal d'observations."
+        Description = "Gestion du jardin : espaces, zones, plantes, journal d'interventions et voyant d'arrosage."
     });
 
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";

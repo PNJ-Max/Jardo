@@ -48,6 +48,21 @@ public class SpaceServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Un_espace_dont_le_journal_ne_convient_pas_au_nouveau_type_ne_peut_pas_en_changer()
+    {
+        var potager = await _database.Context.AddSpaceAsync("Potager");
+        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, new DateOnly(2026, 6, 1), potager);
+
+        await Assert.ThrowsAsync<BusinessRuleException>(() => _service.UpdateAsync(
+            potager.Id, new SaveSpaceDto { Name = "Potager", Kind = SpaceKind.Firewood }));
+
+        var updated = await _service.UpdateAsync(
+            potager.Id, new SaveSpaceDto { Name = "Potager", Kind = SpaceKind.Greenhouse });
+
+        Assert.Equal(SpaceKind.Greenhouse, updated.Kind);
+    }
+
+    [Fact]
     public async Task Un_espace_vide_peut_changer_de_type()
     {
         var verger = await _database.Context.AddSpaceAsync("Verger", SpaceKind.Orchard);

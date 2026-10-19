@@ -85,40 +85,64 @@ namespace Jardo.Api.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("Jardo.Api.Models.Observation", b =>
+            modelBuilder.Entity("Jardo.Api.Models.JournalEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("HeightCm")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Note")
+                    b.Property<int?>("ItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
                         .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateOnly>("ObservedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PlantId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ProblemNote")
+                    b.Property<string>("Problem")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
+
+                    b.Property<double?>("Quantity")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("QuantityUnit")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SpaceId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Treatment")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ZoneId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("PlantId", "ObservedAt")
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("ZoneId");
+
+                    b.HasIndex("SpaceId", "Date")
                         .IsDescending(false, true);
 
-                    b.ToTable("Observations");
+                    b.ToTable("JournalEntries");
                 });
 
             modelBuilder.Entity("Jardo.Api.Models.Space", b =>
@@ -156,30 +180,6 @@ namespace Jardo.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Spaces");
-                });
-
-            modelBuilder.Entity("Jardo.Api.Models.WateringLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PlantId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateOnly>("WateredAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlantId", "WateredAt")
-                        .IsDescending(false, true);
-
-                    b.ToTable("WateringLogs");
                 });
 
             modelBuilder.Entity("Jardo.Api.Models.Zone", b =>
@@ -261,15 +261,29 @@ namespace Jardo.Api.Migrations
                     b.Navigation("Zone");
                 });
 
-            modelBuilder.Entity("Jardo.Api.Models.Observation", b =>
+            modelBuilder.Entity("Jardo.Api.Models.JournalEntry", b =>
                 {
-                    b.HasOne("Jardo.Api.Models.Plant", "Plant")
-                        .WithMany("Observations")
-                        .HasForeignKey("PlantId")
+                    b.HasOne("Jardo.Api.Models.GardenItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Jardo.Api.Models.Space", "Space")
+                        .WithMany()
+                        .HasForeignKey("SpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Plant");
+                    b.HasOne("Jardo.Api.Models.Zone", "Zone")
+                        .WithMany()
+                        .HasForeignKey("ZoneId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Space");
+
+                    b.Navigation("Zone");
                 });
 
             modelBuilder.Entity("Jardo.Api.Models.Space", b =>
@@ -281,17 +295,6 @@ namespace Jardo.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Garden");
-                });
-
-            modelBuilder.Entity("Jardo.Api.Models.WateringLog", b =>
-                {
-                    b.HasOne("Jardo.Api.Models.Plant", "Plant")
-                        .WithMany("WateringLogs")
-                        .HasForeignKey("PlantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Plant");
                 });
 
             modelBuilder.Entity("Jardo.Api.Models.Zone", b =>
@@ -320,13 +323,6 @@ namespace Jardo.Api.Migrations
             modelBuilder.Entity("Jardo.Api.Models.Zone", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("Jardo.Api.Models.Plant", b =>
-                {
-                    b.Navigation("Observations");
-
-                    b.Navigation("WateringLogs");
                 });
 #pragma warning restore 612, 618
         }

@@ -21,7 +21,7 @@ public interface ISpaceService
     /// <summary>Modifie un espace, type compris.</summary>
     /// <exception cref="Infrastructure.NotFoundException">L'espace n'existe pas.</exception>
     /// <exception cref="Infrastructure.BusinessRuleException">
-    /// Un autre espace porte déjà ce nom, ou le nouveau type n'accepte pas le contenu actuel.
+    /// Un autre espace porte déjà ce nom, ou le nouveau type n'accepte pas le contenu actuel ou le journal.
     /// </exception>
     Task<SpaceResponseDto> UpdateAsync(int id, SaveSpaceDto dto, CancellationToken cancellationToken = default);
 
@@ -32,7 +32,7 @@ public interface ISpaceService
     /// <exception cref="Infrastructure.NotFoundException">L'espace n'existe pas.</exception>
     Task<SpaceResponseDto> SetArchivedAsync(int id, bool isArchived, CancellationToken cancellationToken = default);
 
-    /// <summary>Supprime un espace sans élément, avec ses zones.</summary>
+    /// <summary>Supprime un espace sans élément, avec ses zones et son journal.</summary>
     /// <exception cref="Infrastructure.NotFoundException">L'espace n'existe pas.</exception>
     /// <exception cref="Infrastructure.BusinessRuleException">L'espace contient encore des éléments.</exception>
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);

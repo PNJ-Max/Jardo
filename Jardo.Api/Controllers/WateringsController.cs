@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Jardo.Api.Controllers;
 
 /// <summary>
-/// Arrosages : ce qui a été fait, et ce qui reste à faire.
+/// Arrosage : ce qui reste à faire, et un raccourci pour noter un arrosage au journal.
 /// </summary>
 [ApiController]
 [Route("api")]
@@ -22,41 +22,32 @@ public class WateringsController : ControllerBase
     /// <summary>
     /// Les plantes à arroser aujourd'hui, les plus en retard d'abord.
     /// </summary>
+    /// <remarks>
+    /// Un arrosage noté sur la zone ou sur tout l'espace d'une plante compte comme le sien.
+    /// </remarks>
     [HttpGet("watering/needed")]
     [ProducesResponseType<List<PlantResponseDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PlantResponseDto>>> GetPlantsNeedingWater(CancellationToken cancellationToken)
         => await _wateringService.GetPlantsNeedingWaterAsync(cancellationToken);
 
     /// <summary>
-    /// Historique des arrosages d'une plante, du plus récent au plus ancien.
-    /// </summary>
-    [HttpGet("plants/{plantId:int}/waterings")]
-    [ProducesResponseType<List<WateringLogResponseDto>>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<List<WateringLogResponseDto>>> GetHistory(
-        int plantId,
-        CancellationToken cancellationToken)
-        => await _wateringService.GetHistoryAsync(plantId, cancellationToken);
-
-    /// <summary>
-    /// Enregistre l'arrosage d'une plante.
+    /// Note l'arrosage d'une plante au journal.
     /// </summary>
     /// <remarks>
-    /// Le corps est optionnel : « {} » enregistre un arrosage à la date du jour.
+    /// Le corps est optionnel : « {} » note un arrosage à la date du jour.
     /// Une date passée est acceptée, une date future est refusée.
     /// </remarks>
     [HttpPost("plants/{plantId:int}/waterings")]
-    [ProducesResponseType<WateringLogResponseDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType<JournalEntryResponseDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<WateringLogResponseDto>> WaterPlant(
+    public async Task<ActionResult<JournalEntryResponseDto>> WaterPlant(
         int plantId,
         CreateWateringDto dto,
         CancellationToken cancellationToken)
     {
-        var log = await _wateringService.WaterPlantAsync(plantId, dto, cancellationToken);
+        var entry = await _wateringService.WaterPlantAsync(plantId, dto, cancellationToken);
 
-        // Location vers l'historique : il n'existe pas d'endpoint pour un arrosage seul.
-        return CreatedAtAction(nameof(GetHistory), new { plantId }, log);
+        return CreatedAtAction(nameof(JournalController.GetEntry), "Journal", new { id = entry.Id }, entry);
     }
 }

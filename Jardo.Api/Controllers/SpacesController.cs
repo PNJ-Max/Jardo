@@ -89,7 +89,7 @@ public class SpacesController : ControllerBase
         => await _spaceService.SetArchivedAsync(id, isArchived: false, cancellationToken);
 
     /// <summary>
-    /// Supprime un espace et ses zones. Refusé s'il contient encore des éléments, même archivés.
+    /// Supprime un espace, ses zones et son journal. Refusé s'il contient encore des éléments, même archivés.
     /// </summary>
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
