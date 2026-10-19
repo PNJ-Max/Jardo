@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Jardo.Api.Controllers;
 
 /// <summary>
-/// Les plantes du jardin (cultures, arbres, arbustes), avec leur voyant d'arrosage.
+/// Les plantes du jardin : cultures, arbres, arbustes.
 /// </summary>
 [ApiController]
 [Route("api/plants")]
@@ -35,7 +35,7 @@ public class PlantsController : ControllerBase
         => await _plantService.GetAllAsync(spaceId, zoneId, includeArchived, cancellationToken);
 
     /// <summary>
-    /// Récupère une plante par son identifiant, voyant d'arrosage compris.
+    /// Récupère une plante par son identifiant.
     /// </summary>
     [HttpGet("{id:int}", Name = nameof(GetPlant))]
     [ProducesResponseType<PlantResponseDto>(StatusCodes.Status200OK)]
@@ -59,7 +59,7 @@ public class PlantsController : ControllerBase
     }
 
     /// <summary>
-    /// Modifie une plante. Un SpaceId ou un ZoneId différent la déplace, avec son journal.
+    /// Modifie une plante. Un SpaceId ou un ZoneId différent la déplace, avec son journal et ses tâches.
     /// </summary>
     [HttpPut("{id:int}")]
     [ProducesResponseType<PlantResponseDto>(StatusCodes.Status200OK)]
@@ -75,7 +75,7 @@ public class PlantsController : ControllerBase
     /// Archive une plante : fin de saison, arrachée ou morte.
     /// </summary>
     /// <remarks>
-    /// Une plante archivée sort des calculs d'arrosage et de la liste par défaut, mais
+    /// Une plante archivée sort des tâches dues et de la liste par défaut, mais
     /// conserve tout son historique.
     /// </remarks>
     [HttpPost("{id:int}/archive")]
@@ -85,7 +85,7 @@ public class PlantsController : ControllerBase
         => await _plantService.SetArchivedAsync(id, isArchived: true, cancellationToken);
 
     /// <summary>
-    /// Réactive une plante archivée : elle réintègre les calculs d'arrosage.
+    /// Réactive une plante archivée : ses tâches reprennent.
     /// </summary>
     [HttpPost("{id:int}/unarchive")]
     [ProducesResponseType<PlantResponseDto>(StatusCodes.Status200OK)]
@@ -94,7 +94,7 @@ public class PlantsController : ControllerBase
         => await _plantService.SetArchivedAsync(id, isArchived: false, cancellationToken);
 
     /// <summary>
-    /// Supprime définitivement une plante, avec ses entrées de journal.
+    /// Supprime définitivement une plante, avec ses entrées de journal et ses tâches.
     /// </summary>
     /// <remarks>
     /// À réserver aux erreurs de saisie ; pour une plante en fin de vie, utiliser l'archivage.

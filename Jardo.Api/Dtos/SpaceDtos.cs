@@ -39,7 +39,13 @@ public class SpaceResponseDto
     /// <summary>Nombre d'éléments actifs (non archivés).</summary>
     public int ItemCount { get; set; }
 
-    public static SpaceResponseDto FromEntity(Space space, int zoneCount, int itemCount) => new()
+    /// <summary>
+    /// Nombre de tâches de l'espace à faire aujourd'hui ou en retard, hors éléments archivés.
+    /// Toujours 0 pour un espace archivé.
+    /// </summary>
+    public int DueTaskCount { get; set; }
+
+    public static SpaceResponseDto FromEntity(Space space, int zoneCount, int itemCount, int dueTaskCount) => new()
     {
         Id = space.Id,
         Name = space.Name,
@@ -48,6 +54,7 @@ public class SpaceResponseDto
         IsArchived = space.IsArchived,
         CreatedAt = space.CreatedAt,
         ZoneCount = zoneCount,
-        ItemCount = itemCount
+        ItemCount = itemCount,
+        DueTaskCount = dueTaskCount
     };
 }

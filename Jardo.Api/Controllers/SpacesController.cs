@@ -20,7 +20,7 @@ public class SpacesController : ControllerBase
     }
 
     /// <summary>
-    /// Liste les espaces, avec leur nombre de zones et d'éléments actifs.
+    /// Liste les espaces, avec leur nombre de zones, d'éléments actifs et de tâches dues.
     /// </summary>
     /// <param name="includeArchived">Inclure les espaces archivés (faux par défaut).</param>
     [HttpGet]
@@ -71,7 +71,7 @@ public class SpacesController : ControllerBase
     /// Archive un espace : il sort de la liste par défaut et n'accueille plus rien de nouveau.
     /// </summary>
     /// <remarks>
-    /// Son contenu et son historique sont conservés ; ses plantes sortent des calculs d'arrosage.
+    /// Son contenu et son historique sont conservés ; ses tâches ne sont plus dues.
     /// </remarks>
     [HttpPost("{id:int}/archive")]
     [ProducesResponseType<SpaceResponseDto>(StatusCodes.Status200OK)]

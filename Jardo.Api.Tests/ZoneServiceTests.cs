@@ -77,33 +77,15 @@ public class ZoneServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Les_compteurs_de_zone_ne_retiennent_que_les_plantes_actives()
+    public async Task Le_compteur_de_zone_ne_retient_que_les_elements_actifs()
     {
         var potager = await _database.Context.AddSpaceAsync("Potager");
         var carre = await _database.Context.AddZoneAsync(potager, "Carré 1");
-        await _database.Context.AddPlantAsync(potager, carre, "Tomate", wateringIntervalDays: 2);
-        await _database.Context.AddPlantAsync(potager, carre, "Radis", wateringIntervalDays: 2, isArchived: true);
-        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, new DateOnly(2026, 6, 1), potager, carre);
+        await _database.Context.AddPlantAsync(potager, carre, "Tomate");
+        await _database.Context.AddPlantAsync(potager, carre, "Radis", isArchived: true);
 
         var zone = Assert.Single(await _service.GetBySpaceAsync(potager.Id));
 
         Assert.Equal(1, zone.ItemCount);
-        Assert.Equal(1, zone.PlantsNeedingWater);
-    }
-
-    [Fact]
-    public async Task Larrosage_de_la_zone_ou_de_lespace_compte_pour_le_compteur_de_la_zone()
-    {
-        var potager = await _database.Context.AddSpaceAsync("Potager");
-        var carre1 = await _database.Context.AddZoneAsync(potager, "Carré 1");
-        var carre2 = await _database.Context.AddZoneAsync(potager, "Carré 2");
-        await _database.Context.AddPlantAsync(potager, carre1, "Tomate", wateringIntervalDays: 2);
-        await _database.Context.AddPlantAsync(potager, carre2, "Carotte", wateringIntervalDays: 2);
-        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, new DateOnly(2026, 6, 1), potager);
-        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, new DateOnly(2026, 6, 15), potager, carre1);
-
-        var zones = await _service.GetBySpaceAsync(potager.Id);
-
-        Assert.Equal(new[] { 0, 1 }, zones.Select(zone => zone.PlantsNeedingWater).ToArray());
     }
 }

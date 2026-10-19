@@ -2,7 +2,8 @@
 
 Proposition conceptuelle qui traduit la [vision produit](vision-produit.md). L'API
 l'implémente par étapes (voir [Stratégie de migration](#stratégie-de-migration)) : l'étape 1,
-jardin, espaces, zones et plantes, et l'étape 2, journal d'interventions, sont faites. Les noms d'entités sont ceux du code (en
+jardin, espaces, zones et plantes, l'étape 2, journal d'interventions, et l'étape 3, tâches,
+sont faites. Les noms d'entités sont ceux du code (en
 anglais) ; les champs listés sont indicatifs et sont arrêtés dans chaque PR.
 
 ## Vue d'ensemble
@@ -113,11 +114,10 @@ carré, « arroser le verger » de chaque arbre du verger, zones comprises. L'é
 où il se trouve au moment de la lecture ; on ne garde pas l'historique de ses déplacements. La
 règle sert :
 
-- au voyant d'arrosage : le dernier arrosage d'une plante est le plus récent de ceux notés sur
-  elle, sur sa zone et sur tout son espace (`LatestInterventions`). Une plantation postérieure
-  à ce dernier arrosage relance le décompte, pour qu'une plante arrivée dans un carré déjà
-  arrosé ne naisse pas en retard ;
-- au calculateur d'échéance des tâches (étape 3), pour tout type d'intervention ;
+- à l'échéance des tâches, pour tout type d'intervention (`LatestInterventions`) : la dernière
+  intervention qui vaut pour un élément est la plus récente de celles notées sur lui, sur sa
+  zone et sur tout son espace ; pour une zone, sur elle et sur tout son espace ; pour un
+  espace, sur lui seul. Arroser une plante n'arrose pas son carré ;
 - à la lecture du journal : celui d'un élément montre ses entrées et celles de sa zone et de
   son espace ; celui d'une zone, ses entrées, celles de ses éléments et celles de tout
   l'espace ; celui d'un espace, tout ce qui s'y est fait.
@@ -137,15 +137,50 @@ et une récurrence :
 - **chaque année** à partir d'une date (tailler chaque 1er février) ;
 - **une seule fois**, à une date donnée.
 
-**L'échéance est calculée, jamais stockée**, sur le principe du voyant actuel : dernière
-entrée du journal de même `Kind` qui vaut pour la cible (la cible elle-même ou ce qui la
-contient, selon la règle d'application du journal), plus la récurrence ; à défaut, la date de
-départ de la tâche. Faire une tâche, c'est noter l'intervention au journal : il n'y a pas de
-statut « faite » à tenir à jour. Une tâche ponctuelle est close dès qu'une entrée de même type
-et de même cible existe à sa date ou après.
+La cible suit les règles du journal (cohérence vérifiée, zone prise d'office pour un élément
+situé dans une zone, type d'intervention accepté par l'espace, pas de nouvelle tâche sur une
+cible archivée), et **les tâches d'un élément le suivent** quand il est déplacé. Une tâche
+« autre » porte un titre. Un espace ne change pas de type si ses tâches contiennent un type que
+le nouveau refuse.
 
-Le voyant `Ok` / `DueSoon` / `Overdue` s'applique à toute tâche. `WateringCalculator`
-devient un calculateur d'échéance générique, toujours pur et sans dépendance.
+**L'échéance est calculée, jamais stockée** (`DueDateCalculator`, pur et sans dépendance), à
+partir de la dernière entrée du journal de même `Kind` qui vaut pour la cible, selon la règle
+d'application du journal :
+
+| Récurrence | Date de départ | Échéance |
+|---|---|---|
+| Tous les N jours | Première échéance | Dernière fois + N jours, mais jamais avant la date de départ ; à défaut, la date de départ |
+| Chaque année | Date anniversaire, à partir de cette année-là | La date anniversaire qui suit celle que la dernière fois a faite ; à défaut, la date de départ |
+| Une seule fois | Jour prévu | Le jour prévu, jusqu'à ce qu'une entrée datée du jour de création de la tâche ou après existe : la tâche est alors close |
+
+- **Tous les N jours** : un historique plus ancien que la date de départ ne fait pas naître la
+  tâche en retard. C'est ce qui remplace l'ancienne règle « une plantation relance le décompte
+  d'arrosage » : une plante arrivée dans un carré arrosé il y a dix jours reçoit une tâche qui
+  part d'aujourd'hui.
+- **Chaque année : une intervention compte pour la date anniversaire si elle est faite au plus
+  30 jours avant**, ou n'importe quand après (en retard). Tailler le 25 janvier fait la taille
+  du 1er février : la suivante tombe le 1er février de l'an prochain. Une taille en vert de
+  septembre ne fait pas la taille d'hiver qui vient ; elle compte, en retard, pour le dernier
+  1er février passé. Une tâche jamais faite est due depuis sa date de départ, même lointaine.
+  Une date anniversaire au 29 février tombe le 28 les années non bissextiles.
+- **Une seule fois : close par une intervention notée à partir du jour où la tâche a été
+  créée**, qu'elle tombe avant ou après le jour prévu. « Traiter les rosiers le 25 octobre »,
+  créée le 20 et faite le 23, est close le 23. Une intervention antérieure à la création ne
+  compte pas : un arrosage de la semaine dernière ne ferme pas un « arroser » ponctuel créé
+  aujourd'hui. Le jour de création compte, lui : un premier traitement noté le jour même où l'on
+  crée « renouveler dans dix jours » clôt la tâche (la comparaison se fait au jour, pas à l'heure).
+
+Le voyant vaut pour toute tâche : `Ok` (échéance future ou tâche ponctuelle close), `DueSoon`
+(échéance aujourd'hui), `Overdue` (échéance passée, avec le nombre de jours de retard). Faire
+une tâche, c'est noter l'intervention au journal : il n'y a pas de statut « faite » à tenir à
+jour. L'action « Fait » note l'entrée sur la cible de la tâche, à la date du jour ou à une date
+passée, avec le titre de la tâche pour note à défaut d'une autre. Les tâches d'un élément ou
+d'un espace archivé ne sont jamais dues.
+
+Les tâches se lisent comme le journal : pour tout le jardin, ou pour une cible (celles d'un
+élément comprennent celles de sa zone et de son espace). Les tâches dues, toutes catégories,
+se lisent les plus en retard d'abord, pour aujourd'hui ou pour les sept prochains jours ; chaque
+espace donne son nombre de tâches dues.
 
 ## Commun et propre à chaque type
 
@@ -167,9 +202,9 @@ un pommier et un rang de carottes sont tous des `Plant`.
 | `WateringLog` | `JournalEntry` de type arrosage | 2, faite |
 | `Observation` (note, hauteur, problème, traitement) | `JournalEntry` de type observation ou traitement, mêmes champs | 2, faite |
 | `POST /api/zones/{id}/waterings` (un arrosage par plante) | Une seule entrée sur la zone, qui vaut pour ses plantes ; toute intervention se note aussi sur une zone ou un espace via `POST /api/journal` | 2, faite |
-| `Plant.WateringIntervalDays` | Une `GardenTask` d'arrosage tous les N jours | 3 |
-| `WateringCalculator`, `wateringStatus` | Calculateur d'échéance générique, statut sur chaque tâche | 3 |
-| `GET /api/watering/needed` | Tâches dues (toutes catégories) | 3 |
+| `Plant.WateringIntervalDays` | Une `GardenTask` d'arrosage tous les N jours | 3, faite |
+| `WateringCalculator`, `wateringStatus` | `DueDateCalculator` générique, statut sur chaque tâche | 3, faite |
+| `GET /api/watering/needed`, raccourcis d'arrosage d'une plante ou d'une zone | `GET /api/tasks/due` (toutes catégories) et l'action « Fait » `POST /api/tasks/{id}/done` | 3, faite |
 
 Les règles en place restent valables : contrôleurs fins et services métier, ProblemDetails,
 `TimeProvider`, DTOs séparés, contraintes en Fluent API.

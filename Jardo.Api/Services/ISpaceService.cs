@@ -32,7 +32,7 @@ public interface ISpaceService
     /// <exception cref="Infrastructure.NotFoundException">L'espace n'existe pas.</exception>
     Task<SpaceResponseDto> SetArchivedAsync(int id, bool isArchived, CancellationToken cancellationToken = default);
 
-    /// <summary>Supprime un espace sans élément, avec ses zones et son journal.</summary>
+    /// <summary>Supprime un espace sans élément, avec ses zones, son journal et ses tâches.</summary>
     /// <exception cref="Infrastructure.NotFoundException">L'espace n'existe pas.</exception>
     /// <exception cref="Infrastructure.BusinessRuleException">L'espace contient encore des éléments.</exception>
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);

@@ -17,6 +17,7 @@ public class GardenDbContext : DbContext
     public DbSet<GardenItem> GardenItems => Set<GardenItem>();
     public DbSet<Plant> Plants => Set<Plant>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
+    public DbSet<GardenTask> GardenTasks => Set<GardenTask>();
 
     // Contraintes en Fluent API (et non en attributs) pour que Models reste indépendant d'EF Core.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -123,6 +124,30 @@ public class GardenDbContext : DbContext
 
             entry.HasIndex(e => new { e.SpaceId, e.Date })
                  .IsDescending(false, true);
+        });
+
+        modelBuilder.Entity<GardenTask>(task =>
+        {
+            task.Property(t => t.Kind).HasConversion<string>().HasMaxLength(30);
+            task.Property(t => t.Recurrence).HasConversion<string>().HasMaxLength(30);
+            task.Property(t => t.Title).HasMaxLength(100);
+
+            // Mêmes cascades que le journal, sûres pour la même raison : les tâches d'un élément le
+            // suivent quand il change d'espace ou de zone.
+            task.HasOne(t => t.Space)
+                .WithMany()
+                .HasForeignKey(t => t.SpaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            task.HasOne(t => t.Zone)
+                .WithMany()
+                .HasForeignKey(t => t.ZoneId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            task.HasOne(t => t.Item)
+                .WithMany()
+                .HasForeignKey(t => t.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

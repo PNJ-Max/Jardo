@@ -85,6 +85,55 @@ namespace Jardo.Api.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("Jardo.Api.Models.GardenTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IntervalDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Recurrence")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SpaceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ZoneId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("SpaceId");
+
+                    b.HasIndex("ZoneId");
+
+                    b.ToTable("GardenTasks");
+                });
+
             modelBuilder.Entity("Jardo.Api.Models.JournalEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -237,9 +286,6 @@ namespace Jardo.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("WateringIntervalDays")
-                        .HasColumnType("INTEGER");
-
                     b.HasDiscriminator().HasValue("Plant");
                 });
 
@@ -255,6 +301,31 @@ namespace Jardo.Api.Migrations
                         .WithMany("Items")
                         .HasForeignKey("ZoneId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Space");
+
+                    b.Navigation("Zone");
+                });
+
+            modelBuilder.Entity("Jardo.Api.Models.GardenTask", b =>
+                {
+                    b.HasOne("Jardo.Api.Models.GardenItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Jardo.Api.Models.Space", "Space")
+                        .WithMany()
+                        .HasForeignKey("SpaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Jardo.Api.Models.Zone", "Zone")
+                        .WithMany()
+                        .HasForeignKey("ZoneId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Item");
 
                     b.Navigation("Space");
 

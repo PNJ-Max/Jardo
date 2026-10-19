@@ -19,6 +19,4 @@ public class Plant : GardenItem
     public DateOnly? SownDate { get; set; }
 
     public DateOnly? PlantedDate { get; set; }
-
-    public int WateringIntervalDays { get; set; }
 }

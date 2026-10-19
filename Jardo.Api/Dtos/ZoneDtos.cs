@@ -29,17 +29,13 @@ public class ZoneResponseDto
     /// <summary>Nombre d'éléments actifs (non archivés).</summary>
     public int ItemCount { get; set; }
 
-    /// <summary>Nombre de plantes dont l'arrosage est dû ou en retard.</summary>
-    public int PlantsNeedingWater { get; set; }
-
-    public static ZoneResponseDto FromEntity(Zone zone, int itemCount, int plantsNeedingWater) => new()
+    public static ZoneResponseDto FromEntity(Zone zone, int itemCount) => new()
     {
         Id = zone.Id,
         SpaceId = zone.SpaceId,
         Name = zone.Name,
         Description = zone.Description,
         CreatedAt = zone.CreatedAt,
-        ItemCount = itemCount,
-        PlantsNeedingWater = plantsNeedingWater
+        ItemCount = itemCount
     };
 }

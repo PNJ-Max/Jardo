@@ -30,10 +30,6 @@ public class SavePlantDto
 
     public DateOnly? PlantedDate { get; set; }
 
-    /// <summary>Nombre de jours entre deux arrosages.</summary>
-    [Range(1, 365)]
-    public int WateringIntervalDays { get; set; } = 3;
-
     [Range(1, int.MaxValue)]
     public int SpaceId { get; set; }
 
@@ -41,7 +37,7 @@ public class SavePlantDto
     public int? ZoneId { get; set; }
 }
 
-/// <summary>Représentation d'une plante renvoyée par l'API, état d'arrosage compris.</summary>
+/// <summary>Représentation d'une plante renvoyée par l'API.</summary>
 public class PlantResponseDto
 {
     public int Id { get; set; }
@@ -52,7 +48,6 @@ public class PlantResponseDto
     public QuantityUnit QuantityUnit { get; set; }
     public DateOnly? SownDate { get; set; }
     public DateOnly? PlantedDate { get; set; }
-    public int WateringIntervalDays { get; set; }
     public bool IsArchived { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
@@ -60,44 +55,4 @@ public class PlantResponseDto
     public string SpaceName { get; set; } = string.Empty;
     public int? ZoneId { get; set; }
     public string? ZoneName { get; set; }
-
-    // Voyant d'arrosage : recalculé à chaque lecture, jamais stocké.
-    public DateOnly? LastWateredAt { get; set; }
-
-    public DateOnly NextWateringDate { get; set; }
-
-    /// <summary>Ok (vert), DueSoon (orange, échéance aujourd'hui), Overdue (rouge).</summary>
-    public WateringStatus WateringStatus { get; set; }
-
-    /// <summary>Jours de retard, 0 si l'échéance n'est pas dépassée.</summary>
-    public int DaysOverdue { get; set; }
-
-    public bool NeedsWater => WateringStatus != Models.WateringStatus.Ok;
-
-    public static PlantResponseDto FromEntity(
-        Plant plant,
-        WateringState state,
-        string spaceName,
-        string? zoneName) => new()
-    {
-        Id = plant.Id,
-        Name = plant.Name,
-        Species = plant.Species,
-        Variety = plant.Variety,
-        Quantity = plant.Quantity,
-        QuantityUnit = plant.QuantityUnit,
-        SownDate = plant.SownDate,
-        PlantedDate = plant.PlantedDate,
-        WateringIntervalDays = plant.WateringIntervalDays,
-        IsArchived = plant.IsArchived,
-        CreatedAt = plant.CreatedAt,
-        SpaceId = plant.SpaceId,
-        SpaceName = spaceName,
-        ZoneId = plant.ZoneId,
-        ZoneName = zoneName,
-        LastWateredAt = state.LastWateredAt,
-        NextWateringDate = state.NextDueDate,
-        WateringStatus = state.Status,
-        DaysOverdue = state.DaysOverdue
-    };
 }

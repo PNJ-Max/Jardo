@@ -18,8 +18,6 @@ public class JournalService : IJournalService
         _timeProvider = timeProvider;
     }
 
-    private record Target(int SpaceId, int? ZoneId, int? ItemId);
-
     private static IQueryable<JournalEntryResponseDto> Project(IQueryable<JournalEntry> entries)
         => entries.Select(entry => new JournalEntryResponseDto
         {
@@ -164,8 +162,9 @@ public class JournalService : IJournalService
 
         EnsureFieldsFitKind(kind, note, dto.Quantity, dto.QuantityUnit, dto.HeightCm, problem, treatment);
 
-        var current = isNew ? null : new Target(entry.SpaceId, entry.ZoneId, entry.ItemId);
-        var target = await ResolveTargetAsync(dto, kind, current, cancellationToken);
+        var current = isNew ? null : new InterventionTarget(entry.SpaceId, entry.ZoneId, entry.ItemId);
+        var target = await InterventionTarget.ResolveAsync(
+            _db, dto.SpaceId, dto.ZoneId, dto.ItemId, kind, current, "noter une intervention", cancellationToken);
 
         entry.SpaceId = target.SpaceId;
         entry.ZoneId = target.ZoneId;
@@ -233,84 +232,5 @@ public class JournalService : IJournalService
         {
             throw new BusinessRuleException("Une entrée « autre » a besoin d'une note pour dire ce qui a été fait.");
         }
-    }
-
-    // 400 et non 404 : ce sont les identifiants du corps qui sont invalides. Une cible archivée ne
-    // reçoit plus de nouvelle entrée, mais les entrées qu'elle a déjà restent corrigeables.
-    private async Task<Target> ResolveTargetAsync(
-        SaveJournalEntryDto dto,
-        JournalEntryKind kind,
-        Target? current,
-        CancellationToken cancellationToken)
-    {
-        var space = await _db.Spaces
-            .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == dto.SpaceId, cancellationToken)
-            ?? throw new BusinessRuleException($"L'espace {dto.SpaceId} n'existe pas.");
-
-        if (!kind.IsAllowedIn(space.Kind))
-        {
-            throw new BusinessRuleException(
-                $"L'espace « {space.Name} » est un espace {space.Kind.Label()} : " +
-                $"il n'accueille pas d'entrée « {kind.Label()} ».");
-        }
-
-        if (dto.ZoneId is { } zoneId)
-        {
-            var zone = await _db.Zones
-                .AsNoTracking()
-                .FirstOrDefaultAsync(candidate => candidate.Id == zoneId, cancellationToken)
-                ?? throw new BusinessRuleException($"La zone {zoneId} n'existe pas.");
-
-            if (zone.SpaceId != space.Id)
-            {
-                throw new BusinessRuleException(
-                    $"La zone « {zone.Name} » n'appartient pas à l'espace « {space.Name} ».");
-            }
-        }
-
-        var target = new Target(space.Id, dto.ZoneId, ItemId: null);
-        GardenItem? item = null;
-
-        if (dto.ItemId is { } itemId)
-        {
-            item = await _db.GardenItems
-                .AsNoTracking()
-                .FirstOrDefaultAsync(candidate => candidate.Id == itemId, cancellationToken)
-                ?? throw new BusinessRuleException($"L'élément {itemId} n'existe pas.");
-
-            if (item.SpaceId != space.Id)
-            {
-                throw new BusinessRuleException(
-                    $"L'élément « {item.Name} » n'est pas dans l'espace « {space.Name} ».");
-            }
-
-            if (dto.ZoneId.HasValue && item.ZoneId != dto.ZoneId)
-            {
-                throw new BusinessRuleException(
-                    $"L'élément « {item.Name} » n'est pas dans la zone {dto.ZoneId}.");
-            }
-
-            target = new Target(space.Id, item.ZoneId, item.Id);
-        }
-
-        if (target == current)
-        {
-            return target;
-        }
-
-        if (space.IsArchived)
-        {
-            throw new BusinessRuleException(
-                $"L'espace « {space.Name} » est archivé : réactivez-le avant d'y noter une intervention.");
-        }
-
-        if (item is { IsArchived: true })
-        {
-            throw new BusinessRuleException(
-                $"L'élément « {item.Name} » est archivé : réactivez-le avant d'y noter une intervention.");
-        }
-
-        return target;
     }
 }

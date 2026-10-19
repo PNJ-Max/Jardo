@@ -18,44 +18,17 @@ public class ZoneService : IZoneService
         _timeProvider = timeProvider;
     }
 
-    private record ZoneWithItems(Zone Zone, int ItemCount, List<PlantWateringInfo> ActivePlants);
+    private record ZoneWithCount(Zone Zone, int ItemCount);
 
-    private record PlantWateringInfo(int Id, int WateringIntervalDays, DateOnly? PlantedDate);
+    // L'appelant filtre et trie avant la projection : un OrderBy sur la projection n'est pas
+    // traduisible par EF Core.
+    private static IQueryable<ZoneWithCount> Project(IQueryable<Zone> zones)
+        => zones.Select(zone => new ZoneWithCount(zone, zone.Items.Count(item => !item.IsArchived)));
 
-    // Une seule requête SQL pour zones et éléments. L'appelant filtre et trie avant la projection :
-    // un OrderBy sur la projection n'est pas traduisible par EF Core.
-    private static IQueryable<ZoneWithItems> Project(IQueryable<Zone> zones)
-        => zones
-            .Select(zone => new ZoneWithItems(
-                zone,
-                zone.Items.Count(item => !item.IsArchived),
-                zone.Items
-                    .OfType<Plant>()
-                    .Where(plant => !plant.IsArchived)
-                    .Select(plant => new PlantWateringInfo(plant.Id, plant.WateringIntervalDays, plant.PlantedDate))
-                    .ToList()));
-
-    private static ZoneResponseDto ToDto(ZoneWithItems row, LatestInterventions waterings, DateOnly today)
-    {
-        var plantsNeedingWater = row.ActivePlants.Count(plant => WateringCalculator.Calculate(
-            plant.WateringIntervalDays,
-            waterings.ForItem(plant.Id, row.Zone.SpaceId, row.Zone.Id),
-            plant.PlantedDate,
-            today).Status != WateringStatus.Ok);
-
-        return ZoneResponseDto.FromEntity(row.Zone, row.ItemCount, plantsNeedingWater);
-    }
-
-    private Task<LatestInterventions> LoadWateringsAsync(int spaceId, CancellationToken cancellationToken)
-        => LatestInterventions.LoadAsync(
-            _db.JournalEntries.Where(entry => entry.SpaceId == spaceId),
-            JournalEntryKind.Watering,
-            cancellationToken);
+    private static ZoneResponseDto ToDto(ZoneWithCount row) => ZoneResponseDto.FromEntity(row.Zone, row.ItemCount);
 
     public async Task<List<ZoneResponseDto>> GetBySpaceAsync(int spaceId, CancellationToken cancellationToken = default)
     {
-        var today = _timeProvider.Today();
-
         if (!await _db.Spaces.AnyAsync(space => space.Id == spaceId, cancellationToken))
         {
             throw NotFoundException.For("Space", spaceId);
@@ -67,15 +40,12 @@ public class ZoneService : IZoneService
             .OrderBy(zone => zone.Name);
 
         var rows = await Project(source).ToListAsync(cancellationToken);
-        var waterings = await LoadWateringsAsync(spaceId, cancellationToken);
 
-        return rows.Select(row => ToDto(row, waterings, today)).ToList();
+        return rows.Select(ToDto).ToList();
     }
 
     public async Task<ZoneResponseDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var today = _timeProvider.Today();
-
         var source = _db.Zones
             .AsNoTracking()
             .Where(zone => zone.Id == id);
@@ -83,9 +53,7 @@ public class ZoneService : IZoneService
         var row = await Project(source).FirstOrDefaultAsync(cancellationToken)
             ?? throw NotFoundException.For("Zone", id);
 
-        var waterings = await LoadWateringsAsync(row.Zone.SpaceId, cancellationToken);
-
-        return ToDto(row, waterings, today);
+        return ToDto(row);
     }
 
     public async Task<ZoneResponseDto> CreateAsync(int spaceId, SaveZoneDto dto, CancellationToken cancellationToken = default)
@@ -116,7 +84,7 @@ public class ZoneService : IZoneService
         _db.Zones.Add(zone);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return ZoneResponseDto.FromEntity(zone, itemCount: 0, plantsNeedingWater: 0);
+        return ZoneResponseDto.FromEntity(zone, itemCount: 0);
     }
 
     public async Task<ZoneResponseDto> UpdateAsync(int id, SaveZoneDto dto, CancellationToken cancellationToken = default)

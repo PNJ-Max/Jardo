@@ -8,4 +8,8 @@ public static class TimeProviderExtensions
     /// </summary>
     public static DateOnly Today(this TimeProvider timeProvider)
         => DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime);
+
+    /// <summary>Le jour local d'un instant enregistré, dans le même fuseau que <see cref="Today"/>.</summary>
+    public static DateOnly LocalDate(this TimeProvider timeProvider, DateTimeOffset instant)
+        => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, timeProvider.LocalTimeZone).DateTime);
 }

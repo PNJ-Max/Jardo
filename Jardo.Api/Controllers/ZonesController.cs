@@ -13,16 +13,14 @@ namespace Jardo.Api.Controllers;
 public class ZonesController : ControllerBase
 {
     private readonly IZoneService _zoneService;
-    private readonly IWateringService _wateringService;
 
-    public ZonesController(IZoneService zoneService, IWateringService wateringService)
+    public ZonesController(IZoneService zoneService)
     {
         _zoneService = zoneService;
-        _wateringService = wateringService;
     }
 
     /// <summary>
-    /// Les zones d'un espace, avec leur nombre d'éléments et de plantes à arroser.
+    /// Les zones d'un espace, avec leur nombre d'éléments actifs.
     /// </summary>
     [HttpGet("spaces/{spaceId:int}/zones")]
     [ProducesResponseType<List<ZoneResponseDto>>(StatusCodes.Status200OK)]
@@ -81,26 +79,5 @@ public class ZonesController : ControllerBase
         await _zoneService.DeleteAsync(id, cancellationToken);
 
         return NoContent();
-    }
-
-    /// <summary>
-    /// Note l'arrosage de toute la zone au journal.
-    /// </summary>
-    /// <remarks>
-    /// Une seule entrée, sur la zone : elle compte comme arrosage de chacun de ses éléments.
-    /// Le corps est optionnel : « {} » note un arrosage à la date du jour.
-    /// </remarks>
-    [HttpPost("zones/{id:int}/waterings")]
-    [ProducesResponseType<JournalEntryResponseDto>(StatusCodes.Status201Created)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<JournalEntryResponseDto>> WaterZone(
-        int id,
-        CreateWateringDto dto,
-        CancellationToken cancellationToken)
-    {
-        var entry = await _wateringService.WaterZoneAsync(id, dto, cancellationToken);
-
-        return CreatedAtAction(nameof(JournalController.GetEntry), "Journal", new { id = entry.Id }, entry);
     }
 }

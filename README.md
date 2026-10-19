@@ -7,25 +7,27 @@ organise ce que contient le jardin, on note ce qu'on y fait, et l'app rappelle c
 faire. Une API ASP.NET Core et une app Android (Expo) qui la consomme.
 
 La [vision produit](docs/vision-produit.md) et le [modèle du domaine](docs/modele-domaine.md)
-décrivent la cible. L'API en est à la deuxième étape de la migration : un jardin, ses espaces
-typés (potager, verger, petits fruits, serre, bois de chauffage), leurs zones et leurs plantes, plus un
-journal d'interventions et un premier service, le rappel d'arrosage.
+décrivent la cible. L'API en est à la troisième étape de la migration : un jardin, ses espaces
+typés (potager, verger, petits fruits, serre, bois de chauffage), leurs zones et leurs plantes, un
+journal d'interventions et des tâches qui rappellent ce qui est à faire.
 
-## Premier service : le voyant d'arrosage
+## Tâches et échéances
 
-Chaque plante porte un intervalle en jours, et l'API calcule son état à partir du dernier
-arrosage noté au journal, sur la plante, sa zone ou tout son espace. Ce voyant s'étendra à
-toutes les tâches du jardin.
+Une tâche vise un espace, une zone ou un élément, avec un type d'intervention et un rythme :
+tous les N jours (arroser), chaque année à une date (tailler), ou une seule fois. L'API calcule
+son échéance à partir de la dernière intervention de même type notée au journal, sur la cible
+ou sur ce qui la contient : arroser le carré compte pour chacune de ses plantes. Faire une
+tâche, c'est noter l'intervention au journal (`POST /api/tasks/{id}/done`).
 
 | État | Signification |
 |---|---|
-| `Ok` | l'échéance est dans le futur |
+| `Ok` | l'échéance est dans le futur, ou la tâche ponctuelle est faite |
 | `DueSoon` | l'échéance est aujourd'hui |
 | `Overdue` | l'échéance est dépassée (`daysOverdue` donne le retard) |
 
-L'état est recalculé à chaque lecture, jamais stocké. Une zone agrège celui de ses plantes via
-`plantsNeedingWater`. `GET /api/watering/needed` renvoie les plantes à arroser, les plus en
-retard d'abord.
+L'état est recalculé à chaque lecture, jamais stocké. Chaque espace compte ses tâches dues
+(`dueTaskCount`). `GET /api/tasks/due` renvoie les tâches dues de tout le jardin, les plus en
+retard d'abord ; `?horizon=Week` y ajoute celles des six prochains jours.
 
 ## Lancer
 

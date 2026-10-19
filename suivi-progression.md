@@ -24,7 +24,7 @@ en six étapes.
 journal d'interventions, tâches). L'API y migre par étapes. La refonte des écrans est
 suspendue jusqu'à la nouvelle API et aux maquettes revues.
 
-**Backend `Jardo.Api` : migration vers le nouveau modèle, étapes 1 et 2 sur 4 faites.**
+**Backend `Jardo.Api` : migration vers le nouveau modèle, étapes 1 à 3 sur 4 faites.**
 - ASP.NET Core (.NET 10) + EF Core + SQLite, tests dans `Jardo.Api.Tests`.
 - Étape 1, jardin et espaces : un jardin unique (créé par la migration), des espaces typés
   (potager, verger, petits fruits, serre, bois de chauffage) archivables, des zones rattachées à un
@@ -44,13 +44,24 @@ suspendue jusqu'à la nouvelle API et aux maquettes revues.
   une intervention sur une zone ou un espace vaut pour les éléments qu'ils contiennent
   ([détail](docs/modele-domaine.md#journalentry-intervention)). Endpoint `/api/journal` (lecture
   pour le jardin ou une cible, filtre par types, correction, suppression).
-- Voyant d'arrosage conservé (`WateringIntervalDays`, `GET /api/watering/needed`) : il lit le
-  dernier arrosage dans le journal selon la règle ; arroser une zone note une seule entrée. Les
-  tâches génériques arrivent à l'étape 3, le tas de bois à l'étape 4.
-- Le seeder produit quelques semaines de journal : arrosages de zones et d'espaces, semis,
-  plantations, taille du verger, récoltes, oïdium constaté puis traité.
+- Étape 3, tâches : `GardenTask` sur la même cible que le journal, un type d'intervention, un
+  titre facultatif et un rythme (tous les N jours, chaque année à partir d'une date, une seule
+  fois). L'échéance est calculée à la lecture par `DueDateCalculator`, à partir du journal et
+  selon la même règle zone ou espace → éléments ; voyant `Ok` / `DueSoon` / `Overdue` avec jours
+  de retard sur toute tâche. Cas annuel tranché : ce qui est fait jusqu'à 30 jours avant la date
+  compte pour l'année ([détail](docs/modele-domaine.md#gardentask-tâche)). L'arrosage devient
+  une tâche : `WateringIntervalDays`, `GET /api/watering/needed` et les raccourcis d'arrosage
+  disparaissent. Endpoints `/api/tasks` (CRUD, lecture par cible), `/api/tasks/due?horizon=Today|Week`
+  (écran Aujourd'hui), `POST /api/tasks/{id}/done` (« Fait » : note au journal et renvoie la
+  tâche recalculée) ; `dueTaskCount` sur chaque espace pour la liste du Jardin. Le tas de bois
+  arrive à l'étape 4.
+- Le seeder produit quelques semaines de journal (arrosages de zones et d'espaces, semis,
+  plantations, taille du verger, récoltes, oïdium constaté puis traité) et seize tâches :
+  arrosages de cultures, de carrés et d'une plante de verger, désherbage, taille d'hiver,
+  compost annuel, traitement à renouveler, plantation faite ; les trois voyants y figurent.
 - Le front actuel ne suit plus l'API (zones sans espace, `CreatePlantDto`, arrosages et
-  observations disparus) : il sera refait sur le nouveau modèle.
+  observations disparus, voyant d'arrosage remplacé par les tâches) : il sera refait sur le
+  nouveau modèle après l'étape 4.
 - Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
   évidente. README recentré sur le produit.
 
@@ -95,7 +106,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 - API, une PR par étape ([détail](docs/modele-domaine.md#stratégie-de-migration)) :
   1. jardin, espaces typés, zones, plantes avec variété et quantité. Fait ;
   2. journal d'interventions unifié. Fait ;
-  3. tâches récurrentes et calculateur d'échéance générique (l'arrosage en devient une) ;
+  3. tâches récurrentes et calculateur d'échéance générique (l'arrosage en devient une). Fait ;
   4. tas de bois.
 
 **Phase 4 : écrans du nouveau MVP**

@@ -18,14 +18,31 @@ public class PlantService : IPlantService
         _timeProvider = timeProvider;
     }
 
+    private static IQueryable<PlantResponseDto> Project(IQueryable<Plant> plants)
+        => plants.Select(plant => new PlantResponseDto
+        {
+            Id = plant.Id,
+            Name = plant.Name,
+            Species = plant.Species,
+            Variety = plant.Variety,
+            Quantity = plant.Quantity,
+            QuantityUnit = plant.QuantityUnit,
+            SownDate = plant.SownDate,
+            PlantedDate = plant.PlantedDate,
+            IsArchived = plant.IsArchived,
+            CreatedAt = plant.CreatedAt,
+            SpaceId = plant.SpaceId,
+            SpaceName = plant.Space.Name,
+            ZoneId = plant.ZoneId,
+            ZoneName = plant.Zone == null ? null : plant.Zone.Name
+        });
+
     public async Task<List<PlantResponseDto>> GetAllAsync(
         int? spaceId = null,
         int? zoneId = null,
         bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
-        var today = _timeProvider.Today();
-
         var query = _db.Plants.AsNoTracking().AsQueryable();
 
         if (spaceId.HasValue)
@@ -43,36 +60,18 @@ public class PlantService : IPlantService
             query = query.Where(plant => !plant.IsArchived && !plant.Space.IsArchived);
         }
 
-        var rows = await query
+        var ordered = query
             .OrderBy(plant => plant.Space.Name)
             .ThenBy(plant => plant.Zone!.Name)
-            .ThenBy(plant => plant.Name)
-            .SelectWithNames()
-            .ToListAsync(cancellationToken);
+            .ThenBy(plant => plant.Name);
 
-        var waterings = await LatestInterventions.LoadAsync(_db.JournalEntries, JournalEntryKind.Watering, cancellationToken);
-
-        return rows.Select(row => row.ToDto(waterings, today)).ToList();
+        return await Project(ordered).ToListAsync(cancellationToken);
     }
 
     public async Task<PlantResponseDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
-    {
-        var today = _timeProvider.Today();
-
-        var row = await _db.Plants
-            .AsNoTracking()
-            .Where(plant => plant.Id == id)
-            .SelectWithNames()
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw NotFoundException.For("Plant", id);
-
-        var waterings = await LatestInterventions.LoadAsync(
-            _db.JournalEntries.Where(entry => entry.SpaceId == row.Plant.SpaceId),
-            JournalEntryKind.Watering,
-            cancellationToken);
-
-        return row.ToDto(waterings, today);
-    }
+        => await Project(_db.Plants.AsNoTracking().Where(plant => plant.Id == id))
+               .FirstOrDefaultAsync(cancellationToken)
+           ?? throw NotFoundException.For("Plant", id);
 
     public async Task<PlantResponseDto> CreateAsync(SavePlantDto dto, CancellationToken cancellationToken = default)
     {
@@ -109,8 +108,8 @@ public class PlantService : IPlantService
 
         if (plant.SpaceId != dto.SpaceId || plant.ZoneId != dto.ZoneId)
         {
-            // Le journal d'un élément le suit : ses entrées restent dans son espace et sa zone, ce
-            // qui permet de supprimer sans perte un espace ou une zone vidés de leurs éléments.
+            // Le journal et les tâches d'un élément le suivent : ils restent dans son espace et sa
+            // zone, ce qui permet de supprimer sans perte un espace ou une zone vidés de leurs éléments.
             var entries = await _db.JournalEntries
                 .Where(entry => entry.ItemId == id)
                 .ToListAsync(cancellationToken);
@@ -119,6 +118,16 @@ public class PlantService : IPlantService
             {
                 entry.SpaceId = dto.SpaceId;
                 entry.ZoneId = dto.ZoneId;
+            }
+
+            var tasks = await _db.GardenTasks
+                .Where(task => task.ItemId == id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var task in tasks)
+            {
+                task.SpaceId = dto.SpaceId;
+                task.ZoneId = dto.ZoneId;
             }
         }
 
@@ -146,7 +155,7 @@ public class PlantService : IPlantService
         var plant = await _db.Plants.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             ?? throw NotFoundException.For("Plant", id);
 
-        // Ses entrées de journal partent avec la plante, par la cascade de GardenDbContext.
+        // Ses entrées de journal et ses tâches partent avec la plante, par la cascade de GardenDbContext.
         _db.Plants.Remove(plant);
         await _db.SaveChangesAsync(cancellationToken);
     }
@@ -167,7 +176,6 @@ public class PlantService : IPlantService
         plant.QuantityUnit = dto.QuantityUnit;
         plant.SownDate = dto.SownDate;
         plant.PlantedDate = dto.PlantedDate;
-        plant.WateringIntervalDays = dto.WateringIntervalDays;
     }
 
     // 400 et non 404 : la ressource demandée est la plante, ce sont les identifiants du corps qui
