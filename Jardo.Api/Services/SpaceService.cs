@@ -45,7 +45,7 @@ public class SpaceService : ISpaceService
 
         var tasks = await rows.ToDtosAsync(
             _db.JournalEntries.Where(entry => spaceIds.Contains(entry.SpaceId)),
-            _timeProvider.Today(),
+            _timeProvider,
             cancellationToken);
 
         return tasks

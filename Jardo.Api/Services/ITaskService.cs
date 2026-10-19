@@ -46,7 +46,7 @@ public interface ITaskService
 
     /// <summary>
     /// « Fait » : note l'intervention au journal, sur la cible de la tâche, et renvoie la tâche
-    /// recalculée. Une tâche ponctuelle faite avant sa date est ramenée à ce jour-là : elle est close.
+    /// recalculée. Une tâche ponctuelle est close dès que c'est fait, même avant sa date.
     /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">La tâche n'existe pas.</exception>
     /// <exception cref="Infrastructure.BusinessRuleException">

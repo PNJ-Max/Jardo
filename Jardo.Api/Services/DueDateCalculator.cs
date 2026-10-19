@@ -19,19 +19,25 @@ public static class DueDateCalculator
     /// <param name="startDate">Première échéance, date anniversaire ou jour prévu, selon le rythme.</param>
     /// <param name="intervalDays">Le nombre de jours d'une tâche tous les N jours, au moins 1.</param>
     /// <param name="lastDoneOn">La dernière intervention de même type qui vaut pour la cible, ou null.</param>
+    /// <param name="createdOn">
+    /// Le jour où la tâche a été créée. Une tâche ponctuelle est close par une intervention faite
+    /// ce jour-là ou après, avant comme après sa date prévue : faire en avance compte, mais un
+    /// arrosage de la semaine dernière ne ferme pas un « arroser » ponctuel créé aujourd'hui.
+    /// </param>
     /// <param name="today">La date du jour, fournie par l'appelant.</param>
     public static DueState Calculate(
         TaskRecurrence recurrence,
         DateOnly startDate,
         int? intervalDays,
         DateOnly? lastDoneOn,
+        DateOnly createdOn,
         DateOnly today)
     {
         DateOnly? nextDueDate = recurrence switch
         {
             TaskRecurrence.EveryNDays => NextEveryNDays(startDate, intervalDays, lastDoneOn),
             TaskRecurrence.Yearly => NextYearly(startDate, lastDoneOn),
-            TaskRecurrence.Once => lastDoneOn >= startDate ? null : startDate,
+            TaskRecurrence.Once => lastDoneOn >= createdOn ? null : startDate,
             _ => throw new ArgumentOutOfRangeException(nameof(recurrence), recurrence, null)
         };
 

@@ -151,7 +151,7 @@ d'application du journal :
 |---|---|---|
 | Tous les N jours | Première échéance | Dernière fois + N jours, mais jamais avant la date de départ ; à défaut, la date de départ |
 | Chaque année | Date anniversaire, à partir de cette année-là | La date anniversaire qui suit celle que la dernière fois a faite ; à défaut, la date de départ |
-| Une seule fois | Jour prévu | Le jour prévu, jusqu'à ce qu'une entrée existe à cette date ou après : la tâche est alors close |
+| Une seule fois | Jour prévu | Le jour prévu, jusqu'à ce qu'une entrée datée du jour de création de la tâche ou après existe : la tâche est alors close |
 
 - **Tous les N jours** : un historique plus ancien que la date de départ ne fait pas naître la
   tâche en retard. C'est ce qui remplace l'ancienne règle « une plantation relance le décompte
@@ -163,9 +163,12 @@ d'application du journal :
   septembre ne fait pas la taille d'hiver qui vient ; elle compte, en retard, pour le dernier
   1er février passé. Une tâche jamais faite est due depuis sa date de départ, même lointaine.
   Une date anniversaire au 29 février tombe le 28 les années non bissextiles.
-- **Une seule fois** : une entrée antérieure au jour prévu ne la clôt pas (un traitement à
-  renouveler dans dix jours n'est pas fait par le premier). L'action « Fait » sur une tâche
-  ponctuelle pas encore échue la ramène au jour où elle est faite : elle est close.
+- **Une seule fois : close par une intervention notée à partir du jour où la tâche a été
+  créée**, qu'elle tombe avant ou après le jour prévu. « Traiter les rosiers le 25 octobre »,
+  créée le 20 et faite le 23, est close le 23. Une intervention antérieure à la création ne
+  compte pas : un arrosage de la semaine dernière ne ferme pas un « arroser » ponctuel créé
+  aujourd'hui. Le jour de création compte, lui : un premier traitement noté le jour même où l'on
+  crée « renouveler dans dix jours » clôt la tâche (la comparaison se fait au jour, pas à l'heure).
 
 Le voyant vaut pour toute tâche : `Ok` (échéance future ou tâche ponctuelle close), `DueSoon`
 (échéance aujourd'hui), `Overdue` (échéance passée, avec le nombre de jours de retard). Faire

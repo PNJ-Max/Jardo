@@ -7,15 +7,18 @@ public class DueDateCalculatorTests
 {
     private static readonly DateOnly Today = new(2026, 6, 15);
 
+    // La date de création ne compte que pour une tâche ponctuelle.
+    private static readonly DateOnly LongAgo = new(2020, 1, 1);
+
     private static DueState EveryNDays(int intervalDays, DateOnly? lastDoneOn, DateOnly? startDate = null)
         => DueDateCalculator.Calculate(
-            TaskRecurrence.EveryNDays, startDate ?? new DateOnly(2026, 1, 1), intervalDays, lastDoneOn, Today);
+            TaskRecurrence.EveryNDays, startDate ?? new DateOnly(2026, 1, 1), intervalDays, lastDoneOn, LongAgo, Today);
 
     private static DueState Yearly(DateOnly startDate, DateOnly? lastDoneOn)
-        => DueDateCalculator.Calculate(TaskRecurrence.Yearly, startDate, null, lastDoneOn, Today);
+        => DueDateCalculator.Calculate(TaskRecurrence.Yearly, startDate, null, lastDoneOn, LongAgo, Today);
 
-    private static DueState Once(DateOnly date, DateOnly? lastDoneOn)
-        => DueDateCalculator.Calculate(TaskRecurrence.Once, date, null, lastDoneOn, Today);
+    private static DueState Once(DateOnly date, DateOnly createdOn, DateOnly? lastDoneOn)
+        => DueDateCalculator.Calculate(TaskRecurrence.Once, date, null, lastDoneOn, createdOn, Today);
 
     [Fact]
     public void Une_tache_faite_aujourdhui_est_a_jour_jusqua_la_prochaine_echeance()
@@ -82,7 +85,7 @@ public class DueDateCalculatorTests
     public void Une_tache_tous_les_N_jours_sans_intervalle_est_refusee()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => DueDateCalculator.Calculate(
-            TaskRecurrence.EveryNDays, Today, intervalDays: null, lastDoneOn: null, Today));
+            TaskRecurrence.EveryNDays, Today, intervalDays: null, lastDoneOn: null, LongAgo, Today));
     }
 
     [Fact]
@@ -123,25 +126,34 @@ public class DueDateCalculatorTests
     [Fact]
     public void Une_tache_ponctuelle_pas_encore_faite_est_due_a_sa_date()
     {
-        Assert.Equal(DueStatus.Ok, Once(Today.AddDays(3), lastDoneOn: null).Status);
+        Assert.Equal(DueStatus.Ok, Once(Today.AddDays(3), createdOn: Today, lastDoneOn: null).Status);
 
-        var late = Once(Today.AddDays(-2), lastDoneOn: Today.AddDays(-3));
+        var late = Once(Today.AddDays(-2), createdOn: Today.AddDays(-10), lastDoneOn: null);
 
         Assert.Equal(DueStatus.Overdue, late.Status);
         Assert.Equal(2, late.DaysOverdue);
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    public void Une_tache_ponctuelle_est_close_par_une_entree_a_sa_date_ou_apres(int doneDaysAfter)
+    [InlineData(5, 3)]   // Faite en avance : prévue dans 5 jours, faite il y a 3 jours.
+    [InlineData(-5, 10)] // Faite le jour de sa création.
+    [InlineData(-5, 2)]  // Faite après sa date, en retard.
+    public void Une_tache_ponctuelle_est_close_par_une_intervention_depuis_sa_creation(int plannedInDays, int doneDaysAgo)
     {
-        var date = Today.AddDays(-5);
-
-        var state = Once(date, lastDoneOn: date.AddDays(doneDaysAfter));
+        var state = Once(Today.AddDays(plannedInDays), createdOn: Today.AddDays(-10), lastDoneOn: Today.AddDays(-doneDaysAgo));
 
         Assert.Null(state.NextDueDate);
         Assert.Equal(DueStatus.Ok, state.Status);
         Assert.Equal(0, state.DaysOverdue);
+    }
+
+    [Fact]
+    public void Une_intervention_anterieure_a_la_creation_ne_clot_pas_une_tache_ponctuelle()
+    {
+        var state = Once(Today.AddDays(3), createdOn: Today, lastDoneOn: Today.AddDays(-1));
+
+        Assert.Equal(Today.AddDays(3), state.NextDueDate);
+        Assert.Equal(DueStatus.Ok, state.Status);
+        Assert.Equal(Today.AddDays(-1), state.LastDoneOn);
     }
 }

@@ -1,4 +1,5 @@
 using Jardo.Api.Dtos;
+using Jardo.Api.Infrastructure;
 using Jardo.Api.Models;
 
 namespace Jardo.Api.Services;
@@ -26,9 +27,10 @@ public static class TaskQueries
     public static async Task<List<TaskResponseDto>> ToDtosAsync(
         this IReadOnlyCollection<TaskRow> rows,
         IQueryable<JournalEntry> journal,
-        DateOnly today,
+        TimeProvider timeProvider,
         CancellationToken cancellationToken = default)
     {
+        var today = timeProvider.Today();
         var latestByKind = new Dictionary<JournalEntryKind, LatestInterventions>();
 
         foreach (var kind in rows.Select(row => row.Task.Kind).Distinct())
@@ -45,6 +47,7 @@ public static class TaskQueries
                 task.StartDate,
                 task.IntervalDays,
                 latestByKind[task.Kind].ForTarget(task.SpaceId, task.ZoneId, task.ItemId),
+                timeProvider.LocalDate(task.CreatedAt),
                 today);
 
             return ToDto(row, state);

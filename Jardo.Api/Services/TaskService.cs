@@ -87,7 +87,7 @@ public class TaskService : ITaskService
 
         var rows = await query.SelectWithNames().ToListAsync(cancellationToken);
 
-        return OrderByDueDate(await rows.ToDtosAsync(journal, _timeProvider.Today(), cancellationToken));
+        return OrderByDueDate(await rows.ToDtosAsync(journal, _timeProvider, cancellationToken));
     }
 
     public async Task<List<TaskResponseDto>> GetDueAsync(DueHorizon horizon, CancellationToken cancellationToken = default)
@@ -107,7 +107,7 @@ public class TaskService : ITaskService
             .SelectWithNames()
             .ToListAsync(cancellationToken);
 
-        var tasks = await rows.ToDtosAsync(_db.JournalEntries, today, cancellationToken);
+        var tasks = await rows.ToDtosAsync(_db.JournalEntries, _timeProvider, cancellationToken);
 
         return OrderByDueDate(tasks.Where(task => task.NextDueDate <= limit));
     }
@@ -123,7 +123,7 @@ public class TaskService : ITaskService
 
         var journal = _db.JournalEntries.Where(entry => entry.SpaceId == row.Task.SpaceId);
 
-        return (await new[] { row }.ToDtosAsync(journal, _timeProvider.Today(), cancellationToken)).Single();
+        return (await new[] { row }.ToDtosAsync(journal, _timeProvider, cancellationToken)).Single();
     }
 
     public async Task<TaskResponseDto> CreateAsync(SaveTaskDto dto, CancellationToken cancellationToken = default)
@@ -164,13 +164,6 @@ public class TaskService : ITaskService
             ?? throw NotFoundException.For("Task", id);
 
         var date = dto.Date ?? _timeProvider.Today();
-
-        // Sans cela, une tâche ponctuelle faite en avance resterait due : seule une entrée à sa date
-        // ou après la clôt. Le journal partage ce DbContext : son enregistrement emporte ce changement.
-        if (task.Recurrence is TaskRecurrence.Once && date < task.StartDate)
-        {
-            task.StartDate = date;
-        }
 
         await _journalService.CreateAsync(new SaveJournalEntryDto
         {

@@ -93,7 +93,8 @@ public static class TestData
         Zone? zone = null,
         GardenItem? item = null,
         int? intervalDays = null,
-        string? title = null)
+        string? title = null,
+        DateTimeOffset? createdAt = null)
     {
         var task = new GardenTask
         {
@@ -105,7 +106,7 @@ public static class TestData
             SpaceId = space.Id,
             ZoneId = item is null ? zone?.Id : item.ZoneId,
             ItemId = item?.Id,
-            CreatedAt = DateTimeOffset.UnixEpoch
+            CreatedAt = createdAt ?? DateTimeOffset.UnixEpoch
         };
 
         db.GardenTasks.Add(task);

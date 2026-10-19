@@ -191,15 +191,20 @@ public class TaskServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Une_tache_ponctuelle_faite_en_avance_est_close()
+    public async Task Une_tache_ponctuelle_faite_en_avance_est_close_mais_pas_par_une_intervention_anterieure()
     {
         var potager = await Db.AddSpaceAsync("Potager");
-        var task = await Db.AddTaskAsync(JournalEntryKind.Treatment, TaskRecurrence.Once, Today.AddDays(4), potager);
+        var createdThisMorning = new DateTimeOffset(Today.ToDateTime(new TimeOnly(8, 0)), TimeSpan.Zero);
+        var task = await Db.AddTaskAsync(
+            JournalEntryKind.Treatment, TaskRecurrence.Once, Today.AddDays(4), potager, createdAt: createdThisMorning);
+        await Db.AddEntryAsync(JournalEntryKind.Treatment, Today.AddDays(-1), potager);
+
+        Assert.Equal(task.Id, Assert.Single(await _service.GetDueAsync(DueHorizon.Week)).Id);
 
         var done = await _service.CompleteAsync(task.Id, new CompleteTaskDto());
 
         Assert.True(done.IsCompleted);
-        Assert.Equal(Today, done.StartDate);
+        Assert.Equal(Today.AddDays(4), done.StartDate);
         Assert.Empty(await _service.GetDueAsync(DueHorizon.Week));
     }
 

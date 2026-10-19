@@ -274,7 +274,8 @@ Content-Type: application/json
   "spaceId": 2
 }
 
-### Une seule fois : close des qu'une entree du meme type existe a sa date ou apres
+### Une seule fois : close par une entree du meme type notee depuis sa creation,
+### avant ou apres sa date
 POST {{host}}/api/tasks
 Content-Type: application/json
 
@@ -317,7 +318,7 @@ Content-Type: application/json
   "note": "Arrosage au pied, paillage remis"
 }
 
-### Fait en avance sur une tache ponctuelle : elle est ramenee a ce jour et close
+### Fait en avance sur une tache ponctuelle : elle est close
 POST {{host}}/api/tasks/15/done
 Content-Type: application/json
 

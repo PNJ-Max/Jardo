@@ -263,7 +263,8 @@ public static class DbSeeder
             Zone? zone = null,
             Plant? item = null,
             int? intervalDays = null,
-            string? title = null)
+            string? title = null,
+            int createdDaysAgo = 0)
             => new()
             {
                 Kind = kind,
@@ -274,7 +275,7 @@ public static class DbSeeder
                 Space = space,
                 Zone = zone ?? item?.Zone,
                 Item = item,
-                CreatedAt = now
+                CreatedAt = now.AddDays(-createdDaysAgo)
             };
 
         GardenTask WateringTask(Space space, Zone? zone = null, Plant? item = null, int everyDays = 1, int startedDaysAgo = 60, string? title = null)
@@ -315,12 +316,12 @@ public static class DbSeeder
             // En retard de 10 jours : jamais faite.
             NewTask(JournalEntryKind.Fertilizing, TaskRecurrence.Yearly, Ago(10), petitsFruits,
                 title: "Compost au pied des arbustes"),
-            // À jour, prévue dans 6 jours.
+            // À jour, prévue dans 6 jours : le traitement d'hier, antérieur à la tâche, ne la fait pas.
             NewTask(JournalEntryKind.Treatment, TaskRecurrence.Once, today.AddDays(6), potager, item: courgettes,
                 title: "Renouveler le purin de prêle"),
-            // Faite : plantés il y a 3 jours.
-            NewTask(JournalEntryKind.Planting, TaskRecurrence.Once, Ago(5), petitsFruits, item: groseilliers,
-                title: "Planter les groseilliers")
+            // Faite en avance : prévue dans 2 jours, plantés il y a 3 jours.
+            NewTask(JournalEntryKind.Planting, TaskRecurrence.Once, today.AddDays(2), petitsFruits, item: groseilliers,
+                title: "Planter les groseilliers", createdDaysAgo: 10)
         );
 
         await db.SaveChangesAsync(cancellationToken);
