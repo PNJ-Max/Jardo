@@ -24,6 +24,14 @@ npm --prefix jardo-app run web -- --port 8081
 
 Dans `jardo-app/` : `npx expo lint` et `npx tsc --noEmit`.
 
+## Méthode
+
+- **Réfléchir avant de coder.** Expliciter ses hypothèses. Si la demande est ambiguë ou admet plusieurs approches, les exposer et demander plutôt que trancher en silence ; dire franchement quand une approche plus simple existe.
+- **La simplicité d'abord.** Le minimum de code qui résout le problème posé : pas de fonctionnalité, d'option, de configuration ni de gestion d'erreur pour des cas qui n'existent pas encore.
+- **Des changements chirurgicaux.** Chaque ligne modifiée se rattache à la demande. Ne pas reformater, renommer ni « améliorer » le code voisin ; supprimer ce que son propre changement rend inutile, signaler le reste dans la PR.
+- **Un objectif vérifiable.** Traduire la tâche en critères de réussite qu'on peut vérifier (un test qui échoue puis passe, un build, une capture), boucler jusqu'à les atteindre, et ne jamais déclarer une tâche finie sans les avoir vérifiés.
+- **Lire de façon ciblée.** Chercher avant d'ouvrir, et ne lire que les parties utiles d'un fichier : le contexte coûte.
+
 ## Règles de code
 
 - Niveau professionnel. Un commentaire n'existe que si le *pourquoi* n'est pas évident à la lecture. Jamais de commentaire pédagogique qui explique le langage, le framework ou ce que fait la ligne.
@@ -37,4 +45,3 @@ Dans `jardo-app/` : `npx expo lint` et `npx tsc --noEmit`.
 - Chaque tâche se fait sur une branche dédiée et arrive sur `main` par une Pull Request (`gh pr create`).
 - Avant d'ouvrir la PR : `dotnet build` et `dotnet test` verts si l'API est touchée ; `npx expo lint` et `npx tsc --noEmit` verts si le front est touché.
 - Mettre à jour `suivi-progression.md` (section « Où on en est ») dans la même PR.
-- Rester dans le périmètre de la tâche ; signaler le reste dans la description de la PR plutôt que le corriger au passage.

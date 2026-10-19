@@ -52,7 +52,9 @@ suspendue jusqu'à la nouvelle API et aux maquettes revues.
 - Fondations UI : thème clair / sombre qui suit le téléphone (`src/theme/`, `useTheme`,
   `createStyles`), polices Fraunces et Inter avec échelle typographique, composants de base
   découpés dans `src/components/ui/`, dépendances inutiles du template retirées.
-- Maquettes des écrans actuels faites dans Claude Design, à revoir pour la nouvelle vision.
+- Maquettes v2 et Design System publiés dans Claude Design pour la nouvelle vision, mais non
+  validés : charte, typographie, boutons et mode sombre ne convainquent pas. Le MVP se construit
+  sur la charte actuelle ; le design est repris juste après.
 - Restent : sélecteur de date, puis refonte des écrans sur le nouveau modèle.
 - Pas de tests.
 
@@ -85,8 +87,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   4. tas de bois.
 
 **Phase 4 : écrans du nouveau MVP**
-- Maquettes revues pour la nouvelle vision.
-- Refonte des écrans : onglets Jardin (accueil) · Aujourd'hui · Journal, espaces, fiches,
+- Refonte des écrans sur la charte actuelle (le design est repris en phase 6) : onglets Jardin (accueil) · Aujourd'hui · Journal, espaces, fiches,
   formulaires avec sélecteur de date.
 
 **Phase 5 : qualité**
@@ -94,6 +95,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 - Types du front générés depuis l'OpenAPI, tests du front.
 
 **Phase 6 : après le MVP**
+- Refonte du design en premier : charte (couleurs, mode sombre), typographie, boutons, une
+  interface plus vivante, avec des skills de design (frontend-design).
 - Carte isométrique dans l'onglet Jardin (premier chantier, [étapes](docs/etude-carte-potager.md#étapes-livrables)),
   notifications, récoltes chiffrées, photos,
   catalogue d'espèces, autres types d'espaces, météo, foyer partagé.
