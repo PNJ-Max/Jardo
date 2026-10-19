@@ -7,8 +7,9 @@ organise ce que contient le jardin, on note ce qu'on y fait, et l'app rappelle c
 faire. Une API ASP.NET Core et une app Android (Expo) qui la consomme.
 
 La [vision produit](docs/vision-produit.md) et le [modèle du domaine](docs/modele-domaine.md)
-décrivent la cible. Le code en est à la première étape : des zones, leurs plantes, un journal
-d'observations et un premier service, le rappel d'arrosage.
+décrivent la cible. L'API en est à la première étape de la migration : un jardin, ses espaces
+typés (potager, verger, petits fruits, serre, bois de chauffage), leurs zones et leurs plantes, plus un
+journal d'observations et un premier service, le rappel d'arrosage.
 
 ## Premier service : le voyant d'arrosage
 
@@ -32,7 +33,7 @@ dotnet run --project Jardo.Api
 ```
 
 Swagger est disponible sur http://localhost:5015/swagger. En environnement `Development`, la base
-SQLite est créée, migrée et remplie d'un potager d'exemple au premier lancement ; pour repartir
+SQLite est créée, migrée et remplie d'un jardin d'exemple au premier lancement ; pour repartir
 de zéro, supprimer `Jardo.Api/jardo.db`. `Jardo.Api/Jardo.Api.http` rassemble des requêtes
 prêtes à l'emploi.
 

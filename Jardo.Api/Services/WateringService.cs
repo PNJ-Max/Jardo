@@ -26,7 +26,7 @@ public class WateringService : IWateringService
 
         var rows = await _db.Plants
             .AsNoTracking()
-            .Where(plant => !plant.IsArchived)
+            .Where(plant => !plant.IsArchived && !plant.Space.IsArchived)
             .SelectWithWatering()
             .ToListAsync(cancellationToken);
 

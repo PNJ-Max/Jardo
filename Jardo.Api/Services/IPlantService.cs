@@ -3,16 +3,20 @@ using Jardo.Api.Dtos;
 namespace Jardo.Api.Services;
 
 /// <summary>
-/// Gestion des plantes du potager.
+/// Gestion des plantes : cultures, arbres et arbustes.
 /// </summary>
 public interface IPlantService
 {
     /// <summary>
     /// Liste les plantes, avec leur voyant d'arrosage.
     /// </summary>
+    /// <param name="spaceId">Ne garder que les plantes de cet espace. Null = tous les espaces.</param>
     /// <param name="zoneId">Ne garder que les plantes de cette zone. Null = toutes les zones.</param>
-    /// <param name="includeArchived">Inclure les plantes archivées. Faux par défaut.</param>
+    /// <param name="includeArchived">
+    /// Inclure les plantes archivées et celles des espaces archivés. Faux par défaut.
+    /// </param>
     Task<List<PlantResponseDto>> GetAllAsync(
+        int? spaceId = null,
         int? zoneId = null,
         bool includeArchived = false,
         CancellationToken cancellationToken = default);
@@ -21,14 +25,17 @@ public interface IPlantService
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>
     Task<PlantResponseDto> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    /// <summary>Crée une plante dans une zone existante.</summary>
-    /// <exception cref="Infrastructure.BusinessRuleException">La zone visée n'existe pas.</exception>
-    Task<PlantResponseDto> CreateAsync(CreatePlantDto dto, CancellationToken cancellationToken = default);
+    /// <summary>Crée une plante dans un espace, et éventuellement dans une de ses zones.</summary>
+    /// <exception cref="Infrastructure.BusinessRuleException">
+    /// L'espace n'existe pas, est archivé ou n'accueille pas de plantes ; ou la zone n'appartient
+    /// pas à l'espace.
+    /// </exception>
+    Task<PlantResponseDto> CreateAsync(SavePlantDto dto, CancellationToken cancellationToken = default);
 
-    /// <summary>Modifie une plante. Permet aussi de la déplacer vers une autre zone.</summary>
+    /// <summary>Modifie une plante. Permet aussi de la déplacer vers un autre espace ou une autre zone.</summary>
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>
-    /// <exception cref="Infrastructure.BusinessRuleException">La zone visée n'existe pas.</exception>
-    Task<PlantResponseDto> UpdateAsync(int id, UpdatePlantDto dto, CancellationToken cancellationToken = default);
+    /// <exception cref="Infrastructure.BusinessRuleException">Mêmes règles qu'à la création.</exception>
+    Task<PlantResponseDto> UpdateAsync(int id, SavePlantDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Archive ou réactive une plante. Une plante archivée sort des calculs d'arrosage

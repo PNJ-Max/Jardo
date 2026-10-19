@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Jardo.Api.Controllers;
 
 /// <summary>
-/// Les plantes du potager, avec leur voyant d'arrosage.
+/// Les plantes du jardin (cultures, arbres, arbustes), avec leur voyant d'arrosage.
 /// </summary>
 [ApiController]
 [Route("api/plants")]
@@ -20,17 +20,19 @@ public class PlantsController : ControllerBase
     }
 
     /// <summary>
-    /// Liste les plantes, éventuellement filtrées par zone.
+    /// Liste les plantes, éventuellement filtrées par espace et par zone.
     /// </summary>
+    /// <param name="spaceId">Ne garder que les plantes de cet espace.</param>
     /// <param name="zoneId">Ne garder que les plantes de cette zone.</param>
-    /// <param name="includeArchived">Inclure les plantes archivées (faux par défaut).</param>
+    /// <param name="includeArchived">Inclure les plantes archivées et celles des espaces archivés (faux par défaut).</param>
     [HttpGet]
     [ProducesResponseType<List<PlantResponseDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PlantResponseDto>>> GetPlants(
+        [FromQuery] int? spaceId,
         [FromQuery] int? zoneId,
         [FromQuery] bool includeArchived = false,
         CancellationToken cancellationToken = default)
-        => await _plantService.GetAllAsync(zoneId, includeArchived, cancellationToken);
+        => await _plantService.GetAllAsync(spaceId, zoneId, includeArchived, cancellationToken);
 
     /// <summary>
     /// Récupère une plante par son identifiant, voyant d'arrosage compris.
@@ -42,13 +44,13 @@ public class PlantsController : ControllerBase
         => await _plantService.GetByIdAsync(id, cancellationToken);
 
     /// <summary>
-    /// Crée une plante dans une zone existante.
+    /// Crée une plante dans un espace, et éventuellement dans une de ses zones.
     /// </summary>
     [HttpPost]
     [ProducesResponseType<PlantResponseDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PlantResponseDto>> CreatePlant(
-        CreatePlantDto dto,
+        SavePlantDto dto,
         CancellationToken cancellationToken)
     {
         var plant = await _plantService.CreateAsync(dto, cancellationToken);
@@ -57,7 +59,7 @@ public class PlantsController : ControllerBase
     }
 
     /// <summary>
-    /// Modifie une plante. Envoyer un ZoneId différent la déplace vers cette zone.
+    /// Modifie une plante. Un SpaceId ou un ZoneId différent la déplace.
     /// </summary>
     [HttpPut("{id:int}")]
     [ProducesResponseType<PlantResponseDto>(StatusCodes.Status200OK)]
@@ -65,7 +67,7 @@ public class PlantsController : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PlantResponseDto>> UpdatePlant(
         int id,
-        UpdatePlantDto dto,
+        SavePlantDto dto,
         CancellationToken cancellationToken)
         => await _plantService.UpdateAsync(id, dto, cancellationToken);
 

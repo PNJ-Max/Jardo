@@ -29,23 +29,21 @@ public class WateringServiceTests
         string zoneName,
         params (string Name, int Interval, int? WateredDaysAgo, bool IsArchived)[] plants)
     {
-        var zone = new Zone { Name = zoneName, CreatedAt = DateTimeOffset.UnixEpoch };
-        db.Zones.Add(zone);
-        await db.SaveChangesAsync();
+        var space = await db.AddSpaceAsync("Potager");
+        return await SeedZoneAsync(db, space, zoneName, plants);
+    }
+
+    private static async Task<Zone> SeedZoneAsync(
+        GardenDbContext db,
+        Space space,
+        string zoneName,
+        params (string Name, int Interval, int? WateredDaysAgo, bool IsArchived)[] plants)
+    {
+        var zone = await db.AddZoneAsync(space, zoneName);
 
         foreach (var (name, interval, wateredDaysAgo, isArchived) in plants)
         {
-            var plant = new Plant
-            {
-                ZoneId = zone.Id,
-                Name = name,
-                WateringIntervalDays = interval,
-                IsArchived = isArchived,
-                CreatedAt = DateTimeOffset.UnixEpoch
-            };
-
-            db.Plants.Add(plant);
-            await db.SaveChangesAsync();
+            var plant = await db.AddPlantAsync(space, zone, name, interval, isArchived);
 
             if (wateredDaysAgo.HasValue)
             {
@@ -75,6 +73,23 @@ public class WateringServiceTests
 
             Assert.Single(needingWater);
             Assert.Equal("Tomate", needingWater[0].Name);
+        }
+    }
+
+    [Fact]
+    public async Task Les_plantes_dun_espace_archive_ne_sont_jamais_signalees_a_arroser()
+    {
+        var (service, db, database) = CreateService();
+        using (database)
+        {
+            await SeedZoneAsync(db, "Carré 1", ("Tomate", 2, 10, false));
+
+            var serre = await db.AddSpaceAsync("Serre", isArchived: true);
+            await SeedZoneAsync(db, serre, "Carré 1", ("Concombre", 2, 10, false));
+
+            var needingWater = await service.GetPlantsNeedingWaterAsync();
+
+            Assert.Equal("Tomate", Assert.Single(needingWater).Name);
         }
     }
 

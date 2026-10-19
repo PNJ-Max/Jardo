@@ -18,17 +18,19 @@ public class ZoneService : IZoneService
         _timeProvider = timeProvider;
     }
 
-    private record ZoneWithPlants(Zone Zone, List<PlantWateringInfo> ActivePlants);
+    private record ZoneWithItems(Zone Zone, int ItemCount, List<PlantWateringInfo> ActivePlants);
 
     private record PlantWateringInfo(int WateringIntervalDays, DateOnly? PlantedDate, DateOnly? LastWateredAt);
 
-    // Une seule requête SQL pour zones, plantes et arrosages. L'appelant filtre et trie avant la
+    // Une seule requête SQL pour zones, éléments et arrosages. L'appelant filtre et trie avant la
     // projection : un OrderBy sur la projection n'est pas traduisible par EF Core.
-    private static IQueryable<ZoneWithPlants> Project(IQueryable<Zone> zones)
+    private static IQueryable<ZoneWithItems> Project(IQueryable<Zone> zones)
         => zones
-            .Select(zone => new ZoneWithPlants(
+            .Select(zone => new ZoneWithItems(
                 zone,
-                zone.Plants
+                zone.Items.Count(item => !item.IsArchived),
+                zone.Items
+                    .OfType<Plant>()
                     .Where(plant => !plant.IsArchived)
                     .Select(plant => new PlantWateringInfo(
                         plant.WateringIntervalDays,
@@ -36,25 +38,31 @@ public class ZoneService : IZoneService
                         plant.WateringLogs.Max(log => (DateOnly?)log.WateredAt)))
                     .ToList()));
 
-    private int CountNeedingWater(List<PlantWateringInfo> plants, DateOnly today)
+    private static int CountNeedingWater(List<PlantWateringInfo> plants, DateOnly today)
         => plants.Count(plant => WateringCalculator.Calculate(
             plant.WateringIntervalDays,
             plant.LastWateredAt,
             plant.PlantedDate,
             today).Status != WateringStatus.Ok);
 
-    private ZoneResponseDto ToDto(ZoneWithPlants row, DateOnly today)
+    private static ZoneResponseDto ToDto(ZoneWithItems row, DateOnly today)
         => ZoneResponseDto.FromEntity(
             row.Zone,
-            plantCount: row.ActivePlants.Count,
+            itemCount: row.ItemCount,
             plantsNeedingWater: CountNeedingWater(row.ActivePlants, today));
 
-    public async Task<List<ZoneResponseDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<ZoneResponseDto>> GetBySpaceAsync(int spaceId, CancellationToken cancellationToken = default)
     {
         var today = _timeProvider.Today();
 
+        if (!await _db.Spaces.AnyAsync(space => space.Id == spaceId, cancellationToken))
+        {
+            throw NotFoundException.For("Space", spaceId);
+        }
+
         var source = _db.Zones
             .AsNoTracking()
+            .Where(zone => zone.SpaceId == spaceId)
             .OrderBy(zone => zone.Name);
 
         var rows = await Project(source).ToListAsync(cancellationToken);
@@ -76,14 +84,26 @@ public class ZoneService : IZoneService
         return ToDto(row, today);
     }
 
-    public async Task<ZoneResponseDto> CreateAsync(CreateZoneDto dto, CancellationToken cancellationToken = default)
+    public async Task<ZoneResponseDto> CreateAsync(int spaceId, SaveZoneDto dto, CancellationToken cancellationToken = default)
     {
         var name = Text.Required(dto.Name, "Nom");
 
-        await EnsureNameIsAvailableAsync(name, excludingZoneId: null, cancellationToken);
+        var space = await _db.Spaces
+            .AsNoTracking()
+            .FirstOrDefaultAsync(candidate => candidate.Id == spaceId, cancellationToken)
+            ?? throw NotFoundException.For("Space", spaceId);
+
+        if (space.IsArchived)
+        {
+            throw new BusinessRuleException(
+                $"L'espace « {space.Name} » est archivé : réactivez-le avant d'y ajouter une zone.");
+        }
+
+        await EnsureNameIsAvailableAsync(spaceId, name, excludingZoneId: null, cancellationToken);
 
         var zone = new Zone
         {
+            SpaceId = spaceId,
             Name = name,
             Description = Text.Optional(dto.Description),
             CreatedAt = _timeProvider.GetUtcNow()
@@ -92,17 +112,17 @@ public class ZoneService : IZoneService
         _db.Zones.Add(zone);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return ZoneResponseDto.FromEntity(zone, plantCount: 0, plantsNeedingWater: 0);
+        return ZoneResponseDto.FromEntity(zone, itemCount: 0, plantsNeedingWater: 0);
     }
 
-    public async Task<ZoneResponseDto> UpdateAsync(int id, UpdateZoneDto dto, CancellationToken cancellationToken = default)
+    public async Task<ZoneResponseDto> UpdateAsync(int id, SaveZoneDto dto, CancellationToken cancellationToken = default)
     {
         var name = Text.Required(dto.Name, "Nom");
 
         var zone = await _db.Zones.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             ?? throw NotFoundException.For("Zone", id);
 
-        await EnsureNameIsAvailableAsync(name, excludingZoneId: id, cancellationToken);
+        await EnsureNameIsAvailableAsync(zone.SpaceId, name, excludingZoneId: id, cancellationToken);
 
         zone.Name = name;
         zone.Description = Text.Optional(dto.Description);
@@ -117,20 +137,19 @@ public class ZoneService : IZoneService
         var zone = await _db.Zones.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             ?? throw NotFoundException.For("Zone", id);
 
-        // La cascade en base détruirait les plantes et leur historique : on refuse tant que la zone
-        // en contient, archivées comprises. Le détail évite un écart avec le compteur de la liste
-        // des zones, qui ne compte que les actives.
-        var activeCount = await _db.Plants
-            .CountAsync(plant => plant.ZoneId == id && !plant.IsArchived, cancellationToken);
+        // Archivés compris : la base refuserait de toute façon (Restrict). Le détail évite un écart
+        // avec le compteur de la zone, qui ne compte que les actifs.
+        var activeCount = await _db.GardenItems
+            .CountAsync(item => item.ZoneId == id && !item.IsArchived, cancellationToken);
 
-        var archivedCount = await _db.Plants
-            .CountAsync(plant => plant.ZoneId == id && plant.IsArchived, cancellationToken);
+        var archivedCount = await _db.GardenItems
+            .CountAsync(item => item.ZoneId == id && item.IsArchived, cancellationToken);
 
         if (activeCount + archivedCount > 0)
         {
             var detail = archivedCount > 0
-                ? $"{activeCount} plante(s) active(s) et {archivedCount} archivée(s)"
-                : $"{activeCount} plante(s)";
+                ? $"{activeCount} élément(s) actif(s) et {archivedCount} archivé(s)"
+                : $"{activeCount} élément(s)";
 
             throw new BusinessRuleException(
                 $"La zone « {zone.Name} » contient encore {detail}. " +
@@ -141,13 +160,17 @@ public class ZoneService : IZoneService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    // Double l'index unique de la base pour produire un message clair ; l'index reste le garant
-    // en cas de requêtes concurrentes.
-    private async Task EnsureNameIsAvailableAsync(string name, int? excludingZoneId, CancellationToken cancellationToken)
+    // Double l'index unique (SpaceId, Name) pour produire un message clair ; l'index reste le
+    // garant en cas de requêtes concurrentes.
+    private async Task EnsureNameIsAvailableAsync(
+        int spaceId,
+        string name,
+        int? excludingZoneId,
+        CancellationToken cancellationToken)
     {
         var query = _db.Zones
             .AsNoTracking()
-            .Where(zone => zone.Name == name);
+            .Where(zone => zone.SpaceId == spaceId && zone.Name == name);
 
         // Filtre conditionnel et non `Id != excludingZoneId` : avec null, EF Core génère `Id <> NULL`,
         // toujours faux en SQL, et le contrôle ne détecterait aucun doublon à la création.
@@ -158,7 +181,7 @@ public class ZoneService : IZoneService
 
         if (await query.AnyAsync(cancellationToken))
         {
-            throw new BusinessRuleException($"Une zone nommée « {name} » existe déjà.");
+            throw new BusinessRuleException($"Une zone nommée « {name} » existe déjà dans cet espace.");
         }
     }
 }

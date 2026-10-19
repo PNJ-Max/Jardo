@@ -6,8 +6,8 @@ faire. L'arrosage est le premier de ces rappels, pas le cœur de l'app.
 Objectif : une vraie app, publiable un jour sur le Play Store.
 
 Vision : [`docs/vision-produit.md`](docs/vision-produit.md). Modèle cible :
-[`docs/modele-domaine.md`](docs/modele-domaine.md). Le code implémente encore l'ancien modèle
-`Zone → Plant`, centré sur l'arrosage ; il migre par étapes.
+[`docs/modele-domaine.md`](docs/modele-domaine.md). L'API y migre par étapes : jardin,
+espaces et zones sont faits ; arrosages et observations restent à fondre dans le journal et les tâches.
 
 - `Jardo.Api/` : API ASP.NET Core (.NET 10), EF Core + SQLite. Tests dans `Jardo.Api.Tests/` (xUnit, SQLite en mémoire).
 - `jardo-app/` : front Expo (React Native + TypeScript), Expo Router, TanStack Query. Règles Expo dans `jardo-app/AGENTS.md`.

@@ -11,7 +11,10 @@ public class GardenDbContext : DbContext
     {
     }
 
+    public DbSet<Garden> Gardens => Set<Garden>();
+    public DbSet<Space> Spaces => Set<Space>();
     public DbSet<Zone> Zones => Set<Zone>();
+    public DbSet<GardenItem> GardenItems => Set<GardenItem>();
     public DbSet<Plant> Plants => Set<Plant>();
     public DbSet<WateringLog> WateringLogs => Set<WateringLog>();
     public DbSet<Observation> Observations => Set<Observation>();
@@ -19,26 +22,79 @@ public class GardenDbContext : DbContext
     // Contraintes en Fluent API (et non en attributs) pour que Models reste indépendant d'EF Core.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Garden>(garden =>
+        {
+            garden.Property(g => g.Name).IsRequired().HasMaxLength(100);
+
+            // Le jardin unique du MVP fait partie du schéma : il existe dès la première migration,
+            // sans dépendre du seeder.
+            garden.HasData(new Garden
+            {
+                Id = Garden.DefaultId,
+                Name = "Mon jardin",
+                CreatedAt = new DateTimeOffset(2026, 10, 18, 0, 0, 0, TimeSpan.Zero)
+            });
+        });
+
+        modelBuilder.Entity<Space>(space =>
+        {
+            space.Property(s => s.Name).IsRequired().HasMaxLength(100);
+            space.Property(s => s.Description).HasMaxLength(500);
+
+            // En texte : la base reste lisible et l'ordre de l'énumération peut changer.
+            space.Property(s => s.Kind).HasConversion<string>().HasMaxLength(30);
+
+            space.HasOne(s => s.Garden)
+                 .WithMany(g => g.Spaces)
+                 .HasForeignKey(s => s.GardenId);
+
+            space.HasIndex(s => new { s.GardenId, s.Name }).IsUnique();
+        });
+
         modelBuilder.Entity<Zone>(zone =>
         {
             zone.Property(z => z.Name).IsRequired().HasMaxLength(100);
             zone.Property(z => z.Description).HasMaxLength(500);
 
-            zone.HasIndex(z => z.Name).IsUnique();
+            // Un espace ne se supprime que vide d'éléments (SpaceService) : ses zones partent avec lui.
+            zone.HasOne(z => z.Space)
+                .WithMany(s => s.Zones)
+                .HasForeignKey(z => z.SpaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            zone.HasIndex(z => new { z.SpaceId, z.Name }).IsUnique();
+        });
+
+        modelBuilder.Entity<GardenItem>(item =>
+        {
+            item.ToTable("GardenItems");
+
+            item.HasDiscriminator<string>("ItemType")
+                .HasValue<Plant>("Plant");
+
+            item.Property("ItemType").HasMaxLength(30);
+            item.Property(i => i.Name).IsRequired().HasMaxLength(100);
+
+            // Restrict : supprimer un espace ou une zone ne doit jamais emporter un élément et son
+            // historique. Les services refusent avant, avec un message clair.
+            item.HasOne(i => i.Space)
+                .WithMany(s => s.Items)
+                .HasForeignKey(i => i.SpaceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            item.HasOne(i => i.Zone)
+                .WithMany(z => z.Items)
+                .HasForeignKey(i => i.ZoneId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            item.HasIndex(i => new { i.SpaceId, i.IsArchived });
         });
 
         modelBuilder.Entity<Plant>(plant =>
         {
-            plant.Property(p => p.Name).IsRequired().HasMaxLength(100);
             plant.Property(p => p.Species).HasMaxLength(100);
-
-            plant.HasOne(p => p.Zone)
-                 .WithMany(z => z.Plants)
-                 .HasForeignKey(p => p.ZoneId)
-                 // Doublée par une règle métier : ZoneService refuse de supprimer une zone non vide.
-                 .OnDelete(DeleteBehavior.Cascade);
-
-            plant.HasIndex(p => new { p.ZoneId, p.IsArchived });
+            plant.Property(p => p.Variety).HasMaxLength(100);
+            plant.Property(p => p.QuantityUnit).HasConversion<string>().HasMaxLength(30);
         });
 
         modelBuilder.Entity<WateringLog>(log =>
