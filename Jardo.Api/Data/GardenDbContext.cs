@@ -16,8 +16,7 @@ public class GardenDbContext : DbContext
     public DbSet<Zone> Zones => Set<Zone>();
     public DbSet<GardenItem> GardenItems => Set<GardenItem>();
     public DbSet<Plant> Plants => Set<Plant>();
-    public DbSet<WateringLog> WateringLogs => Set<WateringLog>();
-    public DbSet<Observation> Observations => Set<Observation>();
+    public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
 
     // Contraintes en Fluent API (et non en attributs) pour que Models reste indépendant d'EF Core.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -97,33 +96,33 @@ public class GardenDbContext : DbContext
             plant.Property(p => p.QuantityUnit).HasConversion<string>().HasMaxLength(30);
         });
 
-        modelBuilder.Entity<WateringLog>(log =>
+        modelBuilder.Entity<JournalEntry>(entry =>
         {
-            log.Property(l => l.Note).HasMaxLength(500);
+            entry.Property(e => e.Kind).HasConversion<string>().HasMaxLength(30);
+            entry.Property(e => e.QuantityUnit).HasConversion<string>().HasMaxLength(30);
+            entry.Property(e => e.Note).HasMaxLength(1000);
+            entry.Property(e => e.Problem).HasMaxLength(500);
+            entry.Property(e => e.Treatment).HasMaxLength(500);
 
-            log.HasOne(l => l.Plant)
-               .WithMany(p => p.WateringLogs)
-               .HasForeignKey(l => l.PlantId)
-               .OnDelete(DeleteBehavior.Cascade);
+            // Cascade sans risque pour l'historique d'un élément : ses entrées sont toujours dans
+            // son espace et sa zone, et ceux-ci ne se suppriment que vides d'éléments.
+            entry.HasOne(e => e.Space)
+                 .WithMany()
+                 .HasForeignKey(e => e.SpaceId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Sert la requête « dernier arrosage d'une plante ».
-            log.HasIndex(l => new { l.PlantId, l.WateredAt })
-               .IsDescending(false, true);
-        });
+            entry.HasOne(e => e.Zone)
+                 .WithMany()
+                 .HasForeignKey(e => e.ZoneId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Observation>(observation =>
-        {
-            observation.Property(o => o.Note).IsRequired().HasMaxLength(1000);
-            observation.Property(o => o.ProblemNote).HasMaxLength(500);
-            observation.Property(o => o.Treatment).HasMaxLength(500);
+            entry.HasOne(e => e.Item)
+                 .WithMany()
+                 .HasForeignKey(e => e.ItemId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-            observation.HasOne(o => o.Plant)
-                       .WithMany(p => p.Observations)
-                       .HasForeignKey(o => o.PlantId)
-                       .OnDelete(DeleteBehavior.Cascade);
-
-            observation.HasIndex(o => new { o.PlantId, o.ObservedAt })
-                       .IsDescending(false, true);
+            entry.HasIndex(e => new { e.SpaceId, e.Date })
+                 .IsDescending(false, true);
         });
     }
 }

@@ -81,17 +81,29 @@ public class ZoneServiceTests : IDisposable
     {
         var potager = await _database.Context.AddSpaceAsync("Potager");
         var carre = await _database.Context.AddZoneAsync(potager, "Carré 1");
-        var tomate = await _database.Context.AddPlantAsync(potager, carre, "Tomate", wateringIntervalDays: 2);
-        var radis = await _database.Context.AddPlantAsync(potager, carre, "Radis", wateringIntervalDays: 2, isArchived: true);
-
-        _database.Context.WateringLogs.AddRange(
-            new WateringLog { PlantId = tomate.Id, WateredAt = new DateOnly(2026, 6, 1) },
-            new WateringLog { PlantId = radis.Id, WateredAt = new DateOnly(2026, 6, 1) });
-        await _database.Context.SaveChangesAsync();
+        await _database.Context.AddPlantAsync(potager, carre, "Tomate", wateringIntervalDays: 2);
+        await _database.Context.AddPlantAsync(potager, carre, "Radis", wateringIntervalDays: 2, isArchived: true);
+        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, new DateOnly(2026, 6, 1), potager, carre);
 
         var zone = Assert.Single(await _service.GetBySpaceAsync(potager.Id));
 
         Assert.Equal(1, zone.ItemCount);
         Assert.Equal(1, zone.PlantsNeedingWater);
+    }
+
+    [Fact]
+    public async Task Larrosage_de_la_zone_ou_de_lespace_compte_pour_le_compteur_de_la_zone()
+    {
+        var potager = await _database.Context.AddSpaceAsync("Potager");
+        var carre1 = await _database.Context.AddZoneAsync(potager, "Carré 1");
+        var carre2 = await _database.Context.AddZoneAsync(potager, "Carré 2");
+        await _database.Context.AddPlantAsync(potager, carre1, "Tomate", wateringIntervalDays: 2);
+        await _database.Context.AddPlantAsync(potager, carre2, "Carotte", wateringIntervalDays: 2);
+        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, new DateOnly(2026, 6, 1), potager);
+        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, new DateOnly(2026, 6, 15), potager, carre1);
+
+        var zones = await _service.GetBySpaceAsync(potager.Id);
+
+        Assert.Equal(new[] { 0, 1 }, zones.Select(zone => zone.PlantsNeedingWater).ToArray());
     }
 }

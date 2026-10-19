@@ -47,10 +47,12 @@ public class PlantService : IPlantService
             .OrderBy(plant => plant.Space.Name)
             .ThenBy(plant => plant.Zone!.Name)
             .ThenBy(plant => plant.Name)
-            .SelectWithWatering()
+            .SelectWithNames()
             .ToListAsync(cancellationToken);
 
-        return rows.Select(row => row.ToDto(today)).ToList();
+        var waterings = await LatestInterventions.LoadAsync(_db.JournalEntries, JournalEntryKind.Watering, cancellationToken);
+
+        return rows.Select(row => row.ToDto(waterings, today)).ToList();
     }
 
     public async Task<PlantResponseDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -60,11 +62,16 @@ public class PlantService : IPlantService
         var row = await _db.Plants
             .AsNoTracking()
             .Where(plant => plant.Id == id)
-            .SelectWithWatering()
+            .SelectWithNames()
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw NotFoundException.For("Plant", id);
 
-        return row.ToDto(today);
+        var waterings = await LatestInterventions.LoadAsync(
+            _db.JournalEntries.Where(entry => entry.SpaceId == row.Plant.SpaceId),
+            JournalEntryKind.Watering,
+            cancellationToken);
+
+        return row.ToDto(waterings, today);
     }
 
     public async Task<PlantResponseDto> CreateAsync(SavePlantDto dto, CancellationToken cancellationToken = default)
@@ -99,6 +106,22 @@ public class PlantService : IPlantService
             cancellationToken);
 
         Apply(dto, plant);
+
+        if (plant.SpaceId != dto.SpaceId || plant.ZoneId != dto.ZoneId)
+        {
+            // Le journal d'un élément le suit : ses entrées restent dans son espace et sa zone, ce
+            // qui permet de supprimer sans perte un espace ou une zone vidés de leurs éléments.
+            var entries = await _db.JournalEntries
+                .Where(entry => entry.ItemId == id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var entry in entries)
+            {
+                entry.SpaceId = dto.SpaceId;
+                entry.ZoneId = dto.ZoneId;
+            }
+        }
+
         plant.SpaceId = dto.SpaceId;
         plant.ZoneId = dto.ZoneId;
 
@@ -123,7 +146,7 @@ public class PlantService : IPlantService
         var plant = await _db.Plants.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             ?? throw NotFoundException.For("Plant", id);
 
-        // Arrosages et observations partent avec la plante, par la cascade de GardenDbContext.
+        // Ses entrées de journal partent avec la plante, par la cascade de GardenDbContext.
         _db.Plants.Remove(plant);
         await _db.SaveChangesAsync(cancellationToken);
     }

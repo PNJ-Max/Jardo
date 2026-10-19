@@ -3,8 +3,8 @@ using Jardo.Api.Dtos;
 namespace Jardo.Api.Services;
 
 /// <summary>
-/// Enregistrement des arrosages et calcul du voyant.
-///</summary>
+/// Le voyant d'arrosage, et des raccourcis pour noter un arrosage au journal.
+/// </summary>
 public interface IWateringService
 {
     /// <summary>
@@ -13,24 +13,24 @@ public interface IWateringService
     /// </summary>
     Task<List<PlantResponseDto>> GetPlantsNeedingWaterAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>Historique des arrosages d'une plante, du plus récent au plus ancien.</summary>
+    /// <summary>Note l'arrosage d'une plante au journal.</summary>
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>
-    Task<List<WateringLogResponseDto>> GetHistoryAsync(int plantId, CancellationToken cancellationToken = default);
-
-    /// <summary>Enregistre l'arrosage d'une plante.</summary>
-    /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>
-    /// <exception cref="Infrastructure.BusinessRuleException">La date est dans le futur, ou la plante est archivée.</exception>
-    Task<WateringLogResponseDto> WaterPlantAsync(
+    /// <exception cref="Infrastructure.BusinessRuleException">
+    /// La date est dans le futur, ou la plante ou son espace est archivé.
+    /// </exception>
+    Task<JournalEntryResponseDto> WaterPlantAsync(
         int plantId,
         CreateWateringDto dto,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Enregistre l'arrosage de toutes les plantes actives d'une zone, en une seule opération.
+    /// Note l'arrosage d'une zone : une seule entrée, qui vaut pour chacun de ses éléments.
     /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">La zone n'existe pas.</exception>
-    /// <exception cref="Infrastructure.BusinessRuleException">La date est dans le futur.</exception>
-    Task<ZoneWateringResultDto> WaterZoneAsync(
+    /// <exception cref="Infrastructure.BusinessRuleException">
+    /// La date est dans le futur, ou l'espace est archivé ou n'accueille pas de plantes.
+    /// </exception>
+    Task<JournalEntryResponseDto> WaterZoneAsync(
         int zoneId,
         CreateWateringDto dto,
         CancellationToken cancellationToken = default);

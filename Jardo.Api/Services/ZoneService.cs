@@ -20,10 +20,10 @@ public class ZoneService : IZoneService
 
     private record ZoneWithItems(Zone Zone, int ItemCount, List<PlantWateringInfo> ActivePlants);
 
-    private record PlantWateringInfo(int WateringIntervalDays, DateOnly? PlantedDate, DateOnly? LastWateredAt);
+    private record PlantWateringInfo(int Id, int WateringIntervalDays, DateOnly? PlantedDate);
 
-    // Une seule requête SQL pour zones, éléments et arrosages. L'appelant filtre et trie avant la
-    // projection : un OrderBy sur la projection n'est pas traduisible par EF Core.
+    // Une seule requête SQL pour zones et éléments. L'appelant filtre et trie avant la projection :
+    // un OrderBy sur la projection n'est pas traduisible par EF Core.
     private static IQueryable<ZoneWithItems> Project(IQueryable<Zone> zones)
         => zones
             .Select(zone => new ZoneWithItems(
@@ -32,24 +32,25 @@ public class ZoneService : IZoneService
                 zone.Items
                     .OfType<Plant>()
                     .Where(plant => !plant.IsArchived)
-                    .Select(plant => new PlantWateringInfo(
-                        plant.WateringIntervalDays,
-                        plant.PlantedDate,
-                        plant.WateringLogs.Max(log => (DateOnly?)log.WateredAt)))
+                    .Select(plant => new PlantWateringInfo(plant.Id, plant.WateringIntervalDays, plant.PlantedDate))
                     .ToList()));
 
-    private static int CountNeedingWater(List<PlantWateringInfo> plants, DateOnly today)
-        => plants.Count(plant => WateringCalculator.Calculate(
+    private static ZoneResponseDto ToDto(ZoneWithItems row, LatestInterventions waterings, DateOnly today)
+    {
+        var plantsNeedingWater = row.ActivePlants.Count(plant => WateringCalculator.Calculate(
             plant.WateringIntervalDays,
-            plant.LastWateredAt,
+            waterings.ForItem(plant.Id, row.Zone.SpaceId, row.Zone.Id),
             plant.PlantedDate,
             today).Status != WateringStatus.Ok);
 
-    private static ZoneResponseDto ToDto(ZoneWithItems row, DateOnly today)
-        => ZoneResponseDto.FromEntity(
-            row.Zone,
-            itemCount: row.ItemCount,
-            plantsNeedingWater: CountNeedingWater(row.ActivePlants, today));
+        return ZoneResponseDto.FromEntity(row.Zone, row.ItemCount, plantsNeedingWater);
+    }
+
+    private Task<LatestInterventions> LoadWateringsAsync(int spaceId, CancellationToken cancellationToken)
+        => LatestInterventions.LoadAsync(
+            _db.JournalEntries.Where(entry => entry.SpaceId == spaceId),
+            JournalEntryKind.Watering,
+            cancellationToken);
 
     public async Task<List<ZoneResponseDto>> GetBySpaceAsync(int spaceId, CancellationToken cancellationToken = default)
     {
@@ -66,8 +67,9 @@ public class ZoneService : IZoneService
             .OrderBy(zone => zone.Name);
 
         var rows = await Project(source).ToListAsync(cancellationToken);
+        var waterings = await LoadWateringsAsync(spaceId, cancellationToken);
 
-        return rows.Select(row => ToDto(row, today)).ToList();
+        return rows.Select(row => ToDto(row, waterings, today)).ToList();
     }
 
     public async Task<ZoneResponseDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -81,7 +83,9 @@ public class ZoneService : IZoneService
         var row = await Project(source).FirstOrDefaultAsync(cancellationToken)
             ?? throw NotFoundException.For("Zone", id);
 
-        return ToDto(row, today);
+        var waterings = await LoadWateringsAsync(row.Zone.SpaceId, cancellationToken);
+
+        return ToDto(row, waterings, today);
     }
 
     public async Task<ZoneResponseDto> CreateAsync(int spaceId, SaveZoneDto dto, CancellationToken cancellationToken = default)

@@ -94,7 +94,7 @@ Content-Type: application/json
 ### Supprimer une zone -- refuse si elle contient encore des elements
 DELETE {{host}}/api/zones/1
 
-### Arroser TOUTE une zone : cree un enregistrement par plante active
+### Arroser TOUTE une zone : une seule entree au journal, qui vaut pour chaque plante du carre
 POST {{host}}/api/zones/1/waterings
 Content-Type: application/json
 
@@ -209,14 +209,15 @@ POST {{host}}/api/plants/3/archive
 ### Reactiver
 POST {{host}}/api/plants/3/unarchive
 
-### Supprimer definitivement (emporte arrosages et observations)
+### Supprimer definitivement (emporte son journal)
 DELETE {{host}}/api/plants/3
 
 ### ==========================================================================
 ### ARROSAGE
 ### ==========================================================================
 
-### Ce qu'il faut arroser, le plus urgent d'abord
+### Ce qu'il faut arroser, le plus urgent d'abord. Un arrosage note sur la zone
+### ou sur tout l'espace d'une plante compte comme le sien.
 GET {{host}}/api/watering/needed
 Accept: application/json
 
@@ -231,43 +232,121 @@ POST {{host}}/api/plants/1/waterings
 Content-Type: application/json
 
 {
-  "wateredAt": "2026-06-14",
+  "wateredAt": "2026-10-18",
   "note": "Arrosage au pied, paillage remis"
 }
 
-### Historique d'arrosage d'une plante
-GET {{host}}/api/plants/1/waterings
+### ==========================================================================
+### JOURNAL D'INTERVENTIONS
+### kind : Watering, Sowing, Planting, Pruning, Treatment, Fertilizing, Harvest,
+###        Observation, WoodSupply, WoodConsumption, Other
+### quantityUnit : Kilograms, Grams, Pieces, Steres
+### ==========================================================================
+
+### Tout le jardin, du plus recent au plus ancien
+GET {{host}}/api/journal
 Accept: application/json
 
-### ==========================================================================
-### JOURNAL D'OBSERVATIONS
-### ==========================================================================
-
-### Le journal d'une plante
-GET {{host}}/api/plants/1/observations
+### Filtre par type, a repeter
+GET {{host}}/api/journal?kind=Harvest&kind=Treatment
 Accept: application/json
 
-### Ajouter une entree : note, mesure et probleme en une seule requete
-POST {{host}}/api/plants/1/observations
+### Le journal d'un espace (tout ce qui s'y est fait, zones et elements compris)
+GET {{host}}/api/journal?spaceId=2
+Accept: application/json
+
+### Le journal d'une zone : ses entrees, celles de ses elements et celles de tout l'espace
+GET {{host}}/api/journal?zoneId=1
+Accept: application/json
+
+### Le journal d'un element : ses entrees, et celles de sa zone et de son espace
+GET {{host}}/api/journal?itemId=5
+Accept: application/json
+
+### Les arrosages d'une plante, ceux du carre compris
+GET {{host}}/api/journal?itemId=1&kind=Watering
+Accept: application/json
+
+### Une entree
+GET {{host}}/api/journal/1
+Accept: application/json
+
+### Noter une taille sur un element (sa zone est prise d'office)
+POST {{host}}/api/journal
 Content-Type: application/json
 
 {
+  "date": "2026-10-19",
+  "kind": "Pruning",
+  "note": "Gourmands supprimes.",
+  "spaceId": 1,
+  "itemId": 1
+}
+
+### Noter une recolte, avec sa quantite
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "Harvest",
+  "quantity": 1.8,
+  "quantityUnit": "Kilograms",
+  "spaceId": 1,
+  "itemId": 5
+}
+
+### Noter une observation : note, hauteur et probleme en une seule entree
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "Observation",
   "note": "Premiers fruits rouges, port bien degage.",
   "heightCm": 85,
-  "problemNote": "Quelques feuilles basses jaunies",
-  "treatment": "Feuilles retirees, arrosage au pied uniquement"
+  "problem": "Quelques feuilles basses jaunies",
+  "spaceId": 1,
+  "itemId": 1
 }
 
-### Une note seule suffit
-POST {{host}}/api/plants/5/observations
+### Noter une intervention sur une zone (vaut pour chacune de ses plantes)
+POST {{host}}/api/journal
 Content-Type: application/json
 
 {
-  "note": "Beaucoup de fleurs males cette semaine."
+  "date": "2026-10-19",
+  "kind": "Fertilizing",
+  "note": "Compost etale sur tout le carre.",
+  "spaceId": 1,
+  "zoneId": 2
 }
 
-### Supprimer une entree de journal
-DELETE {{host}}/api/observations/1
+### Noter une intervention sur tout un espace
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "Treatment",
+  "treatment": "Bouillie bordelaise",
+  "note": "Traitement d'automne de tous les arbres.",
+  "spaceId": 2
+}
+
+### Corriger une entree (remplacement complet, cible comprise)
+PUT {{host}}/api/journal/1
+Content-Type: application/json
+
+{
+  "date": "2026-09-23",
+  "kind": "Watering",
+  "note": "Grand arrosage de tout le potager, au goutte-a-goutte.",
+  "spaceId": 1
+}
+
+### Supprimer une entree
+DELETE {{host}}/api/journal/1
 
 ### ==========================================================================
 ### LES CAS D'ERREUR -- a executer pour voir les reponses ProblemDetails
@@ -383,3 +462,66 @@ POST {{host}}/api/plants/4/waterings
 Content-Type: application/json
 
 {}
+
+### 400 : entree de journal datee dans le futur
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2030-01-01",
+  "kind": "Watering",
+  "spaceId": 1
+}
+
+### 400 : zone qui n'appartient pas a l'espace (zone 5 = rang des petits fruits)
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "Watering",
+  "spaceId": 1,
+  "zoneId": 5
+}
+
+### 400 : element qui n'est pas dans la zone donnee (tomates = carre 1)
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "Watering",
+  "spaceId": 1,
+  "zoneId": 2,
+  "itemId": 1
+}
+
+### 400 : du bois se note en steres, et seulement dans un espace bois de chauffage
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "WoodSupply",
+  "quantity": 4,
+  "quantityUnit": "Steres",
+  "spaceId": 1
+}
+
+### 400 : une quantite sur un arrosage
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "Watering",
+  "quantity": 10,
+  "quantityUnit": "Kilograms",
+  "spaceId": 1
+}
+
+### 400 : le journal se lit pour une seule cible
+GET {{host}}/api/journal?spaceId=1&zoneId=2
+
+### 404 : journal d'un element inexistant
+GET {{host}}/api/journal?itemId=9999

@@ -10,7 +10,7 @@ une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce q
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (18/10/2026)
+## Où on en est (19/10/2026)
 
 **Étude de la carte du jardin validée** ([`docs/etude-carte-potager.md`](docs/etude-carte-potager.md),
 avec un prototype cliquable). Scène modèle « maison mitoyenne », espaces cliquables (serre
@@ -24,7 +24,7 @@ en six étapes.
 journal d'interventions, tâches). L'API y migre par étapes. La refonte des écrans est
 suspendue jusqu'à la nouvelle API et aux maquettes revues.
 
-**Backend `Jardo.Api` : migration vers le nouveau modèle, étape 1 sur 4 faite.**
+**Backend `Jardo.Api` : migration vers le nouveau modèle, étapes 1 et 2 sur 4 faites.**
 - ASP.NET Core (.NET 10) + EF Core + SQLite, tests dans `Jardo.Api.Tests`.
 - Étape 1, jardin et espaces : un jardin unique (créé par la migration), des espaces typés
   (potager, verger, petits fruits, serre, bois de chauffage) archivables, des zones rattachées à un
@@ -35,10 +35,22 @@ suspendue jusqu'à la nouvelle API et aux maquettes revues.
   (espace dans le jardin, zone dans l'espace).
   Endpoints `/api/garden`, `/api/spaces`, `/api/spaces/{id}/zones`, `/api/zones/{id}`,
   `/api/plants?spaceId=&zoneId=`. Le seeder crée un jardin d'exemple complet.
-- Arrosages, observations et voyant d'arrosage inchangés, en attendant le journal (étape 2)
-  et les tâches (étape 3).
-- Le front actuel ne suit plus l'API (zones sans espace, `CreatePlantDto` disparu) : il sera
-  refait sur le nouveau modèle.
+- Étape 2, journal d'interventions unifié : `JournalEntry` remplace arrosages et observations.
+  Onze types (arrosage, semis, plantation, taille, traitement, fertilisation, récolte,
+  observation, apport et consommation de bois, autre), champs facultatifs contrôlés selon le
+  type (quantité pour la récolte et le bois, en stères pour le bois ; hauteur ; problème et
+  traitement), date jamais future. Cible : un espace, et une zone ou un élément de cet espace,
+  cohérence vérifiée ; les entrées d'un élément le suivent quand il est déplacé. Règle tranchée :
+  une intervention sur une zone ou un espace vaut pour les éléments qu'ils contiennent
+  ([détail](docs/modele-domaine.md#journalentry-intervention)). Endpoint `/api/journal` (lecture
+  pour le jardin ou une cible, filtre par types, correction, suppression).
+- Voyant d'arrosage conservé (`WateringIntervalDays`, `GET /api/watering/needed`) : il lit le
+  dernier arrosage dans le journal selon la règle ; arroser une zone note une seule entrée. Les
+  tâches génériques arrivent à l'étape 3, le tas de bois à l'étape 4.
+- Le seeder produit quelques semaines de journal : arrosages de zones et d'espaces, semis,
+  plantations, taille du verger, récoltes, oïdium constaté puis traité.
+- Le front actuel ne suit plus l'API (zones sans espace, `CreatePlantDto`, arrosages et
+  observations disparus) : il sera refait sur le nouveau modèle.
 - Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
   évidente. README recentré sur le produit.
 
@@ -82,7 +94,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 - Vision produit et proposition de modèle du domaine. Fait.
 - API, une PR par étape ([détail](docs/modele-domaine.md#stratégie-de-migration)) :
   1. jardin, espaces typés, zones, plantes avec variété et quantité. Fait ;
-  2. journal d'interventions unifié ;
+  2. journal d'interventions unifié. Fait ;
   3. tâches récurrentes et calculateur d'échéance générique (l'arrosage en devient une) ;
   4. tas de bois.
 

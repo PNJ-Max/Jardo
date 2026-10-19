@@ -2,7 +2,7 @@ namespace Jardo.Api.Models;
 
 /// <summary>
 /// Base commune de tout ce qu'on suit dans un espace. Héritage TPH : le journal et les tâches
-/// pointeront vers une seule table.
+/// pointent vers une seule table.
 /// </summary>
 public abstract class GardenItem
 {

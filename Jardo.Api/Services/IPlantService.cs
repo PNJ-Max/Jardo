@@ -32,7 +32,10 @@ public interface IPlantService
     /// </exception>
     Task<PlantResponseDto> CreateAsync(SavePlantDto dto, CancellationToken cancellationToken = default);
 
-    /// <summary>Modifie une plante. Permet aussi de la déplacer vers un autre espace ou une autre zone.</summary>
+    /// <summary>
+    /// Modifie une plante. Permet aussi de la déplacer vers un autre espace ou une autre zone ; ses
+    /// entrées de journal la suivent.
+    /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>
     /// <exception cref="Infrastructure.BusinessRuleException">Mêmes règles qu'à la création.</exception>
     Task<PlantResponseDto> UpdateAsync(int id, SavePlantDto dto, CancellationToken cancellationToken = default);
@@ -45,7 +48,7 @@ public interface IPlantService
     Task<PlantResponseDto> SetArchivedAsync(int id, bool isArchived, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Supprime définitivement une plante, ainsi que ses arrosages et observations.
+    /// Supprime définitivement une plante, ainsi que ses entrées de journal.
     /// Pour une plante en fin de vie, préférer <see cref="SetArchivedAsync"/>.
     /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">La plante n'existe pas.</exception>

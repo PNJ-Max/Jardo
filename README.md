@@ -7,14 +7,15 @@ organise ce que contient le jardin, on note ce qu'on y fait, et l'app rappelle c
 faire. Une API ASP.NET Core et une app Android (Expo) qui la consomme.
 
 La [vision produit](docs/vision-produit.md) et le [modèle du domaine](docs/modele-domaine.md)
-décrivent la cible. L'API en est à la première étape de la migration : un jardin, ses espaces
+décrivent la cible. L'API en est à la deuxième étape de la migration : un jardin, ses espaces
 typés (potager, verger, petits fruits, serre, bois de chauffage), leurs zones et leurs plantes, plus un
-journal d'observations et un premier service, le rappel d'arrosage.
+journal d'interventions et un premier service, le rappel d'arrosage.
 
 ## Premier service : le voyant d'arrosage
 
 Chaque plante porte un intervalle en jours, et l'API calcule son état à partir du dernier
-arrosage enregistré. Ce voyant s'étendra à toutes les tâches du jardin.
+arrosage noté au journal, sur la plante, sa zone ou tout son espace. Ce voyant s'étendra à
+toutes les tâches du jardin.
 
 | État | Signification |
 |---|---|

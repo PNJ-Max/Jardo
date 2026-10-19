@@ -70,7 +70,7 @@ public class ZonesController : ControllerBase
         => await _zoneService.UpdateAsync(id, dto, cancellationToken);
 
     /// <summary>
-    /// Supprime une zone. Refusé si elle contient encore des éléments.
+    /// Supprime une zone et les entrées notées sur elle. Refusé si elle contient encore des éléments.
     /// </summary>
     [HttpDelete("zones/{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -84,18 +84,23 @@ public class ZonesController : ControllerBase
     }
 
     /// <summary>
-    /// Arrose toutes les plantes actives de la zone en une seule opération.
+    /// Note l'arrosage de toute la zone au journal.
     /// </summary>
     /// <remarks>
-    /// Un enregistrement est créé par plante, pour que chacune garde son propre historique.
+    /// Une seule entrée, sur la zone : elle compte comme arrosage de chacun de ses éléments.
+    /// Le corps est optionnel : « {} » note un arrosage à la date du jour.
     /// </remarks>
     [HttpPost("zones/{id:int}/waterings")]
-    [ProducesResponseType<ZoneWateringResultDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<JournalEntryResponseDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ZoneWateringResultDto>> WaterZone(
+    public async Task<ActionResult<JournalEntryResponseDto>> WaterZone(
         int id,
         CreateWateringDto dto,
         CancellationToken cancellationToken)
-        => await _wateringService.WaterZoneAsync(id, dto, cancellationToken);
+    {
+        var entry = await _wateringService.WaterZoneAsync(id, dto, cancellationToken);
+
+        return CreatedAtAction(nameof(JournalController.GetEntry), "Journal", new { id = entry.Id }, entry);
+    }
 }

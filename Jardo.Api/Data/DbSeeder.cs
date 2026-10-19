@@ -6,8 +6,9 @@ namespace Jardo.Api.Data;
 
 /// <summary>
 /// Remplit la base avec un jardin d'exemple : un potager en carrés, un verger, des petits fruits
-/// par rang, une serre et un espace bois de chauffage, encore vide. Les dates sont relatives à aujourd'hui
-/// pour qu'il y ait toujours des plantes en retard d'arrosage.
+/// par rang, une serre et un espace bois de chauffage, encore vide ; et quelques semaines de
+/// journal. Les dates sont relatives à aujourd'hui pour qu'il y ait toujours des plantes en retard
+/// d'arrosage.
 /// </summary>
 public static class DbSeeder
 {
@@ -147,69 +148,128 @@ public static class DbSeeder
 
         await db.SaveChangesAsync(cancellationToken);
 
-        // Chaque date produit un état précis ; le commentaire de ligne donne l'échéance obtenue.
-        WateringLog Watering(Plant plant, int daysAgo, string? note = null)
-            => new() { Plant = plant, WateredAt = Ago(daysAgo), Note = note };
+        JournalEntry Entry(
+            JournalEntryKind kind,
+            int daysAgo,
+            Space space,
+            Zone? zone = null,
+            Plant? item = null,
+            string? note = null,
+            double? quantity = null,
+            MeasureUnit? unit = null,
+            int? heightCm = null,
+            string? problem = null,
+            string? treatment = null)
+            => new()
+            {
+                Kind = kind,
+                Date = Ago(daysAgo),
+                Space = space,
+                Zone = zone ?? item?.Zone,
+                Item = item,
+                Note = note,
+                Quantity = quantity,
+                QuantityUnit = unit,
+                HeightCm = heightCm,
+                Problem = problem,
+                Treatment = treatment,
+                CreatedAt = now
+            };
 
-        db.WateringLogs.AddRange(
-            Watering(tomates, 8),
-            Watering(tomates, 6, "Paillage ajouté au pied."),
-            Watering(tomates, 4),                      // + 2 j  -> en retard de 2 jours
-            Watering(basilic, 0),                      // + 2 j  -> à jour
-            Watering(carottes, 3),                     // + 3 j  -> échéance aujourd'hui
-            Watering(courgettes, 5),                   // + 3 j  -> en retard de 2 jours
-            Watering(laitues, 1),                      // + 1 j  -> échéance aujourd'hui
-            Watering(poireaux, 2),                     // + 4 j  -> à jour
-            Watering(rhubarbe, 3),                     // + 7 j  -> à jour
-            Watering(pommiers, 20, "Arrosage de reprise après la sécheresse."),
-                                                       // + 14 j -> en retard de 6 jours
-            Watering(poirier, 10),                     // + 14 j -> à jour
-            Watering(cerisier, 14),                    // + 14 j -> échéance aujourd'hui
-            Watering(framboisiers, 2),                 // + 7 j  -> à jour
-            Watering(cassissiers, 9),                  // + 7 j  -> en retard de 2 jours
-            Watering(piments, 1),                      // + 1 j  -> échéance aujourd'hui
-            Watering(concombres, 1)                    // + 2 j  -> à jour
+        const JournalEntryKind Watering = JournalEntryKind.Watering;
 
-            // Prunier (à jour), groseilliers (à jour) et aubergines (en retard de 7 jours)
-            // n'ont aucun arrosage : l'échéance repart de la date de plantation.
+        // Arrosages : la plupart sont notés sur une zone ou un espace et valent pour leurs plantes.
+        // Les plus anciens font l'historique ; les derniers de chaque cible produisent chacun un état
+        // précis, donné en commentaire.
+        db.JournalEntries.AddRange(
+            Entry(Watering, 25, potager, note: "Grand arrosage de tout le potager au jet."),
+            Entry(Watering, 14, potager, carre1),
+            Entry(Watering, 12, potager, note: "Tout le potager, après trois jours de canicule."),
+            Entry(Watering, 11, potager, carre1),
+            Entry(Watering, 10, potager, carre2),
+            Entry(Watering, 9, serre, bac),
+            Entry(Watering, 8, potager, carre1),
+            Entry(Watering, 7, serre, tablette),
+            Entry(Watering, 6, potager, carre1, note: "Paillage ajouté au pied des tomates."),
+            Entry(Watering, 6, potager, carre2),
+
+            // Tomates (+ 2 j) : en retard de 2 jours.
+            Entry(Watering, 4, potager, carre1),
+            // Basilic (+ 2 j) : à jour, malgré le carré arrosé il y a 4 jours.
+            Entry(Watering, 0, potager, item: basilic),
+            // Carottes (+ 3 j) : échéance aujourd'hui.
+            Entry(Watering, 3, potager, carre2),
+            // Courgettes (+ 3 j) : en retard de 2 jours.
+            Entry(Watering, 5, potager, item: courgettes),
+            // Laitues (+ 1 j) : échéance aujourd'hui ; poireaux (+ 4 j) : à jour.
+            Entry(Watering, 1, potager, carre4),
+            // Rhubarbe (+ 7 j) : à jour.
+            Entry(Watering, 3, potager, item: rhubarbe),
+            // Pommiers (+ 14 j) : en retard de 6 jours. Le prunier, planté depuis, part de sa
+            // plantation : à jour.
+            Entry(Watering, 20, verger, note: "Arrosage de reprise après la sécheresse."),
+            // Poirier (+ 14 j) : à jour.
+            Entry(Watering, 10, verger, item: poirier),
+            // Cerisier (+ 14 j) : échéance aujourd'hui.
+            Entry(Watering, 14, verger, item: cerisier),
+            // Framboisiers (+ 7 j) : à jour.
+            Entry(Watering, 2, petitsFruits, rang1),
+            // Cassissiers (+ 7 j) : en retard de 2 jours. Les groseilliers, plantés depuis : à jour.
+            Entry(Watering, 9, petitsFruits, rang2),
+            // Piments (+ 1 j) : échéance aujourd'hui.
+            Entry(Watering, 1, serre, tablette),
+            // Aubergines (+ 3 j) : en retard de 2 jours.
+            Entry(Watering, 5, serre, bac),
+            // Concombres (+ 2 j) : à jour.
+            Entry(Watering, 1, serre, item: concombres)
         );
 
-        db.Observations.AddRange(
-            new Observation
-            {
-                Plant = tomates,
-                ObservedAt = Ago(10),
-                Note = "Premières fleurs sur le pied du fond.",
-                HeightCm = 45
-            },
-            new Observation
-            {
-                Plant = tomates,
-                ObservedAt = Ago(3),
-                Note = "Belle croissance, premiers fruits verts.",
-                HeightCm = 72
-            },
-            new Observation
-            {
-                Plant = courgettes,
-                ObservedAt = Ago(2),
-                Note = "Taches blanches sur les feuilles les plus basses.",
-                ProblemNote = "Oïdium probable, favorisé par l'humidité du matin.",
-                Treatment = "Feuilles atteintes retirées, purin de prêle appliqué."
-            },
-            new Observation
-            {
-                Plant = pommiers,
-                ObservedAt = Ago(15),
-                Note = "Belle charge cette année, quelques fruits éclaircis."
-            },
-            new Observation
-            {
-                Plant = groseilliers,
-                ObservedAt = Ago(1),
-                Note = "Reprise correcte, premières feuilles.",
-                HeightCm = 35
-            }
+        db.JournalEntries.AddRange(
+            Entry(JournalEntryKind.Sowing, 60, potager, item: carottes,
+                note: "Deux rangs, graines en ruban."),
+            Entry(JournalEntryKind.Planting, 45, potager, item: tomates,
+                note: "Six pieds, tuteurs en spirale."),
+            Entry(JournalEntryKind.Harvest, 40, verger, item: cerisier,
+                note: "Une partie laissée aux merles.", quantity: 6, unit: MeasureUnit.Kilograms),
+            Entry(JournalEntryKind.Pruning, 35, verger,
+                note: "Taille en vert de tous les arbres : gourmands et branches qui se croisent."),
+            Entry(JournalEntryKind.Fertilizing, 30, potager, carre3,
+                note: "Deux seaux de compost mûr avant le paillage."),
+            Entry(JournalEntryKind.Harvest, 25, potager, item: radis,
+                note: "Fin de la planche, radis creux pour les derniers.", quantity: 30, unit: MeasureUnit.Pieces),
+            Entry(JournalEntryKind.Pruning, 21, petitsFruits, item: framboisiers,
+                note: "Cannes qui ont fructifié coupées au ras du sol."),
+            Entry(JournalEntryKind.Planting, 20, potager, item: laitues,
+                note: "Douze plants repiqués, filet contre les oiseaux."),
+            Entry(JournalEntryKind.Other, 18, potager,
+                note: "Désherbage des allées et tonte des abords."),
+            Entry(JournalEntryKind.Sowing, 15, serre, item: piments,
+                note: "Douze godets sur la tablette chauffante."),
+            Entry(JournalEntryKind.Observation, 15, verger, item: pommiers,
+                note: "Belle charge cette année, quelques fruits éclaircis."),
+            Entry(JournalEntryKind.Observation, 10, potager, item: tomates,
+                note: "Premières fleurs sur le pied du fond.", heightCm: 45),
+            Entry(JournalEntryKind.Planting, 10, verger, item: prunier,
+                note: "Scion de deux ans, tuteuré face au vent."),
+            Entry(JournalEntryKind.Harvest, 6, potager, item: courgettes,
+                note: "Les premières, cueillies à 20 cm.", quantity: 3.2, unit: MeasureUnit.Kilograms),
+            Entry(JournalEntryKind.Harvest, 4, petitsFruits, item: framboisiers,
+                quantity: 650, unit: MeasureUnit.Grams),
+            Entry(JournalEntryKind.Observation, 3, potager, item: tomates,
+                note: "Belle croissance, premiers fruits verts.", heightCm: 72),
+            Entry(JournalEntryKind.Planting, 3, petitsFruits, item: groseilliers,
+                note: "Trois pieds en racines nues."),
+            Entry(JournalEntryKind.Observation, 2, potager, item: courgettes,
+                note: "Taches blanches sur les feuilles les plus basses.",
+                problem: "Oïdium probable, favorisé par l'humidité du matin."),
+            Entry(JournalEntryKind.Treatment, 1, potager, item: courgettes,
+                note: "Feuilles atteintes retirées.",
+                problem: "Oïdium",
+                treatment: "Purin de prêle pulvérisé en fin de journée."),
+            Entry(JournalEntryKind.Observation, 1, petitsFruits, item: groseilliers,
+                note: "Reprise correcte, premières feuilles.", heightCm: 35),
+            Entry(JournalEntryKind.Harvest, 1, potager, item: tomates,
+                note: "Premières cœur de bœuf.", quantity: 2.5, unit: MeasureUnit.Kilograms)
         );
 
         await db.SaveChangesAsync(cancellationToken);

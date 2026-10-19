@@ -59,7 +59,7 @@ public class PlantsController : ControllerBase
     }
 
     /// <summary>
-    /// Modifie une plante. Un SpaceId ou un ZoneId différent la déplace.
+    /// Modifie une plante. Un SpaceId ou un ZoneId différent la déplace, avec son journal.
     /// </summary>
     [HttpPut("{id:int}")]
     [ProducesResponseType<PlantResponseDto>(StatusCodes.Status200OK)]
@@ -94,7 +94,7 @@ public class PlantsController : ControllerBase
         => await _plantService.SetArchivedAsync(id, isArchived: false, cancellationToken);
 
     /// <summary>
-    /// Supprime définitivement une plante, avec ses arrosages et ses observations.
+    /// Supprime définitivement une plante, avec ses entrées de journal.
     /// </summary>
     /// <remarks>
     /// À réserver aux erreurs de saisie ; pour une plante en fin de vie, utiliser l'archivage.

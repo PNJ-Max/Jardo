@@ -2,7 +2,7 @@
 
 Proposition conceptuelle qui traduit la [vision produit](vision-produit.md). L'API
 l'implémente par étapes (voir [Stratégie de migration](#stratégie-de-migration)) : l'étape 1,
-jardin, espaces, zones et plantes, est faite. Les noms d'entités sont ceux du code (en
+jardin, espaces, zones et plantes, et l'étape 2, journal d'interventions, sont faites. Les noms d'entités sont ceux du code (en
 anglais) ; les champs listés sont indicatifs et sont arrêtés dans chaque PR.
 
 ## Vue d'ensemble
@@ -73,18 +73,60 @@ pointer vers une seule table, et SQLite s'en accommode sans jointure. Deux types
 
 ### JournalEntry (intervention)
 
-Une chose faite au jardin. Date, `Kind`, note, et des champs facultatifs selon le type :
-quantité et unité (récolte, bois), hauteur, problème constaté, traitement appliqué.
+Une chose faite au jardin. Date (jamais dans le futur), `Kind`, note facultative, et des
+champs facultatifs selon le type.
 
-`Kind` au MVP : arrosage, semis, plantation, taille, traitement, fertilisation, récolte,
-observation, apport de bois, consommation de bois, autre.
+`Kind` au MVP : `Watering` (arrosage), `Sowing` (semis), `Planting` (plantation), `Pruning`
+(taille), `Treatment` (traitement), `Fertilizing` (fertilisation), `Harvest` (récolte),
+`Observation`, `WoodSupply` (apport de bois), `WoodConsumption` (consommation de bois), `Other`
+(autre).
+
+| Champ | Accepté pour | Règle |
+|---|---|---|
+| Quantité et unité | Récolte, bois | Toujours ensemble. Récolte : kilos, grammes ou pièces, facultative. Bois : stères, obligatoire |
+| Hauteur (cm) | Observation | |
+| Problème constaté, traitement appliqué | Observation, traitement | |
+| Note | Tous | Obligatoire pour « autre » ; une observation porte au moins une note, une hauteur ou un problème |
+
+Le type doit aussi convenir à l'espace : le bois ne se note que dans un espace bois de
+chauffage, les soins aux plantes (arrosage à récolte) que dans un espace qui accueille des
+plantes ; observation et « autre » se notent partout. Un espace ne change pas de type si son
+journal contient des entrées que le nouveau type refuse.
 
 **Cible** : un espace obligatoire, plus une zone ou un élément facultatifs. « Désherber le
 carré 2 » vise une zone, « tailler le pommier » un élément, « tondre » tout l'espace. Le
-journal d'un espace se lit donc sans jointure.
+journal d'un espace se lit donc sans jointure. La cohérence est garantie à l'écriture : la zone
+et l'élément appartiennent à l'espace, et l'élément est dans la zone si les deux sont donnés.
+Une entrée sur un élément situé dans une zone prend cette zone d'office, pour que le journal
+d'une zone se lise lui aussi sans jointure.
 
-Une entrée peut être corrigée ou supprimée : rien n'en est recopié ailleurs, échéances et
-stock de bois sont recalculés à la lecture.
+**Les entrées d'un élément le suivent.** Déplacer une plante déplace ses entrées vers son
+nouvel espace et sa nouvelle zone : la cible d'une entrée est toujours cohérente, et supprimer
+un espace ou une zone vidés de leurs éléments n'emporte jamais l'historique d'un élément. Pour
+garder un historique à sa place (semis de la serre repiqué au potager), on archive l'élément
+et on en crée un nouveau. Une cible archivée (élément ou espace) ne reçoit plus de nouvelle
+entrée ; ses entrées existantes restent corrigeables.
+
+**Règle d'application : une intervention notée sur une zone ou sur un espace vaut pour les
+éléments qu'ils contiennent.** « Arroser le carré 2 » compte comme arrosage de chaque plante du
+carré, « arroser le verger » de chaque arbre du verger, zones comprises. L'élément est pris là
+où il se trouve au moment de la lecture ; on ne garde pas l'historique de ses déplacements. La
+règle sert :
+
+- au voyant d'arrosage : le dernier arrosage d'une plante est le plus récent de ceux notés sur
+  elle, sur sa zone et sur tout son espace (`LatestInterventions`). Une plantation postérieure
+  à ce dernier arrosage relance le décompte, pour qu'une plante arrivée dans un carré déjà
+  arrosé ne naisse pas en retard ;
+- au calculateur d'échéance des tâches (étape 3), pour tout type d'intervention ;
+- à la lecture du journal : celui d'un élément montre ses entrées et celles de sa zone et de
+  son espace ; celui d'une zone, ses entrées, celles de ses éléments et celles de tout
+  l'espace ; celui d'un espace, tout ce qui s'y est fait.
+
+Le journal se lit du plus récent au plus ancien, pour tout le jardin ou pour une seule cible,
+filtré par types d'intervention. Une entrée peut être corrigée (cible comprise) ou supprimée :
+rien n'en est recopié ailleurs, échéances et stock de bois sont recalculés à la lecture.
+Supprimer un élément, une zone ou un espace (ces deux derniers vides d'éléments) supprime les
+entrées notées dessus.
 
 ### GardenTask (tâche)
 
@@ -96,7 +138,8 @@ et une récurrence :
 - **une seule fois**, à une date donnée.
 
 **L'échéance est calculée, jamais stockée**, sur le principe du voyant actuel : dernière
-entrée du journal de même `Kind` sur la même cible, plus la récurrence ; à défaut, la date de
+entrée du journal de même `Kind` qui vaut pour la cible (la cible elle-même ou ce qui la
+contient, selon la règle d'application du journal), plus la récurrence ; à défaut, la date de
 départ de la tâche. Faire une tâche, c'est noter l'intervention au journal : il n'y a pas de
 statut « faite » à tenir à jour. Une tâche ponctuelle est close dès qu'une entrée de même type
 et de même cible existe à sa date ou après.
@@ -117,16 +160,16 @@ un pommier et un rang de carottes sont tous des `Plant`.
 
 ## Impact sur le modèle actuel
 
-| Aujourd'hui | Demain |
-|---|---|
-| `Zone` (racine) | `Garden` → `Space` (typé) → `Zone` (facultative) |
-| `Plant` avec `ZoneId` | `Plant`, sous-type de `GardenItem`, avec `SpaceId` et `ZoneId` facultatif, plus variété et quantité |
-| `Plant.WateringIntervalDays` | Une `GardenTask` d'arrosage tous les N jours |
-| `WateringLog` | `JournalEntry` de type arrosage |
-| `Observation` (note, hauteur, problème, traitement) | `JournalEntry` de type observation ou traitement, mêmes champs |
-| `WateringCalculator`, `wateringStatus` | Calculateur d'échéance générique, statut sur chaque tâche |
-| `GET /api/watering/needed` | Tâches dues (toutes catégories) |
-| `POST /api/zones/{id}/waterings` | Intervention sur une zone ou un espace |
+| Avant | Après | Étape |
+|---|---|---|
+| `Zone` (racine) | `Garden` → `Space` (typé) → `Zone` (facultative) | 1, faite |
+| `Plant` avec `ZoneId` | `Plant`, sous-type de `GardenItem`, avec `SpaceId` et `ZoneId` facultatif, plus variété et quantité | 1, faite |
+| `WateringLog` | `JournalEntry` de type arrosage | 2, faite |
+| `Observation` (note, hauteur, problème, traitement) | `JournalEntry` de type observation ou traitement, mêmes champs | 2, faite |
+| `POST /api/zones/{id}/waterings` (un arrosage par plante) | Une seule entrée sur la zone, qui vaut pour ses plantes ; toute intervention se note aussi sur une zone ou un espace via `POST /api/journal` | 2, faite |
+| `Plant.WateringIntervalDays` | Une `GardenTask` d'arrosage tous les N jours | 3 |
+| `WateringCalculator`, `wateringStatus` | Calculateur d'échéance générique, statut sur chaque tâche | 3 |
+| `GET /api/watering/needed` | Tâches dues (toutes catégories) | 3 |
 
 Les règles en place restent valables : contrôleurs fins et services métier, ProblemDetails,
 `TimeProvider`, DTOs séparés, contraintes en Fluent API.

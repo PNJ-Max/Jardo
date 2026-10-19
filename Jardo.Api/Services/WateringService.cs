@@ -11,13 +11,13 @@ public class WateringService : IWateringService
 {
     private readonly GardenDbContext _db;
     private readonly TimeProvider _timeProvider;
-    private readonly ILogger<WateringService> _logger;
+    private readonly IJournalService _journalService;
 
-    public WateringService(GardenDbContext db, TimeProvider timeProvider, ILogger<WateringService> logger)
+    public WateringService(GardenDbContext db, TimeProvider timeProvider, IJournalService journalService)
     {
         _db = db;
         _timeProvider = timeProvider;
-        _logger = logger;
+        _journalService = journalService;
     }
 
     public async Task<List<PlantResponseDto>> GetPlantsNeedingWaterAsync(CancellationToken cancellationToken = default)
@@ -27,141 +27,56 @@ public class WateringService : IWateringService
         var rows = await _db.Plants
             .AsNoTracking()
             .Where(plant => !plant.IsArchived && !plant.Space.IsArchived)
-            .SelectWithWatering()
+            .SelectWithNames()
             .ToListAsync(cancellationToken);
+
+        var waterings = await LatestInterventions.LoadAsync(_db.JournalEntries, JournalEntryKind.Watering, cancellationToken);
 
         // Filtre et tri en mémoire : l'état d'arrosage est calculé, pas stocké. Suffisant pour
         // quelques dizaines de plantes.
         return rows
-            .Select(row => row.ToDto(today))
+            .Select(row => row.ToDto(waterings, today))
             .Where(dto => dto.NeedsWater)
             .OrderByDescending(dto => dto.DaysOverdue)
             .ThenBy(dto => dto.Name)
             .ToList();
     }
 
-    public async Task<List<WateringLogResponseDto>> GetHistoryAsync(int plantId, CancellationToken cancellationToken = default)
-    {
-        await EnsurePlantExistsAsync(plantId, cancellationToken);
-
-        var logs = await _db.WateringLogs
-            .AsNoTracking()
-            .Where(log => log.PlantId == plantId)
-            .OrderByDescending(log => log.WateredAt)
-            .ThenByDescending(log => log.Id)
-            .ToListAsync(cancellationToken);
-
-        return logs.Select(WateringLogResponseDto.FromEntity).ToList();
-    }
-
-    public async Task<WateringLogResponseDto> WaterPlantAsync(
+    public async Task<JournalEntryResponseDto> WaterPlantAsync(
         int plantId,
         CreateWateringDto dto,
         CancellationToken cancellationToken = default)
     {
-        var plant = await _db.Plants
-            .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == plantId, cancellationToken)
+        var spaceId = await _db.Plants
+            .Where(plant => plant.Id == plantId)
+            .Select(plant => (int?)plant.SpaceId)
+            .FirstOrDefaultAsync(cancellationToken)
             ?? throw NotFoundException.For("Plant", plantId);
 
-        if (plant.IsArchived)
-        {
-            throw new BusinessRuleException(
-                $"La plante « {plant.Name} » est archivée : elle ne peut plus être arrosée. " +
-                "Réactivez-la d'abord si elle est de nouveau en culture.");
-        }
-
-        var wateredAt = ResolveWateringDate(dto.WateredAt);
-
-        var log = new WateringLog
-        {
-            PlantId = plantId,
-            WateredAt = wateredAt,
-            Note = Text.Optional(dto.Note)
-        };
-
-        _db.WateringLogs.Add(log);
-        await _db.SaveChangesAsync(cancellationToken);
-
-        return WateringLogResponseDto.FromEntity(log);
+        return await _journalService.CreateAsync(ToEntry(dto, spaceId, zoneId: null, itemId: plantId), cancellationToken);
     }
 
-    public async Task<ZoneWateringResultDto> WaterZoneAsync(
+    public async Task<JournalEntryResponseDto> WaterZoneAsync(
         int zoneId,
         CreateWateringDto dto,
         CancellationToken cancellationToken = default)
     {
-        var zone = await _db.Zones
-            .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == zoneId, cancellationToken)
+        var spaceId = await _db.Zones
+            .Where(zone => zone.Id == zoneId)
+            .Select(zone => (int?)zone.SpaceId)
+            .FirstOrDefaultAsync(cancellationToken)
             ?? throw NotFoundException.For("Zone", zoneId);
 
-        var wateredAt = ResolveWateringDate(dto.WateredAt);
-        var note = Text.Optional(dto.Note);
-
-        var plantIds = await _db.Plants
-            .AsNoTracking()
-            .Where(plant => plant.ZoneId == zoneId && !plant.IsArchived)
-            .Select(plant => plant.Id)
-            .ToListAsync(cancellationToken);
-
-        // Un enregistrement par plante : l'historique reste attaché à la plante, même déplacée de zone.
-        var logs = plantIds
-            .Select(plantId => new WateringLog
-            {
-                PlantId = plantId,
-                WateredAt = wateredAt,
-                Note = note
-            })
-            .ToList();
-
-        _db.WateringLogs.AddRange(logs);
-
-        // Un seul SaveChanges (donc une transaction) : toute la zone est arrosée, ou aucune plante.
-        await _db.SaveChangesAsync(cancellationToken);
-
-        _logger.LogInformation("Zone {ZoneName} arrosée le {Date} : {Count} plante(s).",
-            zone.Name, wateredAt, logs.Count);
-
-        return new ZoneWateringResultDto
-        {
-            ZoneId = zone.Id,
-            ZoneName = zone.Name,
-            WateredAt = wateredAt,
-            PlantsWatered = logs.Count
-        };
+        return await _journalService.CreateAsync(ToEntry(dto, spaceId, zoneId, itemId: null), cancellationToken);
     }
 
-    // Une date future est refusée : elle repousserait l'échéance et masquerait la plante de la
-    // liste « à arroser ». Le passé est accepté (saisie tardive).
-    private DateOnly ResolveWateringDate(DateOnly? requested)
+    private SaveJournalEntryDto ToEntry(CreateWateringDto dto, int spaceId, int? zoneId, int? itemId) => new()
     {
-        var today = _timeProvider.Today();
-
-        if (requested is null)
-        {
-            return today;
-        }
-
-        if (requested.Value > today)
-        {
-            throw new BusinessRuleException(
-                $"La date d'arrosage ({requested.Value:yyyy-MM-dd}) est dans le futur. " +
-                "Un arrosage ne peut être enregistré qu'une fois effectué.");
-        }
-
-        return requested.Value;
-    }
-
-    private async Task EnsurePlantExistsAsync(int plantId, CancellationToken cancellationToken)
-    {
-        var exists = await _db.Plants
-            .AsNoTracking()
-            .AnyAsync(plant => plant.Id == plantId, cancellationToken);
-
-        if (!exists)
-        {
-            throw NotFoundException.For("Plant", plantId);
-        }
-    }
+        Date = dto.WateredAt ?? _timeProvider.Today(),
+        Kind = JournalEntryKind.Watering,
+        Note = dto.Note,
+        SpaceId = spaceId,
+        ZoneId = zoneId,
+        ItemId = itemId
+    };
 }

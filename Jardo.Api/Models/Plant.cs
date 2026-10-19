@@ -21,8 +21,4 @@ public class Plant : GardenItem
     public DateOnly? PlantedDate { get; set; }
 
     public int WateringIntervalDays { get; set; }
-
-    public ICollection<WateringLog> WateringLogs { get; set; } = new List<WateringLog>();
-
-    public ICollection<Observation> Observations { get; set; } = new List<Observation>();
 }

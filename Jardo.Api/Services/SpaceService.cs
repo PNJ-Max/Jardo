@@ -98,6 +98,25 @@ public class SpaceService : ISpaceService
             }
         }
 
+        if (kind != space.Kind)
+        {
+            var journalKinds = await _db.JournalEntries
+                .Where(entry => entry.SpaceId == id)
+                .Select(entry => entry.Kind)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            var refused = journalKinds.Where(entryKind => !entryKind.IsAllowedIn(kind)).ToList();
+
+            if (refused.Count > 0)
+            {
+                throw new BusinessRuleException(
+                    $"Le journal de l'espace « {space.Name} » contient des entrées " +
+                    $"« {string.Join(" », « ", refused.Select(entryKind => entryKind.Label()))} », " +
+                    $"qu'un espace {kind.Label()} n'accueille pas.");
+            }
+        }
+
         space.Name = name;
         space.Description = Text.Optional(dto.Description);
         space.Kind = kind;

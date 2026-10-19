@@ -27,7 +27,7 @@ public interface IZoneService
     /// <exception cref="Infrastructure.BusinessRuleException">Une autre zone de l'espace porte déjà ce nom.</exception>
     Task<ZoneResponseDto> UpdateAsync(int id, SaveZoneDto dto, CancellationToken cancellationToken = default);
 
-    /// <summary>Supprime une zone, à condition qu'elle soit vide.</summary>
+    /// <summary>Supprime une zone sans élément, avec les entrées de journal notées sur elle.</summary>
     /// <exception cref="Infrastructure.NotFoundException">La zone n'existe pas.</exception>
     /// <exception cref="Infrastructure.BusinessRuleException">La zone contient encore des éléments.</exception>
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);

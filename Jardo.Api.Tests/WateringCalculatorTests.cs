@@ -79,6 +79,20 @@ public class WateringCalculatorTests
     }
 
     [Fact]
+    public void Une_plantation_posterieure_au_dernier_arrosage_relance_le_decompte()
+    {
+        var state = WateringCalculator.Calculate(
+            wateringIntervalDays: 3,
+            lastWateredAt: Today.AddDays(-10),
+            plantedDate: Today.AddDays(-1),
+            today: Today);
+
+        Assert.Equal(WateringStatus.Ok, state.Status);
+        Assert.Equal(Today.AddDays(2), state.NextDueDate);
+        Assert.Equal(Today.AddDays(-10), state.LastWateredAt);
+    }
+
+    [Fact]
     public void Sans_arrosage_ni_date_de_plantation_lecheance_part_daujourdhui()
     {
         var state = WateringCalculator.Calculate(
