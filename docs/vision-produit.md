@@ -101,8 +101,8 @@ Dans l'ordre envisagé, à re-prioriser au fil de l'eau :
 5. Autres types d'espaces : aromatiques, massifs, pelouse, compost, poulailler…
 6. Météo : la pluie décale l'arrosage, alertes de gel.
 7. Foyer partagé (qui a fait quoi) et plusieurs jardins.
-8. Publication : API hébergée, authentification, build et fiche Play Store. À précéder d'une
-   étude « local d'abord » (données sur le téléphone, hors connexion).
+8. Publication : données sur le téléphone, sans compte ni serveur ; APK pour la famille, puis
+   fiche Play Store. Voir l'[étude d'architecture des données](etude-architecture-donnees.md).
 
 Ce que font les concurrents, et ce que Jardo en retient : [benchmark](benchmark-concurrents.md).
 

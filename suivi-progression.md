@@ -12,6 +12,17 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (21/10/2026)
 
+**Architecture des données tranchée : local d'abord.** Les données vivront sur le téléphone, dans
+une base SQLite (`expo-sqlite`), sans serveur ni compte. Résultat : 0 €/mois, une app qui marche
+hors connexion, aucune donnée collectée. Arbitrages de Maxime : hors connexion avant le partage en
+famille, budget nul, le .NET n'est pas une contrainte, publication pour la famille d'abord. La
+logique métier passera en TypeScript, avec les tests C# pour spécification, puis l'API .NET sera
+retirée. La migration se fait en sept PR, l'app restant utilisable à chacune, à commencer après
+l'étape en cours de la carte et avant les notifications. La synchronisation (foyer) se décidera
+plus tard. Voir l'[étude](docs/etude-architecture-donnees.md). Aucun code n'a changé.
+
+### Avant, le 21/10/2026
+
 **Carte du jardin, étape 2 : l'API.** `GET` et `PUT /api/garden/map` (le `PUT` remplace le modèle
 et les affectations en une transaction), `Garden.MapLayout` et la table `GardenMapSlot`
 (migration `AddGardenMap`), catalogue `GardenLayouts` avec le modèle `terraced-long` et ses clés
@@ -206,8 +217,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   catalogue d'espèces, autres types d'espaces, météo, foyer partagé.
 
 **Phase 7 : vers le Play Store**
-- Test sur téléphone (Expo Go), API hébergée en HTTPS + authentification, build EAS,
-  fiche Play Store.
+- Test sur téléphone (Expo Go), données sur le téléphone ([migration en sept PR](docs/etude-architecture-donnees.md#plan-de-migration)),
+  APK pour la famille par EAS, puis fiche Play Store.
 
 ## À décider
 
