@@ -26,6 +26,7 @@ export type {
   TaskCompletionResponseDto as TaskCompletion,
   TaskRecurrence,
   TaskResponseDto as GardenTask,
+  UpdateGardenDto as GardenInput,
   ValidationProblemDetails as ProblemDetails,
   WoodPileResponseDto as WoodPile,
   ZoneResponseDto as Zone,

@@ -1,10 +1,10 @@
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Text, View } from 'react-native';
 
 import { useDeleteWoodPile, useSetWoodPileArchived, useWoodPile } from '@/api/queries';
 import type { WoodPile } from '@/api/types';
 import { ArchivedBadge, DryingBadge } from '@/components/items';
-import { Fact, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
+import { DetailScreen, Fact, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
 import { ErrorView, Loading } from '@/components/ui';
 import { confirm, notify } from '@/lib/confirm';
 import { formatLongDate } from '@/lib/dates';
@@ -46,32 +46,45 @@ function WoodPileDetail({ pile }: { pile: WoodPile }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Stack.Screen options={{ title: pile.name }} />
-
-      <View style={styles.header}>
-        <Text style={styles.title}>{pile.name}</Text>
-        <Text style={styles.subtitle}>{[pile.zoneName, pile.spaceName].filter(Boolean).join(' · ')}</Text>
-        {pile.isArchived ? <ArchivedBadge /> : <DryingBadge pile={pile} />}
-        <View style={styles.facts}>
-          <Fact label="Stock restant" value={steres(pile.remainingSteres)} />
-          <Fact label="Volume initial" value={steres(pile.initialSteres)} />
-          <Fact label="Essence" value={pile.woodSpecies} />
-          <Fact label="Bûches" value={pile.logLengthCm ? `${pile.logLengthCm} cm` : null} />
-          <Fact label="Coupé le" value={formatLongDate(pile.cutDate)} />
-          <Fact label="Prêt à brûler le" value={formatLongDate(pile.readyOn)} />
-        </View>
-      </View>
-
-      <TasksSection target={target} />
-      <JournalSection target={target} />
-
-      <ManageSection
-        onEdit={() => router.push({ pathname: '/wood-pile/form', params: { id: String(pile.id) } })}
-        archive={{ archived: pile.isArchived, onToggle: toggleArchive, loading: archive.isPending }}
-        onDelete={deletePile}
-        deleting={remove.isPending}
-      />
-    </ScrollView>
+    <DetailScreen
+      header={
+        <>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>{pile.name}</Text>
+            <Text style={styles.subtitle}>{[pile.zoneName, pile.spaceName].filter(Boolean).join(' · ')}</Text>
+          </View>
+          <Text style={styles.fact}>
+            {[pile.woodSpecies, `Reste ${steres(pile.remainingSteres)}`].filter(Boolean).join(' · ')}
+          </Text>
+          {pile.isArchived ? <ArchivedBadge /> : <DryingBadge pile={pile} />}
+        </>
+      }
+      tabs={[
+        { key: 'tasks', label: 'Tâches', render: () => <TasksSection target={target} /> },
+        { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
+        {
+          key: 'info',
+          label: 'Infos',
+          render: () => (
+            <>
+              <View style={styles.facts}>
+                <Fact label="Stock restant" value={steres(pile.remainingSteres)} />
+                <Fact label="Volume initial" value={steres(pile.initialSteres)} />
+                <Fact label="Essence" value={pile.woodSpecies} />
+                <Fact label="Bûches" value={pile.logLengthCm ? `${pile.logLengthCm} cm` : null} />
+                <Fact label="Coupé le" value={formatLongDate(pile.cutDate)} />
+                <Fact label="Prêt à brûler le" value={formatLongDate(pile.readyOn)} />
+              </View>
+              <ManageSection
+                onEdit={() => router.push({ pathname: '/wood-pile/form', params: { id: String(pile.id) } })}
+                archive={{ archived: pile.isArchived, onToggle: toggleArchive, loading: archive.isPending }}
+                onDelete={deletePile}
+                deleting={remove.isPending}
+              />
+            </>
+          ),
+        },
+      ]}
+    />
   );
 }

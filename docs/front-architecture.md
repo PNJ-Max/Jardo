@@ -60,7 +60,7 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   ├── */form.tsx            formulaires en modale : space, zone, plant, wood-pile,
 │   │                         entry (intervention), task ; ?id= pour modifier
 │   ├── task/done.tsx         « Fait » en précisant le jour et une note (appui long)
-│   └── settings.tsx          réglages : apparence Système, Clair ou Sombre
+│   └── settings.tsx          réglages : nom du jardin, apparence, version de l'app
 ├── src/api/
 │   ├── generated/            types générés depuis le Swagger (ne pas modifier)
 │   ├── types.ts              noms courts des contrats (Space, GardenTask…)

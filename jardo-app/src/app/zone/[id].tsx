@@ -1,10 +1,10 @@
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Text, View } from 'react-native';
 
 import { useDeleteZone, useSpace, useZone } from '@/api/queries';
 import type { Space, Zone } from '@/api/types';
 import { ItemsSection } from '@/components/items-section';
-import { JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
+import { DetailScreen, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
 import { ErrorView, Loading } from '@/components/ui';
 import { confirm, notify } from '@/lib/confirm';
 import { goBack } from '@/lib/navigation';
@@ -43,24 +43,40 @@ function ZoneDetail({ zone, space }: { zone: Zone; space: Space }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Stack.Screen options={{ title: zone.name }} />
-
-      <View style={styles.header}>
-        <Text style={styles.title}>{zone.name}</Text>
-        <Text style={styles.subtitle}>Zone de {space.name}</Text>
-        {zone.description && <Text style={styles.description}>{zone.description}</Text>}
-      </View>
-
-      <TasksSection target={target} />
-      <ItemsSection scope={{ spaceId: space.id, spaceKind: space.kind, zoneId: zone.id }} />
-      <JournalSection target={target} />
-
-      <ManageSection
-        onEdit={() => router.push({ pathname: '/zone/form', params: { id: String(zone.id) } })}
-        onDelete={deleteZone}
-        deleting={remove.isPending}
-      />
-    </ScrollView>
+    <DetailScreen
+      header={
+        <View style={styles.headerText}>
+          <Text style={styles.title}>{zone.name}</Text>
+          <Text style={styles.subtitle}>
+            Zone de {space.name} · {zone.itemCount} {zone.itemCount > 1 ? 'éléments' : 'élément'}
+          </Text>
+        </View>
+      }
+      tabs={[
+        { key: 'tasks', label: 'Tâches', render: () => <TasksSection target={target} /> },
+        {
+          key: 'items',
+          label: space.kind === 'Firewood' ? 'Tas de bois' : 'Plantes',
+          render: () => <ItemsSection scope={{ spaceId: space.id, spaceKind: space.kind, zoneId: zone.id }} />,
+        },
+        { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
+        {
+          key: 'info',
+          label: 'Infos',
+          render: () => (
+            <>
+              <Text style={zone.description ? styles.description : styles.subtitle}>
+                {zone.description ?? 'Pas de description.'}
+              </Text>
+              <ManageSection
+                onEdit={() => router.push({ pathname: '/zone/form', params: { id: String(zone.id) } })}
+                onDelete={deleteZone}
+                deleting={remove.isPending}
+              />
+            </>
+          ),
+        },
+      ]}
+    />
   );
 }

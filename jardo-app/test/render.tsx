@@ -4,9 +4,14 @@ import type { ReactElement } from 'react';
 
 import { UndoProvider } from '@/components/undo';
 
-/** Un cache neuf par test, sans nouvelle tentative : une erreur de l'API doit s'afficher tout de suite. */
+/**
+ * Un cache neuf par test, sans nouvelle tentative : une erreur de l'API doit s'afficher tout de suite.
+ * Un gcTime infini ne programme aucun minuteur de nettoyage, qui empêcherait Jest de s'arrêter.
+ */
 export async function renderScreen(ui: ReactElement) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { gcTime: Infinity } },
+  });
   const utils = await render(
     <QueryClientProvider client={queryClient}>
       <UndoProvider>{ui}</UndoProvider>

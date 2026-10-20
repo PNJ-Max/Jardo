@@ -38,34 +38,62 @@ dans l'[étude de la carte](etude-carte-potager.md).
 - **État vide :** « Rien à faire aujourd'hui 🌱 », c'est le résultat qu'on veut voir.
 
 
+## Fiches : principe commun
+
+Les fiches d'un espace, d'une zone, d'une plante et d'un tas de bois sont en **onglets** plutôt
+qu'en une longue page. L'en-tête (nom, type, informations clés) et la barre d'onglets restent en
+place ; seul le contenu de l'onglet défile. La fiche s'ouvre sur **Tâches**. La barre de
+navigation donne le type de fiche (Espace, Zone, Plante, Tas de bois), l'en-tête son nom.
+
+- **Tâches** : d'abord celles de la cible elle-même, puis « Ajouter une tâche à cette plante »
+  (à cette zone, à cet espace, à ce tas), qui crée toujours la tâche sur la cible de la fiche.
+  Viennent ensuite, **repliées**, les tâches qui ne lui appartiennent pas en propre :
+  - celles de ce qui la contient, sous « Valent aussi pour cette plante » : un groupe par
+    provenance (« Carré 4 · Zone », « Potager · Espace »), car un arrosage du carré vaut pour
+    ses plantes ;
+  - pour un espace ou une zone, celles de ce qu'ils contiennent (« Tâches des zones et des
+    éléments », « Tâches des éléments »), chaque ligne nommant sa cible.
+
+  L'en-tête d'un groupe replié dit combien il compte de tâches, et combien sont en retard ou à
+  faire aujourd'hui : rien d'urgent ne se cache.
+- **Journal** : bouton « Noter une intervention » (avec choix de la date, sans date future),
+  puis la chronologie de la cible.
+- **Infos** : tous les détails, puis Modifier, Archiver / Désarchiver, Supprimer. Ces actions ne
+  sont pas dans la barre de navigation, où le bouton du menu développeur d'Expo Go les
+  masquerait pendant les essais.
+
+Une ligne de tâche tient sur deux ou trois lignes de texte : l'intervention, puis le voyant et
+la cible côte à côte quand la place le permet. Le bouton « Fait » est moins haut que la ligne
+mais sa zone de toucher dépasse 48 dp.
+
 ## 3. Espace
 
-- En-tête : nom, type, description.
-- Zones de l'espace, puis éléments, groupés par zone. Pour un tas de bois : stock restant et
-  état de séchage.
-- Tâches dues de l'espace, et accès à son journal.
-- Ajouter une zone, un élément (proposé selon le type d'espace), une intervention, une tâche.
-- Les éléments archivés s'affichent à la demande, dans leur zone.
-- Modifier, archiver, supprimer l'espace. La suppression demande une confirmation. On change son
-  type depuis Modifier : l'API refuse un type incohérent (un bois de chauffage qui contiendrait
-  des plantes), et son message s'affiche sous le formulaire.
+- En-tête : icône du type, nom, type, nombre de zones et d'éléments.
+- Onglets **Tâches** · **Contenu** · **Journal** · **Infos**.
+- Contenu : les zones de l'espace, puis les éléments groupés par zone. Pour un tas de bois :
+  stock restant et état de séchage. Ajouter une zone, un élément (proposé selon le type
+  d'espace). Les éléments archivés s'affichent à la demande, dans leur zone.
+- Infos : description ; modifier, archiver, supprimer l'espace. La suppression demande une
+  confirmation. On change son type depuis Modifier : l'API refuse un type incohérent (un bois de
+  chauffage qui contiendrait des plantes), et son message s'affiche sous le formulaire.
 
 ## 4. Zone
 
-- Éléments de la zone, tâches dues, journal de la zone.
+- En-tête : nom, espace, nombre d'éléments.
+- Onglets **Tâches** · **Plantes** (ou **Tas de bois**) · **Journal** · **Infos**.
 - Action sur toute la zone : noter une intervention (« arroser le carré 2 », « désherber »).
-- Modifier, supprimer.
+- Infos : description ; modifier, supprimer.
 
 ## 5. Fiche élément
 
-- **Plante** (culture, arbre, arbuste) : nom, espèce, variété, quantité, espace et zone, dates
-  de semis et de plantation.
-- **Tas de bois** : essence, volume initial, stock restant, date de coupe, prêt à brûler à
-  partir de quand.
+- Onglets **Tâches** · **Journal** · **Infos**.
+- **Plante** (culture, arbre, arbuste) : l'en-tête donne nom, zone et espace, espèce, variété et
+  quantité ; Infos ajoute les dates de semis et de plantation.
+- **Tas de bois** : l'en-tête donne nom, essence, stock restant et état de séchage ; Infos ajoute
+  volume initial, longueur des bûches, date de coupe, prêt à brûler à partir de quand.
 - Tâches de l'élément avec leur voyant ; ajouter, modifier, supprimer une tâche.
 - **Journal** de l'élément : toutes ses interventions dans une chronologie unique.
-- Bouton « Noter une intervention » (avec choix de la date, sans date future).
-- Menu : modifier, archiver / désarchiver, supprimer. Modifier permet aussi de déplacer
+- Infos : modifier, archiver / désarchiver, supprimer. Modifier permet aussi de déplacer
   l'élément vers une autre zone de son espace ; son journal et ses tâches le suivent.
 
 ## 6. Journal
@@ -93,8 +121,13 @@ dans l'[étude de la carte](etude-carte-potager.md).
 
 ## 8. Réglages
 
-- Apparence : Système (par défaut, suit le téléphone), Clair ou Sombre. Le choix est mémorisé
+Une page à part entière, ouverte par la roue de l'en-tête de l'onglet Jardin.
+
+- **Jardin** : nom du jardin, enregistré par l'API ; « Enregistrer le nom » n'apparaît qu'une
+  fois le nom changé. Les erreurs de validation s'affichent sous le champ.
+- **Apparence** : Système (par défaut, suit le téléphone), Clair ou Sombre. Le choix est mémorisé
   sur l'appareil.
+- **À propos** : nom et version de l'app.
 
 ## Voyant d'échéance : code visuel
 
