@@ -28,6 +28,7 @@ function PlantDetail({ plant }: { plant: Plant }) {
     spaceId: plant.spaceId,
     zoneId: plant.zoneId,
     itemId: plant.id,
+    itemKind: 'Plant' as const,
     label: targetLabel({ itemName: plant.name, zoneName: plant.zoneName, spaceName: plant.spaceName }),
   };
 

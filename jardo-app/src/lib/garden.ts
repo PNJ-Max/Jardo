@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 
-import type { JournalEntryKind, MeasureUnit, QuantityUnit, SpaceKind, TaskRecurrence } from '@/api/types';
+import type { ItemKind, JournalEntryKind, MeasureUnit, QuantityUnit, SpaceKind, TaskRecurrence } from '@/api/types';
 import type { IconName } from '@/components/ui';
 
 // Vocabulaire du domaine affiché à l'écran. Les règles d'acceptation reprennent celles de l'API
@@ -54,8 +54,14 @@ export function entryKindsFor(spaceKind: SpaceKind): JournalEntryKind[] {
  * Une tâche de bois ne pourrait jamais être faite : l'entrée exige un volume que « Fait » ne
  * porte pas. « Rentrer le bois » se prévoit en tâche « autre ».
  */
-export function taskKindsFor(spaceKind: SpaceKind): JournalEntryKind[] {
-  return entryKindsFor(spaceKind).filter((kind) => !woodKinds.includes(kind));
+const itemTaskKinds: Record<ItemKind, JournalEntryKind[]> = {
+  Plant: [...plantCareKinds, 'Observation', 'Other'],
+  WoodPile: ['Observation', 'Other'],
+};
+
+/** Les tâches qui conviennent à la cible : celles de son élément, ou à défaut de son espace. */
+export function taskKindsFor(spaceKind: SpaceKind, itemKind: ItemKind | null): JournalEntryKind[] {
+  return itemKind ? itemTaskKinds[itemKind] : entryKindsFor(spaceKind).filter((kind) => !woodKinds.includes(kind));
 }
 
 export const isWoodKind = (kind: JournalEntryKind) => woodKinds.includes(kind);
@@ -111,17 +117,15 @@ export function targetLabel({ itemName, zoneName, spaceName }: Target): string {
   return [itemName, zoneName, spaceName].filter(Boolean).join(' · ');
 }
 
-/**
- * La fiche d'un élément dépend de son type, que le journal et les tâches ne donnent pas. Le
- * type d'espace le dit : un espace bois de chauffage ne contient que des tas, les autres que
- * des plantes. Sans lui (espace archivé, absent du cache), on ouvre la zone ou l'espace.
- */
-export function targetHref(
-  target: { spaceId: number; zoneId: number | null; itemId: number | null },
-  spaceKind: SpaceKind | undefined,
-): Href {
-  if (target.itemId && spaceKind) {
-    return spaceKind === 'Firewood' ? `/wood-pile/${target.itemId}` : `/plant/${target.itemId}`;
+/** L'écran qui montre la cible d'une tâche ou d'une intervention : la fiche de l'élément, sa zone ou son espace. */
+export function targetHref(target: {
+  spaceId: number;
+  zoneId: number | null;
+  itemId: number | null;
+  itemKind: ItemKind | null;
+}): Href {
+  if (target.itemId) {
+    return target.itemKind === 'WoodPile' ? `/wood-pile/${target.itemId}` : `/plant/${target.itemId}`;
   }
   return target.zoneId ? `/zone/${target.zoneId}` : `/space/${target.spaceId}`;
 }

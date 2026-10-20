@@ -5,7 +5,7 @@ using Jardo.Api.Models;
 namespace Jardo.Api.Services;
 
 /// <summary>Une tâche avec le nom de sa cible.</summary>
-public record TaskRow(GardenTask Task, string SpaceName, string? ZoneName, string? ItemName);
+public record TaskRow(GardenTask Task, string SpaceName, string? ZoneName, string? ItemName, ItemKind? ItemKind);
 
 /// <summary>Requêtes et calcul d'échéance partagés par TaskService et SpaceService.</summary>
 public static class TaskQueries
@@ -19,7 +19,8 @@ public static class TaskQueries
             task,
             task.Space.Name,
             task.Zone == null ? null : task.Zone.Name,
-            task.Item == null ? null : task.Item.Name));
+            task.Item == null ? null : task.Item.Name,
+            task.Item == null ? null : task.Item is WoodPile ? ItemKind.WoodPile : ItemKind.Plant));
 
     /// <summary>
     /// Calcule l'échéance de chaque tâche : une requête au journal par type d'intervention présent.
@@ -69,6 +70,7 @@ public static class TaskQueries
         ZoneName = row.ZoneName,
         ItemId = row.Task.ItemId,
         ItemName = row.ItemName,
+        ItemKind = row.ItemKind,
         LastDoneOn = state.LastDoneOn,
         NextDueDate = state.NextDueDate,
         Status = state.Status,

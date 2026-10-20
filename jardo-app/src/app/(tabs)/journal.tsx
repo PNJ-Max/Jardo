@@ -1,12 +1,15 @@
 import { router } from 'expo-router';
-import { SectionList } from 'react-native';
+import { useState } from 'react';
+import { SectionList, View } from 'react-native';
 
-import { useJournal } from '@/api/queries';
-import type { JournalEntry } from '@/api/types';
+import { useJournal, useSpaces } from '@/api/queries';
+import type { JournalEntry, JournalEntryKind } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
-import { Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
+import { ChipSelect, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
 import { formatDayHeading } from '@/lib/dates';
+import { entryKinds } from '@/lib/garden';
 import { usePullToRefresh } from '@/lib/refresh';
+import { spacing } from '@/theme';
 
 /** Regroupe par jour des entrées déjà triées du plus récent au plus ancien par l'API. */
 function byDay(entries: JournalEntry[]) {
@@ -19,22 +22,52 @@ function byDay(entries: JournalEntry[]) {
   return days;
 }
 
-/** La chronologie de tout le jardin, la plus récente d'abord. */
-export default function JournalScreen() {
-  const { data, error, isPending, refetch } = useJournal();
-  const refresh = usePullToRefresh(refetch);
+const allSpaces = 0;
+const allKinds = 'all';
 
-  if (isPending) return <Loading />;
+const kindOptions: { value: JournalEntryKind | typeof allKinds; label: string }[] = [
+  { value: allKinds, label: 'Toutes' },
+  ...(Object.keys(entryKinds) as JournalEntryKind[]).map((kind) => ({ value: kind, label: entryKinds[kind].label })),
+];
+
+/** La chronologie de tout le jardin, la plus récente d'abord, filtrable par espace et par type. */
+export default function JournalScreen() {
+  const [spaceId, setSpaceId] = useState(allSpaces);
+  const [kind, setKind] = useState<JournalEntryKind | typeof allKinds>(allKinds);
+  // Les espaces archivés gardent leur journal : on peut encore le consulter.
+  const spaces = useSpaces(true);
+  const { data, error, isPending, refetch } = useJournal({
+    spaceId: spaceId === allSpaces ? undefined : spaceId,
+    kinds: kind === allKinds ? undefined : [kind],
+  });
+  const refresh = usePullToRefresh(refetch);
+  const filtered = spaceId !== allSpaces || kind !== allKinds;
+
   if (error) return <ErrorView error={error} onRetry={refetch} />;
 
   return (
     <SectionList
       style={screenStyles.screen}
-      contentContainerStyle={[screenStyles.list, data.length === 0 && { flex: 1 }]}
-      sections={byDay(data)}
+      contentContainerStyle={[screenStyles.list, !data?.length && { flexGrow: 1 }]}
+      sections={data ? byDay(data) : []}
       keyExtractor={(entry) => String(entry.id)}
       stickySectionHeadersEnabled={false}
       {...refresh}
+      ListHeaderComponent={
+        <View style={{ gap: spacing.sm }}>
+          <ChipSelect
+            label="Espace"
+            scrollable
+            options={[
+              { value: allSpaces, label: 'Tous' },
+              ...(spaces.data ?? []).map((space) => ({ value: space.id, label: space.name })),
+            ]}
+            value={spaceId}
+            onChange={setSpaceId}
+          />
+          <ChipSelect label="Intervention" scrollable options={kindOptions} value={kind} onChange={setKind} />
+        </View>
+      }
       renderSectionHeader={({ section }) => <SectionTitle>{formatDayHeading(section.date)}</SectionTitle>}
       renderItem={({ item }) => (
         <JournalEntryRow
@@ -43,11 +76,17 @@ export default function JournalScreen() {
         />
       )}
       ListEmptyComponent={
-        <Empty
-          icon="journal-outline"
-          title="Le journal est vide"
-          hint="Les interventions notées au jardin, et les tâches faites, s'afficheront ici."
-        />
+        isPending ? (
+          <Loading />
+        ) : filtered ? (
+          <Empty icon="search-outline" title="Rien de noté" hint="Aucune intervention ne correspond à ces filtres." />
+        ) : (
+          <Empty
+            icon="journal-outline"
+            title="Le journal est vide"
+            hint="Les interventions notées au jardin, et les tâches faites, s'afficheront ici."
+          />
+        )
       }
     />
   );

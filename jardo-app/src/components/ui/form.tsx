@@ -1,4 +1,4 @@
-import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { createStyles, useTheme } from '@/theme';
@@ -29,32 +29,42 @@ export function ChipSelect<T extends string | number>({
   value,
   onChange,
   error,
+  hint,
+  scrollable,
 }: {
   label: string;
   options: { value: T; label: string }[];
   value: T | undefined;
   onChange: (value: T) => void;
   error?: string;
+  hint?: string;
+  /** Une seule ligne qui défile, pour une longue liste : les filtres d'une liste, par exemple. */
+  scrollable?: boolean;
 }) {
   const styles = useFieldStyles();
+  const chips = options.map((option) => {
+    const selected = option.value === value;
+    return (
+      <Pressable
+        key={option.value}
+        onPress={() => onChange(option.value)}
+        style={[styles.chip, selected && styles.chipSelected]}>
+        <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{option.label}</Text>
+      </Pressable>
+    );
+  });
 
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.chips}>
-        {options.map((option) => {
-          const selected = option.value === value;
-          return (
-            <Pressable
-              key={option.value}
-              onPress={() => onChange(option.value)}
-              style={[styles.chip, selected && styles.chipSelected]}>
-              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{option.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {scrollable ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {chips}
+        </ScrollView>
+      ) : (
+        <View style={styles.chips}>{chips}</View>
+      )}
+      {error ? <Text style={styles.error}>{error}</Text> : hint ? <Text style={styles.hint}>{hint}</Text> : null}
     </View>
   );
 }

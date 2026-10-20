@@ -46,11 +46,12 @@ public interface ITaskService
 
     /// <summary>
     /// « Fait » : note l'intervention au journal, sur la cible de la tâche, et renvoie la tâche
-    /// recalculée. Une tâche ponctuelle est close dès que c'est fait, même avant sa date.
+    /// recalculée avec l'entrée notée. Une tâche ponctuelle est close dès que c'est fait, même avant
+    /// sa date.
     /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">La tâche n'existe pas.</exception>
     /// <exception cref="Infrastructure.BusinessRuleException">
     /// Date future, cible archivée, ou entrée refusée par le journal (une observation sans note).
     /// </exception>
-    Task<TaskResponseDto> CompleteAsync(int id, CompleteTaskDto dto, CancellationToken cancellationToken = default);
+    Task<TaskCompletionResponseDto> CompleteAsync(int id, CompleteTaskDto dto, CancellationToken cancellationToken = default);
 }

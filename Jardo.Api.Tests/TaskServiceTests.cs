@@ -153,7 +153,7 @@ public class TaskServiceTests : IDisposable
             JournalEntryKind.Watering, TaskRecurrence.EveryNDays, SeasonStart, potager, item: tomate,
             intervalDays: 2, title: "Arroser au pied");
 
-        var done = await _service.CompleteAsync(task.Id, new CompleteTaskDto());
+        var done = (await _service.CompleteAsync(task.Id, new CompleteTaskDto())).Task;
 
         Assert.Equal(DueStatus.Ok, done.Status);
         Assert.Equal(Today, done.LastDoneOn);
@@ -166,12 +166,49 @@ public class TaskServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Supprimer_lentree_renvoyee_par_Fait_annule_le_Fait()
+    {
+        var potager = await Db.AddSpaceAsync("Potager");
+        var tomate = await Db.AddPlantAsync(potager, null, "Tomate");
+        var task = await AddWateringAsync(potager, item: tomate);
+        var dueBefore = await _service.GetByIdAsync(task.Id);
+
+        var completion = await _service.CompleteAsync(task.Id, new CompleteTaskDto());
+
+        var entry = await Db.JournalEntries.AsNoTracking().SingleAsync();
+        Assert.Equal(entry.Id, completion.Entry.Id);
+        Assert.Equal(ItemKind.Plant, completion.Entry.ItemKind);
+
+        await new JournalService(Db, new FakeTimeProvider(Today)).DeleteAsync(completion.Entry.Id);
+
+        var undone = await _service.GetByIdAsync(task.Id);
+        Assert.Equal((dueBefore.Status, dueBefore.NextDueDate), (undone.Status, undone.NextDueDate));
+    }
+
+    [Fact]
+    public async Task Chaque_tache_porte_le_type_de_son_element()
+    {
+        var potager = await Db.AddSpaceAsync("Potager");
+        var tomate = await Db.AddPlantAsync(potager, null, "Tomate");
+        var bucher = await Db.AddSpaceAsync("Bûcher", SpaceKind.Firewood);
+        var chene = await Db.AddWoodPileAsync(bucher, "Chêne");
+        var plantTask = await AddWateringAsync(potager, item: tomate);
+        var pileTask = await Db.AddTaskAsync(
+            JournalEntryKind.Other, TaskRecurrence.Once, Today, bucher, item: chene, title: "Rentrer le bois");
+        var spaceTask = await AddWateringAsync(potager);
+
+        Assert.Equal(ItemKind.Plant, (await _service.GetByIdAsync(plantTask.Id)).ItemKind);
+        Assert.Equal(ItemKind.WoodPile, (await _service.GetByIdAsync(pileTask.Id)).ItemKind);
+        Assert.Null((await _service.GetByIdAsync(spaceTask.Id)).ItemKind);
+    }
+
+    [Fact]
     public async Task Fait_a_une_date_passee_recalcule_depuis_cette_date()
     {
         var potager = await Db.AddSpaceAsync("Potager");
         var task = await AddWateringAsync(potager, everyDays: 3);
 
-        var done = await _service.CompleteAsync(task.Id, new CompleteTaskDto { Date = Today.AddDays(-4), Note = "Oublié de le noter" });
+        var done = (await _service.CompleteAsync(task.Id, new CompleteTaskDto { Date = Today.AddDays(-4), Note = "Oublié de le noter" })).Task;
 
         Assert.Equal(DueStatus.Overdue, done.Status);
         Assert.Equal(1, done.DaysOverdue);
@@ -201,7 +238,7 @@ public class TaskServiceTests : IDisposable
 
         Assert.Equal(task.Id, Assert.Single(await _service.GetDueAsync(DueHorizon.Week)).Id);
 
-        var done = await _service.CompleteAsync(task.Id, new CompleteTaskDto());
+        var done = (await _service.CompleteAsync(task.Id, new CompleteTaskDto())).Task;
 
         Assert.True(done.IsCompleted);
         Assert.Equal(Today.AddDays(4), done.StartDate);

@@ -80,6 +80,25 @@ public class JournalServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Chaque_entree_porte_le_type_de_son_element()
+    {
+        var potager = await _database.Context.AddSpaceAsync("Potager");
+        var carre = await _database.Context.AddZoneAsync(potager, "Carré 1");
+        var tomate = await _database.Context.AddPlantAsync(potager, carre, "Tomate");
+        var bucher = await _database.Context.AddSpaceAsync("Bûcher", SpaceKind.Firewood);
+        var chene = await _database.Context.AddWoodPileAsync(bucher, "Chêne");
+        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, Today.AddDays(-2), potager, item: tomate);
+        await _database.Context.AddEntryAsync(JournalEntryKind.Watering, Today.AddDays(-1), potager, carre);
+        await _database.Context.AddEntryAsync(JournalEntryKind.Observation, Today, bucher, item: chene);
+
+        var journal = await _service.GetAllAsync();
+
+        Assert.Equal(
+            new ItemKind?[] { ItemKind.WoodPile, null, ItemKind.Plant },
+            journal.Select(entry => entry.ItemKind).ToArray());
+    }
+
+    [Fact]
     public async Task Un_element_archive_ne_recoit_plus_dentree_mais_ses_entrees_restent_corrigeables()
     {
         var potager = await _database.Context.AddSpaceAsync("Potager");

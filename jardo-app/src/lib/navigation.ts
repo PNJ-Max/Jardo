@@ -1,8 +1,4 @@
-import { router, type Href } from 'expo-router';
-
-import { useSpaces } from '@/api/queries';
-
-import { targetHref } from './garden';
+import { router } from 'expo-router';
 
 /**
  * Retour à l'écran précédent. Sur le web, on peut arriver directement sur un
@@ -15,12 +11,4 @@ export function goBack() {
   } else {
     router.replace('/');
   }
-}
-
-type Target = { spaceId: number; zoneId: number | null; itemId: number | null };
-
-/** L'écran qui montre la cible d'une tâche ou d'une intervention (voir targetHref). */
-export function useTargetHref(): (target: Target) => Href {
-  const spaces = useSpaces();
-  return (target) => targetHref(target, spaces.data?.find((space) => space.id === target.spaceId)?.kind);
 }

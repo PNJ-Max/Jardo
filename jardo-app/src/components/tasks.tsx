@@ -1,13 +1,45 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
-import type { GardenTask } from '@/api/types';
+import { useCompleteTask, useDeleteJournalEntry } from '@/api/queries';
+import type { CompleteTaskInput, GardenTask } from '@/api/types';
+import { useShowUndo } from '@/components/undo';
 import { Badge, Card } from '@/components/ui';
+import { notify } from '@/lib/confirm';
 import { formatDate } from '@/lib/dates';
 import { entryKinds, targetLabel } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
 
 export const taskTitle = (task: GardenTask) => task.title ?? entryKinds[task.kind].verb;
+
+/**
+ * « Fait », puis quelques secondes pour l'annuler : l'annulation supprime l'entrée que « Fait » a
+ * notée au journal, et la tâche revient à son échéance d'avant.
+ */
+export function useMarkDone() {
+  const complete = useCompleteTask();
+  const removeEntry = useDeleteJournalEntry();
+  const showUndo = useShowUndo();
+
+  const markDone = (task: GardenTask, input?: CompleteTaskInput, onSuccess?: () => void) =>
+    complete.mutate(
+      { id: task.id, input },
+      {
+        onSuccess: ({ entry }) => {
+          onSuccess?.();
+          showUndo({
+            message: `Noté : ${taskTitle(task)} · ${task.itemName ?? task.zoneName ?? task.spaceName}`,
+            onUndo: () =>
+              removeEntry.mutate(entry.id, { onError: (e) => notify("Le « Fait » n'a pas été annulé", e.message) }),
+          });
+        },
+        onError: (e) => notify("La tâche n'a pas été notée", e.message),
+      },
+    );
+
+  return { markDone, isPending: complete.isPending };
+}
 
 /**
  * Le voyant d'échéance. Il affiche tel quel ce que l'API a calculé : le front ne refait
@@ -45,7 +77,10 @@ export function DueBadge({ task }: { task: GardenTask }) {
 type TaskRowProps = {
   task: GardenTask;
   onPress: () => void;
-  /** Affiche le bouton « Fait ». Absent pour une tâche ponctuelle déjà faite. */
+  /**
+   * Affiche le bouton « Fait ». Absent pour une tâche ponctuelle déjà faite. Un appui long ouvre
+   * l'écran où préciser la date et une note.
+   */
   onDone?: () => void;
 };
 
@@ -71,8 +106,13 @@ export function TaskRow({ task, onPress, onDone }: TaskRowProps) {
             event.stopPropagation();
             onDone();
           }}
+          onLongPress={(event) => {
+            event.stopPropagation();
+            router.push({ pathname: '/task/done', params: { id: String(task.id) } });
+          }}
           accessibilityRole="button"
           accessibilityLabel={`Fait : ${title}, ${targetLabel(task)}`}
+          accessibilityHint="Appui long pour préciser la date ou ajouter une note"
           hitSlop={8}
           style={({ pressed }) => [styles.done, pressed && { opacity: 0.6 }]}>
           <Ionicons name="checkmark" size={18} color={colors.primaryText} />

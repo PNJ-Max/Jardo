@@ -158,14 +158,14 @@ public class TaskService : ITaskService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<TaskResponseDto> CompleteAsync(int id, CompleteTaskDto dto, CancellationToken cancellationToken = default)
+    public async Task<TaskCompletionResponseDto> CompleteAsync(int id, CompleteTaskDto dto, CancellationToken cancellationToken = default)
     {
         var task = await _db.GardenTasks.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             ?? throw NotFoundException.For("Task", id);
 
         var date = dto.Date ?? _timeProvider.Today();
 
-        await _journalService.CreateAsync(new SaveJournalEntryDto
+        var entry = await _journalService.CreateAsync(new SaveJournalEntryDto
         {
             Date = date,
             Kind = task.Kind,
@@ -175,7 +175,7 @@ public class TaskService : ITaskService
             ItemId = task.ItemId
         }, cancellationToken);
 
-        return await GetByIdAsync(id, cancellationToken);
+        return new TaskCompletionResponseDto { Task = await GetByIdAsync(id, cancellationToken), Entry = entry };
     }
 
     private async Task ApplyAsync(SaveTaskDto dto, GardenTask task, bool isNew, CancellationToken cancellationToken)

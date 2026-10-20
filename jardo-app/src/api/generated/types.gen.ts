@@ -40,6 +40,12 @@ export type GardenResponseDto = {
 };
 
 /**
+ * Le type d'un élément suivi, renvoyé avec les entrées du journal et les tâches qui le visent :
+ * le front y lit quelle fiche ouvrir.
+ */
+export type ItemKind = 'Plant' | 'WoodPile';
+
+/**
  * Le type d'une intervention notée au journal.
  */
 export type JournalEntryKind = 'Watering' | 'Sowing' | 'Planting' | 'Pruning' | 'Treatment' | 'Fertilizing' | 'Harvest' | 'Observation' | 'WoodSupply' | 'WoodConsumption' | 'Other';
@@ -70,6 +76,10 @@ export type JournalEntryResponseDto = {
      */
     itemId: number | null;
     itemName: string | null;
+    /**
+     * Plant ou WoodPile ; null sans élément visé.
+     */
+    itemKind: ItemKind | null;
 };
 
 /**
@@ -279,6 +289,20 @@ export type SpaceResponseDto = {
 };
 
 /**
+ * Réponse de l'action « Fait ».
+ */
+export type TaskCompletionResponseDto = {
+    /**
+     * La tâche, échéance recalculée.
+     */
+    task: TaskResponseDto;
+    /**
+     * L'entrée notée au journal : la supprimer annule le « Fait ».
+     */
+    entry: JournalEntryResponseDto;
+};
+
+/**
  * Le rythme d'une tâche.
  */
 export type TaskRecurrence = 'EveryNDays' | 'Yearly' | 'Once';
@@ -309,6 +333,10 @@ export type TaskResponseDto = {
      */
     itemId: number | null;
     itemName: string | null;
+    /**
+     * Plant ou WoodPile ; null sans élément visé.
+     */
+    itemKind: ItemKind | null;
     /**
      * La dernière intervention de même type qui vaut pour la cible.
      */
@@ -398,6 +426,20 @@ export type ZoneResponseDto = {
 };
 
 /**
+ * Réponse de l'action « Fait ».
+ */
+export type TaskCompletionResponseDtoWritable = {
+    /**
+     * La tâche, échéance recalculée.
+     */
+    task: TaskResponseDtoWritable;
+    /**
+     * L'entrée notée au journal : la supprimer annule le « Fait ».
+     */
+    entry: JournalEntryResponseDto;
+};
+
+/**
  * Une tâche telle que renvoyée par l'API, avec le nom de sa cible et son échéance.
  */
 export type TaskResponseDtoWritable = {
@@ -423,6 +465,10 @@ export type TaskResponseDtoWritable = {
      */
     itemId: number | null;
     itemName: string | null;
+    /**
+     * Plant ou WoodPile ; null sans élément visé.
+     */
+    itemKind: ItemKind | null;
     /**
      * La dernière intervention de même type qui vaut pour la cible.
      */
@@ -1261,7 +1307,7 @@ export type PostApiTasksByIdDoneResponses = {
     /**
      * OK
      */
-    200: TaskResponseDto;
+    200: TaskCompletionResponseDto;
 };
 
 export type PostApiTasksByIdDoneResponse = PostApiTasksByIdDoneResponses[keyof PostApiTasksByIdDoneResponses];

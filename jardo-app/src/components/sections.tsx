@@ -2,24 +2,30 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
-import { useCompleteTask, useJournal, useTasks } from '@/api/queries';
-import type { GardenTask } from '@/api/types';
+import { useJournal, useTasks } from '@/api/queries';
+import type { GardenTask, ItemKind } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
-import { TaskRow } from '@/components/tasks';
+import { TaskRow, useMarkDone } from '@/components/tasks';
 import { Button, SectionTitle } from '@/components/ui';
-import { notify } from '@/lib/confirm';
 import { formatDate } from '@/lib/dates';
 import { createStyles, useTheme } from '@/theme';
 
 /** La cible des tâches et interventions d'un écran de détail. */
-export type Target = { spaceId: number; zoneId?: number | null; itemId?: number | null; label: string };
+export type Target = {
+  spaceId: number;
+  zoneId?: number | null;
+  itemId?: number | null;
+  itemKind?: ItemKind;
+  label: string;
+};
 
 /** Paramètres d'URL des formulaires de tâche et d'intervention pour cette cible. */
-export function targetParams({ spaceId, zoneId, itemId, label }: Target) {
+export function targetParams({ spaceId, zoneId, itemId, itemKind, label }: Target) {
   return {
     spaceId: String(spaceId),
     ...(zoneId ? { zoneId: String(zoneId) } : {}),
     ...(itemId ? { itemId: String(itemId) } : {}),
+    ...(itemKind ? { itemKind } : {}),
     label,
   };
 }
@@ -43,7 +49,7 @@ function filterFor(target: Target) {
 export function TasksSection({ target }: { target: Target }) {
   const styles = useStyles();
   const tasks = useTasks(filterFor(target));
-  const complete = useCompleteTask();
+  const { markDone } = useMarkDone();
 
   return (
     <View style={styles.section}>
@@ -60,12 +66,7 @@ export function TasksSection({ target }: { target: Target }) {
             key={task.id}
             task={task}
             onPress={() => router.push({ pathname: '/task/form', params: { id: String(task.id) } })}
-            onDone={() =>
-              complete.mutate(
-                { id: task.id },
-                { onError: (error) => notify("La tâche n'a pas été notée", error.message) },
-              )
-            }
+            onDone={() => markDone(task)}
           />
         ))
       )}
