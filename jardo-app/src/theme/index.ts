@@ -3,7 +3,7 @@
 import type { Theme as NavigationTheme } from 'expo-router';
 import { StyleSheet, useColorScheme } from 'react-native';
 
-import type { WateringStatus } from '@/api/types';
+import type { DueStatus } from '@/api/types';
 
 import { palettes, type ColorScheme, type Colors } from './colors';
 import { fonts, typography } from './typography';
@@ -15,16 +15,17 @@ export const spacing = { xs: 4, sm: 8, md: 16, lg: 24 };
 
 export const radius = 12;
 
-type WateringStyle = { color: string; background: string; label: string };
+type DueStyle = { color: string; background: string };
 
 export type Theme = {
   scheme: ColorScheme;
   colors: Colors;
   /**
-   * Le voyant : une couleur ET un libellé, pour ne jamais compter sur la couleur seule.
-   * `color` reste lisible en texte sur `background` comme sur le fond de l'écran.
+   * Le voyant d'échéance d'une tâche, toujours accompagné d'une icône et d'un texte pour ne
+   * jamais compter sur la couleur seule. `color` reste lisible en texte sur `background` comme
+   * sur le fond de l'écran.
    */
-  watering: Record<WateringStatus, WateringStyle>;
+  due: Record<DueStatus, DueStyle>;
   typography: typeof typography;
   fonts: typeof fonts;
   spacing: typeof spacing;
@@ -40,10 +41,10 @@ function createTheme(scheme: ColorScheme): Theme {
   return {
     scheme,
     colors,
-    watering: {
-      Ok: { color: colors.success, background: colors.successTint, label: 'OK' },
-      DueSoon: { color: colors.water, background: colors.waterTint, label: "Aujourd'hui" },
-      Overdue: { color: colors.danger, background: colors.dangerTint, label: 'En retard' },
+    due: {
+      Ok: { color: colors.success, background: colors.successTint },
+      DueSoon: { color: colors.water, background: colors.waterTint },
+      Overdue: { color: colors.danger, background: colors.dangerTint },
     },
     typography,
     fonts,

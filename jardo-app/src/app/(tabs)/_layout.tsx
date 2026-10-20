@@ -11,27 +11,28 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: { fontFamily: fonts.bodySemiBold },
         headerTitleStyle: { color: colors.text, fontFamily: fonts.heading },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'À arroser',
-          tabBarIcon: ({ color, size }) => <Ionicons name="water" size={size} color={color} />,
+          title: 'Jardin',
+          tabBarIcon: ({ color, size }) => <Ionicons name="leaf-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="zones"
+        name="today"
         options={{
-          title: 'Zones',
-          tabBarIcon: ({ color, size }) => <Ionicons name="grid" size={size} color={color} />,
+          title: "Aujourd'hui",
+          tabBarIcon: ({ color, size }) => <Ionicons name="today-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="plantes"
+        name="journal"
         options={{
-          title: 'Plantes',
-          tabBarIcon: ({ color, size }) => <Ionicons name="leaf" size={size} color={color} />,
+          title: 'Journal',
+          tabBarIcon: ({ color, size }) => <Ionicons name="journal-outline" size={size} color={color} />,
         }}
       />
     </Tabs>

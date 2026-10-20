@@ -52,7 +52,12 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Gestion du jardin : espaces, zones, plantes, tas de bois, journal d'interventions et tâches avec leur échéance."
     });
 
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    // Le contrat sert à générer les types du front : il doit dire ce qui peut être null ou absent.
+    options.SupportNonNullableReferenceTypes();
+    options.UseAllOfToExtendReferenceSchemas();
+    options.SchemaFilter<ResponsePropertiesRequiredFilter>();
+
+    var xmlFile =$"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 
     if (File.Exists(xmlPath))

@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@tanstack/react-query": "^5.104.1",
     "expo": "~57.0.26",
     "expo-constants": "~57.0.20",
@@ -25,6 +26,7 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
@@ -35,7 +37,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "api:types": "openapi-ts -i http://localhost:5015/swagger/v1/swagger.json -o src/api/generated -p @hey-api/typescript --no-log-file"
   },
   "private": true
 }

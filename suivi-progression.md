@@ -12,6 +12,13 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (20/10/2026)
 
+**Socle du nouveau front livré (B1).** L'app a changé de visage : trois onglets Jardin (accueil,
+liste des espaces avec leurs tâches dues) · Aujourd'hui (en retard, aujourd'hui, cette semaine,
+« Fait » optimiste, « Rien à faire aujourd'hui 🌱 ») · Journal (chronologie par jour). Détail
+d'un espace, d'une zone, d'une plante et d'un tas de bois ; six formulaires simples en modale
+(espace, zone, plante, tas de bois, intervention, tâche) ; sélecteur de date Android et web.
+Types du front générés depuis le Swagger. Vérifié en mode web, en clair et en sombre.
+
 **Étude de la carte du jardin validée** ([`docs/etude-carte-potager.md`](docs/etude-carte-potager.md),
 avec un prototype cliquable). Scène modèle « maison mitoyenne », espaces cliquables (serre
 comprise), ni liste ni voyant, nuit en mode sombre ; rendu recommandé avec Skia, à confirmer
@@ -21,8 +28,7 @@ en six étapes.
 **Vision produit arrêtée.** Jardo passe du suivi d'arrosage à la gestion du jardin :
 [`docs/vision-produit.md`](docs/vision-produit.md) et proposition de modèle
 [`docs/modele-domaine.md`](docs/modele-domaine.md) (jardin, espaces typés, zones, éléments,
-journal d'interventions, tâches). L'API l'implémente en entier. La refonte des écrans est
-suspendue jusqu'à la nouvelle API et aux maquettes revues.
+journal d'interventions, tâches). L'API l'implémente en entier, le front en a le socle.
 
 **Backend `Jardo.Api` : migration vers le nouveau modèle terminée (4 étapes sur 4).**
 - ASP.NET Core (.NET 10) + EF Core + SQLite, tests dans `Jardo.Api.Tests`.
@@ -68,15 +74,26 @@ suspendue jusqu'à la nouvelle API et aux maquettes revues.
   compost annuel, traitement à renouveler, plantation faite ; les trois voyants y figurent. Trois tas
   de bois : un chêne sec en cours d'usage, un hêtre en séchage avec sa tâche « rentrer le bois », un
   bouleau épuisé et archivé.
-- Le front actuel ne suit plus l'API (zones sans espace, `CreatePlantDto`, arrosages et
-  observations disparus, voyant d'arrosage remplacé par les tâches) : il sera refait sur le
-  nouveau modèle, juste après cette PR.
+- Contrat Swagger exact, pour générer les types du front : références non nulles, enums
+  nullables, toutes les propriétés des réponses déclarées obligatoires
+  (`ResponsePropertiesRequiredFilter`).
 - Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
   évidente. README recentré sur le produit.
 
-**Front `jardo-app` : premier jet fonctionnel, fondations UI posées, écrans à refaire.**
+**Front `jardo-app` : socle du nouveau modèle en place, écrans à enrichir.**
 - Expo SDK 57 (React Native + TypeScript), Expo Router, TanStack Query.
-- Tous les écrans du MVP existent et sont branchés sur l'API.
+- Contrats : types générés depuis le Swagger par `@hey-api/openapi-ts` (`openapi-typescript`
+  exige TypeScript 5) dans `src/api/generated/`, régénérés par `npm run api:types`, API démarrée.
+- Données : client `fetch` (`ApiError`, ProblemDetails), hooks TanStack Query pour jardin,
+  espaces, zones, plantes, tas de bois, journal (filtres par cible et par type), tâches, tâches
+  dues (aujourd'hui ou semaine) et « Fait ». Invalidations par famille : un « Fait » recharge
+  tâches dues, journal, compteurs des espaces et stock des tas.
+- Écrans : onglets Jardin · Aujourd'hui · Journal (Ionicons contour), détails espace, zone,
+  plante, tas de bois (tâches avec « Fait », éléments groupés par zone, journal), formulaires
+  en modale. Les anciens écrans (À arroser · Zones · Plantes) sont supprimés.
+- Sélecteur de date `DateField` : calendrier natif d'Android (`@react-native-community/datetimepicker`,
+  inclus dans Expo Go), `<input type="date">` sur le web, option « pas de date future ».
+  Non testé sur téléphone.
 - Charte v2 validée le 19/10 ([`docs/charte-graphique.md`](docs/charte-graphique.md)) : verts en
   clair, sarcelle en sombre, police Nunito. Appliquée au thème : toute l’app
   en profite sans toucher aux écrans.
@@ -87,7 +104,16 @@ suspendue jusqu'à la nouvelle API et aux maquettes revues.
   découpés dans `src/components/ui/`, dépendances inutiles du template retirées.
 - Maquettes v2 et Design System (Claude Design) antérieurs à la charte v2 : non validés. Boutons,
   icône, splash et « une interface plus vivante » sont repris en phase 6.
-- Restent : sélecteur de date, puis refonte des écrans sur le nouveau modèle.
+- Restent à enrichir, écran par écran :
+  - Jardin : espaces archivés (affichage, désarchivage), puis la carte isométrique (phase 6) ;
+  - Aujourd'hui : choisir la date ou une note au moment du « Fait », annuler un « Fait » ;
+  - Journal : filtres par espace et par type (les hooks les acceptent déjà), pagination ;
+  - Espace : changer le type, déplacer un élément, voir les éléments archivés ;
+  - Zone et fiches : déplacer un élément d'espace ou de zone, archiver depuis la liste ;
+  - Formulaires : tâches proposées selon le type d'élément, contrôles locaux plus fins.
+  - L'API ne dit pas le type d'un élément ciblé par une tâche ou une entrée : le front le
+    déduit du type d'espace (bois de chauffage → tas de bois). Un `itemKind` dans les DTOs le
+    rendrait explicite.
 - Pas de tests.
 
 **CI** : GitHub Actions (`.github/workflows/ci.yml`) sur chaque PR vers `main` et chaque push
@@ -108,7 +134,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 **Phase 2 : fondations du front**
 - Application de la charte, composants, mode sombre, icône et splash, retrait des
-  dépendances inutiles. Fait. Reste le sélecteur de date.
+  dépendances inutiles. Fait. Sélecteur de date fait avec le socle des écrans.
 
 **Phase 3 : vision et modèle du jardin**
 - Vision produit et proposition de modèle du domaine. Fait.
@@ -120,11 +146,13 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 **Phase 4 : écrans du nouveau MVP**
 - Refonte des écrans sur la charte actuelle (le design est repris en phase 6) : onglets Jardin (accueil) · Aujourd'hui · Journal, espaces, fiches,
-  formulaires avec sélecteur de date.
+  formulaires avec sélecteur de date. Socle fait (B1) ; restent les fiches détaillées et les
+  formulaires complets.
 
 **Phase 5 : qualité**
 - CI GitHub Actions. Fait.
-- Types du front générés depuis l'OpenAPI, tests du front.
+- Types du front générés depuis l'OpenAPI. Fait.
+- Tests du front.
 
 **Phase 6 : après le MVP**
 - Refonte du design en premier : charte (couleurs, mode sombre), typographie, boutons, une
