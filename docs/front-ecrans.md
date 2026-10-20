@@ -4,8 +4,9 @@
 endpoints seront fixés avec l'API ([étapes de migration](modele-domaine.md#stratégie-de-migration)),
 et le détail visuel par les maquettes revues.
 
-> Le code actuel implémente encore la version précédente, centrée sur l'arrosage : onglets
-> À arroser · Zones · Plantes. Il sera refait sur ce document.
+> Le socle du front suit ce document : les trois onglets, le détail d'un espace, d'une zone et
+> d'un élément, et des formulaires simples. Écrans de détail et formulaires restent à enrichir
+> (voir le [suivi](../suivi-progression.md)).
 
 Navigation : 3 onglets en bas (**Jardin** · **Aujourd'hui** · **Journal**), plus des écrans de
 détail. L'accueil est **Jardin** : on ouvre l'app sur son jardin, pas sur une liste de corvées.

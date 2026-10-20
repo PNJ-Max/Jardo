@@ -32,10 +32,11 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Framework | Expo SDK 57, TypeScript strict | Standard actuel de React Native |
 | Navigation | **Expo Router** | Routes basées sur les fichiers, onglets et piles prêts à l'emploi |
 | Données serveur | **TanStack Query** | Cache, rechargement, états chargement/erreur, mises à jour optimistes |
-| Client API | `fetch` + types écrits à la main (`src/api/types.ts`) | `openapi-typescript` n'accepte pas encore TypeScript 6 |
-| Formulaires | `useState` + validation légère, erreurs de l'API sous les champs | Suffisant pour 3 formulaires |
+| Client API | `fetch` + types générés depuis le Swagger de l'API par `@hey-api/openapi-ts` | Contrat toujours aligné sur l'API ; `openapi-typescript` exige TypeScript 5, `@hey-api/openapi-ts` accepte TypeScript 6 |
+| Formulaires | `useState` + validation légère, erreurs de l'API sous les champs | Suffisant pour six formulaires simples |
+| Dates | `@react-native-community/datetimepicker` sur Android, `<input type="date">` sur le web | Recommandé par Expo et inclus dans Expo Go ; le module n'existe pas sur le web |
 | Style | `StyleSheet` + `src/theme/` (`useTheme`, `createStyles`) | Aucune dépendance ; suit le mode clair / sombre du téléphone ; jetons décrits dans la [charte graphique](charte-graphique.md) |
-| Polices | `@expo-google-fonts/fraunces` et `/inter` + `expo-font` | Chargées au démarrage, écran de démarrage maintenu jusque-là |
+| Polices | `@expo-google-fonts/nunito` + `expo-font` | Chargée au démarrage, écran de démarrage maintenu jusque-là |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
 | Notifications (plus tard) | `expo-notifications` | Rappel d'arrosage local |
 
@@ -48,33 +49,54 @@ dans `useState`.
 jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 ├── src/app/                  écrans, un fichier = une route (Expo Router)
 │   ├── (tabs)/
-│   │   ├── index.tsx         « À arroser »
-│   │   ├── zones.tsx         liste des zones
-│   │   └── plantes.tsx       toutes les plantes
+│   │   ├── index.tsx         Jardin : les espaces (accueil)
+│   │   ├── today.tsx         Aujourd'hui : les tâches dues et « Fait »
+│   │   └── journal.tsx       Journal : la chronologie du jardin
+│   ├── space/[id].tsx        détail d'un espace (tâches, zones, éléments, journal)
 │   ├── zone/[id].tsx         détail d'une zone
-│   ├── zone/form.tsx         création / modification (?id=)
-│   ├── plante/[id].tsx       fiche plante + journal
-│   ├── plante/form.tsx       création / modification (?id= ou ?zoneId=)
-│   └── plante/observation.tsx
-├── src/api/                  client fetch, hooks TanStack Query, types
-├── src/components/ui/        briques de base (boutons, carte, champs, états d'écran)
-├── src/components/plants.tsx voyant d'arrosage, ligne plante
-├── src/lib/                  dates, confirmations, navigation
+│   ├── plant/[id].tsx        fiche plante
+│   ├── wood-pile/[id].tsx    fiche tas de bois
+│   └── */form.tsx            formulaires en modale : space, zone, plant, wood-pile,
+│                             entry (intervention), task ; ?id= pour modifier
+├── src/api/
+│   ├── generated/            types générés depuis le Swagger (ne pas modifier)
+│   ├── types.ts              noms courts des contrats (Space, GardenTask…)
+│   ├── client.ts             fetch, ApiError (ProblemDetails), query string
+│   └── queries.ts            hooks TanStack Query, clés de cache, invalidations
+├── src/components/ui/        briques de base (boutons, carte, champs, date, pastille, états)
+├── src/components/           lignes et sections métier (tâche, intervention, espace, élément)
+├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation
 ├── src/theme/                palettes clair / sombre, typographie, useTheme, createStyles
 └── app.json                  configuration Expo
 ```
 
+## Contrat de l'API
+
+Les types de `src/api/generated/` sont générés depuis `/swagger/v1/swagger.json`. Après un
+changement de DTO côté .NET, API démarrée :
+
+```bash
+npm --prefix jardo-app run api:types
+```
+
+Le fichier généré est commité : le front compile sans l'API. Côté API, `Program.cs` configure
+Swagger pour que le contrat soit exact (types de référence non nuls, enums nullables, propriétés
+des réponses toujours présentes via `ResponsePropertiesRequiredFilter`).
+
 ## Conventions
 
-- **Le voyant vient du serveur.** On affiche `wateringStatus` (`Ok` / `DueSoon` / `Overdue`),
-  `daysOverdue` et `nextWateringDate` tels quels. Le front ne recalcule jamais l'échéance,
-  c'est la règle déjà posée côté API.
+- **Le voyant vient du serveur.** On affiche le `status` d'une tâche (`Ok` / `DueSoon` / `Overdue`),
+  `daysOverdue` et `nextDueDate` tels quels. Le front ne recalcule jamais l'échéance, ni le stock
+  ou le séchage d'un tas de bois : c'est la règle posée côté API.
 - **Erreurs.** L'API renvoie du ProblemDetails (RFC 9457). Un seul utilitaire transforme
   une réponse d'erreur en message lisible pour l'écran.
-- **Dates.** Les dates d'arrosage sont des `DateOnly` : on les manipule en chaîne
-  `YYYY-MM-DD`, sans conversion de fuseau.
-- **Mises à jour optimistes** pour l'arrosage : le voyant passe au vert immédiatement, et
-  revient en arrière si l'API refuse.
+- **Dates.** Les dates du jardin sont des `DateOnly` : on les manipule en chaîne `YYYY-MM-DD`,
+  sans conversion de fuseau. Le champ de date (`DateField`) peut interdire les jours futurs.
+- **Mise à jour optimiste** pour « Fait » : la tâche quitte les listes de tâches dues aussitôt,
+  et revient si l'API refuse.
+- **Invalidations par famille de ressources.** Une intervention ou un « Fait » recharge le
+  journal, les tâches, les compteurs des espaces et les tas de bois ; une tâche, les tâches et
+  les espaces ; un espace, une zone ou un élément, tout le jardin (`src/api/queries.ts`).
 - **Mobile-first, une main.** Les actions principales sont en bas de l'écran, avec de
   grandes zones de toucher.
 - **Commentaires** : comme dans le back, on explique *pourquoi*, pas ce que fait la ligne.

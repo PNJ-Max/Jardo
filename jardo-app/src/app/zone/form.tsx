@@ -7,32 +7,31 @@ import type { Zone } from '@/api/types';
 import { apiFieldError, Button, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
 import { goBack } from '@/lib/navigation';
 
-/** Création (sans paramètre) ou modification (?id=3) d'une zone. */
+/**
+ * Création ou modification d'une zone.
+ *   /zone/form?spaceId=1   → nouvelle zone dans l'espace 1
+ *   /zone/form?id=4        → modification
+ */
 export default function ZoneFormScreen() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const zoneId = id ? Number(id) : undefined;
-
-  if (!zoneId) return <ZoneForm />;
-  return <EditZone id={zoneId} />;
+  const { id, spaceId } = useLocalSearchParams<{ id?: string; spaceId?: string }>();
+  return id ? <EditZone id={Number(id)} /> : <ZoneForm spaceId={Number(spaceId)} />;
 }
 
-// Le formulaire n'est monté qu'une fois la zone chargée : ses useState partent ainsi
-// directement des bonnes valeurs, sans effet de synchronisation à écrire.
 function EditZone({ id }: { id: number }) {
   const zone = useZone(id);
   if (zone.isPending) return <Loading />;
   if (zone.error) return <ErrorView error={zone.error} onRetry={zone.refetch} />;
-  return <ZoneForm zone={zone.data} />;
+  return <ZoneForm zone={zone.data} spaceId={zone.data.spaceId} />;
 }
 
-function ZoneForm({ zone }: { zone?: Zone }) {
+function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: number }) {
+  const save = useSaveZone();
   const [name, setName] = useState(zone?.name ?? '');
   const [description, setDescription] = useState(zone?.description ?? '');
-  const save = useSaveZone();
 
   const submit = () =>
     save.mutate(
-      { id: zone?.id, input: { name: name.trim(), description: description.trim() || null } },
+      { id: zone?.id, spaceId, input: { name: name.trim(), description: description.trim() || null } },
       { onSuccess: goBack },
     );
 
@@ -44,7 +43,7 @@ function ZoneForm({ zone }: { zone?: Zone }) {
         label="Nom"
         value={name}
         onChangeText={setName}
-        placeholder="Potager, Carré nord…"
+        placeholder="Carré 1"
         maxLength={100}
         autoFocus={!zone}
         error={apiFieldError(save.error, 'name')}

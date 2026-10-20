@@ -7,7 +7,7 @@ type FieldProps = TextInputProps & { label: string; error?: string; hint?: strin
 
 export function Field({ label, error, hint, style, ...input }: FieldProps) {
   const { colors } = useTheme();
-  const styles = useStyles();
+  const styles = useFieldStyles();
 
   return (
     <View style={styles.field}>
@@ -36,7 +36,7 @@ export function ChipSelect<T extends string | number>({
   onChange: (value: T) => void;
   error?: string;
 }) {
-  const styles = useStyles();
+  const styles = useFieldStyles();
 
   return (
     <View style={styles.field}>
@@ -65,7 +65,7 @@ export function ChipSelect<T extends string | number>({
  * (zone introuvable, API injoignable…).
  */
 export function FormError({ error }: { error: Error | null }) {
-  const styles = useStyles();
+  const styles = useFieldStyles();
 
   if (!error || (error instanceof ApiError && error.problem.errors)) return null;
   return <Text style={styles.error}>{error.message}</Text>;
@@ -76,7 +76,8 @@ export function apiFieldError(error: Error | null, field: string): string | unde
   return error instanceof ApiError ? error.fieldError(field) : undefined;
 }
 
-const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) => ({
+/** Styles communs des champs, partagés avec le sélecteur de date. */
+export const useFieldStyles = createStyles(({ colors, fonts, typography, spacing, radius }) => ({
   field: { gap: spacing.xs },
   label: { ...typography.body, fontFamily: fonts.bodySemiBold, color: colors.text },
   input: {

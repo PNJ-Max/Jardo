@@ -44,12 +44,17 @@ export default function RootLayout() {
             headerTitleStyle: { color: theme.colors.text, fontFamily: theme.fonts.heading },
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="space/[id]" options={{ title: 'Espace' }} />
           <Stack.Screen name="zone/[id]" options={{ title: 'Zone' }} />
-          <Stack.Screen name="plante/[id]" options={{ title: 'Plante' }} />
+          <Stack.Screen name="plant/[id]" options={{ title: 'Plante' }} />
+          <Stack.Screen name="wood-pile/[id]" options={{ title: 'Tas de bois' }} />
           {/* Les formulaires s'ouvrent en modale : on y entre pour une action, puis on revient. */}
+          <Stack.Screen name="space/form" options={{ presentation: 'modal', title: 'Espace' }} />
           <Stack.Screen name="zone/form" options={{ presentation: 'modal', title: 'Zone' }} />
-          <Stack.Screen name="plante/form" options={{ presentation: 'modal', title: 'Plante' }} />
-          <Stack.Screen name="plante/observation" options={{ presentation: 'modal', title: 'Observation' }} />
+          <Stack.Screen name="plant/form" options={{ presentation: 'modal', title: 'Plante' }} />
+          <Stack.Screen name="wood-pile/form" options={{ presentation: 'modal', title: 'Tas de bois' }} />
+          <Stack.Screen name="entry/form" options={{ presentation: 'modal', title: 'Intervention' }} />
+          <Stack.Screen name="task/form" options={{ presentation: 'modal', title: 'Tâche' }} />
         </Stack>
       </ThemeProvider>
     </QueryClientProvider>
