@@ -1,10 +1,8 @@
 # Modèle du domaine : proposition
 
-Proposition conceptuelle qui traduit la [vision produit](vision-produit.md). L'API
-l'implémente par étapes (voir [Stratégie de migration](#stratégie-de-migration)) : l'étape 1,
-jardin, espaces, zones et plantes, l'étape 2, journal d'interventions, et l'étape 3, tâches,
-sont faites. Les noms d'entités sont ceux du code (en
-anglais) ; les champs listés sont indicatifs et sont arrêtés dans chaque PR.
+Modèle qui traduit la [vision produit](vision-produit.md). L'API l'implémente en entier : les
+quatre étapes de la [migration](#stratégie-de-migration) (jardin et espaces, journal, tâches,
+bois de chauffage) sont faites. Les noms d'entités sont ceux du code (en anglais).
 
 ## Vue d'ensemble
 
@@ -67,10 +65,32 @@ pointer vers une seule table, et SQLite s'en accommode sans jointure. Deux types
   1. La quantité est strictement positive ; en pieds, elle est entière. Une culture de potager
   est archivée en fin de saison : l'historique par carré reste consultable. Le comportement
   propre au verger vient du type d'espace, pas d'une entité à part.
-- **WoodPile** (tas de bois) : essence, volume initial en stères, longueur des bûches, date de
-  coupe, durée de séchage en mois. Calculés à la lecture, jamais stockés : le **stock
-  restant** (volume initial − consommations notées au journal) et l'**état de séchage**
-  (en séchage, prêt à brûler à partir de telle date).
+- **WoodPile** (tas de bois) : essence (`WoodSpecies`), volume initial en stères, longueur des
+  bûches (facultative), date de coupe, durée de séchage en mois (0 pour du bois acheté sec). Il
+  n'est accepté que dans un espace bois de chauffage, comme une `Plant` n'y est pas acceptée.
+  Calculés à la lecture, jamais stockés, par `WoodPileCalculator` (pur et sans dépendance) :
+  - le **stock restant** : volume initial, plus les apports (`WoodSupply`), moins les
+    consommations (`WoodConsumption`) notés au journal **sur ce tas**. Un apport ajoute du bois à
+    un tas existant, en plus de son volume initial (un complément livré, du bois repris à un
+    autre tas) ; un nouveau tas, lui, se crée avec son volume initial. Une entrée de bois notée
+    sur l'espace ou une zone, sans tas, reste au journal mais n'entre dans le stock d'aucun
+    (la règle « vaut pour les éléments qu'ils contiennent » ne s'applique pas ici : on ne sait
+    pas dans quel tas on a puisé). Le résultat est arrondi au centième de stère ;
+  - l'**état de séchage** : le bois est prêt à brûler le jour de la coupe plus la durée de
+    séchage, ce jour compris ; avant, il est en séchage. L'API donne `dryingStatus` (`Drying` ou
+    `Ready`) et `readyOn`, futur ou passé. Un mois se compte au même quantième, ramené à la fin
+    du mois s'il n'existe pas (coupé le 31 janvier, séché un mois : prêt le 28 février).
+
+  **Le stock ne passe jamais sous zéro.** Toute écriture qui le ferait est refusée : noter une
+  consommation trop grosse, la corriger ou la reporter sur un autre tas, supprimer un apport déjà
+  consommé, ou baisser le volume initial sous ce qui a été consommé. Seul le total compte, pas
+  l'ordre des dates. Consommer exactement le reste est permis ; un tas épuisé s'archive.
+  Un tas se déplace vers un autre espace bois de chauffage avec son journal et ses tâches, comme
+  une plante. Un espace qui contient des tas, archivés compris, ne change pas de type.
+
+  Le journal et les tâches ciblent un tas comme n'importe quel élément. « Rentrer le bois » se
+  prévoit en tâche « autre » avec un titre : une tâche d'apport ou de consommation de bois ne
+  pourrait pas être faite, l'entrée exigeant un volume que l'action « Fait » ne porte pas.
 
 ### JournalEntry (intervention)
 
@@ -205,6 +225,7 @@ un pommier et un rang de carottes sont tous des `Plant`.
 | `Plant.WateringIntervalDays` | Une `GardenTask` d'arrosage tous les N jours | 3, faite |
 | `WateringCalculator`, `wateringStatus` | `DueDateCalculator` générique, statut sur chaque tâche | 3, faite |
 | `GET /api/watering/needed`, raccourcis d'arrosage d'une plante ou d'une zone | `GET /api/tasks/due` (toutes catégories) et l'action « Fait » `POST /api/tasks/{id}/done` | 3, faite |
+| Rien (le bois n'existait pas) | `WoodPile`, sous-type de `GardenItem`, avec stock restant et séchage calculés ; `/api/wood-piles` | 4, faite |
 
 Les règles en place restent valables : contrôleurs fins et services métier, ProblemDetails,
 `TimeProvider`, DTOs séparés, contraintes en Fluent API.
@@ -229,7 +250,8 @@ n'écrit donc **aucun script de reprise de données**.
    `Plant` devient une tâche ; endpoint des tâches dues.
 4. **Bois de chauffage.** `WoodPile`, stock et séchage calculés.
 
-La refonte des écrans vient ensuite, sur le nouveau modèle et les maquettes revues.
+Les quatre étapes sont faites. La refonte des écrans vient ensuite, sur le nouveau modèle et les
+maquettes revues.
 
 Le jour où l'app aura des utilisateurs, chaque changement de schéma devra conserver les
 données : migrations avec reprise, testées sur une copie de la base.

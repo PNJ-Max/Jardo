@@ -289,6 +289,29 @@ namespace Jardo.Api.Migrations
                     b.HasDiscriminator().HasValue("Plant");
                 });
 
+            modelBuilder.Entity("Jardo.Api.Models.WoodPile", b =>
+                {
+                    b.HasBaseType("Jardo.Api.Models.GardenItem");
+
+                    b.Property<DateOnly>("CutDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DryingMonths")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("InitialSteres")
+                        .HasColumnType("REAL");
+
+                    b.Property<int?>("LogLengthCm")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("WoodSpecies")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasDiscriminator().HasValue("WoodPile");
+                });
+
             modelBuilder.Entity("Jardo.Api.Models.GardenItem", b =>
                 {
                     b.HasOne("Jardo.Api.Models.Space", "Space")

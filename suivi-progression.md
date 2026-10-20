@@ -10,7 +10,7 @@ une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce q
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (19/10/2026)
+## Où on en est (20/10/2026)
 
 **Étude de la carte du jardin validée** ([`docs/etude-carte-potager.md`](docs/etude-carte-potager.md),
 avec un prototype cliquable). Scène modèle « maison mitoyenne », espaces cliquables (serre
@@ -21,10 +21,10 @@ en six étapes.
 **Vision produit arrêtée.** Jardo passe du suivi d'arrosage à la gestion du jardin :
 [`docs/vision-produit.md`](docs/vision-produit.md) et proposition de modèle
 [`docs/modele-domaine.md`](docs/modele-domaine.md) (jardin, espaces typés, zones, éléments,
-journal d'interventions, tâches). L'API y migre par étapes. La refonte des écrans est
+journal d'interventions, tâches). L'API l'implémente en entier. La refonte des écrans est
 suspendue jusqu'à la nouvelle API et aux maquettes revues.
 
-**Backend `Jardo.Api` : migration vers le nouveau modèle, étapes 1 à 3 sur 4 faites.**
+**Backend `Jardo.Api` : migration vers le nouveau modèle terminée (4 étapes sur 4).**
 - ASP.NET Core (.NET 10) + EF Core + SQLite, tests dans `Jardo.Api.Tests`.
 - Étape 1, jardin et espaces : un jardin unique (créé par la migration), des espaces typés
   (potager, verger, petits fruits, serre, bois de chauffage) archivables, des zones rattachées à un
@@ -53,15 +53,24 @@ suspendue jusqu'à la nouvelle API et aux maquettes revues.
   une tâche : `WateringIntervalDays`, `GET /api/watering/needed` et les raccourcis d'arrosage
   disparaissent. Endpoints `/api/tasks` (CRUD, lecture par cible), `/api/tasks/due?horizon=Today|Week`
   (écran Aujourd'hui), `POST /api/tasks/{id}/done` (« Fait » : note au journal et renvoie la
-  tâche recalculée) ; `dueTaskCount` sur chaque espace pour la liste du Jardin. Le tas de bois
-  arrive à l'étape 4.
+  tâche recalculée) ; `dueTaskCount` sur chaque espace pour la liste du Jardin.
+- Étape 4, bois de chauffage : `WoodPile`, sous-type de `GardenItem`, accepté dans un espace
+  bois de chauffage seulement (essence, volume initial en stères, longueur des bûches, coupe,
+  séchage en mois). Le stock restant (volume initial, plus les apports, moins les consommations
+  du journal qui visent le tas) et l'état de séchage (en séchage ou prêt, avec la date) sont
+  calculés à la lecture par `WoodPileCalculator`, jamais stockés ; un stock négatif est refusé à
+  toute écriture ([détail](docs/modele-domaine.md#gardenitem-élément-suivi)). Endpoints
+  `/api/wood-piles` (CRUD, archivage, liste par espace). Journal et tâches fonctionnent sur un
+  tas sans code propre.
 - Le seeder produit quelques semaines de journal (arrosages de zones et d'espaces, semis,
   plantations, taille du verger, récoltes, oïdium constaté puis traité) et seize tâches :
   arrosages de cultures, de carrés et d'une plante de verger, désherbage, taille d'hiver,
-  compost annuel, traitement à renouveler, plantation faite ; les trois voyants y figurent.
+  compost annuel, traitement à renouveler, plantation faite ; les trois voyants y figurent. Trois tas
+  de bois : un chêne sec en cours d'usage, un hêtre en séchage avec sa tâche « rentrer le bois », un
+  bouleau épuisé et archivé.
 - Le front actuel ne suit plus l'API (zones sans espace, `CreatePlantDto`, arrosages et
   observations disparus, voyant d'arrosage remplacé par les tâches) : il sera refait sur le
-  nouveau modèle après l'étape 4.
+  nouveau modèle, juste après cette PR.
 - Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
   évidente. README recentré sur le produit.
 
@@ -107,7 +116,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   1. jardin, espaces typés, zones, plantes avec variété et quantité. Fait ;
   2. journal d'interventions unifié. Fait ;
   3. tâches récurrentes et calculateur d'échéance générique (l'arrosage en devient une). Fait ;
-  4. tas de bois.
+  4. tas de bois de chauffage, stock et séchage calculés. Fait. La phase est terminée.
 
 **Phase 4 : écrans du nouveau MVP**
 - Refonte des écrans sur la charte actuelle (le design est repris en phase 6) : onglets Jardin (accueil) · Aujourd'hui · Journal, espaces, fiches,

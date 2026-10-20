@@ -9,6 +9,8 @@ namespace Jardo.Api.Services;
 /// <inheritdoc cref="IPlantService"/>
 public class PlantService : IPlantService
 {
+    private static readonly ItemPlacement.Noun PlantNoun = new("de plantes", "une plante");
+
     private readonly GardenDbContext _db;
     private readonly TimeProvider _timeProvider;
 
@@ -108,27 +110,7 @@ public class PlantService : IPlantService
 
         if (plant.SpaceId != dto.SpaceId || plant.ZoneId != dto.ZoneId)
         {
-            // Le journal et les tâches d'un élément le suivent : ils restent dans son espace et sa
-            // zone, ce qui permet de supprimer sans perte un espace ou une zone vidés de leurs éléments.
-            var entries = await _db.JournalEntries
-                .Where(entry => entry.ItemId == id)
-                .ToListAsync(cancellationToken);
-
-            foreach (var entry in entries)
-            {
-                entry.SpaceId = dto.SpaceId;
-                entry.ZoneId = dto.ZoneId;
-            }
-
-            var tasks = await _db.GardenTasks
-                .Where(task => task.ItemId == id)
-                .ToListAsync(cancellationToken);
-
-            foreach (var task in tasks)
-            {
-                task.SpaceId = dto.SpaceId;
-                task.ZoneId = dto.ZoneId;
-            }
+            await ItemPlacement.MoveHistoryAsync(_db, id, dto.SpaceId, dto.ZoneId, cancellationToken);
         }
 
         plant.SpaceId = dto.SpaceId;
@@ -178,47 +160,11 @@ public class PlantService : IPlantService
         plant.PlantedDate = dto.PlantedDate;
     }
 
-    // 400 et non 404 : la ressource demandée est la plante, ce sont les identifiants du corps qui
-    // sont invalides. Un espace archivé garde ses plantes mais n'en reçoit plus de nouvelles.
-    private async Task EnsurePlacementIsValidAsync(
+    private Task EnsurePlacementIsValidAsync(
         int spaceId,
         int? zoneId,
         bool isNewToSpace,
         CancellationToken cancellationToken)
-    {
-        var space = await _db.Spaces
-            .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == spaceId, cancellationToken)
-            ?? throw new BusinessRuleException($"L'espace {spaceId} n'existe pas.");
-
-        if (!space.Kind.AcceptsPlants())
-        {
-            throw new BusinessRuleException(
-                $"L'espace « {space.Name} » est un espace {space.Kind.Label()} : il n'accueille pas de plantes.");
-        }
-
-        if (isNewToSpace && space.IsArchived)
-        {
-            throw new BusinessRuleException(
-                $"L'espace « {space.Name} » est archivé : réactivez-le avant d'y ajouter une plante.");
-        }
-
-        if (zoneId is null)
-        {
-            return;
-        }
-
-        var zoneSpaceId = await _db.Zones
-            .AsNoTracking()
-            .Where(zone => zone.Id == zoneId.Value)
-            .Select(zone => (int?)zone.SpaceId)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new BusinessRuleException($"La zone {zoneId} n'existe pas.");
-
-        if (zoneSpaceId != spaceId)
-        {
-            throw new BusinessRuleException(
-                $"La zone {zoneId} n'appartient pas à l'espace « {space.Name} ».");
-        }
-    }
+        => ItemPlacement.EnsureValidAsync(
+            _db, spaceId, zoneId, isNewToSpace, kind => kind.AcceptsPlants(), PlantNoun, cancellationToken);
 }
