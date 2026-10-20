@@ -9,9 +9,9 @@ import { createStyles } from '@/theme';
 
 import { SceneRenderer, type SceneRendererProps, type SceneView } from './scene-renderer';
 
-const MIN_ZOOM = 0.8;
 const MAX_ZOOM = 5;
-const MARGIN = 12;
+/** Le cadrage de départ remplit la largeur, quitte à rogner un peu les coins du jardin. */
+const FIT_OVERFLOW = 1.1;
 /** Les étiquettes des carrés n'apparaissent qu'à partir de ce zoom (étude de la carte). */
 const ZONE_LABEL_ZOOM = 1.45;
 
@@ -19,7 +19,7 @@ type Size = { width: number; height: number };
 
 function fitView(scene: Scene, { width, height }: Size): SceneView {
   const { minX, minY, maxX, maxY } = scene.focus;
-  const scale = Math.min((width - 2 * MARGIN) / (maxX - minX), (height - 2 * MARGIN) / (maxY - minY));
+  const scale = Math.min((width / (maxX - minX)) * FIT_OVERFLOW, height / (maxY - minY));
   return { scale, x: width / 2 - scale * ((minX + maxX) / 2), y: height / 2 - scale * ((minY + maxY) / 2) };
 }
 
@@ -75,10 +75,11 @@ export function MapViewport({ scene, labels, engine, selected, onSelect, recente
   );
 
   const gesture = useMemo(() => {
-    const { minX, minY, maxX, maxY } = scene.bounds;
+    const { minX, minY, maxX, maxY } = scene.limits;
     const width = size?.width ?? 0;
     const height = size?.height ?? 0;
-    const minScale = (fit?.scale ?? 1) * MIN_ZOOM;
+    // On ne dézoome pas au-delà des limites : l'écran reste couvert.
+    const minScale = Math.max(width / (maxX - minX), height / (maxY - minY));
     const maxScale = (fit?.scale ?? 1) * MAX_ZOOM;
 
     // L'écran reste couvert par le dessin ; s'il est plus petit, il est centré.

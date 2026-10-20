@@ -31,7 +31,8 @@ import {
 import { finishScene, type MapScheme, type Scene, type SlotKey, type SlotSpec } from './layouts';
 import { depth } from './scene';
 
-const WORLD = { x0: -18, x1: 26, y0: -16, y1: 44 };
+/** Le sol dessiné, en mètres. */
+export const WORLD = { x0: -18, x1: 26, y0: -16, y1: 44 };
 const BEDS: Record<'bed-1' | 'bed-2' | 'bed-3' | 'bed-4', [number, number]> = {
   'bed-1': [0.95, 17.3],
   'bed-2': [4.45, 17.3],
@@ -78,7 +79,15 @@ export function terracedLongScene(scheme: MapScheme): Scene {
 function buildScene(kit: Kit): Scene {
   drawSurroundings(kit);
   drawGarden(kit);
-  return finishScene(kit, SLOTS, { x0: -1, x1: 9, y0: -6.5, y1: 26, z: 8.5 }, kit.ctx.meadow);
+  return finishScene(
+    kit,
+    SLOTS,
+    {
+      focus: { x0: 0, x1: 8, y0: -2, y1: 25.5, z: 3 },
+      limits: { x0: -5, x1: 13, y0: -9, y1: 30, z: 0 },
+    },
+    kit.ctx.meadow,
+  );
 }
 
 function drawSurroundings(kit: Kit) {

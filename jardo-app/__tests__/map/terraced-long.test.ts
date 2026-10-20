@@ -1,6 +1,6 @@
-import { project } from '@/map/scene';
+import { project, unproject, type Point } from '@/map/scene';
 import { SLOT_KEYS, slotAt } from '@/map/layouts';
-import { terracedLongScene } from '@/map/terraced-long';
+import { terracedLongScene, WORLD } from '@/map/terraced-long';
 
 describe('scène terraced-long', () => {
   it.each(['light', 'dark'] as const)('dessine tous les emplacements en mode %s', (scheme) => {
@@ -30,5 +30,17 @@ describe('scène terraced-long', () => {
     expect(slotAt(scene, project(4, -3, 5))).toBeNull();
     expect(slotAt(scene, project(4, 1.5, 0))).toBeNull();
     expect(slotAt(scene, project(-1.6, 13.2, 0))).toBeNull();
+  });
+
+  it("couvre de décor tout ce qu'on peut atteindre en se déplaçant", () => {
+    const { minX, minY, maxX, maxY } = terracedLongScene('light').limits;
+
+    for (const corner of [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]] satisfies Point[]) {
+      const [x, y] = unproject(corner);
+      expect(x).toBeGreaterThanOrEqual(WORLD.x0);
+      expect(x).toBeLessThanOrEqual(WORLD.x1);
+      expect(y).toBeGreaterThanOrEqual(WORLD.y0);
+      expect(y).toBeLessThanOrEqual(WORLD.y1);
+    }
   });
 });

@@ -33,10 +33,12 @@ export type SceneSlot = {
 
 export type Scene = {
   shapes: Shape[];
-  /** Tout le dessin : le déplacement s'arrête à ses bords. */
+  /** Tout le dessin. */
   bounds: Bounds;
   /** Le jardin : le cadrage de départ. */
   focus: Bounds;
+  /** Le déplacement et le dézoom s'arrêtent à ces bords, couverts par le décor. */
+  limits: Bounds;
   slots: Record<SlotKey, SceneSlot>;
   /** Couleur du sol au-delà du dessin. */
   background: string;
@@ -60,11 +62,26 @@ export function slotAt(scene: Scene, point: Point): SlotKey | null {
   return HIT_ORDER.find((key) => contains(scene.slots[key].hit, point)) ?? null;
 }
 
-/** Assemble la scène dessinée ; `focus` est la boîte du jardin, en mètres, maison comprise. */
+type Box = { x0: number; y0: number; x1: number; y1: number; z: number };
+
+/** Emprise à l'écran d'une boîte en mètres. */
+function screenBounds(box: Box): Bounds {
+  const corners = [box.x0, box.x1].flatMap((x) =>
+    [box.y0, box.y1].flatMap((y) => [project(x, y, 0), project(x, y, box.z)]),
+  );
+  const xs = corners.map((c) => c[0]);
+  const ys = corners.map((c) => c[1]);
+  return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) };
+}
+
+/**
+ * Assemble la scène dessinée. `focus` est la boîte du jardin, en mètres ; `limits`, celle
+ * jusqu'où l'on peut se déplacer : le décor doit couvrir son emprise à l'écran.
+ */
 export function finishScene(
   { p }: Kit,
   specs: Record<SlotKey, SlotSpec>,
-  focus: { x0: number; y0: number; x1: number; y1: number; z: number },
+  { focus, limits }: { focus: Box; limits: Box },
   background: string,
 ): Scene {
   const { shapes, bounds } = p.shapes();
@@ -81,16 +98,5 @@ export function finishScene(
       ];
     }),
   ) as Record<SlotKey, SceneSlot>;
-  const corners = [focus.x0, focus.x1].flatMap((x) =>
-    [focus.y0, focus.y1].flatMap((y) => [project(x, y, 0), project(x, y, focus.z)]),
-  );
-  const xs = corners.map((c) => c[0]);
-  const ys = corners.map((c) => c[1]);
-  return {
-    shapes,
-    bounds,
-    focus: { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) },
-    slots,
-    background,
-  };
+  return { shapes, bounds, focus: screenBounds(focus), limits: screenBounds(limits), slots, background };
 }

@@ -28,6 +28,13 @@ export function project(x: number, y: number, z: number): Point {
   return [(x * C + y * S) * UNIT, ((-x * S + y * C) * SP - z * CP) * UNIT];
 }
 
+/** Point au sol (z = 0) sous un point de l'écran. */
+export function unproject([sx, sy]: Point): Point {
+  const a = sx / UNIT;
+  const b = sy / (UNIT * SP);
+  return [a * C - b * S, a * S + b * C];
+}
+
 /** Profondeur d'un point au sol : plus elle est grande, plus il est proche de l'observateur. */
 export function depth(x: number, y: number) {
   return -x * S + y * C;
