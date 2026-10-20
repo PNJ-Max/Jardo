@@ -115,6 +115,7 @@ export function MapViewport({ scene, engine, selected, onSelect, recenter }: Map
       .onEnd(() => scheduleOnRN(commit, current()));
 
     const pan = Gesture.Pan()
+      .minDistance(10)
       .averageTouches(true)
       .onStart(() => {
         start.set({ ...start.get(), x: x.get(), y: y.get() });
