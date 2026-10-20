@@ -19,6 +19,11 @@ d'un espace, d'une zone, d'une plante et d'un tas de bois ; six formulaires simp
 (espace, zone, plante, tas de bois, intervention, tâche) ; sélecteur de date Android et web.
 Types du front générés depuis le Swagger. Vérifié en mode web, en clair et en sombre.
 
+**Test sur téléphone préparé** (Expo Go, même Wi-Fi) : profil de lancement API `lan`, URL de
+l'API déduite de l'hôte Metro, guide et commandes pare-feu dans le
+[README de jardo-app](jardo-app/README.md#tester-sur-téléphone). Pas encore testé sur un vrai
+téléphone (sélecteur de date Android à vérifier).
+
 **Étude de la carte du jardin validée** ([`docs/etude-carte-potager.md`](docs/etude-carte-potager.md),
 avec un prototype cliquable). Scène modèle « maison mitoyenne », espaces cliquables (serre
 comprise), ni liste ni voyant, nuit en mode sombre ; rendu recommandé avec Skia, à confirmer
