@@ -139,8 +139,64 @@ public class JournalService : IJournalService
         var entry = await _db.JournalEntries.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             ?? throw NotFoundException.For("JournalEntry", id);
 
+        // Supprimer un apport peut laisser un stock que les consommations dépassent.
+        if (entry.Kind.IsWood())
+        {
+            await EnsureWoodStockStaysPositiveAsync([entry.ItemId], pending: null, excludedEntryId: id, cancellationToken);
+        }
+
         _db.JournalEntries.Remove(entry);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    // Le stock d'un tas se calcule à partir du journal, jamais stocké : le refus d'une consommation
+    // qui le ferait passer sous zéro se joue donc ici, à l'écriture. On recompte sans l'entrée visée
+    // et on y substitue sa nouvelle valeur.
+    private async Task EnsureWoodStockStaysPositiveAsync(
+        IEnumerable<int?> itemIds,
+        (int ItemId, WoodMovement Movement)? pending,
+        int? excludedEntryId,
+        CancellationToken cancellationToken)
+    {
+        var candidateIds = itemIds.OfType<int>().Distinct().ToList();
+
+        if (candidateIds.Count == 0)
+        {
+            return;
+        }
+
+        var piles = await _db.WoodPiles
+            .AsNoTracking()
+            .Where(pile => candidateIds.Contains(pile.Id))
+            .Select(pile => new { pile.Id, pile.Name, pile.InitialSteres })
+            .ToListAsync(cancellationToken);
+
+        if (piles.Count == 0)
+        {
+            return;
+        }
+
+        var movements = await WoodMovements.LoadAsync(
+            _db, piles.Select(pile => pile.Id).ToList(), excludedEntryId, cancellationToken);
+
+        foreach (var pile in piles)
+        {
+            var pileMovements = movements.GetValueOrDefault(pile.Id) ?? [];
+
+            if (pending is { } written && written.ItemId == pile.Id)
+            {
+                pileMovements.Add(written.Movement);
+            }
+
+            var stock = WoodPileCalculator.RemainingSteres(pile.InitialSteres, pileMovements);
+
+            if (stock < 0)
+            {
+                throw new BusinessRuleException(
+                    $"Le stock du tas « {pile.Name} » ne peut pas passer sous zéro : " +
+                    $"cette opération le ferait passer à {stock} stères.");
+            }
+        }
     }
 
     private async Task ApplyAsync(SaveJournalEntryDto dto, JournalEntry entry, bool isNew, CancellationToken cancellationToken)
@@ -162,9 +218,21 @@ public class JournalService : IJournalService
 
         EnsureFieldsFitKind(kind, note, dto.Quantity, dto.QuantityUnit, dto.HeightCm, problem, treatment);
 
+        var previousWoodItemId = !isNew && entry.Kind.IsWood() ? entry.ItemId : null;
         var current = isNew ? null : new InterventionTarget(entry.SpaceId, entry.ZoneId, entry.ItemId);
         var target = await InterventionTarget.ResolveAsync(
             _db, dto.SpaceId, dto.ZoneId, dto.ItemId, kind, current, "noter une intervention", cancellationToken);
+
+        // Avant d'écrire : l'entrée change de tas, de type ou de volume, ce qui peut vider un tas
+        // autant que remplir un autre.
+        if (kind.IsWood() || previousWoodItemId is not null)
+        {
+            await EnsureWoodStockStaysPositiveAsync(
+                [previousWoodItemId, target.ItemId],
+                pending: kind.IsWood() && target.ItemId is { } pendingItemId ? (pendingItemId, new WoodMovement(kind, dto.Quantity!.Value)) : null,
+                excludedEntryId: isNew ? null : entry.Id,
+                cancellationToken);
+        }
 
         entry.SpaceId = target.SpaceId;
         entry.ZoneId = target.ZoneId;

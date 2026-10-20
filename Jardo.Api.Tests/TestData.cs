@@ -113,4 +113,29 @@ public static class TestData
         await db.SaveChangesAsync();
         return task;
     }
+
+    public static async Task<WoodPile> AddWoodPileAsync(
+        this GardenDbContext db,
+        Space space,
+        string name,
+        double initialSteres = 10,
+        DateOnly? cutDate = null,
+        int dryingMonths = 12,
+        bool isArchived = false)
+    {
+        var pile = new WoodPile
+        {
+            SpaceId = space.Id,
+            Name = name,
+            InitialSteres = initialSteres,
+            CutDate = cutDate ?? new DateOnly(2025, 1, 1),
+            DryingMonths = dryingMonths,
+            IsArchived = isArchived,
+            CreatedAt = DateTimeOffset.UnixEpoch
+        };
+
+        db.WoodPiles.Add(pile);
+        await db.SaveChangesAsync();
+        return pile;
+    }
 }

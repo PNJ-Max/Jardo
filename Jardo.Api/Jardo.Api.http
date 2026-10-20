@@ -200,6 +200,103 @@ POST {{host}}/api/plants/3/unarchive
 DELETE {{host}}/api/plants/3
 
 ### ==========================================================================
+### TAS DE BOIS (dans un espace bois de chauffage, espace 4 du seed)
+### remainingSteres : volume initial + apports - consommations notes au journal sur le tas
+### dryingStatus : Drying (readyOn a venir) ou Ready (readyOn passe ou aujourd'hui)
+### Seed : 19 = chene sec en cours d'usage, 20 = hetre en sechage, 21 = bouleau epuise (archive)
+### ==========================================================================
+
+### Tous les tas actifs, avec stock restant et sechage
+GET {{host}}/api/wood-piles
+Accept: application/json
+
+### Les tas d'un espace
+GET {{host}}/api/wood-piles?spaceId=4
+Accept: application/json
+
+### Y compris les archives (le bouleau epuise du seed apparait ici)
+GET {{host}}/api/wood-piles?includeArchived=true
+Accept: application/json
+
+### Un tas
+GET {{host}}/api/wood-piles/19
+Accept: application/json
+
+### Creer un tas -- initialSteres, cutDate et dryingMonths sont obligatoires,
+### dryingMonths = 0 pour du bois achete sec
+POST {{host}}/api/wood-piles
+Content-Type: application/json
+
+{
+  "name": "Charme livre",
+  "woodSpecies": "Charme",
+  "initialSteres": 10,
+  "logLengthCm": 33,
+  "cutDate": "2026-03-01",
+  "dryingMonths": 12,
+  "spaceId": 4
+}
+
+### Modifier un tas -- changer spaceId / zoneId le deplace, avec son journal et ses taches ;
+### le volume initial ne peut pas descendre sous ce qui a deja ete consomme
+PUT {{host}}/api/wood-piles/19
+Content-Type: application/json
+
+{
+  "name": "Chene du fond",
+  "woodSpecies": "Chene",
+  "initialSteres": 8,
+  "logLengthCm": 50,
+  "cutDate": "2024-05-03",
+  "dryingMonths": 24,
+  "spaceId": 4
+}
+
+### Archiver (tas epuise) -- ses taches ne sont plus dues, l'historique reste
+POST {{host}}/api/wood-piles/20/archive
+
+### Reactiver
+POST {{host}}/api/wood-piles/20/unarchive
+
+### Supprimer definitivement (emporte son journal et ses taches)
+DELETE {{host}}/api/wood-piles/21
+
+### Apport de bois sur un tas existant : s'ajoute au stock (WoodSupply, en steres)
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "WoodSupply",
+  "quantity": 2,
+  "quantityUnit": "Steres",
+  "note": "Deux steres livres.",
+  "spaceId": 4,
+  "itemId": 19
+}
+
+### Consommation de bois sur un tas : s'en retranche. Refusee si le stock passait sous zero.
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "WoodConsumption",
+  "quantity": 0.5,
+  "quantityUnit": "Steres",
+  "spaceId": 4,
+  "itemId": 19
+}
+
+### Le journal d'un tas
+GET {{host}}/api/journal?itemId=19
+Accept: application/json
+
+### Une tache sur un tas : la tache ponctuelle du seed (17) rentre le hetre
+GET {{host}}/api/tasks/17
+Accept: application/json
+
+### ==========================================================================
 ### TACHES
 ### kind : les types du journal (Watering, Pruning, Treatment...)
 ### recurrence : EveryNDays (avec intervalDays), Yearly, Once
@@ -631,6 +728,61 @@ Content-Type: application/json
   "quantity": 4,
   "quantityUnit": "Steres",
   "spaceId": 1
+}
+
+### 400 : tas de bois hors d'un espace bois de chauffage (espace 1 = potager)
+POST {{host}}/api/wood-piles
+Content-Type: application/json
+
+{
+  "name": "Chene",
+  "initialSteres": 5,
+  "cutDate": "2026-03-01",
+  "dryingMonths": 12,
+  "spaceId": 1
+}
+
+### 400 : volume initial, date de coupe et duree de sechage obligatoires
+POST {{host}}/api/wood-piles
+Content-Type: application/json
+
+{
+  "name": "Sans volume",
+  "spaceId": 4
+}
+
+### 400 : consommation au-dela du stock (le chene du seed en a 4,5)
+POST {{host}}/api/journal
+Content-Type: application/json
+
+{
+  "date": "2026-10-19",
+  "kind": "WoodConsumption",
+  "quantity": 5,
+  "quantityUnit": "Steres",
+  "spaceId": 4,
+  "itemId": 19
+}
+
+### 400 : volume initial sous ce qui a deja ete consomme (le chene en a brule 5,5 pour 2 apportes)
+PUT {{host}}/api/wood-piles/19
+Content-Type: application/json
+
+{
+  "name": "Chene du fond",
+  "initialSteres": 3,
+  "cutDate": "2024-05-03",
+  "dryingMonths": 24,
+  "spaceId": 4
+}
+
+### 400 : un espace qui contient des tas de bois ne peut pas changer de type
+PUT {{host}}/api/spaces/4
+Content-Type: application/json
+
+{
+  "name": "Bois de chauffage",
+  "kind": "Greenhouse"
 }
 
 ### 400 : une quantite sur un arrosage

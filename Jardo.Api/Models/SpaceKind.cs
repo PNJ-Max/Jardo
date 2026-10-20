@@ -16,6 +16,8 @@ public static class SpaceKindExtensions
 {
     public static bool AcceptsPlants(this SpaceKind kind) => kind is not SpaceKind.Firewood;
 
+    public static bool AcceptsWoodPiles(this SpaceKind kind) => kind is SpaceKind.Firewood;
+
     /// <summary>Libellé pour les messages renvoyés à l'utilisateur.</summary>
     public static string Label(this SpaceKind kind) => kind switch
     {

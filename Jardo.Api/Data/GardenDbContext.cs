@@ -16,6 +16,7 @@ public class GardenDbContext : DbContext
     public DbSet<Zone> Zones => Set<Zone>();
     public DbSet<GardenItem> GardenItems => Set<GardenItem>();
     public DbSet<Plant> Plants => Set<Plant>();
+    public DbSet<WoodPile> WoodPiles => Set<WoodPile>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<GardenTask> GardenTasks => Set<GardenTask>();
 
@@ -70,7 +71,8 @@ public class GardenDbContext : DbContext
             item.ToTable("GardenItems");
 
             item.HasDiscriminator<string>("ItemType")
-                .HasValue<Plant>("Plant");
+                .HasValue<Plant>("Plant")
+                .HasValue<WoodPile>("WoodPile");
 
             item.Property("ItemType").HasMaxLength(30);
             item.Property(i => i.Name).IsRequired().HasMaxLength(100);
@@ -95,6 +97,11 @@ public class GardenDbContext : DbContext
             plant.Property(p => p.Species).HasMaxLength(100);
             plant.Property(p => p.Variety).HasMaxLength(100);
             plant.Property(p => p.QuantityUnit).HasConversion<string>().HasMaxLength(30);
+        });
+
+        modelBuilder.Entity<WoodPile>(pile =>
+        {
+            pile.Property(p => p.WoodSpecies).HasMaxLength(100);
         });
 
         modelBuilder.Entity<JournalEntry>(entry =>

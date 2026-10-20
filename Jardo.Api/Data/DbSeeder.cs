@@ -6,7 +6,7 @@ namespace Jardo.Api.Data;
 
 /// <summary>
 /// Remplit la base avec un jardin d'exemple : un potager en carrés, un verger, des petits fruits
-/// par rang, une serre et un espace bois de chauffage, encore vide ; quelques semaines de journal
+/// par rang, une serre et un espace bois de chauffage avec trois tas ; quelques semaines de journal
 /// et des tâches. Les dates sont relatives à aujourd'hui pour qu'il y ait toujours des tâches à
 /// jour, à faire aujourd'hui et en retard.
 /// </summary>
@@ -144,6 +144,27 @@ public static class DbSeeder
             framboisiers, groseilliers, cassissiers,
             piments, concombres, aubergines);
 
+        WoodPile NewWoodPile(string name, string species, double steres, int logLengthCm, int cutDaysAgo, int dryingMonths)
+            => new()
+            {
+                Space = bois,
+                Name = name,
+                WoodSpecies = species,
+                InitialSteres = steres,
+                LogLengthCm = logLengthCm,
+                CutDate = Ago(cutDaysAgo),
+                DryingMonths = dryingMonths,
+                CreatedAt = now
+            };
+
+        // Chêne coupé il y a trente mois et sec depuis six ; hêtre coupé il y a cinq mois, encore en séchage.
+        var chene = NewWoodPile("Chêne du fond", "Chêne", 8, 50, 900, 24);
+        var hetre = NewWoodPile("Hêtre de l'année", "Hêtre", 6, 33, 150, 18);
+        var bouleau = NewWoodPile("Bouleau", "Bouleau", 3, 33, 1000, 12);
+        bouleau.IsArchived = true;
+
+        db.WoodPiles.AddRange(chene, hetre, bouleau);
+
         await db.SaveChangesAsync(cancellationToken);
 
         JournalEntry Entry(
@@ -151,7 +172,7 @@ public static class DbSeeder
             int daysAgo,
             Space space,
             Zone? zone = null,
-            Plant? item = null,
+            GardenItem? item = null,
             string? note = null,
             double? quantity = null,
             MeasureUnit? unit = null,
@@ -250,7 +271,21 @@ public static class DbSeeder
             Entry(JournalEntryKind.Observation, 1, petitsFruits, item: groseilliers,
                 note: "Reprise correcte, premières feuilles.", heightCm: 35),
             Entry(JournalEntryKind.Harvest, 1, potager, item: tomates,
-                note: "Premières cœur de bœuf.", quantity: 2.5, unit: MeasureUnit.Kilograms)
+                note: "Premières cœur de bœuf.", quantity: 2.5, unit: MeasureUnit.Kilograms),
+
+            // Stock du chêne : 8 stères au départ, 2 apportés, 5,5 brûlés, soit 4,5 stères restants.
+            Entry(JournalEntryKind.WoodSupply, 120, bois, item: chene,
+                note: "Deux stères repris au tas de la haie.", quantity: 2, unit: MeasureUnit.Steres),
+            Entry(JournalEntryKind.WoodConsumption, 60, bois, item: chene, quantity: 1, unit: MeasureUnit.Steres),
+            Entry(JournalEntryKind.WoodConsumption, 45, bois, item: chene, quantity: 1.5, unit: MeasureUnit.Steres),
+            Entry(JournalEntryKind.WoodConsumption, 30, bois, item: chene, quantity: 1, unit: MeasureUnit.Steres),
+            Entry(JournalEntryKind.WoodConsumption, 14, bois, item: chene,
+                note: "Semaine de gel.", quantity: 1.5, unit: MeasureUnit.Steres),
+            Entry(JournalEntryKind.WoodConsumption, 5, bois, item: chene, quantity: 0.5, unit: MeasureUnit.Steres),
+            // Le bouleau, épuisé, est archivé.
+            Entry(JournalEntryKind.WoodConsumption, 200, bois, item: bouleau, quantity: 1.5, unit: MeasureUnit.Steres),
+            Entry(JournalEntryKind.WoodConsumption, 170, bois, item: bouleau,
+                note: "Dernières bûches de l'hiver.", quantity: 1.5, unit: MeasureUnit.Steres)
         );
 
         await db.SaveChangesAsync(cancellationToken);
@@ -261,7 +296,7 @@ public static class DbSeeder
             DateOnly startDate,
             Space space,
             Zone? zone = null,
-            Plant? item = null,
+            GardenItem? item = null,
             int? intervalDays = null,
             string? title = null,
             int createdDaysAgo = 0)
@@ -278,7 +313,7 @@ public static class DbSeeder
                 CreatedAt = now.AddDays(-createdDaysAgo)
             };
 
-        GardenTask WateringTask(Space space, Zone? zone = null, Plant? item = null, int everyDays = 1, int startedDaysAgo = 60, string? title = null)
+        GardenTask WateringTask(Space space, Zone? zone = null, GardenItem? item = null, int everyDays = 1, int startedDaysAgo = 60, string? title = null)
             => NewTask(JournalEntryKind.Watering, TaskRecurrence.EveryNDays, Ago(startedDaysAgo), space, zone, item, everyDays, title);
 
         // L'état de chaque tâche, d'après le journal ci-dessus, est donné en commentaire.
@@ -321,7 +356,10 @@ public static class DbSeeder
                 title: "Renouveler le purin de prêle"),
             // Faite en avance : prévue dans 2 jours, plantés il y a 3 jours.
             NewTask(JournalEntryKind.Planting, TaskRecurrence.Once, today.AddDays(2), petitsFruits, item: groseilliers,
-                title: "Planter les groseilliers", createdDaysAgo: 10)
+                title: "Planter les groseilliers", createdDaysAgo: 10),
+            // Prévue dans 3 jours : le hêtre est encore en séchage, à l'air libre.
+            NewTask(JournalEntryKind.Other, TaskRecurrence.Once, today.AddDays(3), bois, item: hetre,
+                title: "Rentrer le hêtre sous l'abri")
         );
 
         await db.SaveChangesAsync(cancellationToken);

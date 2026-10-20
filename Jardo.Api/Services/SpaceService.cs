@@ -124,6 +124,18 @@ public class SpaceService : ISpaceService
             }
         }
 
+        if (kind != space.Kind && !kind.AcceptsWoodPiles())
+        {
+            var pileCount = await _db.WoodPiles.CountAsync(pile => pile.SpaceId == id, cancellationToken);
+
+            if (pileCount > 0)
+            {
+                throw new BusinessRuleException(
+                    $"L'espace « {space.Name} » contient {pileCount} tas de bois, archivés compris : " +
+                    $"un espace {kind.Label()} n'accueille pas de tas de bois.");
+            }
+        }
+
         if (kind != space.Kind)
         {
             var journalKinds = await _db.JournalEntries
