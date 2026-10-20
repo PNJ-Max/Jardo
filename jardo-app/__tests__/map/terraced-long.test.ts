@@ -1,5 +1,6 @@
 import { project } from '@/map/scene';
-import { SLOT_KEYS, slotAt, terracedLongScene } from '@/map/terraced-long';
+import { SLOT_KEYS, slotAt } from '@/map/layouts';
+import { terracedLongScene } from '@/map/terraced-long';
 
 describe('scène terraced-long', () => {
   it.each(['light', 'dark'] as const)('dessine tous les emplacements en mode %s', (scheme) => {

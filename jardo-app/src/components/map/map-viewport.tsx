@@ -1,27 +1,32 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { slotAt, type Scene, type SlotKey } from '@/map/terraced-long';
+import { slotAt, ZONE_SLOTS, type Scene, type SlotKey } from '@/map/layouts';
+import { createStyles } from '@/theme';
 
-import { SceneRenderer, type SceneView } from './scene-renderer';
+import { SceneRenderer, type SceneRendererProps, type SceneView } from './scene-renderer';
 
 const MIN_ZOOM = 0.8;
 const MAX_ZOOM = 5;
 const MARGIN = 12;
+/** Les étiquettes des carrés n'apparaissent qu'à partir de ce zoom (étude de la carte). */
+const ZONE_LABEL_ZOOM = 1.45;
 
 type Size = { width: number; height: number };
 
 function fitView(scene: Scene, { width, height }: Size): SceneView {
-  const { minX, minY, maxX, maxY } = scene.bounds;
+  const { minX, minY, maxX, maxY } = scene.focus;
   const scale = Math.min((width - 2 * MARGIN) / (maxX - minX), (height - 2 * MARGIN) / (maxY - minY));
   return { scale, x: width / 2 - scale * ((minX + maxX) / 2), y: height / 2 - scale * ((minY + maxY) / 2) };
 }
 
 type MapViewportProps = {
   scene: Scene;
+  /** Nom affiché sur chaque emplacement occupé. */
+  labels: Partial<Record<SlotKey, string>>;
   engine: 'svg' | 'skia';
   selected: SlotKey | null;
   onSelect: (key: SlotKey | null) => void;
@@ -35,7 +40,7 @@ type MapViewportProps = {
  * vue à laquelle le rendu SVG a dessiné la scène, mise à jour à la fin de chaque geste pour
  * rester net.
  */
-export function MapViewport({ scene, engine, selected, onSelect, recenter }: MapViewportProps) {
+export function MapViewport({ scene, labels, engine, selected, onSelect, recenter }: MapViewportProps) {
   const [size, setSize] = useState<Size | null>(null);
   const fit = useMemo(() => (size ? fitView(scene, size) : null), [scene, size]);
   // Une vue enregistrée après un recentrage ou un changement de cadre est périmée.
@@ -76,14 +81,14 @@ export function MapViewport({ scene, engine, selected, onSelect, recenter }: Map
     const minScale = (fit?.scale ?? 1) * MIN_ZOOM;
     const maxScale = (fit?.scale ?? 1) * MAX_ZOOM;
 
-    // Garde le centre de l'écran sur la scène.
+    // L'écran reste couvert par le dessin ; s'il est plus petit, il est centré.
+    const limit = (t: number, lo: number, hi: number) => {
+      'worklet';
+      return lo > hi ? (lo + hi) / 2 : Math.min(Math.max(t, lo), hi);
+    };
     const clamp = (s: number, nx: number, ny: number) => {
       'worklet';
-      return {
-        s,
-        cx: Math.min(Math.max(nx, width / 2 - s * maxX), width / 2 - s * minX),
-        cy: Math.min(Math.max(ny, height / 2 - s * maxY), height / 2 - s * minY),
-      };
+      return { s, cx: limit(nx, width - s * maxX, -s * minX), cy: limit(ny, height - s * maxY, -s * minY) };
     };
     const zoomAround = (factor: number, fx: number, fy: number, from: SceneView) => {
       'worklet';
@@ -147,23 +152,120 @@ export function MapViewport({ scene, engine, selected, onSelect, recenter }: Map
   };
 
   return (
-    <GestureDetector gesture={gesture}>
-      <View style={styles.frame} onLayout={onLayout} collapsable={false}>
-        {size && drawn && (
-          <SceneRenderer
-            engine={engine}
-            scene={scene}
-            size={size}
-            view={{ scale, x, y }}
-            committed={drawn}
-            outline={selected ? scene.slots[selected].outline : null}
-          />
-        )}
-      </View>
-    </GestureDetector>
+    <View style={[styles.frame, { backgroundColor: scene.background }]}>
+      <GestureDetector gesture={gesture}>
+        <View style={styles.frame} onLayout={onLayout} collapsable={false}>
+          {size && drawn && (
+            <SceneRenderer
+              engine={engine}
+              scene={scene}
+              size={size}
+              view={{ scale, x, y }}
+              committed={drawn}
+              outline={selected ? scene.slots[selected].outline : null}
+            />
+          )}
+        </View>
+      </GestureDetector>
+      {fit && (
+        <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+          {(Object.entries(labels) as [SlotKey, string][]).map(([key, text]) => (
+            <MapLabel
+              key={key}
+              text={text}
+              anchor={scene.slots[key].anchor}
+              minScale={ZONE_SLOTS.includes(key) ? fit.scale * ZONE_LABEL_ZOOM : 0}
+              view={{ scale, x, y }}
+              selected={selected === key}
+              onPress={() => onSelect(key)}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const LABEL_WIDTH = 180;
+const LABEL_HEIGHT = 40;
+
+type MapLabelProps = {
+  text: string;
+  anchor: [number, number];
+  /** Échelle en dessous de laquelle l'étiquette est cachée. */
+  minScale: number;
+  view: SceneRendererProps['view'];
+  selected: boolean;
+  onPress: () => void;
+};
+
+/** Étiquette d'un emplacement, de taille fixe, dont la pointe suit la carte. */
+function MapLabel({ text, anchor, minScale, view, selected, onPress }: MapLabelProps) {
+  const styles = useLabelStyles();
+  const animatedStyle = useAnimatedStyle(() => {
+    const s = view.scale.get();
+    const shown = s >= minScale;
+    return {
+      opacity: shown ? 1 : 0,
+      transform: [
+        { translateX: anchor[0] * s + view.x.get() - LABEL_WIDTH / 2 },
+        { translateY: anchor[1] * s + view.y.get() - LABEL_HEIGHT },
+        { scale: shown ? 1 : 0 },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.label, animatedStyle]} pointerEvents="box-none">
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`Ouvrir ${text}`}
+        style={[styles.pill, selected && styles.pillSelected]}>
+        <Text style={[styles.text, selected && styles.textSelected]} numberOfLines={1}>
+          {text}
+        </Text>
+      </Pressable>
+      <View style={[styles.tip, selected && styles.tipSelected]} />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   frame: { flex: 1, overflow: 'hidden' },
 });
+
+const useLabelStyles = createStyles(({ colors, fonts, typography, spacing }) => ({
+  label: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: LABEL_WIDTH,
+    height: LABEL_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  pill: {
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  pillSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  text: { ...typography.caption, fontFamily: fonts.bodySemiBold, color: colors.text },
+  textSelected: { color: colors.primaryText },
+  tip: {
+    width: 8,
+    height: 8,
+    marginTop: -5,
+    marginBottom: 1,
+    transform: [{ rotate: '45deg' }],
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  tipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+}));

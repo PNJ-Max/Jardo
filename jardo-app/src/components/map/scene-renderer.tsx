@@ -1,7 +1,7 @@
 import type { SharedValue } from 'react-native-reanimated';
 
+import type { Scene } from '@/map/layouts';
 import type { Point } from '@/map/scene';
-import type { Scene } from '@/map/terraced-long';
 
 import { SkiaScene } from './skia-scene';
 import { SvgScene } from './svg-scene';

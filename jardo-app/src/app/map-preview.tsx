@@ -5,10 +5,24 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { MapViewport } from '@/components/map/map-viewport';
 import { ChipSelect } from '@/components/ui';
-import { terracedLongScene, type SlotKey } from '@/map/terraced-long';
+import type { SlotKey } from '@/map/layouts';
+import { terracedLongScene } from '@/map/terraced-long';
 import { createStyles, useTheme } from '@/theme';
 
 type Engine = 'svg' | 'skia';
+
+// Dans la carte v1, ce seront les noms des espaces et des zones affectés aux emplacements.
+const slotLabels: Record<SlotKey, string> = {
+  orchard: 'Verger',
+  'small-fruit': 'Petits fruits',
+  vegetable: 'Potager',
+  'bed-1': 'Carré 1',
+  'bed-2': 'Carré 2',
+  'bed-3': 'Carré 3',
+  'bed-4': 'Carré 4',
+  greenhouse: 'Serre',
+  firewood: 'Bois de chauffage',
+};
 
 const engineOptions: { value: Engine; label: string }[] = [
   { value: 'svg', label: 'SVG' },
@@ -41,7 +55,7 @@ export default function MapPreviewScreen() {
           <Ionicons name="scan-outline" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
-      <MapViewport scene={scene} engine={engine} selected={selected} onSelect={setSelected} recenter={recenter} />
+      <MapViewport scene={scene} labels={slotLabels} engine={engine} selected={selected} onSelect={setSelected} recenter={recenter} />
       <View style={styles.status} pointerEvents="none">
         <Text style={selected ? styles.key : styles.hint}>
           {selected ?? 'Touchez un emplacement. Pincez pour zoomer.'}
