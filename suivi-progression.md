@@ -12,6 +12,17 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (20/10/2026)
 
+**Premiers retours d'usage sur téléphone pris en compte.** Les fiches (espace, zone, plante, tas
+de bois) passent en onglets : l'en-tête (nom, type, informations clés) reste en place, et
+l'on choisit Tâches · Contenu (ou Plantes, Tas de bois) · Journal · Infos (détails, Modifier,
+Archiver, Supprimer). Les lignes de tâche sont plus basses, le bouton « Fait » garde une large
+zone de toucher. Sur la fiche d'une plante ou d'un tas, ses propres tâches viennent d'abord ;
+celles de sa zone et de son espace suivent, repliées, sous « Valent aussi pour cette plante »,
+avec leur nombre et ce qui presse. « Ajouter une tâche à cette plante » vise la plante. Sur un
+espace ou une zone, les tâches de leurs éléments sont repliées de la même façon. Vraie page
+Réglages (roue de l'en-tête du Jardin) : nom du jardin modifiable, thème, version de l'app.
+Vérifié en mode web avec l'API, en clair et en sombre ; pas encore sur téléphone.
+
 **Tests automatiques du front.** `npm --prefix jardo-app test` (jest-expo et React Native Testing
 Library, API simulée au niveau de `fetch`) couvre les dates et le vocabulaire du domaine, le client
 API, les écrans Aujourd'hui (sections, état vide, « Fait » optimiste et annulable) et Jardin
@@ -112,9 +123,10 @@ journal d'interventions, tâches). L'API l'implémente en entier, le front en a 
   espaces, zones, plantes, tas de bois, journal (filtres par cible et par type), tâches, tâches
   dues (aujourd'hui ou semaine) et « Fait ». Invalidations par famille : un « Fait » recharge
   tâches dues, journal, compteurs des espaces et stock des tas.
-- Écrans : onglets Jardin · Aujourd'hui · Journal (Ionicons contour), détails espace, zone,
-  plante, tas de bois (tâches avec « Fait », éléments groupés par zone, journal), formulaires
-  en modale. Les anciens écrans (À arroser · Zones · Plantes) sont supprimés.
+- Écrans : onglets Jardin · Aujourd'hui · Journal (Ionicons contour), fiches espace, zone,
+  plante, tas de bois en onglets (tâches avec « Fait », celles héritées ou contenues repliées,
+  éléments groupés par zone, journal, infos), formulaires en modale, page Réglages. Les anciens
+  écrans (À arroser · Zones · Plantes) sont supprimés.
 - Sélecteur de date `DateField` : calendrier natif d'Android (`@react-native-community/datetimepicker`,
   inclus dans Expo Go), `<input type="date">` sur le web, option « pas de date future ».
   Non testé sur téléphone.

@@ -5,6 +5,7 @@ import type {
   CompleteTaskInput,
   DueHorizon,
   Garden,
+  GardenInput,
   GardenTask,
   JournalEntry,
   JournalEntryInput,
@@ -80,6 +81,15 @@ const afterStructureWrite: Family[] = ['spaces', 'zones', 'plants', 'woodPiles',
 // --- Jardin et espaces --------------------------------------------------------
 
 export const useGarden = () => useQuery({ queryKey: keys.garden, queryFn: () => api<Garden>('/api/garden') });
+
+/** Seul le nom du jardin change, et l'API le renvoie : pas de relecture. */
+export function useSaveGarden() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: GardenInput) => api<Garden>('/api/garden', { method: 'PUT', body: input }),
+    onSuccess: (garden) => queryClient.setQueryData(keys.garden, garden),
+  });
+}
 
 export const useSpaces = (includeArchived = false) =>
   useQuery({

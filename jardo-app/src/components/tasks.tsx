@@ -82,9 +82,11 @@ type TaskRowProps = {
    * l'écran où préciser la date et une note.
    */
   onDone?: () => void;
+  /** Faux quand l'écran nomme déjà la cible : la fiche de l'élément, ou le groupe d'une zone. */
+  showTarget?: boolean;
 };
 
-export function TaskRow({ task, onPress, onDone }: TaskRowProps) {
+export function TaskRow({ task, onPress, onDone, showTarget = true }: TaskRowProps) {
   const { colors } = useTheme();
   const styles = useStyles();
   const title = taskTitle(task);
@@ -92,12 +94,20 @@ export function TaskRow({ task, onPress, onDone }: TaskRowProps) {
   return (
     <Card onPress={onPress} style={styles.row}>
       <View style={styles.icon}>
-        <Ionicons name={entryKinds[task.kind].icon} size={20} color={colors.primary} />
+        <Ionicons name={entryKinds[task.kind].icon} size={16} color={colors.primary} />
       </View>
       <View style={styles.body}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.target}>{targetLabel(task)}</Text>
-        <DueBadge task={task} />
+        <Text style={styles.title} numberOfLines={2}>
+          {title}
+        </Text>
+        <View style={styles.meta}>
+          <DueBadge task={task} />
+          {showTarget && (
+            <Text style={styles.target} numberOfLines={1}>
+              {targetLabel(task)}
+            </Text>
+          )}
+        </View>
       </View>
       {onDone && !task.isCompleted && (
         <Pressable
@@ -124,23 +134,25 @@ export function TaskRow({ task, onPress, onDone }: TaskRowProps) {
 }
 
 const useStyles = createStyles(({ colors, fonts, typography, spacing }) => ({
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm, paddingHorizontal: 12 },
   icon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.successTint,
   },
-  body: { flex: 1, gap: spacing.xs },
+  body: { flex: 1, gap: 2 },
   title: { ...typography.body, fontFamily: fonts.bodySemiBold, color: colors.text },
-  target: { ...typography.caption, color: colors.textMuted },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.sm, rowGap: 2 },
+  target: { ...typography.caption, color: colors.textMuted, flexShrink: 1 },
   done: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    minHeight: 44,
+    // 40 de haut, 56 au doigt avec le hitSlop : la ligne reste basse, la cible reste large.
+    minHeight: 40,
     paddingHorizontal: 12,
     borderRadius: 999,
     backgroundColor: colors.primary,

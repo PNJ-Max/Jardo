@@ -63,7 +63,7 @@ export default function RootLayout() {
             <Stack.Screen name="entry/form" options={{ presentation: 'modal', title: 'Intervention' }} />
             <Stack.Screen name="task/form" options={{ presentation: 'modal', title: 'Tâche' }} />
             <Stack.Screen name="task/done" options={{ presentation: 'modal', title: 'Fait' }} />
-            <Stack.Screen name="settings" options={{ presentation: 'modal', title: 'Réglages' }} />
+            <Stack.Screen name="settings" options={{ title: 'Réglages' }} />
           </Stack>
         </UndoProvider>
       </ThemeProvider>

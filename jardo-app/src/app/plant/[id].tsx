@@ -1,10 +1,10 @@
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Text, View } from 'react-native';
 
 import { useDeletePlant, usePlant, useSetPlantArchived } from '@/api/queries';
 import type { Plant } from '@/api/types';
 import { ArchivedBadge, plantQuantity } from '@/components/items';
-import { Fact, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
+import { DetailScreen, Fact, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
 import { ErrorView, Loading } from '@/components/ui';
 import { confirm, notify } from '@/lib/confirm';
 import { formatLongDate } from '@/lib/dates';
@@ -45,32 +45,45 @@ function PlantDetail({ plant }: { plant: Plant }) {
     }
   };
 
+  const keyFacts = [plant.species, plant.variety, plantQuantity(plant)].filter(Boolean).join(' · ');
+
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Stack.Screen options={{ title: plant.name }} />
-
-      <View style={styles.header}>
-        <Text style={styles.title}>{plant.name}</Text>
-        <Text style={styles.subtitle}>{[plant.zoneName, plant.spaceName].filter(Boolean).join(' · ')}</Text>
-        {plant.isArchived && <ArchivedBadge />}
-        <View style={styles.facts}>
-          <Fact label="Espèce" value={plant.species} />
-          <Fact label="Variété" value={plant.variety} />
-          <Fact label="Quantité" value={plantQuantity(plant)} />
-          <Fact label="Semis" value={plant.sownDate && formatLongDate(plant.sownDate)} />
-          <Fact label="Plantation" value={plant.plantedDate && formatLongDate(plant.plantedDate)} />
-        </View>
-      </View>
-
-      <TasksSection target={target} />
-      <JournalSection target={target} />
-
-      <ManageSection
-        onEdit={() => router.push({ pathname: '/plant/form', params: { id: String(plant.id) } })}
-        archive={{ archived: plant.isArchived, onToggle: toggleArchive, loading: archive.isPending }}
-        onDelete={deletePlant}
-        deleting={remove.isPending}
-      />
-    </ScrollView>
+    <DetailScreen
+      header={
+        <>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>{plant.name}</Text>
+            <Text style={styles.subtitle}>{[plant.zoneName, plant.spaceName].filter(Boolean).join(' · ')}</Text>
+          </View>
+          {keyFacts !== '' && <Text style={styles.fact}>{keyFacts}</Text>}
+          {plant.isArchived && <ArchivedBadge />}
+        </>
+      }
+      tabs={[
+        { key: 'tasks', label: 'Tâches', render: () => <TasksSection target={target} /> },
+        { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
+        {
+          key: 'info',
+          label: 'Infos',
+          render: () => (
+            <>
+              <View style={styles.facts}>
+                <Fact label="Espèce" value={plant.species} />
+                <Fact label="Variété" value={plant.variety} />
+                <Fact label="Quantité" value={plantQuantity(plant)} />
+                <Fact label="Semis" value={plant.sownDate && formatLongDate(plant.sownDate)} />
+                <Fact label="Plantation" value={plant.plantedDate && formatLongDate(plant.plantedDate)} />
+              </View>
+              <ManageSection
+                onEdit={() => router.push({ pathname: '/plant/form', params: { id: String(plant.id) } })}
+                archive={{ archived: plant.isArchived, onToggle: toggleArchive, loading: archive.isPending }}
+                onDelete={deletePlant}
+                deleting={remove.isPending}
+              />
+            </>
+          ),
+        },
+      ]}
+    />
   );
 }
