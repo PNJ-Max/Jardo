@@ -121,6 +121,33 @@ rien n'est exposé sur le réseau ; le profil de lancement `lan` ouvre l'API au 
   qu'au mode web : une app native n'est pas soumise à CORS.
 - Test sur téléphone et hébergement HTTPS : plus tard, depuis le PC perso (voir la roadmap).
 
+## Tests
+
+```bash
+npm --prefix jardo-app test              # tous les tests, une fois
+npx jest -t "Fait"                       # (dans jardo-app/) ceux dont le nom contient « Fait »
+npx jest --watch                         # (dans jardo-app/) relance à chaque changement
+```
+
+Jest avec le preset `jest-expo` et React Native Testing Library, comme le recommande la
+[doc Expo](https://docs.expo.dev/develop/unit-testing/). Les tests vivent dans
+`jardo-app/__tests__/` (jamais sous `src/app/`, où chaque fichier est une route), les aides
+dans `jardo-app/test/`.
+
+- **L'API est simulée au niveau de `fetch`** : `mockApi({ 'GET /api/tasks/due?horizon=Week': { body: [...] } })`
+  (`test/api.ts`). Le vrai client, les hooks TanStack Query et l'écran tournent ; une route non
+  déclarée fait échouer le test. Un handler peut être une fonction (réponse qui dépend de la
+  requête, ou promesse qu'on libère à la main pour observer l'écran pendant l'attente).
+  `problem(400, { Name: ['…'] })` fabrique une erreur de validation.
+- **`await renderScreen(<Ecran />)`** (`test/render.tsx`) monte l'écran avec un cache neuf et le
+  fournisseur d'« Annuler ». RNTL 14 est asynchrone : `await` sur `render` et `fireEvent`.
+- `test/fixtures.ts` : `space()`, `task()`, des DTO complets à surcharger.
+- `test/setup.ts` simule `expo-router` (`router.push` est un `jest.fn`), les marges de sécurité
+  et AsyncStorage.
+- On cherche par texte ou libellé d'accessibilité, comme l'utilisateur ; pas de test du rendu
+  exact des styles. Un module natif absent de Jest se simule dans le test qui en a besoin
+  (voir `date-field.test.tsx`).
+
 ## Hors périmètre du MVP
 
 Authentification, mode hors-ligne complet, iOS (possible plus tard avec le même code),

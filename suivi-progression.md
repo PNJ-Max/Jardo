@@ -12,6 +12,13 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (20/10/2026)
 
+**Tests automatiques du front.** `npm --prefix jardo-app test` (jest-expo et React Native Testing
+Library, API simulée au niveau de `fetch`) couvre les dates et le vocabulaire du domaine, le client
+API, les écrans Aujourd'hui (sections, état vide, « Fait » optimiste et annulable) et Jardin
+(espaces, pastille de tâches, archives), l'erreur de validation d'un formulaire sous son champ et
+le refus d'une date future par `DateField`. Lancés par le job Front de la CI. Comment en écrire :
+[docs/front-architecture.md](docs/front-architecture.md#tests).
+
 **MVP du front terminé.** Réglage d'apparence Système, Clair ou Sombre, mémorisé sur l'appareil
 (roue dans l'en-tête du Jardin). « Fait » s'annule pendant quelques secondes, ce qui supprime
 l'entrée notée ; un appui long sur « Fait » permet de préciser un jour passé et une note.
