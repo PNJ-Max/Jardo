@@ -227,7 +227,7 @@ public class WoodPileServiceTests : IDisposable
             ItemId = pile.Id
         });
 
-        var done = await taskService.CompleteAsync(task.Id, new CompleteTaskDto());
+        var done = (await taskService.CompleteAsync(task.Id, new CompleteTaskDto())).Task;
 
         Assert.Equal(DueStatus.Ok, done.Status);
         Assert.Null(done.NextDueDate);

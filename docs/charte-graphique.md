@@ -3,7 +3,7 @@
 Les jetons de couleur, de typographie, d'espacement et de rayon sont dans
 [`jardo-app/src/theme/`](../jardo-app/src/theme/index.ts). Aucun écran ne code de couleur en
 dur : tout passe par `useTheme()` ou `createStyles()`, qui suivent le mode clair / sombre du
-téléphone.
+téléphone, ou celui choisi dans les réglages de l'app.
 
 ## Intention
 
@@ -104,7 +104,8 @@ la silhouette doit rester lisible à 48 dp.
 
 ## Mode sombre
 
-L'app suit le réglage du téléphone (`userInterfaceStyle: "automatic"`). Contrastes mesurés
+L'app suit le réglage du téléphone (`userInterfaceStyle: "automatic"`), sauf si l'on choisit
+Clair ou Sombre dans ses réglages. Contrastes mesurés
 sur le fond et sur la carte. Les aplats (`primary`, `water`, `danger`) y sont clairs : le
 texte posé dessus est le fond sarcelle (`primaryText`), pas du blanc.
 

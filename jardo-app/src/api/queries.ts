@@ -13,6 +13,7 @@ import type {
   PlantInput,
   Space,
   SpaceInput,
+  TaskCompletion,
   TaskInput,
   WoodPile,
   WoodPileInput,
@@ -300,7 +301,8 @@ export function useDeleteTask() {
 /**
  * « Fait » note l'intervention au journal. La tâche quitte aussitôt les listes de tâches dues,
  * sans attendre l'API ; si elle refuse, les listes d'avant sont restaurées. Le rechargement qui
- * suit la replace là où sa nouvelle échéance la met (cette semaine, par exemple).
+ * suit la replace là où sa nouvelle échéance la met (cette semaine, par exemple). Supprimer
+ * l'entrée renvoyée annule le « Fait ».
  */
 export function useCompleteTask() {
   const queryClient = useQueryClient();
@@ -308,7 +310,7 @@ export function useCompleteTask() {
 
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input?: CompleteTaskInput }) =>
-      api<GardenTask>(`/api/tasks/${id}/done`, { method: 'POST', body: input ?? {} }),
+      api<TaskCompletion>(`/api/tasks/${id}/done`, { method: 'POST', body: input ?? {} }),
 
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: keys.dueTasks });

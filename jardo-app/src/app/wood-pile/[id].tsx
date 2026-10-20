@@ -28,6 +28,7 @@ function WoodPileDetail({ pile }: { pile: WoodPile }) {
     spaceId: pile.spaceId,
     zoneId: pile.zoneId,
     itemId: pile.id,
+    itemKind: 'WoodPile' as const,
     label: targetLabel({ itemName: pile.name, zoneName: pile.zoneName, spaceName: pile.spaceName }),
   };
 

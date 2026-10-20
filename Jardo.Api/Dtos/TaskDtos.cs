@@ -59,6 +59,16 @@ public class CompleteTaskDto
     public string? Note { get; set; }
 }
 
+/// <summary>Réponse de l'action « Fait ».</summary>
+public class TaskCompletionResponseDto
+{
+    /// <summary>La tâche, échéance recalculée.</summary>
+    public TaskResponseDto Task { get; set; } = null!;
+
+    /// <summary>L'entrée notée au journal : la supprimer annule le « Fait ».</summary>
+    public JournalEntryResponseDto Entry { get; set; } = null!;
+}
+
 /// <summary>Jusqu'où regarder les tâches dues.</summary>
 public enum DueHorizon
 {
@@ -89,6 +99,9 @@ public class TaskResponseDto
     public int? ItemId { get; set; }
 
     public string? ItemName { get; set; }
+
+    /// <summary>Plant ou WoodPile ; null sans élément visé.</summary>
+    public ItemKind? ItemKind { get; set; }
 
     // Échéance : recalculée à chaque lecture, jamais stockée.
 

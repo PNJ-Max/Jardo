@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text, View } from 'react-native';
 
 import type { Space, SpaceKind } from '@/api/types';
+import { ArchivedBadge } from '@/components/items';
 import { Badge, Card } from '@/components/ui';
 import { spaceKinds } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
@@ -40,7 +41,9 @@ export function SpaceRow({ space, onPress }: { space: Space; onPress: () => void
       <View style={styles.body}>
         <Text style={styles.name}>{space.name}</Text>
         <Text style={styles.contents}>{contents}</Text>
-        {space.dueTaskCount > 0 ? (
+        {space.isArchived ? (
+          <ArchivedBadge />
+        ) : space.dueTaskCount > 0 ? (
           <Badge
             {...due.DueSoon}
             icon="calendar-outline"

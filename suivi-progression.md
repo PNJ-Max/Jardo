@@ -12,6 +12,15 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (20/10/2026)
 
+**MVP du front terminé.** Réglage d'apparence Système, Clair ou Sombre, mémorisé sur l'appareil
+(roue dans l'en-tête du Jardin). « Fait » s'annule pendant quelques secondes, ce qui supprime
+l'entrée notée ; un appui long sur « Fait » permet de préciser un jour passé et une note.
+Journal filtrable par espace et par type. Espaces et éléments archivés visibles à la demande,
+puis désarchivables. Changement de type d'un espace et déplacement d'un élément vers une autre
+zone vérifiés, depuis les formulaires de modification. Types de tâche proposés selon la cible.
+L'API renvoie le type de l'élément ciblé (`itemKind`) avec les tâches et le journal, et « Fait »
+renvoie l'entrée notée. Vérifié en mode web avec l'API, en clair et en sombre.
+
 **Socle du nouveau front livré (B1).** L'app a changé de visage : trois onglets Jardin (accueil,
 liste des espaces avec leurs tâches dues) · Aujourd'hui (en retard, aujourd'hui, cette semaine,
 « Fait » optimiste, « Rien à faire aujourd'hui 🌱 ») · Journal (chronologie par jour). Détail
@@ -79,13 +88,16 @@ journal d'interventions, tâches). L'API l'implémente en entier, le front en a 
   compost annuel, traitement à renouveler, plantation faite ; les trois voyants y figurent. Trois tas
   de bois : un chêne sec en cours d'usage, un hêtre en séchage avec sa tâche « rentrer le bois », un
   bouleau épuisé et archivé.
+- Pour le front : `itemKind` (`Plant` ou `WoodPile`) dans les DTOs de tâche et de journal, et
+  « Fait » (`POST /api/tasks/{id}/done`) renvoie la tâche recalculée avec l'entrée notée, dont
+  la suppression annule le « Fait ». Le journal n'est pas paginé.
 - Contrat Swagger exact, pour générer les types du front : références non nulles, enums
   nullables, toutes les propriétés des réponses déclarées obligatoires
   (`ResponsePropertiesRequiredFilter`).
 - Commentaires pédagogiques retirés : seuls restent ceux qui expliquent une décision non
   évidente. README recentré sur le produit.
 
-**Front `jardo-app` : socle du nouveau modèle en place, écrans à enrichir.**
+**Front `jardo-app` : MVP en place sur le nouveau modèle.**
 - Expo SDK 57 (React Native + TypeScript), Expo Router, TanStack Query.
 - Contrats : types générés depuis le Swagger par `@hey-api/openapi-ts` (`openapi-typescript`
   exige TypeScript 5) dans `src/api/generated/`, régénérés par `npm run api:types`, API démarrée.
@@ -104,21 +116,18 @@ journal d'interventions, tâches). L'API l'implémente en entier, le front en a 
   en profite sans toucher aux écrans.
 - Icône et splash faits : pousse en pot sur fond crème, icône adaptative Android avec
   version monochrome, splash clair et sombre, favicon. Sources SVG dans `jardo-app/assets/source/`.
-- Fondations UI : thème clair / sombre qui suit le téléphone (`src/theme/`, `useTheme`,
-  `createStyles`), échelle typographique, composants de base
+- Fondations UI : thème clair / sombre qui suit le téléphone ou le choix fait dans les
+  réglages (`src/theme/`, `useTheme`, `createStyles`), échelle typographique, composants de base
   découpés dans `src/components/ui/`, dépendances inutiles du template retirées.
 - Maquettes v2 et Design System (Claude Design) antérieurs à la charte v2 : non validés. Boutons,
   icône, splash et « une interface plus vivante » sont repris en phase 6.
-- Restent à enrichir, écran par écran :
-  - Jardin : espaces archivés (affichage, désarchivage), puis la carte isométrique (phase 6) ;
-  - Aujourd'hui : choisir la date ou une note au moment du « Fait », annuler un « Fait » ;
-  - Journal : filtres par espace et par type (les hooks les acceptent déjà), pagination ;
-  - Espace : changer le type, déplacer un élément, voir les éléments archivés ;
-  - Zone et fiches : déplacer un élément d'espace ou de zone, archiver depuis la liste ;
-  - Formulaires : tâches proposées selon le type d'élément, contrôles locaux plus fins.
-  - L'API ne dit pas le type d'un élément ciblé par une tâche ou une entrée : le front le
-    déduit du type d'espace (bois de chauffage → tas de bois). Un `itemKind` dans les DTOs le
-    rendrait explicite.
+- Écrans du MVP faits ([`docs/front-ecrans.md`](docs/front-ecrans.md)). Restent :
+  - Jardin : la carte isométrique (phase 6) ;
+  - Journal : chargement progressif. L'API renvoie tout le journal d'un coup : il faudrait
+    d'abord une pagination côté API (un curseur sur la date et l'identifiant, par exemple) ;
+  - « Fait » précisé : l'appui long se découvre mal, à revoir avec la refonte du design ;
+  - Zone et fiches : déplacer un élément vers un autre espace, archiver depuis la liste ;
+  - Formulaires : contrôles locaux plus fins.
 - Pas de tests.
 
 **CI** : GitHub Actions (`.github/workflows/ci.yml`) sur chaque PR vers `main` et chaque push

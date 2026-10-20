@@ -6,9 +6,11 @@ import { StyleSheet, useColorScheme } from 'react-native';
 import type { DueStatus } from '@/api/types';
 
 import { palettes, type ColorScheme, type Colors } from './colors';
+import { useThemePreference } from './preference';
 import { fonts, typography } from './typography';
 
 export type { ColorScheme, Colors } from './colors';
+export { loadThemePreference, setThemePreference, useThemePreference, type ThemePreference } from './preference';
 export { fontAssets, fonts, typography } from './typography';
 
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24 };
@@ -75,9 +77,12 @@ const themes: Record<ColorScheme, Theme> = {
   dark: createTheme('dark'),
 };
 
-/** Le thème qui suit le réglage clair / sombre du téléphone. */
+/** Le thème choisi dans les réglages de l'app ; par défaut, celui du téléphone. */
 export function useTheme(): Theme {
-  return themes[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  const system = useColorScheme();
+  const preference = useThemePreference();
+  const scheme = preference === 'system' ? system : preference;
+  return themes[scheme === 'dark' ? 'dark' : 'light'];
 }
 
 /**

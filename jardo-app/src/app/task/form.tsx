@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 
 import { useDeleteTask, useSaveTask, useSpace, useTask } from '@/api/queries';
-import type { GardenTask, JournalEntryKind, Space, TaskRecurrence } from '@/api/types';
+import type { GardenTask, ItemKind, JournalEntryKind, Space, TaskRecurrence } from '@/api/types';
 import { FormTarget } from '@/components/form-target';
 import {
   apiFieldError,
@@ -21,7 +21,7 @@ import { today } from '@/lib/dates';
 import { entryKinds, recurrenceOptions, targetLabel, taskKindsFor } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
 
-type Target = { spaceId: number; zoneId: number | null; itemId: number | null; label: string };
+type Target = { spaceId: number; zoneId: number | null; itemId: number | null; itemKind: ItemKind | null; label: string };
 
 const startDateLabels: Record<TaskRecurrence, string> = {
   EveryNDays: 'Première échéance',
@@ -31,11 +31,18 @@ const startDateLabels: Record<TaskRecurrence, string> = {
 
 /**
  * Créer ou modifier une tâche. La cible vient de l'écran d'où l'on arrive.
- *   /task/form?spaceId=1&itemId=7&label=…   → nouvelle tâche
- *   /task/form?id=4                         → modification
+ *   /task/form?spaceId=1&itemId=7&itemKind=Plant&label=…   → nouvelle tâche
+ *   /task/form?id=4                                        → modification
  */
 export default function TaskFormScreen() {
-  const params = useLocalSearchParams<{ id?: string; spaceId?: string; zoneId?: string; itemId?: string; label?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    spaceId?: string;
+    zoneId?: string;
+    itemId?: string;
+    itemKind?: ItemKind;
+    label?: string;
+  }>();
 
   if (params.id) return <EditTask id={Number(params.id)} />;
   return (
@@ -44,6 +51,7 @@ export default function TaskFormScreen() {
         spaceId: Number(params.spaceId),
         zoneId: params.zoneId ? Number(params.zoneId) : null,
         itemId: params.itemId ? Number(params.itemId) : null,
+        itemKind: params.itemKind ?? null,
         label: params.label ?? '',
       }}
     />
@@ -57,7 +65,7 @@ function EditTask({ id }: { id: number }) {
   return <TaskFormInSpace task={task.data} target={{ ...task.data, label: targetLabel(task.data) }} />;
 }
 
-/** Les types de tâche proposés dépendent du type d'espace. */
+/** Les types de tâche proposés dépendent de la cible : son élément, sinon son espace. */
 function TaskFormInSpace({ task, target }: { task?: GardenTask; target: Target }) {
   const space = useSpace(target.spaceId);
   if (space.isPending) return <Loading />;
@@ -113,7 +121,7 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
       {target.label ? <FormTarget label={target.label} /> : null}
       <ChipSelect
         label="À faire"
-        options={taskKindsFor(space.kind).map((value) => ({ value, label: entryKinds[value].verb }))}
+        options={taskKindsFor(space.kind, target.itemKind).map((value) => ({ value, label: entryKinds[value].verb }))}
         value={kind}
         onChange={setKind}
         error={apiFieldError(save.error, 'kind')}

@@ -36,7 +36,8 @@ public class JournalService : IJournalService
             ZoneId = entry.ZoneId,
             ZoneName = entry.Zone == null ? null : entry.Zone.Name,
             ItemId = entry.ItemId,
-            ItemName = entry.Item == null ? null : entry.Item.Name
+            ItemName = entry.Item == null ? null : entry.Item.Name,
+            ItemKind = entry.Item == null ? null : entry.Item is WoodPile ? ItemKind.WoodPile : ItemKind.Plant
         });
 
     public async Task<List<JournalEntryResponseDto>> GetAllAsync(

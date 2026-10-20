@@ -400,7 +400,7 @@ Content-Type: application/json
 }
 
 ### Fait : note l'intervention au journal aujourd'hui, sur la cible de la tache,
-### et renvoie la tache recalculee. Corps vide = aujourd'hui, c'est le cas normal.
+### et renvoie la tache recalculee avec l'entree notee (la supprimer annule le Fait). Corps vide = aujourd'hui, c'est le cas normal.
 POST {{host}}/api/tasks/1/done
 Content-Type: application/json
 

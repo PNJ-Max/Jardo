@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { usePlants, useWoodPiles } from '@/api/queries';
@@ -22,7 +22,7 @@ export function ItemsSection({ scope, zones }: { scope: Scope; zones?: Zone[] })
   );
 }
 
-type Groupable = { id: number; zoneId: number | null };
+type Groupable = { id: number; zoneId: number | null; isArchived: boolean };
 
 /** Dans l'ordre des zones, puis les éléments sans zone. Sans zones, un seul groupe sans titre. */
 function groupByZone<T extends Groupable>(items: T[], zones: Zone[] | undefined) {
@@ -34,12 +34,17 @@ function groupByZone<T extends Groupable>(items: T[], zones: Zone[] | undefined)
   ].filter((group) => group.items.length > 0);
 }
 
+/** Archivés compris : la section les montre à la demande, et un espace archivé garde ses éléments. */
+function itemFilter({ spaceId, zoneId }: Scope) {
+  return zoneId ? { zoneId, includeArchived: true } : { spaceId, includeArchived: true };
+}
+
 function addParams({ spaceId, zoneId }: Scope) {
   return { spaceId: String(spaceId), ...(zoneId ? { zoneId: String(zoneId) } : {}) };
 }
 
 function PlantsSection({ scope, zones }: { scope: Scope; zones?: Zone[] }) {
-  const plants = usePlants(scope.zoneId ? { zoneId: scope.zoneId } : { spaceId: scope.spaceId });
+  const plants = usePlants(itemFilter(scope));
 
   return (
     <Groups
@@ -55,7 +60,7 @@ function PlantsSection({ scope, zones }: { scope: Scope; zones?: Zone[] }) {
 }
 
 function WoodPilesSection({ scope, zones }: { scope: Scope; zones?: Zone[] }) {
-  const piles = useWoodPiles(scope.zoneId ? { zoneId: scope.zoneId } : { spaceId: scope.spaceId });
+  const piles = useWoodPiles(itemFilter(scope));
 
   return (
     <Groups
@@ -83,6 +88,9 @@ type GroupsProps<T extends Groupable> = {
 function Groups<T extends Groupable>({ title, query, zones, emptyText, renderItem, addTitle, onAdd }: GroupsProps<T>) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const [showArchived, setShowArchived] = useState(false);
+  const archivedCount = query.data?.filter((item) => item.isArchived).length ?? 0;
+  const shown = showArchived ? query.data : query.data?.filter((item) => !item.isArchived);
 
   return (
     <View style={styles.section}>
@@ -91,15 +99,23 @@ function Groups<T extends Groupable>({ title, query, zones, emptyText, renderIte
         <ActivityIndicator color={colors.primary} />
       ) : query.error ? (
         <Text style={styles.error}>{query.error.message}</Text>
-      ) : !query.data?.length ? (
+      ) : !shown?.length ? (
         <Text style={styles.empty}>{emptyText}</Text>
       ) : (
-        groupByZone(query.data, zones).map((group) => (
+        groupByZone(shown, zones).map((group) => (
           <View key={group.title ?? 'all'} style={styles.group}>
             {group.title && <Text style={styles.groupTitle}>{group.title}</Text>}
             {group.items.map(renderItem)}
           </View>
         ))
+      )}
+      {archivedCount > 0 && (
+        <Button
+          title={showArchived ? 'Masquer les archivés' : `Voir les archivés (${archivedCount})`}
+          icon="archive-outline"
+          variant="secondary"
+          onPress={() => setShowArchived(!showArchived)}
+        />
       )}
       <Button title={addTitle} icon="add" variant="secondary" onPress={onAdd} />
     </View>

@@ -105,17 +105,18 @@ public class TasksController : ControllerBase
     }
 
     /// <summary>
-    /// « Fait » : note l'intervention au journal et renvoie la tâche recalculée.
+    /// « Fait » : note l'intervention au journal et renvoie la tâche recalculée, avec l'entrée notée.
     /// </summary>
     /// <remarks>
     /// Le corps est optionnel : « {} » note l'intervention à la date du jour, avec le titre de la
-    /// tâche pour note. Une date passée est acceptée, une date future est refusée.
+    /// tâche pour note. Une date passée est acceptée, une date future est refusée. Supprimer l'entrée
+    /// renvoyée annule le « Fait ».
     /// </remarks>
     [HttpPost("{id:int}/done")]
-    [ProducesResponseType<TaskResponseDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<TaskCompletionResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TaskResponseDto>> CompleteTask(
+    public async Task<ActionResult<TaskCompletionResponseDto>> CompleteTask(
         int id,
         CompleteTaskDto dto,
         CancellationToken cancellationToken)

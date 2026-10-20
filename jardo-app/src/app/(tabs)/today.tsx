@@ -2,12 +2,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { SectionList, Text } from 'react-native';
 
-import { useCompleteTask, useDueTasks } from '@/api/queries';
-import type { GardenTask } from '@/api/types';
-import { TaskRow } from '@/components/tasks';
+import { useDueTasks } from '@/api/queries';
+import { TaskRow, useMarkDone } from '@/components/tasks';
 import { Card, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
-import { notify } from '@/lib/confirm';
-import { useTargetHref } from '@/lib/navigation';
+import { targetHref } from '@/lib/garden';
 import { usePullToRefresh } from '@/lib/refresh';
 import { createStyles, useTheme } from '@/theme';
 
@@ -17,8 +15,7 @@ import { createStyles, useTheme } from '@/theme';
  */
 export default function TodayScreen() {
   const { data, error, isPending, refetch } = useDueTasks('Week');
-  const complete = useCompleteTask();
-  const targetHref = useTargetHref();
+  const { markDone } = useMarkDone();
   const refresh = usePullToRefresh(refetch);
 
   if (isPending) return <Loading />;
@@ -30,9 +27,6 @@ export default function TodayScreen() {
     { title: 'Cette semaine', data: data.filter((task) => task.status === 'Ok') },
   ].filter((section) => section.data.length > 0);
   const nothingToday = !data.some((task) => task.status !== 'Ok');
-
-  const markDone = (task: GardenTask) =>
-    complete.mutate({ id: task.id }, { onError: (e) => notify("La tâche n'a pas été notée", e.message) });
 
   return (
     <SectionList

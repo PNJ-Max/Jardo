@@ -76,4 +76,7 @@ public class JournalEntryResponseDto
     public int? ItemId { get; set; }
 
     public string? ItemName { get; set; }
+
+    /// <summary>Plant ou WoodPile ; null sans élément visé.</summary>
+    public ItemKind? ItemKind { get; set; }
 }

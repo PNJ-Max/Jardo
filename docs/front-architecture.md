@@ -35,7 +35,8 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Client API | `fetch` + types générés depuis le Swagger de l'API par `@hey-api/openapi-ts` | Contrat toujours aligné sur l'API ; `openapi-typescript` exige TypeScript 5, `@hey-api/openapi-ts` accepte TypeScript 6 |
 | Formulaires | `useState` + validation légère, erreurs de l'API sous les champs | Suffisant pour six formulaires simples |
 | Dates | `@react-native-community/datetimepicker` sur Android, `<input type="date">` sur le web | Recommandé par Expo et inclus dans Expo Go ; le module n'existe pas sur le web |
-| Style | `StyleSheet` + `src/theme/` (`useTheme`, `createStyles`) | Aucune dépendance ; suit le mode clair / sombre du téléphone ; jetons décrits dans la [charte graphique](charte-graphique.md) |
+| Style | `StyleSheet` + `src/theme/` (`useTheme`, `createStyles`) | Aucune dépendance ; suit le mode clair / sombre du téléphone, ou celui choisi dans les réglages ; jetons décrits dans la [charte graphique](charte-graphique.md) |
+| Réglages sur l'appareil | `@react-native-async-storage/async-storage` | Inclus dans Expo Go ; `localStorage` sur le web. Ne garde que l'apparence choisie |
 | Polices | `@expo-google-fonts/nunito` + `expo-font` | Chargée au démarrage, écran de démarrage maintenu jusque-là |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
 | Notifications (plus tard) | `expo-notifications` | Rappel d'arrosage local |
@@ -56,8 +57,10 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   ├── zone/[id].tsx         détail d'une zone
 │   ├── plant/[id].tsx        fiche plante
 │   ├── wood-pile/[id].tsx    fiche tas de bois
-│   └── */form.tsx            formulaires en modale : space, zone, plant, wood-pile,
-│                             entry (intervention), task ; ?id= pour modifier
+│   ├── */form.tsx            formulaires en modale : space, zone, plant, wood-pile,
+│   │                         entry (intervention), task ; ?id= pour modifier
+│   ├── task/done.tsx         « Fait » en précisant le jour et une note (appui long)
+│   └── settings.tsx          réglages : apparence Système, Clair ou Sombre
 ├── src/api/
 │   ├── generated/            types générés depuis le Swagger (ne pas modifier)
 │   ├── types.ts              noms courts des contrats (Space, GardenTask…)
@@ -66,7 +69,8 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 ├── src/components/ui/        briques de base (boutons, carte, champs, date, pastille, états)
 ├── src/components/           lignes et sections métier (tâche, intervention, espace, élément)
 ├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation
-├── src/theme/                palettes clair / sombre, typographie, useTheme, createStyles
+├── src/theme/                palettes clair / sombre, typographie, useTheme, createStyles,
+│                             apparence choisie (preference.ts)
 └── app.json                  configuration Expo
 ```
 
@@ -93,7 +97,9 @@ des réponses toujours présentes via `ResponsePropertiesRequiredFilter`).
 - **Dates.** Les dates du jardin sont des `DateOnly` : on les manipule en chaîne `YYYY-MM-DD`,
   sans conversion de fuseau. Le champ de date (`DateField`) peut interdire les jours futurs.
 - **Mise à jour optimiste** pour « Fait » : la tâche quitte les listes de tâches dues aussitôt,
-  et revient si l'API refuse.
+  et revient si l'API refuse. L'API renvoie l'entrée notée ; « Annuler » la supprime.
+- **La fiche d'un élément** s'ouvre selon le `itemKind` (`Plant`, `WoodPile`) que l'API renvoie
+  avec les tâches et le journal.
 - **Invalidations par famille de ressources.** Une intervention ou un « Fait » recharge le
   journal, les tâches, les compteurs des espaces et les tas de bois ; une tâche, les tâches et
   les espaces ; un espace, une zone ou un élément, tout le jardin (`src/api/queries.ts`).
