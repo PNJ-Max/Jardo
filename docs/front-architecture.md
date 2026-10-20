@@ -103,11 +103,14 @@ des réponses toujours présentes via `ResponsePropertiesRequiredFilter`).
 
 ## Connexion à l'API
 
-**Pour l'instant, tout tourne en local sur le PC** : l'app en mode web dans le navigateur
-(`npm run web`, port 8081), l'API sur `http://localhost:5015`. Rien n'est exposé sur le réseau.
+**Pour l'instant, tout tourne sur le PC** : l'app en mode web dans le navigateur
+(`npm run web`, port 8081) ou sur un téléphone via Expo Go, l'API sur le port 5015. Par défaut
+rien n'est exposé sur le réseau ; le profil de lancement `lan` ouvre l'API au Wi-Fi local
+(voir [Tester sur téléphone](../jardo-app/README.md#tester-sur-téléphone)).
 
-- L'URL de l'API vaut `http://localhost:5015` par défaut, et peut être changée avec
-  `EXPO_PUBLIC_API_URL` dans un fichier `jardo-app/.env.local`.
+- L'URL de l'API est résolue dans `src/api/client.ts` : `EXPO_PUBLIC_API_URL` si elle est
+  définie (`jardo-app/.env.local`), sinon, sur mobile, l'hôte du serveur Metro
+  (`Constants.expoConfig.hostUri`) sur le port 5015, sinon `http://localhost:5015` (web).
 - La politique CORS `FrontDev` de `Program.cs` autorise `http://localhost:8081`. Elle ne sert
   qu'au mode web : une app native n'est pas soumise à CORS.
 - Test sur téléphone et hébergement HTTPS : plus tard, depuis le PC perso (voir la roadmap).

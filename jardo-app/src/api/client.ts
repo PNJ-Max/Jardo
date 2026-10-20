@@ -1,9 +1,23 @@
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+
 import type { ProblemDetails } from './types';
 
-// En local, l'API tourne sur le même PC. On peut surcharger l'URL avec un fichier
-// .env.local contenant EXPO_PUBLIC_API_URL=... (le préfixe EXPO_PUBLIC_ est ce qui
-// rend la variable lisible côté app).
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5015';
+const API_PORT = 5015;
+
+// Ordre de priorité : EXPO_PUBLIC_API_URL (surcharge explicite, par exemple dans .env.local ;
+// le préfixe EXPO_PUBLIC_ la rend lisible côté app), puis l'hôte du serveur Metro sur mobile
+// (le PC qui fait aussi tourner l'API), sinon localhost. hostUri n'est renseigné qu'en
+// développement, au format "hôte:port".
+function resolveApiUrl(): string {
+  const override = process.env.EXPO_PUBLIC_API_URL;
+  if (override) return override;
+
+  const metroHost = Platform.OS === 'web' ? undefined : Constants.expoConfig?.hostUri?.split(':')[0];
+  return `http://${metroHost ?? 'localhost'}:${API_PORT}`;
+}
+
+const API_URL = resolveApiUrl();
 
 /**
  * Erreur levée pour toute réponse non 2xx. Elle transporte le ProblemDetails pour que
