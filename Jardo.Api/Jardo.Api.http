@@ -17,6 +17,40 @@ Content-Type: application/json
 }
 
 ### ==========================================================================
+### CARTE DU JARDIN (modele de scene "terraced-long")
+### Emplacements : orchard, small-fruit, vegetable, bed-1 a bed-4, greenhouse, firewood
+### ==========================================================================
+
+### La carte : le modele et les emplacements occupes (le seed affecte les espaces 1 a 5)
+GET {{host}}/api/garden/map
+Accept: application/json
+
+### Remplacer la carte : tout ce qui n'est pas liste est libere
+### (potager 1 et ses carres 1 et 2, verger 2, serre 5)
+PUT {{host}}/api/garden/map
+Content-Type: application/json
+
+{
+  "layout": "terraced-long",
+  "slots": [
+    { "slotKey": "vegetable", "spaceId": 1 },
+    { "slotKey": "bed-1", "spaceId": 1, "zoneId": 1 },
+    { "slotKey": "bed-2", "spaceId": 1, "zoneId": 2 },
+    { "slotKey": "orchard", "spaceId": 2 },
+    { "slotKey": "greenhouse", "spaceId": 5 }
+  ]
+}
+
+### Retirer la carte (le front retombe sur la liste des espaces)
+PUT {{host}}/api/garden/map
+Content-Type: application/json
+
+{
+  "layout": null,
+  "slots": []
+}
+
+### ==========================================================================
 ### ESPACES
 ### ==========================================================================
 
@@ -802,3 +836,30 @@ GET {{host}}/api/journal?spaceId=1&zoneId=2
 
 ### 404 : journal d'un element inexistant
 GET {{host}}/api/journal?itemId=9999
+
+### 400 : carte, espace d'un autre type que l'emplacement (espace 3 = petits fruits)
+PUT {{host}}/api/garden/map
+Content-Type: application/json
+
+{
+  "layout": "terraced-long",
+  "slots": [ { "slotKey": "orchard", "spaceId": 3 } ]
+}
+
+### 400 : carte, zone d'un autre espace (zone 5 = rang des petits fruits)
+PUT {{host}}/api/garden/map
+Content-Type: application/json
+
+{
+  "layout": "terraced-long",
+  "slots": [ { "slotKey": "bed-1", "spaceId": 1, "zoneId": 5 } ]
+}
+
+### 400 : carte, emplacement inconnu du modele
+PUT {{host}}/api/garden/map
+Content-Type: application/json
+
+{
+  "layout": "terraced-long",
+  "slots": [ { "slotKey": "bed-5", "spaceId": 1, "zoneId": 1 } ]
+}
