@@ -31,6 +31,32 @@ export type DueHorizon = 'Today' | 'Week';
 export type DueStatus = 'Ok' | 'DueSoon' | 'Overdue';
 
 /**
+ * La carte du jardin : de quoi la dessiner en un appel.
+ */
+export type GardenMapResponseDto = {
+    /**
+     * Clé du modèle de carte. Null tant que la carte n'est pas configurée.
+     */
+    layout: string | null;
+    slots: Array<GardenMapSlotResponseDto>;
+};
+
+/**
+ * Un emplacement occupé. Les emplacements libres du modèle n'y figurent pas.
+ */
+export type GardenMapSlotResponseDto = {
+    slotKey: string;
+    spaceId: number;
+    spaceName: string;
+    /**
+     * Le type d'un espace. Il décide de ce qu'on peut y ajouter.
+     */
+    spaceKind: SpaceKind;
+    zoneId: number | null;
+    zoneName: string | null;
+};
+
+/**
  * Le jardin tel que renvoyé par l'API.
  */
 export type GardenResponseDto = {
@@ -123,6 +149,30 @@ export type ProblemDetails = {
  * Unité de la quantité d'une plante.
  */
 export type QuantityUnit = 'Plants' | 'Rows' | 'SquareMeters';
+
+/**
+ * Corps de requête pour remplacer la carte du jardin : le modèle et toutes les affectations.
+ * Ce qui n'est pas listé est libéré.
+ */
+export type SaveGardenMapDto = {
+    /**
+     * Clé du modèle de carte, par exemple « terraced-long ». Null pour retirer la carte.
+     */
+    layout?: string | null;
+    slots: Array<SaveGardenMapSlotDto>;
+};
+
+/**
+ * Une affectation de la carte : l'espace, ou la zone d'un espace, posé sur un emplacement.
+ */
+export type SaveGardenMapSlotDto = {
+    slotKey: string;
+    spaceId?: number;
+    /**
+     * Obligatoire pour un emplacement de carré du potager, interdite pour les autres.
+     */
+    zoneId?: number | null;
+};
 
 /**
  * Corps de requête pour noter ou corriger une intervention. La cible est un espace, et
@@ -530,6 +580,51 @@ export type PutApiGardenResponses = {
 };
 
 export type PutApiGardenResponse = PutApiGardenResponses[keyof PutApiGardenResponses];
+
+export type GetApiGardenMapData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/garden/map';
+};
+
+export type GetApiGardenMapResponses = {
+    /**
+     * OK
+     */
+    200: GardenMapResponseDto;
+};
+
+export type GetApiGardenMapResponse = GetApiGardenMapResponses[keyof GetApiGardenMapResponses];
+
+export type PutApiGardenMapData = {
+    /**
+     * Corps de requête pour remplacer la carte du jardin : le modèle et toutes les affectations.
+     * Ce qui n'est pas listé est libéré.
+     */
+    body?: SaveGardenMapDto;
+    path?: never;
+    query?: never;
+    url: '/api/garden/map';
+};
+
+export type PutApiGardenMapErrors = {
+    /**
+     * Bad Request
+     */
+    400: ValidationProblemDetails;
+};
+
+export type PutApiGardenMapError = PutApiGardenMapErrors[keyof PutApiGardenMapErrors];
+
+export type PutApiGardenMapResponses = {
+    /**
+     * OK
+     */
+    200: GardenMapResponseDto;
+};
+
+export type PutApiGardenMapResponse = PutApiGardenMapResponses[keyof PutApiGardenMapResponses];
 
 export type GetApiJournalData = {
     body?: never;

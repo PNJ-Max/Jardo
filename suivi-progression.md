@@ -10,7 +10,18 @@ une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce q
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (20/10/2026)
+## Où on en est (21/10/2026)
+
+**Carte du jardin, étape 2 : l'API.** `GET` et `PUT /api/garden/map` (le `PUT` remplace le modèle
+et les affectations en une transaction), `Garden.MapLayout` et la table `GardenMapSlot`
+(migration `AddGardenMap`), catalogue `GardenLayouts` avec le modèle `terraced-long` et ses clés
+d'emplacement (`orchard`, `small-fruit`, `vegetable`, `bed-1` à `bed-4`, `greenhouse`,
+`firewood`). Le jardin d'exemple est posé sur la carte. Un espace archivé ou dont le type change
+quitte la carte. Types du front régénérés ; reste à écrire le hook `useGardenMap()` (étape 4).
+Choix de détail : [étude, « Tranché à l'étape 2 »](docs/etude-carte-potager.md#tranché-à-létape-2-api).
+Il faut recréer la base de dev (aucune donnée réelle).
+
+### Avant, le 20/10/2026
 
 **Premiers retours d'usage sur téléphone pris en compte.** Les fiches (espace, zone, plante, tas
 de bois) passent en onglets : l'en-tête (nom, type, informations clés) reste en place, et

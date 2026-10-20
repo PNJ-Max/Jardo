@@ -160,6 +160,28 @@ table.
 - Tests xUnit : clé inconnue, cible incompatible, zone d'un autre espace, emplacement déjà
   pris, cascade.
 
+### Tranché à l'étape 2 (API)
+
+Livré dans `GardenLayouts`, `GardenMapService` et `GardenMapController` ; clés d'emplacement
+inchangées.
+
+- **Contrat.** `GET` et `PUT /api/garden/map` renvoient le même corps. Les emplacements libres ne
+  figurent pas dans `slots`, triés par clé : le front connaît ceux du modèle. Le `PUT` prend
+  `{ layout, slots: [{ slotKey, spaceId, zoneId? }] }` ; un carré porte l'espace potager **et** sa
+  zone. `layout: null` avec aucun emplacement retire la carte.
+- **« Emplacement déjà pris ».** Le `PUT` remplaçant tout, la règle devient : une clé n'apparaît
+  qu'une fois dans la requête. S'y ajoute : un espace ou une zone n'a qu'un emplacement (le
+  potager peut occuper `vegetable`, et chacun de ses carrés un `bed-n`, mais pas deux `bed-n`).
+- **Espaces archivés.** Un espace archivé ne se pose pas sur la carte, et l'archiver le libère
+  (il passe en « Hors carte »). Le réactiver ne le remet pas en place.
+- **Changement de type.** Changer le type d'un espace le libère aussi, puisque son emplacement ne
+  l'accepte plus. Aucun refus : le front n'a pas encore d'écran pour réorganiser la carte.
+- **Erreurs.** Toutes en 400 (`BusinessRuleException`), y compris un espace ou une zone du corps
+  qui n'existe pas, comme pour les plantes.
+- **Seeder.** Le jardin d'exemple prend le modèle `terraced-long` : Potager (`vegetable`) et ses
+  quatre carrés (`bed-1` à `bed-4`), Verger, Petits fruits, Serre et Bois de chauffage. La serre
+  tunnel archivée reste hors carte.
+
 ## Étapes livrables
 
 Prérequis : l'étape 1 du [modèle du domaine](modele-domaine.md#stratégie-de-migration) (jardin,

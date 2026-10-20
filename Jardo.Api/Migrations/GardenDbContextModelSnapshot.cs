@@ -26,6 +26,10 @@ namespace Jardo.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("MapLayout")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -83,6 +87,38 @@ namespace Jardo.Api.Migrations
                     b.HasDiscriminator<string>("ItemType").HasValue("GardenItem");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("Jardo.Api.Models.GardenMapSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GardenId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SlotKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SpaceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ZoneId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpaceId");
+
+                    b.HasIndex("ZoneId");
+
+                    b.HasIndex("GardenId", "SlotKey")
+                        .IsUnique();
+
+                    b.ToTable("GardenMapSlots");
                 });
 
             modelBuilder.Entity("Jardo.Api.Models.GardenTask", b =>
@@ -330,6 +366,32 @@ namespace Jardo.Api.Migrations
                     b.Navigation("Zone");
                 });
 
+            modelBuilder.Entity("Jardo.Api.Models.GardenMapSlot", b =>
+                {
+                    b.HasOne("Jardo.Api.Models.Garden", "Garden")
+                        .WithMany("MapSlots")
+                        .HasForeignKey("GardenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Jardo.Api.Models.Space", "Space")
+                        .WithMany()
+                        .HasForeignKey("SpaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Jardo.Api.Models.Zone", "Zone")
+                        .WithMany()
+                        .HasForeignKey("ZoneId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Garden");
+
+                    b.Navigation("Space");
+
+                    b.Navigation("Zone");
+                });
+
             modelBuilder.Entity("Jardo.Api.Models.GardenTask", b =>
                 {
                     b.HasOne("Jardo.Api.Models.GardenItem", "Item")
@@ -404,6 +466,8 @@ namespace Jardo.Api.Migrations
 
             modelBuilder.Entity("Jardo.Api.Models.Garden", b =>
                 {
+                    b.Navigation("MapSlots");
+
                     b.Navigation("Spaces");
                 });
 

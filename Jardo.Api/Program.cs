@@ -21,6 +21,7 @@ builder.Services.AddDbContext<GardenDbContext>(options =>
 builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddScoped<IGardenService, GardenService>();
+builder.Services.AddScoped<IGardenMapService, GardenMapService>();
 builder.Services.AddScoped<ISpaceService, SpaceService>();
 builder.Services.AddScoped<IZoneService, ZoneService>();
 builder.Services.AddScoped<IPlantService, PlantService>();
