@@ -24,6 +24,19 @@ Skia n'apportant rien de décisif (fluidité à confirmer sur téléphone à l'�
 modification de l'API ; la clé `country-house` reste à ajouter au catalogue `GardenLayouts`.
 Vérifié en mode web, vue mobile, en clair et en sombre ; pas encore sur téléphone.
 
+**Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
+L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
+
+- [x] 1. Domaine pur en TypeScript (22/10/2026) : `jardo-app/src/domain/` porte
+  `DueDateCalculator`, `WoodPileCalculator`, `LatestInterventions` et le vocabulaire des types,
+  avec les cas des tests C# en Jest. Pas encore branché ([détail](docs/front-architecture.md#domaine-srcdomain)).
+- [ ] 2. Socle SQLite
+- [ ] 3. Services locaux : jardin, carte, espaces, zones, plantes
+- [ ] 4. Services locaux : journal, tâches, tas de bois
+- [ ] 5. Bascule des écrans
+- [ ] 6. Retrait de l'API .NET
+- [ ] 7. Sauvegarde
+
 ### Avant, le 21/10/2026
 
 **Architecture des données tranchée : local d'abord.** Les données vivront sur le téléphone, dans
