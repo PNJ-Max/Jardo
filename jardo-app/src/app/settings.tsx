@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
@@ -41,6 +42,16 @@ export default function SettingsScreen() {
           value={preference}
           onChange={setThemePreference}
           hint="« Système » suit le mode clair ou sombre du téléphone."
+        />
+      </View>
+
+      <View style={styles.section}>
+        <SectionTitle>Carte du jardin</SectionTitle>
+        <Button
+          title="Aperçu de la carte"
+          icon="map-outline"
+          variant="secondary"
+          onPress={() => router.push('/map-preview')}
         />
       </View>
 
