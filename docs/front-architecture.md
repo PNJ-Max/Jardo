@@ -165,6 +165,44 @@ et une base migrée par une autre branche peut être plus récente que l'app. Su
 de développement → Application → Stockage → « Effacer les données du site » pour
 `localhost:8081`. Dans Expo Go : vider les données d'Expo Go (paramètres Android de l'app).
 
+### Services locaux
+
+Étape 3 de la même migration : un module par ressource, qui reprend les règles du service .NET du
+même nom. **Aucun écran ne les appelle encore** (étape 5).
+
+| Module | Équivalent .NET |
+|---|---|
+| `garden.ts` | `GardenService` |
+| `garden-map.ts`, `garden-layouts.ts` | `GardenMapService`, `GardenLayouts` |
+| `spaces.ts` | `SpaceService` |
+| `zones.ts` | `ZoneService` |
+| `plants.ts` | `PlantService` |
+| `item-placement.ts` | `ItemPlacement` (partagé avec les tas de bois, étape 4) |
+| `task-queries.ts` | la part de `TaskQueries` dont `SpaceService` a besoin : le compte des tâches dues |
+
+- **Une fabrique par service**, comme le constructeur d'une classe : `createSpaceService(db, clock)`
+  rend l'objet qui porte `getAll`, `getById`, `create`, `update`, `setArchived`, `delete`, les
+  mêmes noms que l'interface C#. `Clock` (`clock.ts`, une fonction qui rend un `Date`) tient la
+  place de `TimeProvider`.
+- **Réponses de la même forme que les DTO** (`Space`, `Plant`, `Zone`, `Garden`, `GardenMap`),
+  avec des identifiants en chaîne et les noms de colonnes en `snake_case` convertis en camelCase.
+  Les types d'entrée (`SpaceInput`, `PlantInput`…) reprennent les `Save…Dto`.
+- **Toute écriture passe par `db.transaction`**, vérifications comprises : une écriture isolée
+  entrerait dans la transaction en cours, s'il y en a une, et partirait avec elle si elle est
+  annulée. La transaction rend la main avant la relecture de la réponse. Un service n'en ouvre
+  jamais depuis l'intérieur d'une autre : la file attendrait sa propre fin.
+- **Erreurs** (`problem.ts`) : `ProblemError` porte `status`, `problem` (titre, détail, erreurs
+  par champ) et `fieldError()`, comme `ApiError`. `businessRule(…)` donne le 400 « Opération
+  refusée » de `BusinessRuleException`, `notFound(…)` le 404 de `NotFoundException`. La
+  validation de forme que faisaient les DataAnnotations (`validation.ts`) lève un 400 avec les
+  erreurs par champ, clés en PascalCase comme celles de l'API (`Name`, `Kind`…) : les formulaires
+  les affichent sous le champ, en français.
+- **Le catalogue des modèles de carte** (`garden-layouts.ts`) est une constante. Les deux modèles
+  posent les mêmes neuf emplacements ; un test le confronte à `SLOT_KEYS` de la carte.
+- **Tests** (`__tests__/data/`) : un fichier par service, d'abord les cas de l'original C#
+  (même scénario, même nom), puis les « ajouts » que l'original ne couvrait pas. Les données de
+  départ s'insèrent directement (`createGardenFixtures`, l'équivalent de `TestData`).
+
 ## Conventions
 
 - **Le voyant vient du serveur.** On affiche le `status` d'une tâche (`Ok` / `DueSoon` / `Overdue`),
