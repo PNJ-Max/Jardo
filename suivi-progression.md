@@ -12,6 +12,12 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (22/10/2026)
 
+**La carte passe à Skia.** À la demande de Maxime, la carte est rendue par Skia, net à tout
+zoom, et non plus par react-native-svg, qui est retiré. Coût : environ 4 Mo de plus sur l'APK, et
+`canvaskit.wasm` (3,2 Mo en gzip) téléchargé sur le web, copié dans `public/` par le script
+`postinstall`. Vérifié dans le navigateur ; pas encore sur téléphone. Voir la
+[décision](docs/etude-carte-potager.md#essai-du-2110--décision).
+
 **Carte du jardin : visuels et essai technique (étapes 1 et 3 de l'[étude](docs/etude-carte-potager.md)).**
 Deux scènes modèles sont dessinées dans l'app, dans la projection de l'étude : la **maison de
 campagne** (`country-house`), retenue par Maxime pour le MVP, et la maison mitoyenne
@@ -19,9 +25,7 @@ campagne** (`country-house`), retenue par Maxime pour le MVP, et la maison mitoy
 serre, bois de chauffage), tout son décor autour (voisins, route, champs, haies) et sa nuit
 (fenêtres et lampes allumées, lucioles). On les voit depuis Réglages, « Aperçu de la carte ». Les
 étiquettes signalent ce qui est cliquable, et toucher un emplacement le met en évidence. On peut
-pincer, glisser et double-toucher, dans les limites du décor. Rendu retenu : react-native-svg,
-Skia n'apportant rien de décisif (fluidité à confirmer sur téléphone à l'étape 4). Aucune
-modification de l'API ; la clé `country-house` reste à ajouter au catalogue `GardenLayouts`.
+pincer, glisser et double-toucher, dans les limites du décor. Aucune modification de l'API ; la clé `country-house` reste à ajouter au catalogue `GardenLayouts`.
 Vérifié en mode web, vue mobile, en clair et en sombre ; pas encore sur téléphone.
 
 **Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
