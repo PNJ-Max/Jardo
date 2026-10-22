@@ -11,3 +11,6 @@ jest.mock('expo-router', () => ({
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+
+// Le module natif d'expo-crypto n'existe pas sous Jest ; Node tire des UUID v4 de la même façon.
+jest.mock('expo-crypto', () => ({ randomUUID: () => require('node:crypto').randomUUID() }));
