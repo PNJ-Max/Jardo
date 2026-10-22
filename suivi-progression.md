@@ -10,16 +10,19 @@ une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce q
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (21/10/2026)
+## Où on en est (22/10/2026)
 
-**Architecture des données tranchée : local d'abord.** Les données vivront sur le téléphone, dans
-une base SQLite (`expo-sqlite`), sans serveur ni compte. Résultat : 0 €/mois, une app qui marche
-hors connexion, aucune donnée collectée. Arbitrages de Maxime : hors connexion avant le partage en
-famille, budget nul, le .NET n'est pas une contrainte, publication pour la famille d'abord. La
-logique métier passera en TypeScript, avec les tests C# pour spécification, puis l'API .NET sera
-retirée. La migration se fait en sept PR, l'app restant utilisable à chacune, à commencer après
-l'étape en cours de la carte et avant les notifications. La synchronisation (foyer) se décidera
-plus tard. Voir l'[étude](docs/etude-architecture-donnees.md). Aucun code n'a changé.
+**Carte du jardin : visuels et essai technique (étapes 1 et 3 de l'[étude](docs/etude-carte-potager.md)).**
+Deux scènes modèles sont dessinées dans l'app, dans la projection de l'étude : la **maison de
+campagne** (`country-house`), retenue par Maxime pour le MVP, et la maison mitoyenne
+(`terraced-long`). Chacune a ses 9 emplacements (verger, petits fruits, potager et carrés 1 à 4,
+serre, bois de chauffage), tout son décor autour (voisins, route, champs, haies) et sa nuit
+(fenêtres et lampes allumées, lucioles). On les voit depuis Réglages, « Aperçu de la carte ». Les
+étiquettes signalent ce qui est cliquable, et toucher un emplacement le met en évidence. On peut
+pincer, glisser et double-toucher, dans les limites du décor. Rendu retenu : react-native-svg,
+Skia n'apportant rien de décisif (fluidité à confirmer sur téléphone à l'étape 4). Aucune
+modification de l'API ; la clé `country-house` reste à ajouter au catalogue `GardenLayouts`.
+Vérifié en mode web, vue mobile, en clair et en sombre ; pas encore sur téléphone.
 
 **Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
 L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
@@ -35,6 +38,15 @@ L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
 - [ ] 7. Sauvegarde
 
 ### Avant, le 21/10/2026
+
+**Architecture des données tranchée : local d'abord.** Les données vivront sur le téléphone, dans
+une base SQLite (`expo-sqlite`), sans serveur ni compte. Résultat : 0 €/mois, une app qui marche
+hors connexion, aucune donnée collectée. Arbitrages de Maxime : hors connexion avant le partage en
+famille, budget nul, le .NET n'est pas une contrainte, publication pour la famille d'abord. La
+logique métier passera en TypeScript, avec les tests C# pour spécification, puis l'API .NET sera
+retirée. La migration se fait en sept PR, l'app restant utilisable à chacune, à commencer après
+l'étape en cours de la carte et avant les notifications. La synchronisation (foyer) se décidera
+plus tard. Voir l'[étude](docs/etude-architecture-donnees.md). Aucun code n'a changé.
 
 **Carte du jardin, étape 2 : l'API.** `GET` et `PUT /api/garden/map` (le `PUT` remplace le modèle
 et les affectations en une transaction), `Garden.MapLayout` et la table `GardenMapSlot`

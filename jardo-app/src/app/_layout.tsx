@@ -64,6 +64,7 @@ export default function RootLayout() {
             <Stack.Screen name="task/form" options={{ presentation: 'modal', title: 'Tâche' }} />
             <Stack.Screen name="task/done" options={{ presentation: 'modal', title: 'Fait' }} />
             <Stack.Screen name="settings" options={{ title: 'Réglages' }} />
+            <Stack.Screen name="map-preview" options={{ title: 'Aperçu de la carte' }} />
           </Stack>
         </UndoProvider>
       </ThemeProvider>
