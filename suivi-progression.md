@@ -21,6 +21,19 @@ retirée. La migration se fait en sept PR, l'app restant utilisable à chacune, 
 l'étape en cours de la carte et avant les notifications. La synchronisation (foyer) se décidera
 plus tard. Voir l'[étude](docs/etude-architecture-donnees.md). Aucun code n'a changé.
 
+**Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
+L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
+
+- [x] 1. Domaine pur en TypeScript (22/10/2026) : `jardo-app/src/domain/` porte
+  `DueDateCalculator`, `WoodPileCalculator`, `LatestInterventions` et le vocabulaire des types,
+  avec les cas des tests C# en Jest. Pas encore branché ([détail](docs/front-architecture.md#domaine-srcdomain)).
+- [ ] 2. Socle SQLite
+- [ ] 3. Services locaux : jardin, carte, espaces, zones, plantes
+- [ ] 4. Services locaux : journal, tâches, tas de bois
+- [ ] 5. Bascule des écrans
+- [ ] 6. Retrait de l'API .NET
+- [ ] 7. Sauvegarde
+
 ### Avant, le 21/10/2026
 
 **Carte du jardin, étape 2 : l'API.** `GET` et `PUT /api/garden/map` (le `PUT` remplace le modèle

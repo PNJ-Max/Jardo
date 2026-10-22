@@ -66,6 +66,7 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   ├── types.ts              noms courts des contrats (Space, GardenTask…)
 │   ├── client.ts             fetch, ApiError (ProblemDetails), query string
 │   └── queries.ts            hooks TanStack Query, clés de cache, invalidations
+├── src/domain/               règles et calculs purs (échéances, bois, journal), pas encore branchés
 ├── src/components/ui/        briques de base (boutons, carte, champs, date, pastille, états)
 ├── src/components/           lignes et sections métier (tâche, intervention, espace, élément)
 ├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation
@@ -86,6 +87,25 @@ npm --prefix jardo-app run api:types
 Le fichier généré est commité : le front compile sans l'API. Côté API, `Program.cs` configure
 Swagger pour que le contrat soit exact (types de référence non nuls, enums nullables, propriétés
 des réponses toujours présentes via `ResponsePropertiesRequiredFilter`).
+
+## Domaine (`src/domain/`)
+
+Premier pas de la [migration « local d'abord »](etude-architecture-donnees.md#plan-de-migration) :
+le portage en TypeScript de la logique pure de l'API, pour que l'app la porte un jour seule.
+**Aucun écran ne l'appelle encore** (étape 5) ; les écrans suivent l'API.
+
+- **Du code pur** : ni SQLite, ni React, ni horloge. La date du jour est un paramètre, comme
+  `TimeProvider` côté .NET. Les tests (`__tests__/domain/`) sont le portage des tests C#.
+- **Les jours sont des chaînes `YYYY-MM-DD`** (`dates.ts`), comparées telles quelles ; l'arithmétique
+  passe par `Date.UTC`, jamais par le fuseau du téléphone.
+- `due-date.ts` : `calculateDueState` (échéance, voyant, jours de retard) ; `wood-pile.ts` :
+  `remainingSteres` et `drying` ; `latest-interventions.ts` : `latestInterventions(rows, kind)`,
+  la dernière intervention qui vaut pour une cible, à partir de lignes déjà lues.
+- `types.ts` : le vocabulaire (types d'espace, d'élément, d'intervention, rythmes, statuts) ;
+  `kinds.ts` : ce que chaque type d'espace accepte, et les libellés des messages d'erreur.
+- Les identifiants sont des chaînes (`Id`), ceux de la future base locale.
+- `src/lib/garden.ts` garde le vocabulaire d'affichage (libellés, icônes) et ses propres règles
+  d'acceptation, qui seront ramenées sur `kinds.ts` à la bascule.
 
 ## Conventions
 
