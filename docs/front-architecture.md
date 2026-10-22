@@ -39,7 +39,7 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Réglages sur l'appareil | `@react-native-async-storage/async-storage` | Inclus dans Expo Go ; `localStorage` sur le web. Ne garde que l'apparence choisie |
 | Polices | `@expo-google-fonts/nunito` + `expo-font` | Chargée au démarrage, écran de démarrage maintenu jusque-là |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
-| Carte du jardin | `react-native-svg`, `react-native-gesture-handler`, `react-native-reanimated` | Inclus dans Expo Go, rien à configurer sur le web ; choix argumenté dans l'[étude de la carte](etude-carte-potager.md#essai-du-2110--décision) |
+| Carte du jardin | `@shopify/react-native-skia` (v2), `react-native-gesture-handler`, `react-native-reanimated` | Net à tout zoom, dessin sur le thread UI ; inclus dans Expo Go. Sur le web, `canvaskit.wasm` est copié dans `public/` par le script `postinstall`. Choix argumenté dans l'[étude de la carte](etude-carte-potager.md#essai-du-2110--décision) |
 | Notifications (plus tard) | `expo-notifications` | Rappel d'arrosage local |
 
 Rien de plus. Pas de Redux : TanStack Query couvre l'état serveur, et l'état local reste
@@ -70,7 +70,7 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   └── queries.ts            hooks TanStack Query, clés de cache, invalidations
 ├── src/components/ui/        briques de base (boutons, carte, champs, date, pastille, états)
 ├── src/components/           lignes et sections métier (tâche, intervention, espace, élément)
-├── src/components/map/       carte : gestes, rendu SVG, étiquettes
+├── src/components/map/       carte : gestes, rendu Skia, étiquettes
 ├── src/map/                  scènes de la carte dessinées par le code : projection, décor,
 │                             un fichier par modèle, emplacements
 ├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation

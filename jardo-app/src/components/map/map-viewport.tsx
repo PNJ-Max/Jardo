@@ -7,7 +7,10 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { slotAt, ZONE_SLOTS, type Scene, type SlotKey } from '@/map/layouts';
 import { createStyles } from '@/theme';
 
-import { SvgScene, type LiveView, type SceneView } from './svg-scene';
+import { SkiaScene } from './skia-scene';
+import type { LiveView } from './skia-scene-impl';
+
+type SceneView = { scale: number; x: number; y: number };
 
 const MAX_ZOOM = 5;
 /** Le cadrage de départ remplit la largeur, quitte à rogner un peu les coins du jardin. */
@@ -35,17 +38,12 @@ type MapViewportProps = {
 
 /**
  * Cadre de la carte : pincer pour zoomer, glisser pour se déplacer, double-toucher pour zoomer,
- * toucher pour sélectionner. La vue vit dans des valeurs partagées (thread UI) ; `drawn` est la
- * vue à laquelle la scène est dessinée en SVG, mise à jour à la fin de chaque geste pour
- * rester net.
+ * toucher pour sélectionner. La vue vit dans des valeurs partagées : Skia redessine la scène à
+ * chaque image sur le thread UI, sans repasser par React.
  */
 export function MapViewport({ scene, labels, selected, onSelect, recenter }: MapViewportProps) {
   const [size, setSize] = useState<Size | null>(null);
   const fit = useMemo(() => (size ? fitView(scene, size) : null), [scene, size]);
-  // Une vue enregistrée après un recentrage ou un changement de cadre est périmée.
-  const frame = `${fit?.scale}:${fit?.x}:${fit?.y}:${recenter}`;
-  const [committed, setCommitted] = useState<{ frame: string; view: SceneView } | null>(null);
-  const drawn = committed?.frame === frame ? committed.view : fit;
 
   const scale = useSharedValue(1);
   const x = useSharedValue(0);
@@ -62,11 +60,6 @@ export function MapViewport({ scene, labels, selected, onSelect, recenter }: Map
     x.set(withTiming(fit.x, { duration }));
     y.set(withTiming(fit.y, { duration }));
   }, [fit, recenter, scale, x, y]);
-
-  const commit = useCallback(
-    (view: SceneView) => setCommitted({ frame, view }),
-    [frame],
-  );
 
   const select = useCallback(
     (sceneX: number, sceneY: number) => onSelect(slotAt(scene, [sceneX, sceneY])),
@@ -116,8 +109,7 @@ export function MapViewport({ scene, labels, selected, onSelect, recenter }: Map
         const zoomed = zoomAround(e.scale, from.focalX, from.focalY, from);
         // Le point focal suit les doigts : on ajoute son déplacement depuis le début du geste.
         apply(clamp(zoomed.s, zoomed.cx + e.focalX - from.focalX, zoomed.cy + e.focalY - from.focalY));
-      })
-      .onEnd(() => scheduleOnRN(commit, current()));
+      });
 
     const pan = Gesture.Pan()
       .minDistance(10)
@@ -127,24 +119,18 @@ export function MapViewport({ scene, labels, selected, onSelect, recenter }: Map
       })
       .onUpdate((e) => {
         apply(clamp(scale.get(), start.get().x + e.translationX, start.get().y + e.translationY));
-      })
-      .onEnd(() => scheduleOnRN(commit, current()));
+      });
 
-    // La vue d'arrivée est dessinée tout de suite : pendant l'animation, la transformation fait le lien.
     const doubleTap = Gesture.Tap()
       .numberOfTaps(2)
-      .onEnd((e) => {
-        const target = zoomAround(2, e.x, e.y, current());
-        apply(target, 220);
-        scheduleOnRN(commit, { scale: target.s, x: target.cx, y: target.cy });
-      });
+      .onEnd((e) => apply(zoomAround(2, e.x, e.y, current()), 220));
 
     const tap = Gesture.Tap().onEnd((e) => {
       scheduleOnRN(select, (e.x - x.get()) / scale.get(), (e.y - y.get()) / scale.get());
     });
 
     return Gesture.Race(Gesture.Simultaneous(pinch, pan), Gesture.Exclusive(doubleTap, tap));
-  }, [scene, size, fit, scale, x, y, start, commit, select]);
+  }, [scene, size, fit, scale, x, y, start, select]);
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -155,12 +141,11 @@ export function MapViewport({ scene, labels, selected, onSelect, recenter }: Map
     <View style={[styles.frame, styles.clip, { backgroundColor: scene.background }]}>
       <GestureDetector gesture={gesture}>
         <View style={styles.frame} onLayout={onLayout} collapsable={false}>
-          {size && drawn && (
-            <SvgScene
+          {size && (
+            <SkiaScene
               scene={scene}
               size={size}
               view={{ scale, x, y }}
-              committed={drawn}
               outline={selected ? scene.slots[selected].outline : null}
             />
           )}

@@ -39,7 +39,7 @@ carte remplace cette liste dans le même onglet.
 | Style | 2D axonométrique illustrée, dans la palette de la charte. |
 | Décor | **Tout autour du jardin** (21/10, à la demande de Maxime) : voisins, route, champs, haies, arbres, dans des teintes passées pour que le jardin reste au premier plan. Il remplace le socle de maquette, qui laissait l'écran vide autour. Rien n'y est cliquable. |
 | Angle | **Dans l'axe du jardin** : rotation de 20°, plongée de 50°. Le jardin monte dans l'écran et remplit un téléphone tenu en portrait. |
-| Visuels | Dessinés par le code dans la projection, rendus par react-native-svg (voir [Source des visuels](#source-des-visuels) et [la décision](#essai-du-2110--décision)). |
+| Visuels | Dessinés par le code dans la projection, rendus par Skia (voir [Source des visuels](#source-des-visuels) et [la décision](#essai-du-2110--décision)). |
 | Tâches | **Ni liste ni voyant** sur la carte (arbitrage du 18/10, validé par Maxime). Les tâches dues vivent dans l'onglet Aujourd'hui. |
 | Étiquettes | Le nom des espaces est toujours affiché, celui des carrés à partir d'un zoom de ×1,45. Les étiquettes sont aussi des cibles de toucher et de clavier. |
 | Zoom et déplacement | Pincer pour zoomer (jusqu'à ×5), glisser pour se déplacer, double-tap pour zoomer, bouton pour recentrer. Au départ, le jardin occupe toute la largeur de l'écran. Le déplacement et le dézoom s'arrêtent aux limites de chaque modèle, que le décor couvre toujours. |
@@ -105,22 +105,21 @@ La même scène (environ 2 000 formes, construites en 30 à 70 ms) a été rendu
 moteurs, derrière le même cadre de gestes (gesture-handler et Reanimated), dans l'aperçu de la
 carte.
 
-| Critère | react-native-svg | Skia |
+| Critère | react-native-svg | Skia (`@shopify/react-native-skia` 2.6) |
 |---|---|---|
-| Expo Go (SDK 57) | Inclus | Inclus |
-| Web | Rien à configurer. Net à tout zoom | Identique à l'œil, mais `canvaskit.wasm` à servir (8,1 Mo, 2,9 Mo gzip), chargé par `WithSkiaWeb`, et un fichier `.web.tsx` pour le différer |
-| Netteté au zoom (Android) | Pendant un geste, la vue est agrandie par transformation, donc floue ; à la fin du geste, la scène est redessinée à la bonne échelle | Nette en continu |
-| Fluidité | Geste fluide (une transformation) ; un redessin de la scène à la fin de chaque geste | Tout sur le thread UI |
-| Poids | Faible | Bibliothèque native de plusieurs Mo, plus CanvasKit sur le web |
+| Expo Go (SDK 57) | Inclus | Inclus : Expo Go embarque Skia v2. La v3 (`react-native-skia`, Graphite) exige un build de développement : rester en v2 tant qu'on teste avec Expo Go |
+| Web | Rien à configurer | `canvaskit.wasm` servi depuis `public/` (copié par le script `postinstall`), chargé à la première ouverture de la carte par `WithSkiaWeb`. Vérifié dans le navigateur : même rendu, gestes et toucher identiques |
+| Netteté au zoom | Sur Android, la vue SVG est dessinée dans une image à sa taille : pendant un geste, elle est agrandie par transformation, donc floue, puis redessinée à la fin du geste. Maxime l'a vue moins nette au zoom | Redessinée par le GPU à chaque image : nette en continu, jusqu'au ×5 |
+| Fluidité | Geste fluide, mais un redessin de toute la scène par React à la fin de chaque geste | La scène est enregistrée une fois (`SkPicture`), puis redessinée sur le thread UI avec la matrice de la vue, sans repasser par React |
+| Poids | Faible | **APK Android : environ +4 Mo** (chiffre de la documentation de Skia v2 ; les bibliothèques précompilées pèsent 59 Mo par architecture avant liaison et compression, donc à mesurer sur le premier APK). **Web : `canvaskit.wasm` de 8,1 Mo, 3,2 Mo en gzip** (mesuré ; 2,9 Mo selon la documentation), téléchargé une fois puis mis en cache |
 
-**Décision : react-native-svg.** Dans le navigateur, Skia n'apporte rien de visible, et il
-coûte du poids et une mise en place propre au web. L'essai sur téléphone n'a pas été fait :
-Maxime a jugé le visuel dans le navigateur. Le code Skia de l'essai reste dans l'historique de
-la branche `claude/carte-visuels-d6b8e7` (commit `38e0208`).
+**Décision du 22/10 : Skia**, à la demande de Maxime : la carte est faite pour être zoomée,
+et le SVG y est moins net. Quelques Mo de plus valent une carte nette, pour une app qui se veut
+soignée. react-native-svg, qui ne servait qu'à la carte, est retiré. Une première décision en
+faveur du SVG, prise le 21/10 sur la seule base du navigateur, est ainsi revue.
 
-**À vérifier sur un téléphone Android à l'étape 4** : la fluidité du pincement, et le temps du
-redessin à la fin d'un geste. S'ils déçoivent, la scène passe à Skia sans rien changer à son
-dessin : les mêmes formes s'enregistrent dans une `SkPicture`.
+**À vérifier sur un téléphone Android à l'étape 4** : la fluidité du pincement et le poids réel
+ajouté à l'APK.
 
 ## Source des visuels
 
@@ -286,8 +285,8 @@ d'espaces (serre, poulailler…) avec leurs emplacements et leurs dessins, un é
 - Type d'espace `Greenhouse` : à reporter dans le [modèle du domaine](modele-domaine.md).
 - Clé de modèle `country-house` : à ajouter au catalogue `GardenLayouts` de l'API, et à donner
   au jardin d'exemple, qui a aujourd'hui le modèle `terraced-long`.
-- Fluidité du rendu SVG sur un téléphone Android de milieu de gamme : à mesurer en tête de
-  l'étape 4 (voir [la décision](#essai-du-2110--décision)).
+- Fluidité du rendu Skia sur un téléphone Android de milieu de gamme, et poids réel ajouté à
+  l'APK : à mesurer en tête de l'étape 4 (voir [la décision](#essai-du-2110--décision)).
 - La carte n'est pas à l'échelle du vrai jardin, conformément à la vision (« pas de plan au
   centimètre »).
 

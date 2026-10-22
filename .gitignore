@@ -490,3 +490,6 @@ $RECYCLE.BIN/
 *.db
 *.db-shm
 *.db-wal
+
+# CanvasKit (Skia pour le web), copié à chaque installation par le script postinstall du front.
+jardo-app/public/canvaskit.wasm
