@@ -106,6 +106,25 @@ Dans l'ordre envisagé, à re-prioriser au fil de l'eau :
 
 Ce que font les concurrents, et ce que Jardo en retient : [benchmark](benchmark-concurrents.md).
 
+## Stratégie de lancement
+
+Jardo commence comme un test, mais il est construit pour devenir un vrai produit : la demande
+existe ([benchmark](benchmark-concurrents.md)), et l'app doit pouvoir grandir sans être refaite.
+
+1. **Phase de test, maintenant.** L'app est confiée à quelques proches pour être découverte et
+   critiquée. Elle coûte le moins possible : pas de serveur, pas de compte, 0 € par mois. Android
+   d'abord : APK construit avec EAS (offre gratuite), puis test interne du Play Store (inscription
+   unique au compte développeur Google). L'iPhone attend, parce que TestFlight et l'App Store
+   demandent un abonnement Apple annuel. Le code, lui, est déjà prêt pour iOS.
+2. **Produit, si la demande se confirme.** De petits investissements deviennent acceptables :
+   synchronisation et foyer partagé, sauvegarde en ligne, version iOS, éventuellement une offre
+   payante.
+
+Règle qui en découle : **chaque choix technique doit laisser la porte ouverte au produit.** On
+évite ce qui enferme : un service gratuit qui impose son schéma, des identifiants qui empêchent
+la synchronisation, une dette qui obligerait à tout réécrire. On n'achète rien tant que la phase
+de test ne l'exige pas.
+
 ## Ce qu'on ne fera pas
 
 - **Outil professionnel de maraîchage** : planification de production, rendements à
