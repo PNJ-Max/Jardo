@@ -24,6 +24,28 @@ Skia n'apportant rien de décisif (fluidité à confirmer sur téléphone à l'�
 modification de l'API ; la clé `country-house` reste à ajouter au catalogue `GardenLayouts`.
 Vérifié en mode web, vue mobile, en clair et en sombre ; pas encore sur téléphone.
 
+### Avant, le 21/10/2026
+
+**Architecture des données tranchée : local d'abord.** Les données vivront sur le téléphone, dans
+une base SQLite (`expo-sqlite`), sans serveur ni compte. Résultat : 0 €/mois, une app qui marche
+hors connexion, aucune donnée collectée. Arbitrages de Maxime : hors connexion avant le partage en
+famille, budget nul, le .NET n'est pas une contrainte, publication pour la famille d'abord. La
+logique métier passera en TypeScript, avec les tests C# pour spécification, puis l'API .NET sera
+retirée. La migration se fait en sept PR, l'app restant utilisable à chacune, à commencer après
+l'étape en cours de la carte et avant les notifications. La synchronisation (foyer) se décidera
+plus tard. Voir l'[étude](docs/etude-architecture-donnees.md). Aucun code n'a changé.
+
+**Carte du jardin, étape 2 : l'API.** `GET` et `PUT /api/garden/map` (le `PUT` remplace le modèle
+et les affectations en une transaction), `Garden.MapLayout` et la table `GardenMapSlot`
+(migration `AddGardenMap`), catalogue `GardenLayouts` avec le modèle `terraced-long` et ses clés
+d'emplacement (`orchard`, `small-fruit`, `vegetable`, `bed-1` à `bed-4`, `greenhouse`,
+`firewood`). Le jardin d'exemple est posé sur la carte. Un espace archivé ou dont le type change
+quitte la carte. Types du front régénérés ; reste à écrire le hook `useGardenMap()` (étape 4).
+Choix de détail : [étude, « Tranché à l'étape 2 »](docs/etude-carte-potager.md#tranché-à-létape-2-api).
+Il faut recréer la base de dev (aucune donnée réelle).
+
+### Avant, le 20/10/2026
+
 **Premiers retours d'usage sur téléphone pris en compte.** Les fiches (espace, zone, plante, tas
 de bois) passent en onglets : l'en-tête (nom, type, informations clés) reste en place, et
 l'on choisit Tâches · Contenu (ou Plantes, Tas de bois) · Journal · Infos (détails, Modifier,
@@ -207,8 +229,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   catalogue d'espèces, autres types d'espaces, météo, foyer partagé.
 
 **Phase 7 : vers le Play Store**
-- Test sur téléphone (Expo Go), API hébergée en HTTPS + authentification, build EAS,
-  fiche Play Store.
+- Test sur téléphone (Expo Go), données sur le téléphone ([migration en sept PR](docs/etude-architecture-donnees.md#plan-de-migration)),
+  APK pour la famille par EAS, puis fiche Play Store.
 
 ## À décider
 

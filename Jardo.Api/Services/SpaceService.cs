@@ -161,6 +161,11 @@ public class SpaceService : ISpaceService
             }
         }
 
+        if (kind != space.Kind)
+        {
+            await FreeMapSlotsAsync(id, cancellationToken);
+        }
+
         space.Name = name;
         space.Description = Text.Optional(dto.Description);
         space.Kind = kind;
@@ -174,6 +179,11 @@ public class SpaceService : ISpaceService
     {
         var space = await _db.Spaces.FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             ?? throw NotFoundException.For("Space", id);
+
+        if (isArchived)
+        {
+            await FreeMapSlotsAsync(id, cancellationToken);
+        }
 
         space.IsArchived = isArchived;
         await _db.SaveChangesAsync(cancellationToken);
@@ -199,6 +209,12 @@ public class SpaceService : ISpaceService
         _db.Spaces.Remove(space);
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    // Un espace archivé, ou dont le type change, n'est plus valable sur son emplacement : il passe
+    // dans « Hors carte ». Supprimé par SaveChanges avec la modification qui l'a causé.
+    private async Task FreeMapSlotsAsync(int spaceId, CancellationToken cancellationToken)
+        => _db.GardenMapSlots.RemoveRange(
+            await _db.GardenMapSlots.Where(slot => slot.SpaceId == spaceId).ToListAsync(cancellationToken));
 
     // Double l'index unique de la base pour produire un message clair. Les espaces archivés
     // comptent : les réactiver ne doit pas créer de doublon.

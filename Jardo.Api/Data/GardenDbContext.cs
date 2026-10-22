@@ -19,6 +19,7 @@ public class GardenDbContext : DbContext
     public DbSet<WoodPile> WoodPiles => Set<WoodPile>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<GardenTask> GardenTasks => Set<GardenTask>();
+    public DbSet<GardenMapSlot> GardenMapSlots => Set<GardenMapSlot>();
 
     // Contraintes en Fluent API (et non en attributs) pour que Models reste indépendant d'EF Core.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,6 +27,7 @@ public class GardenDbContext : DbContext
         modelBuilder.Entity<Garden>(garden =>
         {
             garden.Property(g => g.Name).IsRequired().HasMaxLength(100);
+            garden.Property(g => g.MapLayout).HasMaxLength(50);
 
             // Le jardin unique du MVP fait partie du schéma : il existe dès la première migration,
             // sans dépendre du seeder.
@@ -155,6 +157,30 @@ public class GardenDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(t => t.ItemId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GardenMapSlot>(slot =>
+        {
+            slot.Property(s => s.SlotKey).IsRequired().HasMaxLength(50);
+
+            // Cascade depuis les trois côtés : supprimer le jardin, un espace ou une zone libère
+            // l'emplacement sans toucher à rien d'autre.
+            slot.HasOne(s => s.Garden)
+                .WithMany(g => g.MapSlots)
+                .HasForeignKey(s => s.GardenId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            slot.HasOne(s => s.Space)
+                .WithMany()
+                .HasForeignKey(s => s.SpaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            slot.HasOne(s => s.Zone)
+                .WithMany()
+                .HasForeignKey(s => s.ZoneId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            slot.HasIndex(s => new { s.GardenId, s.SlotKey }).IsUnique();
         });
     }
 }

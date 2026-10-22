@@ -15,5 +15,13 @@ public class Garden
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>
+    /// Clé du modèle de carte choisi (voir <c>GardenLayouts</c>). Null tant que la carte n'est pas
+    /// configurée : l'onglet Jardin montre alors la liste des espaces.
+    /// </summary>
+    public string? MapLayout { get; set; }
+
     public ICollection<Space> Spaces { get; set; } = new List<Space>();
+
+    public ICollection<GardenMapSlot> MapSlots { get; set; } = new List<GardenMapSlot>();
 }

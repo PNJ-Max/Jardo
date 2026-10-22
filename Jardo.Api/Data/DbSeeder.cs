@@ -1,5 +1,6 @@
 using Jardo.Api.Infrastructure;
 using Jardo.Api.Models;
+using Jardo.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Jardo.Api.Data;
@@ -65,6 +66,23 @@ public static class DbSeeder
 
         db.Spaces.AddRange(potager, verger, petitsFruits, bois, serre, tunnel);
         db.Zones.AddRange(carre1, carre2, carre3, carre4, rang1, rang2, tablette, bac);
+
+        // La serre tunnel, archivée, reste hors carte.
+        garden.MapLayout = GardenLayouts.TerracedLong;
+
+        GardenMapSlot NewSlot(string slotKey, Space space, Zone? zone = null)
+            => new() { Garden = garden, SlotKey = slotKey, Space = space, Zone = zone };
+
+        db.GardenMapSlots.AddRange(
+            NewSlot("orchard", verger),
+            NewSlot("small-fruit", petitsFruits),
+            NewSlot("vegetable", potager),
+            NewSlot("bed-1", potager, carre1),
+            NewSlot("bed-2", potager, carre2),
+            NewSlot("bed-3", potager, carre3),
+            NewSlot("bed-4", potager, carre4),
+            NewSlot("greenhouse", serre),
+            NewSlot("firewood", bois));
 
         // Enregistrements par étape : en un seul SaveChanges, EF Core réordonne les insertions et
         // les identifiants ne suivent plus l'ordre du code, dont dépend Jardo.Api.http.
