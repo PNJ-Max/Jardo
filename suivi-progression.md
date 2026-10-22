@@ -34,7 +34,13 @@ L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
 - [x] 1. Domaine pur en TypeScript (22/10/2026) : `jardo-app/src/domain/` porte
   `DueDateCalculator`, `WoodPileCalculator`, `LatestInterventions` et le vocabulaire des types,
   avec les cas des tests C# en Jest. Pas encore branché ([détail](docs/front-architecture.md#domaine-srcdomain)).
-- [ ] 2. Socle SQLite
+- [x] 2. Socle SQLite (22/10/2026) : `jardo-app/src/data/` ouvre et migre `jardo.db` au
+  démarrage (`SQLiteProvider`), sans encore la lire. Schéma repris de `GardenDbContext` en SQL
+  écrit à la main, UUID en texte, migrations par `PRAGMA user_version` en transaction, jardin
+  d'exemple de `DbSeeder` en développement seulement. Tests Jest sur une vraie SQLite en mémoire
+  (`node:sqlite`). Vérifié en mode web, où la base s'ouvre à condition de passer `web.output` en
+  `"single"` et de n'ouvrir l'app que dans un onglet ; pas encore dans Expo Go
+  ([détail](docs/front-architecture.md#données-locales-srcdata)).
 - [ ] 3. Services locaux : jardin, carte, espaces, zones, plantes
 - [ ] 4. Services locaux : journal, tâches, tas de bois
 - [ ] 5. Bascule des écrans

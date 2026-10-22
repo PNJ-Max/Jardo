@@ -37,6 +37,7 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Dates | `@react-native-community/datetimepicker` sur Android, `<input type="date">` sur le web | Recommandé par Expo et inclus dans Expo Go ; le module n'existe pas sur le web |
 | Style | `StyleSheet` + `src/theme/` (`useTheme`, `createStyles`) | Aucune dépendance ; suit le mode clair / sombre du téléphone, ou celui choisi dans les réglages ; jetons décrits dans la [charte graphique](charte-graphique.md) |
 | Réglages sur l'appareil | `@react-native-async-storage/async-storage` | Inclus dans Expo Go ; `localStorage` sur le web. Ne garde que l'apparence choisie |
+| Base locale | `expo-sqlite` (fichier `jardo.db`), SQL écrit à la main ; `expo-crypto` pour les UUID | Inclus dans Expo Go ; choix argumentés dans l'[étude des données](etude-architecture-donnees.md#la-cible-technique). Ouverte et migrée au démarrage, pas encore lue par les écrans |
 | Polices | `@expo-google-fonts/nunito` + `expo-font` | Chargée au démarrage, écran de démarrage maintenu jusque-là |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
 | Carte du jardin | `@shopify/react-native-skia` (v2), `react-native-gesture-handler`, `react-native-reanimated` | Net à tout zoom, dessin sur le thread UI ; inclus dans Expo Go. Sur le web, `canvaskit.wasm` est copié dans `public/` par le script `postinstall`. Choix argumenté dans l'[étude de la carte](etude-carte-potager.md#essai-du-2110--décision) |
@@ -69,6 +70,7 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   ├── client.ts             fetch, ApiError (ProblemDetails), query string
 │   └── queries.ts            hooks TanStack Query, clés de cache, invalidations
 ├── src/domain/               règles et calculs purs (échéances, bois, journal), pas encore branchés
+├── src/data/                 base locale SQLite : accès, schéma et migrations, jardin d'exemple
 ├── src/components/ui/        briques de base (boutons, carte, champs, date, pastille, états)
 ├── src/components/           lignes et sections métier (tâche, intervention, espace, élément)
 ├── src/components/map/       carte : gestes, rendu Skia, étiquettes
@@ -111,6 +113,57 @@ le portage en TypeScript de la logique pure de l'API, pour que l'app la porte un
 - Les identifiants sont des chaînes (`Id`), ceux de la future base locale.
 - `src/lib/garden.ts` garde le vocabulaire d'affichage (libellés, icônes) et ses propres règles
   d'acceptation, qui seront ramenées sur `kinds.ts` à la bascule.
+
+## Données locales (`src/data/`)
+
+Étape 2 de la même migration : la base SQLite du téléphone. `SQLiteProvider` (dans
+`src/app/_layout.tsx`) ouvre `jardo.db` et la migre au démarrage, l'écran de démarrage restant
+affiché jusque-là. **Aucun écran ne la lit encore** : les services arrivent aux étapes 3 et 4,
+la bascule à l'étape 5.
+
+- **`db.ts` : l'interface `Db`**, la seule porte vers la base : `exec` (script sans paramètres),
+  `run`, `all`, `first` (paramètres `?` positionnels, valeurs `string | number | null`) et
+  `transaction`. `fromExpo` l'adapte à expo-sqlite ; sous Jest, la même interface tourne sur
+  `node:sqlite`. Les transactions passent l'une après l'autre (une file), car l'app n'a qu'une
+  connexion : deux « Fait » tapés vite ne doivent pas ouvrir deux `BEGIN`. Une seule instance de
+  `Db` par connexion, sinon la file ne protège plus rien. Pas de transaction imbriquée.
+- **Seulement les API asynchrones d'expo-sqlite** (`execAsync`, `getAllAsync`…) : sur le web,
+  les API `…Sync` exigent `SharedArrayBuffer` et des en-têtes que le serveur de dev n'envoie pas.
+- **`migrations.ts` : le schéma**, en SQL écrit à la main, repris de `GardenDbContext` avec ses
+  contraintes (noms uniques, clés étrangères et leurs `CASCADE` / `RESTRICT`, table unique
+  `garden_items` pour les plantes et les tas de bois). Une liste ordonnée de scripts : le rang
+  d'un script est la version (`PRAGMA user_version`) qu'il donne à la base. Chaque migration
+  tourne dans une transaction, version comprise. **Une migration publiée ne se modifie plus** :
+  on en ajoute une à la fin, et le test « migrent une base de chaque version précédente » la
+  couvre aussitôt. Une base plus récente que l'app est refusée.
+- **Conventions du schéma** : tables et colonnes en `snake_case` (les services feront la
+  correspondance avec les DTO en camelCase), tables `STRICT` (une valeur du mauvais type est
+  refusée), identifiants UUID v4 en texte (`randomUUID()` d'`expo-crypto`), jours `YYYY-MM-DD`,
+  instants ISO 8601 UTC (`toISOString()`), booléens en 0 ou 1. Le jardin unique est créé par la
+  première migration, avec un UUID tiré au hasard. Pour départager deux lignes au même instant
+  (l'API utilisait l'identifiant entier), le `rowid` de SQLite suit l'ordre d'insertion.
+- **`database.ts` : `prepareDatabase`**, à chaque ouverture : `PRAGMA foreign_keys = ON` (réglé
+  par connexion, sans lui SQLite ignore les clés étrangères), migrations, puis le jardin
+  d'exemple si demandé. `initDatabase` est le `onInit` du `SQLiteProvider`.
+- **`example-garden.ts` : le jardin d'exemple** de `DbSeeder`, carte comprise, daté par rapport
+  au jour. Seulement en développement (`__DEV__`) et seulement si le jardin n'a aucun espace : une
+  installation publiée démarre sur un jardin vide.
+
+**Le mode web.** expo-sqlite web est en alpha : SQLite en wasm dans un worker, la base dans
+l'OPFS du navigateur. Il marche, avec trois conditions :
+
+- `web.output` vaut `"single"` dans `app.json`. En `"static"`, le rendu côté serveur du serveur de
+  dev échoue (« Worker chunk not found for … expo-sqlite/web/worker.ts ») : le bundle paresseux
+  n'embarque pas le worker. Un rendu côté serveur n'apporte rien à une app dont les données sont
+  dans le navigateur.
+- `metro.config.js` déclare l'extension `wasm`.
+- **Un seul onglet de l'app à la fois.** L'OPFS réserve la base à un onglet : un second reste
+  blanc, avec `NoModificationAllowedError` dans la console. Fermer l'autre onglet et recharger.
+
+**Repartir d'une base neuve.** Le jardin d'exemple ne se rajoute pas tant qu'il reste un espace,
+et une base migrée par une autre branche peut être plus récente que l'app. Sur le web : outils
+de développement → Application → Stockage → « Effacer les données du site » pour
+`localhost:8081`. Dans Expo Go : vider les données d'Expo Go (paramètres Android de l'app).
 
 ## Conventions
 
@@ -167,8 +220,14 @@ dans `jardo-app/test/`.
 - **`await renderScreen(<Ecran />)`** (`test/render.tsx`) monte l'écran avec un cache neuf et le
   fournisseur d'« Annuler ». RNTL 14 est asynchrone : `await` sur `render` et `fireEvent`.
 - `test/fixtures.ts` : `space()`, `task()`, des DTO complets à surcharger.
-- `test/setup.ts` simule `expo-router` (`router.push` est un `jest.fn`), les marges de sécurité
-  et AsyncStorage.
+- **La base locale se teste sur une vraie SQLite en mémoire** (`test/db.ts`, `node:sqlite` de
+  Node, sans dépendance) : `await createTestDb()` rend une base migrée comme l'app l'ouvre,
+  `createTestDb({ exampleGarden: true })` avec le jardin d'exemple, `createMemoryDb()` une base
+  vide pour tester les migrations. Les clés étrangères y sont désactivées à l'ouverture, comme
+  dans expo-sqlite : c'est `prepareDatabase` qui les active. Node affiche un avertissement
+  « SQLite is an experimental feature » : il est attendu.
+- `test/setup.ts` simule `expo-router` (`router.push` est un `jest.fn`), les marges de sécurité,
+  AsyncStorage et `randomUUID` d'`expo-crypto` (par celui de Node).
 - On cherche par texte ou libellé d'accessibilité, comme l'utilisateur ; pas de test du rendu
   exact des styles. Un module natif absent de Jest se simule dans le test qui en a besoin
   (voir `date-field.test.tsx`).
