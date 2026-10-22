@@ -39,6 +39,7 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Réglages sur l'appareil | `@react-native-async-storage/async-storage` | Inclus dans Expo Go ; `localStorage` sur le web. Ne garde que l'apparence choisie |
 | Polices | `@expo-google-fonts/nunito` + `expo-font` | Chargée au démarrage, écran de démarrage maintenu jusque-là |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
+| Carte du jardin | `react-native-svg`, `react-native-gesture-handler`, `react-native-reanimated` | Inclus dans Expo Go, rien à configurer sur le web ; choix argumenté dans l'[étude de la carte](etude-carte-potager.md#essai-du-2110--décision) |
 | Notifications (plus tard) | `expo-notifications` | Rappel d'arrosage local |
 
 Rien de plus. Pas de Redux : TanStack Query couvre l'état serveur, et l'état local reste
@@ -60,7 +61,8 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   ├── */form.tsx            formulaires en modale : space, zone, plant, wood-pile,
 │   │                         entry (intervention), task ; ?id= pour modifier
 │   ├── task/done.tsx         « Fait » en précisant le jour et une note (appui long)
-│   └── settings.tsx          réglages : nom du jardin, apparence, version de l'app
+│   ├── settings.tsx          réglages : nom du jardin, apparence, version de l'app
+│   └── map-preview.tsx       aperçu de la carte du jardin (avant l'onglet Jardin)
 ├── src/api/
 │   ├── generated/            types générés depuis le Swagger (ne pas modifier)
 │   ├── types.ts              noms courts des contrats (Space, GardenTask…)
@@ -68,6 +70,9 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   └── queries.ts            hooks TanStack Query, clés de cache, invalidations
 ├── src/components/ui/        briques de base (boutons, carte, champs, date, pastille, états)
 ├── src/components/           lignes et sections métier (tâche, intervention, espace, élément)
+├── src/components/map/       carte : gestes, rendu SVG, étiquettes
+├── src/map/                  scènes de la carte dessinées par le code : projection, décor,
+│                             un fichier par modèle, emplacements
 ├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation
 ├── src/theme/                palettes clair / sombre, typographie, useTheme, createStyles,
 │                             apparence choisie (preference.ts)

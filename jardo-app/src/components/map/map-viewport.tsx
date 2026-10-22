@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -7,7 +7,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { slotAt, ZONE_SLOTS, type Scene, type SlotKey } from '@/map/layouts';
 import { createStyles } from '@/theme';
 
-import { SceneRenderer, type SceneRendererProps, type SceneView } from './scene-renderer';
+import { SvgScene, type LiveView, type SceneView } from './svg-scene';
 
 const MAX_ZOOM = 5;
 /** Le cadrage de départ remplit la largeur, quitte à rogner un peu les coins du jardin. */
@@ -27,7 +27,6 @@ type MapViewportProps = {
   scene: Scene;
   /** Nom affiché sur chaque emplacement occupé. */
   labels: Partial<Record<SlotKey, string>>;
-  engine: 'svg' | 'skia';
   selected: SlotKey | null;
   onSelect: (key: SlotKey | null) => void;
   /** Change de valeur pour demander un recentrage. */
@@ -37,10 +36,10 @@ type MapViewportProps = {
 /**
  * Cadre de la carte : pincer pour zoomer, glisser pour se déplacer, double-toucher pour zoomer,
  * toucher pour sélectionner. La vue vit dans des valeurs partagées (thread UI) ; `drawn` est la
- * vue à laquelle le rendu SVG a dessiné la scène, mise à jour à la fin de chaque geste pour
+ * vue à laquelle la scène est dessinée en SVG, mise à jour à la fin de chaque geste pour
  * rester net.
  */
-export function MapViewport({ scene, labels, engine, selected, onSelect, recenter }: MapViewportProps) {
+export function MapViewport({ scene, labels, selected, onSelect, recenter }: MapViewportProps) {
   const [size, setSize] = useState<Size | null>(null);
   const fit = useMemo(() => (size ? fitView(scene, size) : null), [scene, size]);
   // Une vue enregistrée après un recentrage ou un changement de cadre est périmée.
@@ -153,12 +152,11 @@ export function MapViewport({ scene, labels, engine, selected, onSelect, recente
   };
 
   return (
-    <View style={[styles.frame, { backgroundColor: scene.background }]}>
+    <View style={[styles.frame, styles.clip, { backgroundColor: scene.background }]}>
       <GestureDetector gesture={gesture}>
         <View style={styles.frame} onLayout={onLayout} collapsable={false}>
           {size && drawn && (
-            <SceneRenderer
-              engine={engine}
+            <SvgScene
               scene={scene}
               size={size}
               view={{ scale, x, y }}
@@ -195,7 +193,7 @@ type MapLabelProps = {
   anchor: [number, number];
   /** Échelle en dessous de laquelle l'étiquette est cachée. */
   minScale: number;
-  view: SceneRendererProps['view'];
+  view: LiveView;
   selected: boolean;
   onPress: () => void;
 };
@@ -234,6 +232,9 @@ function MapLabel({ text, anchor, minScale, view, selected, onPress }: MapLabelP
 
 const styles = StyleSheet.create({
   frame: { flex: 1, overflow: 'hidden' },
+  // Sur le web, un conteneur overflow: hidden défile quand une étiquette qui dépasse reçoit le
+  // focus, et décale toute la carte ; overflow: clip rogne sans jamais défiler.
+  clip: Platform.OS === 'web' ? ({ overflow: 'clip' } as unknown as ViewStyle) : {},
 });
 
 const useLabelStyles = createStyles(({ colors, fonts, typography, spacing }) => ({

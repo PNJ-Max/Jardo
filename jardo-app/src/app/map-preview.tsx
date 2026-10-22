@@ -10,7 +10,6 @@ import type { MapScheme, Scene, SlotKey } from '@/map/layouts';
 import { terracedLongScene } from '@/map/terraced-long';
 import { createStyles, useTheme } from '@/theme';
 
-type Engine = 'svg' | 'skia';
 type Layout = 'terraced-long' | 'country-house';
 
 const layouts: Record<Layout, (scheme: MapScheme) => Scene> = {
@@ -19,8 +18,8 @@ const layouts: Record<Layout, (scheme: MapScheme) => Scene> = {
 };
 
 const layoutOptions: { value: Layout; label: string }[] = [
-  { value: 'terraced-long', label: 'Mitoyenne' },
   { value: 'country-house', label: 'Campagne' },
+  { value: 'terraced-long', label: 'Mitoyenne' },
 ];
 
 // Dans la carte v1, ce seront les noms des espaces et des zones affectés aux emplacements.
@@ -36,21 +35,15 @@ const slotLabels: Record<SlotKey, string> = {
   firewood: 'Bois de chauffage',
 };
 
-const engineOptions: { value: Engine; label: string }[] = [
-  { value: 'svg', label: 'SVG' },
-  { value: 'skia', label: 'Skia' },
-];
-
 /**
  * Aperçu de la carte du jardin, avant qu'elle ne remplace la liste de l'onglet Jardin : la
- * scène de chaque modèle, et le choix du moteur de rendu le temps de l'essai technique.
+ * scène de chaque modèle, pour en juger le dessin.
  */
 export default function MapPreviewScreen() {
   const theme = useTheme();
   const styles = useStyles();
-  const [layout, setLayout] = useState<Layout>('terraced-long');
+  const [layout, setLayout] = useState<Layout>('country-house');
   const scene = layouts[layout](theme.scheme);
-  const [engine, setEngine] = useState<Engine>('svg');
   const [selected, setSelected] = useState<SlotKey | null>(null);
   const [recenter, setRecenter] = useState(0);
 
@@ -66,13 +59,11 @@ export default function MapPreviewScreen() {
             setSelected(null);
           }}
         />
-        <ChipSelect label="Rendu" options={engineOptions} value={engine} onChange={setEngine} />
       </View>
       <View style={styles.map}>
         <MapViewport
           scene={scene}
           labels={slotLabels}
-          engine={engine}
           selected={selected}
           onSelect={setSelected}
           recenter={recenter}

@@ -10,7 +10,19 @@ une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce q
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (20/10/2026)
+## Où on en est (22/10/2026)
+
+**Carte du jardin : visuels et essai technique (étapes 1 et 3 de l'[étude](docs/etude-carte-potager.md)).**
+Deux scènes modèles sont dessinées dans l'app, dans la projection de l'étude : la **maison de
+campagne** (`country-house`), retenue par Maxime pour le MVP, et la maison mitoyenne
+(`terraced-long`). Chacune a ses 9 emplacements (verger, petits fruits, potager et carrés 1 à 4,
+serre, bois de chauffage), tout son décor autour (voisins, route, champs, haies) et sa nuit
+(fenêtres et lampes allumées, lucioles). On les voit depuis Réglages, « Aperçu de la carte ». Les
+étiquettes signalent ce qui est cliquable, et toucher un emplacement le met en évidence. On peut
+pincer, glisser et double-toucher, dans les limites du décor. Rendu retenu : react-native-svg,
+Skia n'apportant rien de décisif (fluidité à confirmer sur téléphone à l'étape 4). Aucune
+modification de l'API ; la clé `country-house` reste à ajouter au catalogue `GardenLayouts`.
+Vérifié en mode web, vue mobile, en clair et en sombre ; pas encore sur téléphone.
 
 **Premiers retours d'usage sur téléphone pris en compte.** Les fiches (espace, zone, plante, tas
 de bois) passent en onglets : l'en-tête (nom, type, informations clés) reste en place, et

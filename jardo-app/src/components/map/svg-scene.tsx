@@ -1,11 +1,26 @@
 import { memo, useEffect, useMemo } from 'react';
-import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, G, Line, Polygon, RadialGradient, Stop } from 'react-native-svg';
 
-import type { Shape } from '@/map/scene';
+import type { Scene } from '@/map/layouts';
+import type { Point, Shape } from '@/map/scene';
 import { useTheme } from '@/theme';
 
-import type { SceneRendererProps } from './scene-renderer';
+/** Passage de la scène à l'écran : écran = scène × scale + (x, y). */
+export type SceneView = { scale: number; x: number; y: number };
+
+export type LiveView = { scale: SharedValue<number>; x: SharedValue<number>; y: SharedValue<number> };
+
+type SvgSceneProps = {
+  scene: Scene;
+  size: { width: number; height: number };
+  /** La vue courante, animée sur le thread UI. */
+  view: LiveView;
+  /** La vue à laquelle la scène est dessinée : celle de la fin du dernier geste. */
+  committed: SceneView;
+  /** Contour de l'emplacement sélectionné. */
+  outline: Point[] | null;
+};
 
 const gradientId = (color: string) => `glow-${color.slice(1)}`;
 
@@ -14,7 +29,7 @@ const gradientId = (color: string) => `glow-${color.slice(1)}`;
  * l'agrandir par une transformation la rendrait floue. Pendant un geste, la vue entière est
  * transformée (rapide) ; à la fin, la scène est redessinée à la nouvelle échelle (nette).
  */
-export function SvgScene({ scene, size, view, committed, outline }: SceneRendererProps) {
+export function SvgScene({ scene, size, view, committed, outline }: SvgSceneProps) {
   const { colors } = useTheme();
   const drawn = useSharedValue(committed);
 
