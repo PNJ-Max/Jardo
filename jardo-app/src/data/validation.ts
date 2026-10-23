@@ -48,13 +48,35 @@ export class Validation {
     return this;
   }
 
-  range(field: string, label: string, value: number, min: number, max: number): this {
-    if (!(value >= min && value <= max)) this.fail(field, `Le champ « ${label} » doit être compris entre ${min} et ${max}.`);
+  /** Un `int` côté API : avec `integer`, une valeur décimale est refusée (la colonne est un entier). */
+  range(field: string, label: string, value: number, min: number, max: number, { integer = false } = {}): this {
+    if (!(value >= min && value <= max) || (integer && !Number.isInteger(value))) {
+      this.fail(field, `Le champ « ${label} » doit être compris entre ${min} et ${max}${integer ? ' (nombre entier)' : ''}.`);
+    }
     return this;
   }
 
-  date(field: string, label: string, value: string | null | undefined): this {
-    if (value != null && !isDateOnly(value)) this.fail(field, `Le champ « ${label} » n'est pas un jour au format AAAA-MM-JJ.`);
+  optionalRange(
+    field: string,
+    label: string,
+    value: number | null | undefined,
+    min: number,
+    max: number,
+    options: { integer?: boolean } = {},
+  ): this {
+    return value == null ? this : this.range(field, label, value, min, max, options);
+  }
+
+  optionalOneOf<T extends string>(field: string, label: string, value: unknown, allowed: readonly T[]): this {
+    return value == null ? this : this.oneOf(field, label, value, allowed);
+  }
+
+  date(field: string, label: string, value: string | null | undefined, { required = false } = {}): this {
+    if (value == null) {
+      if (required) this.fail(field, `Le champ « ${label} » est obligatoire.`);
+    } else if (!isDateOnly(value)) {
+      this.fail(field, `Le champ « ${label} » n'est pas un jour au format AAAA-MM-JJ.`);
+    }
     return this;
   }
 
