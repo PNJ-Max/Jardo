@@ -31,7 +31,7 @@ describe("jardin d'exemple", () => {
 
     expect(await db.first('SELECT name, map_layout FROM gardens')).toEqual({
       name: 'Jardin des Tilleuls',
-      map_layout: 'terraced-long',
+      map_layout: 'country-house',
     });
     expect(await counts(db)).toEqual({
       spaces: 6,

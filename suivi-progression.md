@@ -19,7 +19,9 @@ ouvre sa fiche ; un emplacement libre est voilé, sans étiquette, et ne fait ri
 « Hors carte », sous la carte, liste les espaces actifs sans emplacement et les carrés d'un
 potager de la carte qui n'en ont pas. Un bouton de l'en-tête bascule vers la liste des espaces,
 la voie des lecteurs d'écran. Sans carte configurée, ou pour un modèle que l'app ne dessine pas,
-l'onglet garde la liste. L'API accepte le modèle `country-house`, que prend le jardin d'exemple.
+l'onglet garde la liste. L'API accepte le modèle `country-house`, que prennent les jardins
+d'exemple (API et base locale). Changer de thème en cours de route recolore aussi l'en-tête et la
+barre d'onglets.
 L'aperçu de Réglages est retiré. Vérifié en mode web, vue mobile, en clair et en sombre ; **pas
 encore sur téléphone** (fluidité du pincement avec Skia, poids de l'APK). Il faut recréer la
 base de dev pour avoir le nouveau modèle.

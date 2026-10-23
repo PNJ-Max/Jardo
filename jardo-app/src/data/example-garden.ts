@@ -42,7 +42,7 @@ export async function seedExampleGarden(db: Db, today: DateOnly, now: string): P
     await db.run('UPDATE gardens SET name = ?, map_layout = ? WHERE id = ?', [
       'Jardin des Tilleuls',
       // La serre tunnel, archivée, reste hors carte.
-      'terraced-long',
+      'country-house',
       garden.id,
     ]);
 

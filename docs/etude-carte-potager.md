@@ -241,9 +241,9 @@ inchangées.
 ### Tranché à l'étape 4 (carte v1)
 
 - **Catalogue.** `GardenLayouts` accepte `country-house`, avec les mêmes neuf emplacements que
-  `terraced-long`. Le jardin d'exemple de `DbSeeder` prend `country-house` (la base de dev est à
-  recréer). Le jardin d'exemple du front (`src/data/example-garden.ts`) garde `terraced-long` pour
-  l'instant : il appartient à la migration, il suivra à l'étape 3 de celle-ci.
+  `terraced-long`. Les deux jardins d'exemple, celui de `DbSeeder` et celui du front
+  (`src/data/example-garden.ts`), prennent `country-house`, avec tous leurs espaces actifs posés
+  sur la carte (la base de dev est à recréer). Seule la serre tunnel, archivée, reste hors carte.
 - **Quand la carte s'affiche.** Si `MapLayout` est non nul **et** que le front sait dessiner ce
   modèle ; sinon la liste, sans message (l'assistant de configuration est l'étape 6).
 - **Emplacement libre.** Le dessin reste, voilé par la couleur du sol, sans étiquette ni toucher.
