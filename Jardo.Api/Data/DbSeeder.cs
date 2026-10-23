@@ -68,7 +68,7 @@ public static class DbSeeder
         db.Zones.AddRange(carre1, carre2, carre3, carre4, rang1, rang2, tablette, bac);
 
         // La serre tunnel, archivée, reste hors carte.
-        garden.MapLayout = GardenLayouts.TerracedLong;
+        garden.MapLayout = GardenLayouts.CountryHouse;
 
         GardenMapSlot NewSlot(string slotKey, Space space, Zone? zone = null)
             => new() { Garden = garden, SlotKey = slotKey, Space = space, Zone = zone };

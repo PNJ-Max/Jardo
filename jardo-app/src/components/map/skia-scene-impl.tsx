@@ -25,6 +25,8 @@ export type SkiaSceneProps = {
   scene: Scene;
   size: { width: number; height: number };
   view: LiveView;
+  /** Silhouettes des emplacements libres, voilées pour rester discrètes. */
+  muted: Point[][];
   /** Contour de l'emplacement sélectionné. */
   outline: Point[] | null;
 };
@@ -33,12 +35,13 @@ export type SkiaSceneProps = {
  * Rendu Skia : la scène est enregistrée une fois dans une image vectorielle (SkPicture), puis
  * redessinée par le GPU à chaque image avec la matrice de la vue, sans repasser par React.
  */
-export default function SkiaScene({ scene, size, view, outline }: SkiaSceneProps) {
+export default function SkiaScene({ scene, size, view, muted, outline }: SkiaSceneProps) {
   const { colors } = useTheme();
   const picture = useMemo(() => {
     const { minX, minY, maxX, maxY } = scene.bounds;
     return createPicture((canvas) => drawShapes(canvas, scene.shapes), Skia.XYWHRect(minX, minY, maxX - minX, maxY - minY));
   }, [scene]);
+  const mutedPaths = useMemo(() => muted.map((points) => polygonPath(points.flat())), [muted]);
   const outlinePath = useMemo(() => (outline ? polygonPath(outline.flat()) : null), [outline]);
 
   const transform = useDerivedValue(() => [
@@ -52,6 +55,9 @@ export default function SkiaScene({ scene, size, view, outline }: SkiaSceneProps
     <Canvas style={{ width: size.width, height: size.height }}>
       <Group transform={transform}>
         <Picture picture={picture} />
+        {mutedPaths.map((path, i) => (
+          <Path key={i} path={path} color={scene.background} opacity={0.55} />
+        ))}
         {outlinePath && (
           <>
             <Path path={outlinePath} color={colors.primary} opacity={0.25} />

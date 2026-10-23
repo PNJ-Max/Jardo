@@ -56,6 +56,38 @@ public class GardenMapServiceTests : IDisposable
             vegetable => Assert.Equal(("vegetable", null), (vegetable.SlotKey, vegetable.ZoneId)));
     }
 
+    [Theory]
+    [InlineData(GardenLayouts.CountryHouse)]
+    [InlineData(GardenLayouts.TerracedLong)]
+    public async Task Chaque_modele_dessine_accepte_tous_les_emplacements_du_jardin(string layout)
+    {
+        var potager = await _database.Context.AddSpaceAsync("Potager");
+        var carres = new List<Zone>();
+        for (var i = 1; i <= 4; i++)
+            carres.Add(await _database.Context.AddZoneAsync(potager, $"Carré {i}"));
+        var verger = await _database.Context.AddSpaceAsync("Verger", SpaceKind.Orchard);
+        var petitsFruits = await _database.Context.AddSpaceAsync("Petits fruits", SpaceKind.SmallFruit);
+        var serre = await _database.Context.AddSpaceAsync("Serre", SpaceKind.Greenhouse);
+        var bois = await _database.Context.AddSpaceAsync("Bois", SpaceKind.Firewood);
+
+        var map = await _service.ReplaceAsync(new SaveGardenMapDto
+        {
+            Layout = layout,
+            Slots =
+            [
+                Slot("orchard", verger),
+                Slot("small-fruit", petitsFruits),
+                Slot("vegetable", potager),
+                .. carres.Select((carre, i) => Slot($"bed-{i + 1}", potager, carre)),
+                Slot("greenhouse", serre),
+                Slot("firewood", bois)
+            ]
+        });
+
+        Assert.Equal(layout, map.Layout);
+        Assert.Equal(9, map.Slots.Count);
+    }
+
     [Fact]
     public async Task Remplacer_la_carte_libere_ce_qui_nest_pas_relu()
     {

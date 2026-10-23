@@ -9,7 +9,7 @@ namespace Jardo.Api.Dtos;
 /// </summary>
 public class SaveGardenMapDto
 {
-    /// <summary>Clé du modèle de carte, par exemple « terraced-long ». Null pour retirer la carte.</summary>
+    /// <summary>Clé du modèle de carte, « country-house » ou « terraced-long ». Null pour retirer la carte.</summary>
     [StringLength(50)]
     public string? Layout { get; set; }
 

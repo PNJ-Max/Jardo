@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { slotAt, ZONE_SLOTS, type Scene, type SlotKey } from '@/map/layouts';
+import type { Point } from '@/map/scene';
 import { createStyles } from '@/theme';
 
 import { SkiaScene } from './skia-scene';
@@ -30,6 +31,8 @@ type MapViewportProps = {
   scene: Scene;
   /** Nom affiché sur chaque emplacement occupé. */
   labels: Partial<Record<SlotKey, string>>;
+  /** Emplacements libres : dessinés en retrait. */
+  free: SlotKey[];
   selected: SlotKey | null;
   onSelect: (key: SlotKey | null) => void;
   /** Change de valeur pour demander un recentrage. */
@@ -41,9 +44,10 @@ type MapViewportProps = {
  * toucher pour sélectionner. La vue vit dans des valeurs partagées : Skia redessine la scène à
  * chaque image sur le thread UI, sans repasser par React.
  */
-export function MapViewport({ scene, labels, selected, onSelect, recenter }: MapViewportProps) {
+export function MapViewport({ scene, labels, free, selected, onSelect, recenter }: MapViewportProps) {
   const [size, setSize] = useState<Size | null>(null);
   const fit = useMemo(() => (size ? fitView(scene, size) : null), [scene, size]);
+  const muted = useMemo<Point[][]>(() => free.map((key) => scene.slots[key].hit), [scene, free]);
 
   const scale = useSharedValue(1);
   const x = useSharedValue(0);
@@ -146,6 +150,7 @@ export function MapViewport({ scene, labels, selected, onSelect, recenter }: Map
               scene={scene}
               size={size}
               view={{ scale, x, y }}
+              muted={muted}
               outline={selected ? scene.slots[selected].outline : null}
             />
           )}

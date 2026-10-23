@@ -156,7 +156,7 @@ export type QuantityUnit = 'Plants' | 'Rows' | 'SquareMeters';
  */
 export type SaveGardenMapDto = {
     /**
-     * Clé du modèle de carte, par exemple « terraced-long ». Null pour retirer la carte.
+     * Clé du modèle de carte, « country-house » ou « terraced-long ». Null pour retirer la carte.
      */
     layout?: string | null;
     slots: Array<SaveGardenMapSlotDto>;
