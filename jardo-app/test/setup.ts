@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler/jestSetup';
+
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 
 // Le routeur réel exige une arborescence de navigation ; les tests ne vérifient que les
@@ -5,6 +7,8 @@ jest.mock('react-native-safe-area-context', () => require('react-native-safe-are
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) },
   Stack: { Screen: () => null },
+  // Les boutons de l'en-tête de l'onglet Jardin sont déclarés par l'écran : on les y rend.
+  Tabs: { Screen: ({ options }: { options?: { headerRight?: () => unknown } }) => options?.headerRight?.() ?? null },
   useLocalSearchParams: jest.fn(() => ({})),
 }));
 

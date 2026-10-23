@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api, queryString } from './client';
 import type {
@@ -6,6 +6,7 @@ import type {
   DueHorizon,
   Garden,
   GardenInput,
+  GardenMap,
   GardenTask,
   JournalEntry,
   JournalEntryInput,
@@ -30,6 +31,7 @@ type ItemFilter = { spaceId?: number; zoneId?: number; includeArchived?: boolean
 // Chaque famille porte le nom d'une ressource de l'API.
 export const keys = {
   garden: ['garden'] as const,
+  gardenMap: ['gardenMap'] as const,
   spaces: ['spaces'] as const,
   spaceList: (includeArchived: boolean) => ['spaces', 'list', { includeArchived }] as const,
   space: (id: number) => ['spaces', id] as const,
@@ -52,7 +54,7 @@ export const keys = {
   task: (id: number) => ['tasks', id] as const,
 };
 
-type Family = 'spaces' | 'zones' | 'plants' | 'woodPiles' | 'journal' | 'tasks';
+type Family = 'gardenMap' | 'spaces' | 'zones' | 'plants' | 'woodPiles' | 'journal' | 'tasks';
 
 /**
  * Les enregistrements attendent le rechargement : de retour sur l'écran précédent, tout est
@@ -74,9 +76,10 @@ const afterTaskWrite: Family[] = ['tasks', 'spaces'];
 
 /**
  * Espaces, zones et éléments : leurs noms et leurs compteurs apparaissent partout (journal,
- * tâches, autres listes), et un déplacement change les cibles. On recharge tout le jardin.
+ * tâches, autres listes, carte), et un déplacement change les cibles. Archiver, supprimer ou
+ * changer le type d'un espace le retire aussi de la carte. On recharge tout le jardin.
  */
-const afterStructureWrite: Family[] = ['spaces', 'zones', 'plants', 'woodPiles', 'journal', 'tasks'];
+const afterStructureWrite: Family[] = ['gardenMap', 'spaces', 'zones', 'plants', 'woodPiles', 'journal', 'tasks'];
 
 // --- Jardin et espaces --------------------------------------------------------
 
@@ -90,6 +93,9 @@ export function useSaveGarden() {
     onSuccess: (garden) => queryClient.setQueryData(keys.garden, garden),
   });
 }
+
+export const useGardenMap = () =>
+  useQuery({ queryKey: keys.gardenMap, queryFn: () => api<GardenMap>('/api/garden/map') });
 
 export const useSpaces = (includeArchived = false) =>
   useQuery({
@@ -132,6 +138,16 @@ export function useDeleteSpace() {
 
 export const useZones = (spaceId: number) =>
   useQuery({ queryKey: keys.spaceZones(spaceId), queryFn: () => api<Zone[]>(`/api/spaces/${spaceId}/zones`) });
+
+/** Les zones de plusieurs espaces, dans le même cache que `useZones`. */
+export const useZonesOf = (spaceIds: number[]) =>
+  useQueries({
+    queries: spaceIds.map((spaceId) => ({
+      queryKey: keys.spaceZones(spaceId),
+      queryFn: () => api<Zone[]>(`/api/spaces/${spaceId}/zones`),
+    })),
+    combine: (results) => results.flatMap((result) => result.data ?? []),
+  });
 
 export const useZone = (id: number) =>
   useQuery({ queryKey: keys.zone(id), queryFn: () => api<Zone>(`/api/zones/${id}`) });

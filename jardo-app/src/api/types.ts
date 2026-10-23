@@ -8,6 +8,8 @@ export type {
   DryingStatus,
   DueHorizon,
   DueStatus,
+  GardenMapResponseDto as GardenMap,
+  GardenMapSlotResponseDto as GardenMapSlot,
   GardenResponseDto as Garden,
   ItemKind,
   JournalEntryKind,

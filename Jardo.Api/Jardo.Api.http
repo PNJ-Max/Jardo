@@ -17,7 +17,7 @@ Content-Type: application/json
 }
 
 ### ==========================================================================
-### CARTE DU JARDIN (modele de scene "terraced-long")
+### CARTE DU JARDIN (modele de scene "country-house")
 ### Emplacements : orchard, small-fruit, vegetable, bed-1 a bed-4, greenhouse, firewood
 ### ==========================================================================
 
@@ -31,7 +31,7 @@ PUT {{host}}/api/garden/map
 Content-Type: application/json
 
 {
-  "layout": "terraced-long",
+  "layout": "country-house",
   "slots": [
     { "slotKey": "vegetable", "spaceId": 1 },
     { "slotKey": "bed-1", "spaceId": 1, "zoneId": 1 },
@@ -842,7 +842,7 @@ PUT {{host}}/api/garden/map
 Content-Type: application/json
 
 {
-  "layout": "terraced-long",
+  "layout": "country-house",
   "slots": [ { "slotKey": "orchard", "spaceId": 3 } ]
 }
 
@@ -851,7 +851,7 @@ PUT {{host}}/api/garden/map
 Content-Type: application/json
 
 {
-  "layout": "terraced-long",
+  "layout": "country-house",
   "slots": [ { "slotKey": "bed-1", "spaceId": 1, "zoneId": 5 } ]
 }
 
@@ -860,6 +860,6 @@ PUT {{host}}/api/garden/map
 Content-Type: application/json
 
 {
-  "layout": "terraced-long",
+  "layout": "country-house",
   "slots": [ { "slotKey": "bed-5", "spaceId": 1, "zoneId": 1 } ]
 }

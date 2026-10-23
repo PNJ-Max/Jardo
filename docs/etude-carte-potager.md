@@ -11,6 +11,9 @@ isométrique dans l'onglet Jardin.
 la carte ». Maxime a validé les deux modèles dessinés et retenu la maison de campagne pour le MVP.
 Les décisions ci-dessous intègrent ses retours.
 
+**Étape 4 réalisée le 23/10/2026** : la carte est l'accueil de l'onglet Jardin (voir
+[Tranché à l'étape 4](#tranché-à-létape-4-carte-v1)).
+
 ## Vision
 
 L'onglet Jardin, l'accueil, montre une maquette illustrée du jardin vue d'en haut, « comme un
@@ -24,8 +27,8 @@ potager et ses carrés, la serre, le bois de chauffage.
 - La carte se zoome et se déplace à deux doigts, passe à la nuit en mode sombre et s'anime
   discrètement.
 
-La carte n'est pas dans le MVP : l'onglet Jardin y est la liste des espaces. Juste après, la
-carte remplace cette liste dans le même onglet.
+La carte n'était pas dans le MVP, dont l'onglet Jardin était la liste des espaces. Depuis
+l'étape 4, elle remplace cette liste dans le même onglet dès que le jardin a un modèle de carte.
 
 ## Décisions
 
@@ -133,6 +136,7 @@ ajouté à l'APK.
   - Un fichier par modèle (`country-house.ts`, `terraced-long.ts`) : la disposition, les
     emplacements, le décor et les limites du déplacement.
   - `layouts.ts` : les clés d'emplacement, les emprises, les étiquettes et le toucher.
+  - `scenes.ts` : les modèles dessinés, sous la clé que stocke l'API.
 - **Plutôt que des fichiers `.svg` dans `assets/map/`** : la nuit et le décor passé se dérivent
   d'une seule palette, et les éléments s'assemblent sans retouche puisqu'ils partagent la
   projection. Un même élément sert dans chaque modèle, et le toucher et les étiquettes réutilisent
@@ -234,6 +238,27 @@ inchangées.
   quatre carrés (`bed-1` à `bed-4`), Verger, Petits fruits, Serre et Bois de chauffage. La serre
   tunnel archivée reste hors carte.
 
+### Tranché à l'étape 4 (carte v1)
+
+- **Catalogue.** `GardenLayouts` accepte `country-house`, avec les mêmes neuf emplacements que
+  `terraced-long`. Le jardin d'exemple de `DbSeeder` prend `country-house` (la base de dev est à
+  recréer). Le jardin d'exemple du front (`src/data/example-garden.ts`) garde `terraced-long` pour
+  l'instant : il appartient à la migration, il suivra à l'étape 3 de celle-ci.
+- **Quand la carte s'affiche.** Si `MapLayout` est non nul **et** que le front sait dessiner ce
+  modèle ; sinon la liste, sans message (l'assistant de configuration est l'étape 6).
+- **Emplacement libre.** Le dessin reste, voilé par la couleur du sol, sans étiquette ni toucher.
+- **« Hors carte ».** Les espaces actifs sans emplacement propre (un potager dont seuls les carrés
+  sont posés en fait partie), puis les zones sans carré d'un potager posé sur la carte, nommées
+  avec leur espace. Les autres zones s'ouvrent depuis leur espace, et les espaces archivés depuis
+  la liste, à la demande. La bande n'apparaît que si elle a quelque chose à montrer.
+- **Toucher.** Il ouvre directement la fiche, sans mise en évidence préalable : le rebond de
+  l'élément touché viendra avec les animations (étape 5).
+- **Bascule.** Un bouton de l'en-tête, à côté des réglages, passe de la carte à la liste. Le choix
+  n'est pas mémorisé : l'app rouvre sur la carte.
+- **Rafraîchissement.** Créer, renommer, archiver ou supprimer un espace ou une zone relit la carte.
+- **Aperçu de Réglages retiré.** Le modèle est retenu ; l'onglet Jardin dessine celui que donne
+  l'API, et un `PUT /api/garden/map` avec `terraced-long` (voir `Jardo.Api.http`) montre l'autre.
+
 ## Étapes livrables
 
 Prérequis : l'étape 1 du [modèle du domaine](modele-domaine.md#stratégie-de-migration) (jardin,
@@ -253,8 +278,8 @@ design. Une PR par étape.
 
 Étapes 1 et 3 faites le 21/10/2026, dans la même PR : les deux modèles (campagne et mitoyenne),
 leur nuit et leur décor, l'aperçu depuis Réglages (toucher, étiquettes, zoom, déplacement), et
-la décision technique. Pour l'étape 4, il reste à brancher l'aperçu sur `GET /api/garden/map`,
-à le mettre dans l'onglet Jardin et à ajouter la bande « Hors carte ».
+la décision technique. Étape 4 faite le 23/10/2026 : la carte dans l'onglet Jardin, branchée sur
+`GET /api/garden/map`, avec la bande « Hors carte » et la bascule vers la liste.
 
 Plus tard : d'autres modèles de maison, les saisons, de nouveaux types
 d'espaces (serre, poulailler…) avec leurs emplacements et leurs dessins, un éditeur libre.
@@ -283,10 +308,8 @@ d'espaces (serre, poulailler…) avec leurs emplacements et leurs dessins, un é
 ## Points ouverts
 
 - Type d'espace `Greenhouse` : à reporter dans le [modèle du domaine](modele-domaine.md).
-- Clé de modèle `country-house` : à ajouter au catalogue `GardenLayouts` de l'API, et à donner
-  au jardin d'exemple, qui a aujourd'hui le modèle `terraced-long`.
 - Fluidité du rendu Skia sur un téléphone Android de milieu de gamme, et poids réel ajouté à
-  l'APK : à mesurer en tête de l'étape 4 (voir [la décision](#essai-du-2110--décision)).
+  l'APK : à mesurer sur le premier téléphone qui fait tourner l'étape 4 (voir [la décision](#essai-du-2110--décision)).
 - La carte n'est pas à l'échelle du vrai jardin, conformément à la vision (« pas de plan au
   centimètre »).
 

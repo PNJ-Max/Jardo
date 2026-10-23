@@ -1,4 +1,4 @@
-import type { GardenTask, Plant, Space } from '@/api/types';
+import type { GardenTask, Plant, Space, Zone } from '@/api/types';
 
 export const space = (overrides: Partial<Space> = {}): Space => ({
   id: 1,
@@ -51,5 +51,15 @@ export const plant = (overrides: Partial<Plant> = {}): Plant => ({
   spaceName: 'Potager',
   zoneId: 4,
   zoneName: 'Carré 4',
+  ...overrides,
+});
+
+export const zone = (overrides: Partial<Zone> = {}): Zone => ({
+  id: 1,
+  spaceId: 1,
+  name: 'Carré 1',
+  description: null,
+  createdAt: '2026-01-01T00:00:00Z',
+  itemCount: 0,
   ...overrides,
 });

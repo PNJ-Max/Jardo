@@ -10,23 +10,19 @@ une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce q
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (22/10/2026)
+## Où on en est (23/10/2026)
 
-**La carte passe à Skia.** À la demande de Maxime, la carte est rendue par Skia, net à tout
-zoom, et non plus par react-native-svg, qui est retiré. Coût : environ 4 Mo de plus sur l'APK, et
-`canvaskit.wasm` (3,2 Mo en gzip) téléchargé sur le web, copié dans `public/` par le script
-`postinstall`. Vérifié dans le navigateur ; pas encore sur téléphone. Voir la
-[décision](docs/etude-carte-potager.md#essai-du-2110--décision).
-
-**Carte du jardin : visuels et essai technique (étapes 1 et 3 de l'[étude](docs/etude-carte-potager.md)).**
-Deux scènes modèles sont dessinées dans l'app, dans la projection de l'étude : la **maison de
-campagne** (`country-house`), retenue par Maxime pour le MVP, et la maison mitoyenne
-(`terraced-long`). Chacune a ses 9 emplacements (verger, petits fruits, potager et carrés 1 à 4,
-serre, bois de chauffage), tout son décor autour (voisins, route, champs, haies) et sa nuit
-(fenêtres et lampes allumées, lucioles). On les voit depuis Réglages, « Aperçu de la carte ». Les
-étiquettes signalent ce qui est cliquable, et toucher un emplacement le met en évidence. On peut
-pincer, glisser et double-toucher, dans les limites du décor. Aucune modification de l'API ; la clé `country-house` reste à ajouter au catalogue `GardenLayouts`.
-Vérifié en mode web, vue mobile, en clair et en sombre ; pas encore sur téléphone.
+**La carte est l'accueil (étape 4 de l'[étude](docs/etude-carte-potager.md)).** L'onglet Jardin
+affiche la carte du modèle du jardin, lue par `useGardenMap()` sur `GET /api/garden/map`. Chaque
+emplacement occupé porte le nom de son espace ou de sa zone, et le toucher (dessin ou étiquette)
+ouvre sa fiche ; un emplacement libre est voilé, sans étiquette, et ne fait rien. La bande
+« Hors carte », sous la carte, liste les espaces actifs sans emplacement et les carrés d'un
+potager de la carte qui n'en ont pas. Un bouton de l'en-tête bascule vers la liste des espaces,
+la voie des lecteurs d'écran. Sans carte configurée, ou pour un modèle que l'app ne dessine pas,
+l'onglet garde la liste. L'API accepte le modèle `country-house`, que prend le jardin d'exemple.
+L'aperçu de Réglages est retiré. Vérifié en mode web, vue mobile, en clair et en sombre ; **pas
+encore sur téléphone** (fluidité du pincement avec Skia, poids de l'APK). Il faut recréer la
+base de dev pour avoir le nouveau modèle.
 
 **Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
 L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
@@ -46,6 +42,24 @@ L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
 - [ ] 5. Bascule des écrans
 - [ ] 6. Retrait de l'API .NET
 - [ ] 7. Sauvegarde
+
+### Avant, le 22/10/2026
+
+**La carte passe à Skia.** À la demande de Maxime, la carte est rendue par Skia, net à tout
+zoom, et non plus par react-native-svg, qui est retiré. Coût : environ 4 Mo de plus sur l'APK, et
+`canvaskit.wasm` (3,2 Mo en gzip) téléchargé sur le web, copié dans `public/` par le script
+`postinstall`. Vérifié dans le navigateur ; pas encore sur téléphone. Voir la
+[décision](docs/etude-carte-potager.md#essai-du-2110--décision).
+
+**Carte du jardin : visuels et essai technique (étapes 1 et 3 de l'[étude](docs/etude-carte-potager.md)).**
+Deux scènes modèles sont dessinées dans l'app, dans la projection de l'étude : la **maison de
+campagne** (`country-house`), retenue par Maxime pour le MVP, et la maison mitoyenne
+(`terraced-long`). Chacune a ses 9 emplacements (verger, petits fruits, potager et carrés 1 à 4,
+serre, bois de chauffage), tout son décor autour (voisins, route, champs, haies) et sa nuit
+(fenêtres et lampes allumées, lucioles). On les voit depuis Réglages, « Aperçu de la carte ». Les
+étiquettes signalent ce qui est cliquable, et toucher un emplacement le met en évidence. On peut
+pincer, glisser et double-toucher, dans les limites du décor. Aucune modification de l'API ; la clé `country-house` reste à ajouter au catalogue `GardenLayouts`.
+Vérifié en mode web, vue mobile, en clair et en sombre ; pas encore sur téléphone.
 
 ### Avant, le 21/10/2026
 

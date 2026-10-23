@@ -11,12 +11,26 @@ et le détail visuel par les maquettes revues.
 Navigation : 3 onglets en bas (**Jardin** · **Aujourd'hui** · **Journal**), plus des écrans de
 détail. L'accueil est **Jardin** : on ouvre l'app sur son jardin, pas sur une liste de corvées.
 
-Juste après le MVP, la carte isométrique du jardin remplace la liste des espaces dans l'onglet
-Jardin : chaque espace y est dessiné, et le toucher ouvre l'espace. La carte ne porte ni liste
-ni voyant ; les tâches restent dans Aujourd'hui. Un bouton affiche la liste des espaces. Détail
-dans l'[étude de la carte](etude-carte-potager.md).
+Depuis l'étape 4 de l'[étude de la carte](etude-carte-potager.md), l'onglet Jardin montre la carte
+isométrique du jardin quand elle est configurée, et la liste des espaces sinon. La carte ne porte
+ni liste ni voyant ; les tâches restent dans Aujourd'hui.
 
 ## 1. Jardin (onglet d'accueil)
+
+**Carte**, quand le jardin a un modèle de carte (`MapLayout`) que l'app sait dessiner :
+
+- La scène du modèle, de jour en mode clair, de nuit en mode sombre. Pincer pour zoomer (jusqu'à
+  ×5), glisser pour se déplacer, double-toucher pour zoomer, bouton pour recentrer.
+- Chaque emplacement occupé porte le nom de son espace ou de sa zone (celui des carrés à partir
+  d'un zoom de ×1,45). Toucher le dessin ou l'étiquette ouvre l'espace, ou la zone pour un carré.
+- Un emplacement libre est voilé, sans étiquette, et ne réagit pas au toucher.
+- La bande **« Hors carte »**, sous la carte, liste les espaces actifs sans emplacement, puis les
+  zones d'un potager de la carte qui n'ont pas de carré (« Carré 5 · Potager »). Les espaces
+  archivés n'y sont pas : la liste les montre à la demande.
+- Un bouton de l'en-tête affiche la **liste des espaces**, et inversement. La liste reste la voie
+  des lecteurs d'écran.
+
+**Liste des espaces**, sans carte configurée ou à la demande :
 
 - Liste des espaces, avec leur type (icône) et le nombre de tâches dues.
 - Bouton « + » pour créer un espace, en choisissant son type.
@@ -147,5 +161,5 @@ Valeurs, icônes et contrastes : [charte graphique](charte-graphique.md#voyant-d
 
 ## Plus tard (hors MVP)
 
-Carte isométrique dans l'onglet Jardin, notifications des tâches dues, récoltes chiffrées et bilans,
+Assistant de configuration de la carte, notifications des tâches dues, récoltes chiffrées et bilans,
 photos sur le journal, catalogue d'espèces, météo.

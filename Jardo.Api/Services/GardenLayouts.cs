@@ -21,23 +21,29 @@ public record GardenLayout(string Key, IReadOnlyList<MapSlotDefinition> Slots)
 /// </summary>
 public static class GardenLayouts
 {
+    public const string CountryHouse = "country-house";
     public const string TerracedLong = "terraced-long";
+
+    // Les deux modèles dessinés ont les mêmes emplacements, placés autrement dans la scène.
+    private static readonly MapSlotDefinition[] GardenSlots =
+    [
+        new("orchard", SpaceKind.Orchard, AcceptsZone: false),
+        new("small-fruit", SpaceKind.SmallFruit, AcceptsZone: false),
+        new("vegetable", SpaceKind.VegetableGarden, AcceptsZone: false),
+        new("bed-1", SpaceKind.VegetableGarden, AcceptsZone: true),
+        new("bed-2", SpaceKind.VegetableGarden, AcceptsZone: true),
+        new("bed-3", SpaceKind.VegetableGarden, AcceptsZone: true),
+        new("bed-4", SpaceKind.VegetableGarden, AcceptsZone: true),
+        new("greenhouse", SpaceKind.Greenhouse, AcceptsZone: false),
+        new("firewood", SpaceKind.Firewood, AcceptsZone: false)
+    ];
 
     private static readonly GardenLayout[] All =
     [
+        // Maison de campagne au milieu de son terrain.
+        new(CountryHouse, GardenSlots),
         // Maison mitoyenne, jardin en longueur.
-        new(TerracedLong,
-        [
-            new("orchard", SpaceKind.Orchard, AcceptsZone: false),
-            new("small-fruit", SpaceKind.SmallFruit, AcceptsZone: false),
-            new("vegetable", SpaceKind.VegetableGarden, AcceptsZone: false),
-            new("bed-1", SpaceKind.VegetableGarden, AcceptsZone: true),
-            new("bed-2", SpaceKind.VegetableGarden, AcceptsZone: true),
-            new("bed-3", SpaceKind.VegetableGarden, AcceptsZone: true),
-            new("bed-4", SpaceKind.VegetableGarden, AcceptsZone: true),
-            new("greenhouse", SpaceKind.Greenhouse, AcceptsZone: false),
-            new("firewood", SpaceKind.Firewood, AcceptsZone: false)
-        ])
+        new(TerracedLong, GardenSlots)
     ];
 
     public static GardenLayout? Find(string key)
