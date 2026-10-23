@@ -1,7 +1,9 @@
 # Front Jardo : architecture
 
-Application mobile Android pour gérer son jardin. Elle consomme l'API
-`Jardo.Api`, sans autre back-end.
+Application mobile Android pour gérer son jardin. Ses données vivent sur le téléphone, dans une
+base SQLite : l'app marche sans réseau ni serveur. L'API `Jardo.Api` est encore dans le dépôt
+mais n'est plus appelée ; son retrait est l'étape 6 de la
+[migration « local d'abord »](etude-architecture-donnees.md#plan-de-migration).
 
 ## Décision : Expo (React Native + TypeScript)
 
@@ -31,13 +33,13 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 |---|---|---|
 | Framework | Expo SDK 57, TypeScript strict | Standard actuel de React Native |
 | Navigation | **Expo Router** | Routes basées sur les fichiers, onglets et piles prêts à l'emploi |
-| Données serveur | **TanStack Query** | Cache, rechargement, états chargement/erreur, mises à jour optimistes |
-| Client API | `fetch` + types générés depuis le Swagger de l'API par `@hey-api/openapi-ts` | Contrat toujours aligné sur l'API ; `openapi-typescript` exige TypeScript 5, `@hey-api/openapi-ts` accepte TypeScript 6 |
-| Formulaires | `useState` + validation légère, erreurs de l'API sous les champs | Suffisant pour six formulaires simples |
+| Cache des données | **TanStack Query** | Cache, rechargement, états chargement/erreur, mises à jour optimistes ; les hooks appellent les services locaux |
+| Client API (plus appelé) | `fetch` + types générés depuis le Swagger de l'API par `@hey-api/openapi-ts` | Gardé jusqu'au retrait de l'API (étape 6) |
+| Formulaires | `useState` + validation légère, erreurs des services sous les champs | Suffisant pour six formulaires simples |
 | Dates | `@react-native-community/datetimepicker` sur Android, `<input type="date">` sur le web | Recommandé par Expo et inclus dans Expo Go ; le module n'existe pas sur le web |
 | Style | `StyleSheet` + `src/theme/` (`useTheme`, `createStyles`) | Aucune dépendance ; suit le mode clair / sombre du téléphone, ou celui choisi dans les réglages ; jetons décrits dans la [charte graphique](charte-graphique.md) |
 | Réglages sur l'appareil | `@react-native-async-storage/async-storage` | Inclus dans Expo Go ; `localStorage` sur le web. Ne garde que l'apparence choisie |
-| Base locale | `expo-sqlite` (fichier `jardo.db`), SQL écrit à la main ; `expo-crypto` pour les UUID | Inclus dans Expo Go ; choix argumentés dans l'[étude des données](etude-architecture-donnees.md#la-cible-technique). Ouverte et migrée au démarrage, pas encore lue par les écrans |
+| Base locale | `expo-sqlite` (fichier `jardo.db`), SQL écrit à la main ; `expo-crypto` pour les UUID | Inclus dans Expo Go ; choix argumentés dans l'[étude des données](etude-architecture-donnees.md#la-cible-technique). Ouverte et migrée au démarrage, lue et écrite par tous les écrans |
 | Polices | `@expo-google-fonts/nunito` + `expo-font` | Chargée au démarrage, écran de démarrage maintenu jusque-là |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
 | Carte du jardin | `@shopify/react-native-skia` (v2), `react-native-gesture-handler`, `react-native-reanimated` | Net à tout zoom, dessin sur le thread UI ; inclus dans Expo Go. Sur le web, `canvaskit.wasm` est copié dans `public/` par le script `postinstall`. Choix argumenté dans l'[étude de la carte](etude-carte-potager.md#essai-du-2110--décision) |
@@ -65,12 +67,13 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   ├── settings.tsx          réglages : nom du jardin, apparence, version de l'app
 │   └── map-preview.tsx       aperçu de la carte du jardin (avant l'onglet Jardin)
 ├── src/api/
-│   ├── generated/            types générés depuis le Swagger (ne pas modifier)
-│   ├── types.ts              noms courts des contrats (Space, GardenTask…)
-│   ├── client.ts             fetch, ApiError (ProblemDetails), query string
-│   └── queries.ts            hooks TanStack Query, clés de cache, invalidations
-├── src/domain/               règles et calculs purs (échéances, bois, journal), pas encore branchés
-├── src/data/                 base locale SQLite : accès, schéma et migrations, jardin d'exemple
+│   ├── types.ts              noms courts des contrats (Space, GardenTask…), la référence des écrans
+│   ├── queries.ts            hooks TanStack Query sur les services locaux, clés de cache, invalidations
+│   ├── generated/            types générés depuis le Swagger (plus utilisés, retirés à l'étape 6)
+│   └── client.ts             fetch, ApiError (plus appelé, retiré à l'étape 6)
+├── src/domain/               règles et calculs purs (échéances, bois, journal, types acceptés)
+├── src/data/                 base locale SQLite : accès, schéma et migrations, jardin d'exemple,
+│                             un service par ressource, services.tsx (fournisseur des écrans)
 ├── src/components/ui/        briques de base (boutons, carte, champs, date, pastille, états)
 ├── src/components/           lignes et sections métier (tâche, intervention, espace, élément)
 ├── src/components/map/       carte : gestes, rendu Skia, étiquettes
@@ -82,24 +85,19 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 └── app.json                  configuration Expo
 ```
 
-## Contrat de l'API
+## Contrats des écrans
 
-Les types de `src/api/generated/` sont générés depuis `/swagger/v1/swagger.json`. Après un
-changement de DTO côté .NET, API démarrée :
-
-```bash
-npm --prefix jardo-app run api:types
-```
-
-Le fichier généré est commité : le front compile sans l'API. Côté API, `Program.cs` configure
-Swagger pour que le contrat soit exact (types de référence non nuls, enums nullables, propriétés
-des réponses toujours présentes via `ResponsePropertiesRequiredFilter`).
+`src/api/types.ts` est la référence : il nomme pour les écrans les types écrits à la main dans
+`src/domain/types.ts` (vocabulaire, `Id`) et dans les services de `src/data/` (`Space`,
+`GardenTask`, `SpaceInput`…), de la forme des anciens DTO de l'API. Les identifiants sont des UUID
+en chaîne, dans les routes (`/space/<uuid>`), les paramètres et les formulaires. Les types générés
+de `src/api/generated/` ne servent plus ; ils partent avec l'API à l'étape 6.
 
 ## Domaine (`src/domain/`)
 
 Premier pas de la [migration « local d'abord »](etude-architecture-donnees.md#plan-de-migration) :
-le portage en TypeScript de la logique pure de l'API, pour que l'app la porte un jour seule.
-**Aucun écran ne l'appelle encore** (étape 5) ; les écrans suivent l'API.
+le portage en TypeScript de la logique pure de l'API. Les services de `src/data/` s'en servent à
+chaque lecture ; les écrans affichent ce qu'ils renvoient.
 
 - **Du code pur** : ni SQLite, ni React, ni horloge. La date du jour est un paramètre, comme
   `TimeProvider` côté .NET. Les tests (`__tests__/domain/`) sont le portage des tests C#.
@@ -110,16 +108,16 @@ le portage en TypeScript de la logique pure de l'API, pour que l'app la porte un
   la dernière intervention qui vaut pour une cible, à partir de lignes déjà lues.
 - `types.ts` : le vocabulaire (types d'espace, d'élément, d'intervention, rythmes, statuts) ;
   `kinds.ts` : ce que chaque type d'espace accepte, et les libellés des messages d'erreur.
-- Les identifiants sont des chaînes (`Id`), ceux de la future base locale.
-- `src/lib/garden.ts` garde le vocabulaire d'affichage (libellés, icônes) et ses propres règles
-  d'acceptation, qui seront ramenées sur `kinds.ts` à la bascule.
+- Les identifiants sont des chaînes (`Id`), les UUID de la base locale.
+- `src/lib/garden.ts` garde le vocabulaire d'affichage (libellés, icônes, ordre des choix) ; ce
+  qu'il propose suit les règles d'acceptation de `kinds.ts`.
 
 ## Données locales (`src/data/`)
 
 Étape 2 de la même migration : la base SQLite du téléphone. `SQLiteProvider` (dans
 `src/app/_layout.tsx`) ouvre `jardo.db` et la migre au démarrage, l'écran de démarrage restant
-affiché jusque-là. **Aucun écran ne la lit encore** : les services arrivent aux étapes 3 et 4,
-la bascule à l'étape 5.
+affiché jusque-là. Tous les écrans la lisent, par les services (étapes 3 et 4) que la bascule
+(étape 5) a branchés.
 
 - **`db.ts` : l'interface `Db`**, la seule porte vers la base : `exec` (script sans paramètres),
   `run`, `all`, `first` (paramètres `?` positionnels, valeurs `string | number | null`) et
@@ -168,7 +166,15 @@ de développement → Application → Stockage → « Effacer les données du si
 ### Services locaux
 
 Étapes 3 et 4 de la même migration : un module par ressource, qui reprend les règles du service
-.NET du même nom. **Aucun écran ne les appelle encore** (étape 5).
+.NET du même nom. Les écrans les appellent depuis l'étape 5.
+
+**Comment les écrans les atteignent.** `services.tsx` : `createServices(db, clock)` rend tous les
+services sur une même base, et `ServicesProvider` les met à disposition des hooks
+(`useServices()`). Dans l'app, `src/app/_layout.tsx` les crée une seule fois, sous le
+`SQLiteProvider`, à partir de sa connexion (`fromExpo`) : une seule instance de `Db` par connexion,
+sinon la file des transactions ne protège plus rien. Les hooks de `src/api/queries.ts` appellent
+ces services avec les mêmes clés de cache et les mêmes invalidations qu'avec l'API ; une lecture
+qui échoue n'est pas retentée (`retry: false`), elle échouerait encore.
 
 | Module | Équivalent .NET |
 |---|---|
@@ -215,17 +221,20 @@ de développement → Application → Stockage → « Effacer les données du si
 
 ## Conventions
 
-- **Le voyant vient du serveur.** On affiche le `status` d'une tâche (`Ok` / `DueSoon` / `Overdue`),
-  `daysOverdue` et `nextDueDate` tels quels. Le front ne recalcule jamais l'échéance, ni le stock
-  ou le séchage d'un tas de bois : c'est la règle posée côté API.
-- **Erreurs.** L'API renvoie du ProblemDetails (RFC 9457). Un seul utilitaire transforme
-  une réponse d'erreur en message lisible pour l'écran.
+- **Le voyant vient du domaine.** Les services calculent, à chaque lecture et avec `src/domain/`,
+  le `status` d'une tâche (`Ok` / `DueSoon` / `Overdue`), `daysOverdue` et `nextDueDate`, le stock
+  et le séchage d'un tas de bois. Les écrans les affichent tels quels et ne recalculent jamais
+  rien : un seul endroit porte la règle, sinon deux calculs finiraient par diverger.
+- **Erreurs.** Un service qui refuse lève une `ProblemError` au format du ProblemDetails
+  (RFC 9457) : titre, détail, erreurs par champ. `fieldError(error, 'name')` (`components/ui/form.tsx`)
+  affiche une erreur de validation sous son champ ; `FormError`, en bas du formulaire, ce qui ne
+  vise aucun champ (règle métier refusée, ressource introuvable).
 - **Dates.** Les dates du jardin sont des `DateOnly` : on les manipule en chaîne `YYYY-MM-DD`,
   sans conversion de fuseau. Le champ de date (`DateField`) peut interdire les jours futurs.
 - **Mise à jour optimiste** pour « Fait » : la tâche quitte les listes de tâches dues aussitôt,
-  et revient si l'API refuse. L'API renvoie l'entrée notée ; « Annuler » la supprime.
-- **La fiche d'un élément** s'ouvre selon le `itemKind` (`Plant`, `WoodPile`) que l'API renvoie
-  avec les tâches et le journal.
+  et revient si l'écriture est refusée. Le service renvoie l'entrée notée ; « Annuler » la supprime.
+- **La fiche d'un élément** s'ouvre selon le `itemKind` (`Plant`, `WoodPile`) que les services
+  renvoient avec les tâches et le journal.
 - **Invalidations par famille de ressources.** Une intervention ou un « Fait » recharge le
   journal, les tâches, les compteurs des espaces et les tas de bois ; une tâche, les tâches et
   les espaces ; un espace, une zone ou un élément, tout le jardin (`src/api/queries.ts`).
@@ -233,9 +242,10 @@ de développement → Application → Stockage → « Effacer les données du si
   grandes zones de toucher.
 - **Commentaires** : comme dans le back, on explique *pourquoi*, pas ce que fait la ligne.
 
-## Connexion à l'API
+## Connexion à l'API (plus utilisée)
 
-**Pour l'instant, tout tourne sur le PC** : l'app en mode web dans le navigateur
+Depuis l'étape 5, l'app n'appelle plus l'API : en web comme dans Expo Go, il suffit de Metro.
+Ce qui suit décrit l'ancien branchement, retiré avec l'API à l'étape 6 : l'app en mode web dans le navigateur
 (`npm run web`, port 8081) ou sur un téléphone via Expo Go, l'API sur le port 5015. Par défaut
 rien n'est exposé sur le réseau ; le profil de lancement `lan` ouvre l'API au Wi-Fi local
 (voir [Tester sur téléphone](../jardo-app/README.md#tester-sur-téléphone)).
@@ -260,14 +270,18 @@ Jest avec le preset `jest-expo` et React Native Testing Library, comme le recomm
 `jardo-app/__tests__/` (jamais sous `src/app/`, où chaque fichier est une route), les aides
 dans `jardo-app/test/`.
 
-- **L'API est simulée au niveau de `fetch`** : `mockApi({ 'GET /api/tasks/due?horizon=Week': { body: [...] } })`
-  (`test/api.ts`). Le vrai client, les hooks TanStack Query et l'écran tournent ; une route non
-  déclarée fait échouer le test. Un handler peut être une fonction (réponse qui dépend de la
-  requête, ou promesse qu'on libère à la main pour observer l'écran pendant l'attente).
-  `problem(400, { Name: ['…'] })` fabrique une erreur de validation.
-- **`await renderScreen(<Ecran />)`** (`test/render.tsx`) monte l'écran avec un cache neuf et le
-  fournisseur d'« Annuler ». RNTL 14 est asynchrone : `await` sur `render` et `fireEvent`.
-- `test/fixtures.ts` : `space()`, `task()`, des DTO complets à surcharger.
+- **Les écrans tournent sur la couche locale**, une vraie SQLite en mémoire : rien n'est simulé
+  entre l'écran et la base. `const services = await createTestServices()` (`test/render.tsx`)
+  rend les services sur une base neuve ; le test y prépare ses données par les services eux-mêmes
+  (`services.spaces.create(…)`), donc avec leurs règles. Les dates se placent par rapport au jour
+  (`addDays(today(), -2)`), comme l'horloge des services.
+- **`await renderScreen(<Ecran />, services)`** monte l'écran sur ces services (sur une base neuve
+  s'ils sont omis), avec un cache neuf et le fournisseur d'« Annuler », et les rend pour vérifier
+  la base après coup. RNTL 14 est asynchrone : `await` sur `render` et `fireEvent`.
+- **Une panne ou une attente** se provoque sur le service lui-même :
+  `jest.spyOn(services.tasks, 'getDue').mockRejectedValueOnce(…)`, ou une implémentation qui
+  attend une promesse libérée par le test pour observer l'écran pendant l'écriture.
+- `test/api.ts` (`mockApi`) ne sert plus qu'au test de `client.ts` ; tous deux partent à l'étape 6.
 - **La base locale se teste sur une vraie SQLite en mémoire** (`test/db.ts`, `node:sqlite` de
   Node, sans dépendance) : `await createTestDb()` rend une base migrée comme l'app l'ouvre,
   `createTestDb({ exampleGarden: true })` avec le jardin d'exemple, `createMemoryDb()` une base
@@ -282,5 +296,5 @@ dans `jardo-app/test/`.
 
 ## Hors périmètre du MVP
 
-Authentification, mode hors-ligne complet, iOS (possible plus tard avec le même code),
+Authentification, synchronisation entre appareils, iOS (possible plus tard avec le même code),
 publication sur le Play Store.

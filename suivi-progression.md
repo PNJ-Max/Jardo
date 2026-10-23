@@ -12,8 +12,20 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (23/10/2026)
 
+**L'app marche sans API ni réseau (étape 5 du « local d'abord »).** Tous les écrans lisent et
+écrivent la base SQLite du téléphone : les hooks de `queries.ts` appellent les services de
+`src/data/` avec les mêmes clés de cache, les mêmes invalidations et le même « Fait » optimiste
+et annulable. `types.ts` est la référence, écrite à la main dans le domaine et les services ; les
+identifiants sont des UUID en chaîne dans les routes, les paramètres et les formulaires. Les
+erreurs des services s'affichent sous leur champ. La carte de l'onglet Jardin lit aussi la base
+locale (modèle `country-house` du jardin d'exemple). Les tests d'écran tournent sur la SQLite en
+mémoire au lieu de `mockApi`. Convention : « le voyant vient du domaine ». Vérifié par un parcours
+complet en mode web, API éteinte, en clair et en sombre ; **pas encore sur téléphone en mode
+avion**. L'API .NET reste dans le dépôt mais n'est plus appelée (retrait : étape 6). Il faut
+recréer la base de dev d'une branche plus ancienne si elle date d'avant le modèle `country-house`.
+
 **La carte est l'accueil (étape 4 de l'[étude](docs/etude-carte-potager.md)).** L'onglet Jardin
-affiche la carte du modèle du jardin, lue par `useGardenMap()` sur `GET /api/garden/map`. Chaque
+affiche la carte du modèle du jardin, lue par `useGardenMap()` (aujourd'hui dans la base locale). Chaque
 emplacement occupé porte le nom de son espace ou de sa zone, et le toucher (dessin ou étiquette)
 ouvre sa fiche ; un emplacement libre est voilé, sans étiquette, et ne fait rien. La bande
 « Hors carte », sous la carte, liste les espaces actifs sans emplacement et les carrés d'un
@@ -27,7 +39,7 @@ encore sur téléphone** (fluidité du pincement avec Skia, poids de l'APK). Il 
 base de dev pour avoir le nouveau modèle.
 
 **Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
-L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
+Depuis l'étape 5, l'app tourne sur la base locale ; l'API n'est plus appelée.
 
 - [x] 1. Domaine pur en TypeScript (22/10/2026) : `jardo-app/src/domain/` porte
   `DueDateCalculator`, `WoodPileCalculator`, `LatestInterventions` et le vocabulaire des types,
@@ -52,7 +64,12 @@ L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
   transaction, stock de bois jamais négatif vérifié dans la transaction de l'écriture. Les 148 cas
   des tests C# ont leur équivalent en Jest (étapes 1, 3 et 4), plus des ajouts. Aucun écran ne les
   appelle encore ([détail](docs/front-architecture.md#services-locaux)).
-- [ ] 5. Bascule des écrans
+- [x] 5. Bascule des écrans (23/10/2026) : `queries.ts` appelle `src/data/` par
+  `useServices()` (`src/data/services.tsx`, créé une fois sous le `SQLiteProvider`), `types.ts`
+  écrit à la main, identifiants en chaînes, erreurs `ProblemError` sous les champs, règles
+  d'acceptation de `lib/garden.ts` ramenées sur `domain/kinds.ts`, tests d'écran sur la SQLite
+  en mémoire. Parcours complet en mode web sans l'API ; reste le téléphone en mode avion
+  ([détail](docs/front-architecture.md#services-locaux)).
 - [ ] 6. Retrait de l'API .NET
 - [ ] 7. Sauvegarde
 
