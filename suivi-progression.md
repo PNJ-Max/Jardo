@@ -47,7 +47,13 @@ L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
   de la même forme que les DTO, écritures en transaction, refus au format du ProblemDetails. Les
   cas des tests C# correspondants sont portés en Jest sur la SQLite en mémoire. Aucun écran ne les
   appelle encore ([détail](docs/front-architecture.md#services-locaux)).
-- [ ] 4. Services locaux : journal, tâches, tas de bois
+- [x] 4. Services locaux, partie 2 (23/10/2026) : `jardo-app/src/data/` porte `JournalService`,
+  `TaskService`, `TaskQueries`, `WoodPileService`, `InterventionTarget` et `WoodMovements` :
+  cohérence des cibles, règle d'application d'une intervention à ce que la cible contient, dates
+  jamais dans le futur, champs acceptés selon le type, « Fait » qui note l'intervention en une
+  transaction, stock de bois jamais négatif vérifié dans la transaction de l'écriture. Les 148 cas
+  des tests C# ont leur équivalent en Jest (étapes 1, 3 et 4), plus des ajouts. Aucun écran ne les
+  appelle encore ([détail](docs/front-architecture.md#services-locaux)).
 - [ ] 5. Bascule des écrans
 - [ ] 6. Retrait de l'API .NET
 - [ ] 7. Sauvegarde
