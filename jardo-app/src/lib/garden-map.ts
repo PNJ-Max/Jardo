@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 
-import type { GardenMap, Space, SpaceKind, Zone } from '@/api/types';
+import type { GardenMap, Id, Space, SpaceKind, Zone } from '@/api/types';
 
 export type OffMapTarget = {
   key: string;
@@ -15,7 +15,7 @@ export type OffMapTarget = {
  * Les potagers posés sur la carte : seules leurs zones ont des emplacements (les carrés), donc
  * seules elles peuvent manquer à la carte. Les zones d'un autre espace s'ouvrent depuis lui.
  */
-export function mappedVegetableGardens(map: GardenMap): number[] {
+export function mappedVegetableGardens(map: GardenMap): Id[] {
   return map.slots
     .filter((slot) => slot.zoneId === null && slot.spaceKind === 'VegetableGarden')
     .map((slot) => slot.spaceId);

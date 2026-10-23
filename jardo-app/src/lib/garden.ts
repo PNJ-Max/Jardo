@@ -1,10 +1,13 @@
 import type { Href } from 'expo-router';
 
-import type { ItemKind, JournalEntryKind, MeasureUnit, QuantityUnit, SpaceKind, TaskRecurrence } from '@/api/types';
+import type { Id, ItemKind, JournalEntryKind, MeasureUnit, QuantityUnit, SpaceKind, TaskRecurrence } from '@/api/types';
 import type { IconName } from '@/components/ui';
+import { isEntryKindAllowedIn, isWoodKind } from '@/domain/kinds';
 
-// Vocabulaire du domaine affiché à l'écran. Les règles d'acceptation reprennent celles de l'API
-// (docs/modele-domaine.md) : elles servent à ne proposer que des choix valides, l'API reste juge.
+export { isWoodKind } from '@/domain/kinds';
+
+// Vocabulaire du domaine affiché à l'écran. Les règles d'acceptation viennent du domaine
+// (src/domain/kinds.ts) : elles servent à ne proposer que des choix valides, les services restent juges.
 
 export const spaceKinds: Record<SpaceKind, { label: string; icon: IconName }> = {
   VegetableGarden: { label: 'Potager', icon: 'leaf-outline' },
@@ -47,7 +50,7 @@ const woodKinds: JournalEntryKind[] = ['WoodSupply', 'WoodConsumption'];
 
 /** Les interventions qu'un espace accepte : le bois au bois de chauffage, les soins ailleurs. */
 export function entryKindsFor(spaceKind: SpaceKind): JournalEntryKind[] {
-  return [...(spaceKind === 'Firewood' ? woodKinds : plantCareKinds), 'Observation', 'Other'];
+  return [...plantCareKinds, ...woodKinds, 'Observation' as const, 'Other' as const].filter((kind) => isEntryKindAllowedIn(kind, spaceKind));
 }
 
 /**
@@ -61,10 +64,8 @@ const itemTaskKinds: Record<ItemKind, JournalEntryKind[]> = {
 
 /** Les tâches qui conviennent à la cible : celles de son élément, ou à défaut de son espace. */
 export function taskKindsFor(spaceKind: SpaceKind, itemKind: ItemKind | null): JournalEntryKind[] {
-  return itemKind ? itemTaskKinds[itemKind] : entryKindsFor(spaceKind).filter((kind) => !woodKinds.includes(kind));
+  return itemKind ? itemTaskKinds[itemKind] : entryKindsFor(spaceKind).filter((kind) => !isWoodKind(kind));
 }
-
-export const isWoodKind = (kind: JournalEntryKind) => woodKinds.includes(kind);
 
 export const recurrenceOptions: { value: TaskRecurrence; label: string }[] = [
   { value: 'EveryNDays', label: 'Tous les N jours' },
@@ -119,9 +120,9 @@ export function targetLabel({ itemName, zoneName, spaceName }: Target): string {
 
 /** L'écran qui montre la cible d'une tâche ou d'une intervention : la fiche de l'élément, sa zone ou son espace. */
 export function targetHref(target: {
-  spaceId: number;
-  zoneId: number | null;
-  itemId: number | null;
+  spaceId: Id;
+  zoneId: Id | null;
+  itemId: Id | null;
   itemKind: ItemKind | null;
 }): Href {
   if (target.itemId) {

@@ -13,7 +13,7 @@ import { goBack } from '@/lib/navigation';
 
 export default function PlantScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const plant = usePlant(Number(id));
+  const plant = usePlant(id);
 
   if (plant.isPending) return <Loading />;
   if (plant.error) return <ErrorView error={plant.error} onRetry={plant.refetch} />;

@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 
 import { useDeleteJournalEntry, useJournalEntry, useSaveJournalEntry, useSpace } from '@/api/queries';
-import type { JournalEntry, JournalEntryKind, MeasureUnit, Space } from '@/api/types';
+import type { Id, JournalEntry, JournalEntryKind, MeasureUnit, Space } from '@/api/types';
 import { FormTarget } from '@/components/form-target';
 import {
-  apiFieldError,
+  fieldError,
   Button,
   ChipSelect,
   DateField,
@@ -30,7 +30,7 @@ import {
 } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
 
-type Target = { spaceId: number; zoneId: number | null; itemId: number | null; label: string };
+type Target = { spaceId: Id; zoneId: Id | null; itemId: Id | null; label: string };
 
 /**
  * Noter ou corriger une intervention. La cible vient de l'écran d'où l'on arrive.
@@ -40,20 +40,20 @@ type Target = { spaceId: number; zoneId: number | null; itemId: number | null; l
 export default function EntryFormScreen() {
   const params = useLocalSearchParams<{ id?: string; spaceId?: string; zoneId?: string; itemId?: string; label?: string }>();
 
-  if (params.id) return <EditEntry id={Number(params.id)} />;
+  if (params.id) return <EditEntry id={params.id} />;
   return (
     <EntryFormInSpace
       target={{
-        spaceId: Number(params.spaceId),
-        zoneId: params.zoneId ? Number(params.zoneId) : null,
-        itemId: params.itemId ? Number(params.itemId) : null,
+        spaceId: params.spaceId!,
+        zoneId: params.zoneId || null,
+        itemId: params.itemId || null,
         label: params.label ?? '',
       }}
     />
   );
 }
 
-function EditEntry({ id }: { id: number }) {
+function EditEntry({ id }: { id: Id }) {
   const entry = useJournalEntry(id);
   if (entry.isPending) return <Loading />;
   if (entry.error) return <ErrorView error={entry.error} onRetry={entry.refetch} />;
@@ -130,9 +130,9 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
         options={entryKindsFor(space.kind).map((value) => ({ value, label: entryKinds[value].label }))}
         value={kind}
         onChange={setKind}
-        error={apiFieldError(save.error, 'kind')}
+        error={fieldError(save.error, 'kind')}
       />
-      <DateField label="Date" noFuture value={date} onChange={setDate} error={apiFieldError(save.error, 'date')} />
+      <DateField label="Date" noFuture value={date} onChange={setDate} error={fieldError(save.error, 'date')} />
 
       {(isHarvest || isWood) && (
         <Field
@@ -141,7 +141,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
           onChangeText={setQuantityText}
           keyboardType="decimal-pad"
           placeholder={isWood ? undefined : 'Optionnel'}
-          error={apiFieldError(save.error, 'quantity')}
+          error={fieldError(save.error, 'quantity')}
         />
       )}
       {isHarvest && (
@@ -150,7 +150,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
           options={harvestUnits.map((value) => ({ value, label: measureUnits[value].many }))}
           value={harvestUnit}
           onChange={setHarvestUnit}
-          error={apiFieldError(save.error, 'quantityUnit')}
+          error={fieldError(save.error, 'quantityUnit')}
         />
       )}
       {hasHeight && (
@@ -160,7 +160,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
           onChangeText={setHeightText}
           keyboardType="number-pad"
           placeholder="Optionnel"
-          error={apiFieldError(save.error, 'heightCm')}
+          error={fieldError(save.error, 'heightCm')}
         />
       )}
       {hasCare && (
@@ -171,7 +171,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
             onChangeText={setProblem}
             placeholder="Optionnel"
             maxLength={500}
-            error={apiFieldError(save.error, 'problem')}
+            error={fieldError(save.error, 'problem')}
           />
           <Field
             label="Traitement appliqué"
@@ -179,7 +179,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
             onChangeText={setTreatment}
             placeholder="Optionnel"
             maxLength={500}
-            error={apiFieldError(save.error, 'treatment')}
+            error={fieldError(save.error, 'treatment')}
           />
         </>
       )}
@@ -190,7 +190,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
         placeholder={kind === 'Other' ? 'Obligatoire : ce qui a été fait' : 'Optionnel'}
         maxLength={1000}
         multiline
-        error={apiFieldError(save.error, 'note')}
+        error={fieldError(save.error, 'note')}
       />
 
       <FormError error={save.error} />

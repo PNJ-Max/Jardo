@@ -18,7 +18,7 @@ import { goBack } from '@/lib/navigation';
  */
 export default function TaskDoneScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const task = useTask(Number(id));
+  const task = useTask(id);
 
   if (task.isPending) return <Loading />;
   if (task.error) return <ErrorView error={task.error} onRetry={task.refetch} />;

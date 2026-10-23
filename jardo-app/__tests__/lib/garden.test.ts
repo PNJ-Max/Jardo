@@ -49,9 +49,9 @@ describe('vocabulaire du jardin', () => {
   });
 
   it('mène à la fiche la plus précise de la cible', () => {
-    expect(targetHref({ spaceId: 1, zoneId: 2, itemId: 3, itemKind: 'Plant' })).toBe('/plant/3');
-    expect(targetHref({ spaceId: 1, zoneId: null, itemId: 3, itemKind: 'WoodPile' })).toBe('/wood-pile/3');
-    expect(targetHref({ spaceId: 1, zoneId: 2, itemId: null, itemKind: null })).toBe('/zone/2');
-    expect(targetHref({ spaceId: 1, zoneId: null, itemId: null, itemKind: null })).toBe('/space/1');
+    expect(targetHref({ spaceId: 's1', zoneId: 'z2', itemId: 'i3', itemKind: 'Plant' })).toBe('/plant/i3');
+    expect(targetHref({ spaceId: 's1', zoneId: null, itemId: 'i3', itemKind: 'WoodPile' })).toBe('/wood-pile/i3');
+    expect(targetHref({ spaceId: 's1', zoneId: 'z2', itemId: null, itemKind: null })).toBe('/zone/z2');
+    expect(targetHref({ spaceId: 's1', zoneId: null, itemId: null, itemKind: null })).toBe('/space/s1');
   });
 });

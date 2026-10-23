@@ -3,8 +3,7 @@ import { router } from 'expo-router';
 
 import SpaceFormScreen from '@/app/space/form';
 
-import { mockApi, problem } from '../../test/api';
-import { renderScreen } from '../../test/render';
+import { createTestServices, renderScreen } from '../../test/render';
 
 async function fillAndSubmit(name: string) {
   await fireEvent.changeText(screen.getByPlaceholderText('Potager du bas'), name);
@@ -13,52 +12,43 @@ async function fillAndSubmit(name: string) {
 }
 
 describe("formulaire d'espace", () => {
-  it("affiche sous le champ l'erreur de validation renvoyée par l'API", async () => {
-    const calls = mockApi({
-      'POST /api/spaces': problem(400, { Name: ['Un espace de ce nom existe déjà.'] }),
-    });
+  it("affiche sous le champ l'erreur de validation, sans la répéter en bas du formulaire", async () => {
     await renderScreen(<SpaceFormScreen />);
 
-    await fillAndSubmit('Potager');
+    // maxLength borne la saisie au clavier, pas changeText : le service reste juge.
+    await fillAndSubmit('a'.repeat(101));
 
-    expect(await screen.findByText('Un espace de ce nom existe déjà.')).toBeOnTheScreen();
-    expect(calls[0].body).toEqual({ name: 'Potager', kind: 'Orchard', description: null });
+    expect(await screen.findAllByText('Le champ « Nom » ne doit pas dépasser 100 caractères.')).toHaveLength(1);
     expect(router.back).not.toHaveBeenCalled();
   });
 
-  it('ne répète pas une erreur de champ en bas du formulaire', async () => {
-    mockApi({ 'POST /api/spaces': problem(400, { Kind: ['Type inconnu.'] }) });
-    await renderScreen(<SpaceFormScreen />);
+  it('affiche en bas du formulaire une règle refusée qui ne vise aucun champ', async () => {
+    const services = await createTestServices();
+    await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+    await renderScreen(<SpaceFormScreen />, services);
 
     await fillAndSubmit('Potager');
 
-    expect(await screen.findAllByText('Type inconnu.')).toHaveLength(1);
-  });
-
-  it('affiche en bas du formulaire une erreur qui ne vise aucun champ', async () => {
-    mockApi({ 'POST /api/spaces': { status: 500, body: { detail: 'Base indisponible' } } });
-    await renderScreen(<SpaceFormScreen />);
-
-    await fillAndSubmit('Potager');
-
-    expect(await screen.findByText('Base indisponible')).toBeOnTheScreen();
+    expect(await screen.findByText('Un espace nommé « Potager » existe déjà.')).toBeOnTheScreen();
+    expect(router.back).not.toHaveBeenCalled();
   });
 
   it("referme le formulaire une fois l'espace enregistré", async () => {
-    mockApi({ 'POST /api/spaces': { status: 201, body: { id: 9 } } });
-    await renderScreen(<SpaceFormScreen />);
+    const { services } = await renderScreen(<SpaceFormScreen />);
 
-    await fillAndSubmit('Potager');
+    await fillAndSubmit('  Verger du haut ');
 
     await waitFor(() => expect(router.back).toHaveBeenCalled());
+    await expect(services.spaces.getAll()).resolves.toMatchObject([
+      { name: 'Verger du haut', kind: 'Orchard', description: null },
+    ]);
   });
 
-  it("n'envoie rien sans nom ni type", async () => {
-    const calls = mockApi({});
-    await renderScreen(<SpaceFormScreen />);
+  it("n'enregistre rien sans nom ni type", async () => {
+    const { services } = await renderScreen(<SpaceFormScreen />);
 
     await fireEvent.press(screen.getByText('Enregistrer'));
 
-    expect(calls).toHaveLength(0);
+    await expect(services.spaces.getAll()).resolves.toEqual([]);
   });
 });

@@ -1,35 +1,24 @@
-// Noms courts des contrats de l'API. Les types eux-mêmes sont générés depuis son Swagger
-// (`npm run api:types`, API démarrée) dans ./generated : ne jamais les modifier à la main.
-//
-// Les DateOnly arrivent en chaîne "YYYY-MM-DD", les DateTimeOffset en ISO complet.
+// Les contrats que lisent les écrans, sous leurs noms courts. Ils sont écrits à la main dans le
+// domaine et les services locaux, à la forme des anciens DTO de l'API : les identifiants sont des
+// UUID en chaîne, les jours des chaînes "YYYY-MM-DD", les instants de l'ISO 8601 complet.
 
 export type {
-  CompleteTaskDto as CompleteTaskInput,
   DryingStatus,
-  DueHorizon,
   DueStatus,
-  GardenMapResponseDto as GardenMap,
-  GardenMapSlotResponseDto as GardenMapSlot,
-  GardenResponseDto as Garden,
+  Id,
   ItemKind,
   JournalEntryKind,
-  JournalEntryResponseDto as JournalEntry,
   MeasureUnit,
-  PlantResponseDto as Plant,
   QuantityUnit,
-  SaveJournalEntryDto as JournalEntryInput,
-  SavePlantDto as PlantInput,
-  SaveSpaceDto as SpaceInput,
-  SaveTaskDto as TaskInput,
-  SaveWoodPileDto as WoodPileInput,
-  SaveZoneDto as ZoneInput,
   SpaceKind,
-  SpaceResponseDto as Space,
-  TaskCompletionResponseDto as TaskCompletion,
   TaskRecurrence,
-  TaskResponseDto as GardenTask,
-  UpdateGardenDto as GardenInput,
-  ValidationProblemDetails as ProblemDetails,
-  WoodPileResponseDto as WoodPile,
-  ZoneResponseDto as Zone,
-} from './generated';
+} from '@/domain/types';
+export type { Garden, GardenInput } from '@/data/garden';
+export type { GardenMap, GardenMapSlot } from '@/data/garden-map';
+export type { JournalEntry, JournalEntryInput } from '@/data/journal';
+export type { Plant, PlantInput } from '@/data/plants';
+export type { ProblemDetails } from '@/data/problem';
+export type { Space, SpaceInput } from '@/data/spaces';
+export type { CompleteTaskInput, DueHorizon, GardenTask, TaskCompletion, TaskInput } from '@/data/tasks';
+export type { WoodPile, WoodPileInput } from '@/data/wood-piles';
+export type { Zone, ZoneInput } from '@/data/zones';

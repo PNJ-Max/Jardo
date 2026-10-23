@@ -1,7 +1,8 @@
 import { useZones } from '@/api/queries';
+import type { Id } from '@/api/types';
 import { ChipSelect } from '@/components/ui';
 
-const noZone = 0;
+const noZone = 'none';
 
 /** Choix facultatif de la zone d'un élément, parmi celles de son espace. */
 export function ZoneSelect({
@@ -10,9 +11,9 @@ export function ZoneSelect({
   onChange,
   error,
 }: {
-  spaceId: number;
-  value: number | null;
-  onChange: (zoneId: number | null) => void;
+  spaceId: Id;
+  value: Id | null;
+  onChange: (zoneId: Id | null) => void;
   error?: string;
 }) {
   const zones = useZones(spaceId);

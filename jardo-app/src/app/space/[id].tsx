@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { useDeleteSpace, useSetSpaceArchived, useSpace, useZones } from '@/api/queries';
-import type { Space } from '@/api/types';
+import type { Id, Space } from '@/api/types';
 import { ArchivedBadge, Chevron } from '@/components/items';
 import { ItemsSection } from '@/components/items-section';
 import { DetailScreen, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
@@ -15,7 +15,7 @@ import { createStyles, useTheme } from '@/theme';
 
 export default function SpaceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const space = useSpace(Number(id));
+  const space = useSpace(id);
 
   if (space.isPending) return <Loading />;
   if (space.error) return <ErrorView error={space.error} onRetry={space.refetch} />;
@@ -106,7 +106,7 @@ function spaceSummary(space: Space) {
     .join(' · ');
 }
 
-function ZonesSection({ spaceId, zones }: { spaceId: number; zones: ReturnType<typeof useZones> }) {
+function ZonesSection({ spaceId, zones }: { spaceId: Id; zones: ReturnType<typeof useZones> }) {
   const { colors } = useTheme();
   const styles = useStyles();
 

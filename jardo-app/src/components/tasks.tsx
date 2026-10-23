@@ -42,7 +42,7 @@ export function useMarkDone() {
 }
 
 /**
- * Le voyant d'échéance. Il affiche tel quel ce que l'API a calculé : le front ne refait
+ * Le voyant d'échéance. Il affiche tel quel ce que le domaine a calculé : l'écran ne refait
  * jamais le calcul, sinon les deux finiraient par diverger.
  */
 export function DueBadge({ task }: { task: GardenTask }) {

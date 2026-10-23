@@ -11,7 +11,7 @@ import { entryKinds } from '@/lib/garden';
 import { usePullToRefresh } from '@/lib/refresh';
 import { spacing } from '@/theme';
 
-/** Regroupe par jour des entrées déjà triées du plus récent au plus ancien par l'API. */
+/** Regroupe par jour des entrées déjà triées du plus récent au plus ancien par le service. */
 function byDay(entries: JournalEntry[]) {
   const days: { date: string; data: JournalEntry[] }[] = [];
   for (const entry of entries) {
@@ -22,7 +22,7 @@ function byDay(entries: JournalEntry[]) {
   return days;
 }
 
-const allSpaces = 0;
+const allSpaces = 'all';
 const allKinds = 'all';
 
 const kindOptions: { value: JournalEntryKind | typeof allKinds; label: string }[] = [

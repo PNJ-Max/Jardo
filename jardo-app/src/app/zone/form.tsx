@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 
 import { useSaveZone, useZone } from '@/api/queries';
-import type { Zone } from '@/api/types';
-import { apiFieldError, Button, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
+import type { Id, Zone } from '@/api/types';
+import { fieldError, Button, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
 import { goBack } from '@/lib/navigation';
 
 /**
@@ -14,17 +14,17 @@ import { goBack } from '@/lib/navigation';
  */
 export default function ZoneFormScreen() {
   const { id, spaceId } = useLocalSearchParams<{ id?: string; spaceId?: string }>();
-  return id ? <EditZone id={Number(id)} /> : <ZoneForm spaceId={Number(spaceId)} />;
+  return id ? <EditZone id={id} /> : <ZoneForm spaceId={spaceId!} />;
 }
 
-function EditZone({ id }: { id: number }) {
+function EditZone({ id }: { id: Id }) {
   const zone = useZone(id);
   if (zone.isPending) return <Loading />;
   if (zone.error) return <ErrorView error={zone.error} onRetry={zone.refetch} />;
   return <ZoneForm zone={zone.data} spaceId={zone.data.spaceId} />;
 }
 
-function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: number }) {
+function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: Id }) {
   const save = useSaveZone();
   const [name, setName] = useState(zone?.name ?? '');
   const [description, setDescription] = useState(zone?.description ?? '');
@@ -46,7 +46,7 @@ function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: number }) {
         placeholder="Carré 1"
         maxLength={100}
         autoFocus={!zone}
-        error={apiFieldError(save.error, 'name')}
+        error={fieldError(save.error, 'name')}
       />
       <Field
         label="Description"
@@ -55,7 +55,7 @@ function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: number }) {
         placeholder="Optionnel"
         maxLength={500}
         multiline
-        error={apiFieldError(save.error, 'description')}
+        error={fieldError(save.error, 'description')}
       />
 
       <FormError error={save.error} />

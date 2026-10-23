@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from 'react-native';
 
-import { ApiError } from '@/api/client';
+import { ProblemError } from '@/data/problem';
 import { createStyles, useTheme } from '@/theme';
 
 type FieldProps = TextInputProps & { label: string; error?: string; hint?: string };
@@ -72,18 +72,18 @@ export function ChipSelect<T extends string | number>({
 /**
  * Erreur globale d'un formulaire. Les erreurs de validation par champ s'affichent déjà
  * sous chaque champ ; ce bloc ne montre que ce qui n'appartient à aucun champ
- * (zone introuvable, API injoignable…).
+ * (zone introuvable, règle métier refusée…).
  */
 export function FormError({ error }: { error: Error | null }) {
   const styles = useFieldStyles();
 
-  if (!error || (error instanceof ApiError && error.problem.errors)) return null;
+  if (!error || (error instanceof ProblemError && error.problem.errors)) return null;
   return <Text style={styles.error}>{error.message}</Text>;
 }
 
-/** Message de validation renvoyé par l'API pour un champ donné. */
-export function apiFieldError(error: Error | null, field: string): string | undefined {
-  return error instanceof ApiError ? error.fieldError(field) : undefined;
+/** Message de validation d'un champ, renvoyé par un service. */
+export function fieldError(error: Error | null, field: string): string | undefined {
+  return error instanceof ProblemError ? error.fieldError(field) : undefined;
 }
 
 /** Styles communs des champs, partagés avec le sélecteur de date. */

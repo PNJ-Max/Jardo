@@ -4,7 +4,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { useGarden, useSaveGarden } from '@/api/queries';
 import type { Garden } from '@/api/types';
-import { apiFieldError, Button, Card, ChipSelect, Field, FormError, screenStyles, SectionTitle } from '@/components/ui';
+import { fieldError, Button, Card, ChipSelect, Field, FormError, screenStyles, SectionTitle } from '@/components/ui';
 import { createStyles, setThemePreference, useTheme, useThemePreference, type ThemePreference } from '@/theme';
 
 const themeOptions: { value: ThemePreference; label: string }[] = [
@@ -13,7 +13,7 @@ const themeOptions: { value: ThemePreference; label: string }[] = [
   { value: 'dark', label: 'Sombre' },
 ];
 
-/** Réglages : le jardin, enregistré par l'API ; l'apparence, mémorisée sur l'appareil. */
+/** Réglages : le jardin, enregistré dans la base locale ; l'apparence, mémorisée sur l'appareil. */
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -73,7 +73,7 @@ function GardenName({ garden }: { garden: Garden }) {
           save.reset();
         }}
         maxLength={100}
-        error={apiFieldError(save.error, 'Name')}
+        error={fieldError(save.error, 'Name')}
         hint={save.isSuccess && !changed ? 'Nom enregistré.' : "Il s'affiche en tête de l'onglet Jardin."}
       />
       <FormError error={save.error} />
