@@ -30,7 +30,6 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.99.0",
     "@testing-library/react-native": "^14.1.0",
     "@types/jest": "29.5.14",
     "@types/node": "~26.6.4",
@@ -47,7 +46,6 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "api:types": "openapi-ts -i http://localhost:5015/swagger/v1/swagger.json -o src/api/generated -p @hey-api/typescript --no-log-file",
     "test": "jest",
     "postinstall": "setup-skia-web public"
   },

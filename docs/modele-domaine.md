@@ -1,6 +1,7 @@
 # Modèle du domaine : proposition
 
-Modèle qui traduit la [vision produit](vision-produit.md). L'API l'implémente en entier : les
+Modèle qui traduit la [vision produit](vision-produit.md). L'app l'implémente en entier (la
+première version, en API .NET, est au tag `api-dotnet`) : les
 quatre étapes de la [migration](#stratégie-de-migration) (jardin et espaces, journal, tâches,
 bois de chauffage) sont faites. Les noms d'entités sont ceux du code (en anglais).
 
@@ -77,7 +78,7 @@ pointer vers une seule table, et SQLite s'en accommode sans jointure. Deux types
     (la règle « vaut pour les éléments qu'ils contiennent » ne s'applique pas ici : on ne sait
     pas dans quel tas on a puisé). Le résultat est arrondi au centième de stère ;
   - l'**état de séchage** : le bois est prêt à brûler le jour de la coupe plus la durée de
-    séchage, ce jour compris ; avant, il est en séchage. L'API donne `dryingStatus` (`Drying` ou
+    séchage, ce jour compris ; avant, il est en séchage. L'app donne `dryingStatus` (`Drying` ou
     `Ready`) et `readyOn`, futur ou passé. Un mois se compte au même quantième, ramené à la fin
     du mois s'il n'existe pas (coupé le 31 janvier, séché un mois : prêt le 28 février).
 
@@ -227,7 +228,7 @@ un pommier et un rang de carottes sont tous des `Plant`.
 | `GET /api/watering/needed`, raccourcis d'arrosage d'une plante ou d'une zone | `GET /api/tasks/due` (toutes catégories) et l'action « Fait » `POST /api/tasks/{id}/done` | 3, faite |
 | Rien (le bois n'existait pas) | `WoodPile`, sous-type de `GardenItem`, avec stock restant et séchage calculés ; `/api/wood-piles` | 4, faite |
 
-Les règles en place restent valables : contrôleurs fins et services métier, ProblemDetails,
+Les règles de l'API .NET (tag `api-dotnet`) restent la référence que reprennent les services de `src/data/` : contrôleurs fins et services métier, ProblemDetails,
 `TimeProvider`, DTOs séparés, contraintes en Fluent API.
 
 ## Stratégie de migration

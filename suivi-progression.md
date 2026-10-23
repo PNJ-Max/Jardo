@@ -5,12 +5,20 @@ détail technique dans le [README](README.md) et dans [`docs/`](docs/front-archi
 
 ## Le projet
 
-App Android de gestion du jardin (potager, verger, petits fruits, bois de chauffage…) :
-une API ASP.NET Core et une app Expo qui la consomme. On y organise et suit ce que contient
+App de gestion du jardin (potager, verger, petits fruits, bois de chauffage…) :
+une app Expo dont les données vivent sur le téléphone, sans serveur. On y organise et suit ce que contient
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
 ## Où on en est (23/10/2026)
+
+**L'API .NET est retirée du dépôt (étape 6 du « local d'abord »).** `Jardo.Api`, `Jardo.Api.Tests`,
+`Jardo.slnx`, le client HTTP et les types générés du front, le script `api:types`, le profil `lan`
+et le job API de la CI sont supprimés ; la CI ne garde que le job Front. Le tag `api-dotnet`
+pointe sur le dernier commit qui la contient (`git checkout api-dotnet`) : elle pourra revenir
+un jour comme serveur de synchronisation. `CLAUDE.md`, les README et les docs décrivent l'app
+seule. Expo Go ne demande plus que Metro : la règle de pare-feu « Jardo API (dev) » n'a plus
+d'objet (la commande pour la retirer est dans la PR), celle de Metro reste.
 
 **L'app marche sans API ni réseau (étape 5 du « local d'abord »).** Tous les écrans lisent et
 écrivent la base SQLite du téléphone : les hooks de `queries.ts` appellent les services de
@@ -21,7 +29,7 @@ erreurs des services s'affichent sous leur champ. La carte de l'onglet Jardin li
 locale (modèle `country-house` du jardin d'exemple). Les tests d'écran tournent sur la SQLite en
 mémoire au lieu de `mockApi`. Convention : « le voyant vient du domaine ». Vérifié par un parcours
 complet en mode web, API éteinte, en clair et en sombre ; **pas encore sur téléphone en mode
-avion**. L'API .NET reste dans le dépôt mais n'est plus appelée (retrait : étape 6). Il faut
+avion**. Il faut
 recréer la base de dev d'une branche plus ancienne si elle date d'avant le modèle `country-house`.
 
 **La carte est l'accueil (étape 4 de l'[étude](docs/etude-carte-potager.md)).** L'onglet Jardin
@@ -39,7 +47,7 @@ encore sur téléphone** (fluidité du pincement avec Skia, poids de l'APK). Il 
 base de dev pour avoir le nouveau modèle.
 
 **Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
-Depuis l'étape 5, l'app tourne sur la base locale ; l'API n'est plus appelée.
+Depuis l'étape 5, l'app tourne sur la base locale ; l'API, retirée à l'étape 6, n'existe plus que sous le tag `api-dotnet`.
 
 - [x] 1. Domaine pur en TypeScript (22/10/2026) : `jardo-app/src/domain/` porte
   `DueDateCalculator`, `WoodPileCalculator`, `LatestInterventions` et le vocabulaire des types,
@@ -70,7 +78,10 @@ Depuis l'étape 5, l'app tourne sur la base locale ; l'API n'est plus appelée.
   d'acceptation de `lib/garden.ts` ramenées sur `domain/kinds.ts`, tests d'écran sur la SQLite
   en mémoire. Parcours complet en mode web sans l'API ; reste le téléphone en mode avion
   ([détail](docs/front-architecture.md#services-locaux)).
-- [ ] 6. Retrait de l'API .NET
+- [x] 6. Retrait de l'API .NET (23/10/2026) : tag `api-dotnet` d'abord, puis suppression de
+  `Jardo.Api`, `Jardo.Api.Tests`, `Jardo.slnx`, de `client.ts`, de `src/api/generated/`, du script
+  `api:types` (et de `@hey-api/openapi-ts`), du profil `lan` et du job API de la CI. Docs mises
+  à jour ; app inchangée.
 - [ ] 7. Sauvegarde
 
 ### Avant, le 22/10/2026
