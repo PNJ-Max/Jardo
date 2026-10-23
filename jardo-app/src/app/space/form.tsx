@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 
 import { useSaveSpace, useSpace } from '@/api/queries';
-import type { Space, SpaceKind } from '@/api/types';
-import { apiFieldError, Button, ChipSelect, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
+import type { Id, Space, SpaceKind } from '@/api/types';
+import { fieldError, Button, ChipSelect, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
 import { spaceKindOptions } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
 
@@ -15,10 +15,10 @@ import { goBack } from '@/lib/navigation';
  */
 export default function SpaceFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
-  return id ? <EditSpace id={Number(id)} /> : <SpaceForm />;
+  return id ? <EditSpace id={id} /> : <SpaceForm />;
 }
 
-function EditSpace({ id }: { id: number }) {
+function EditSpace({ id }: { id: Id }) {
   const space = useSpace(id);
   if (space.isPending) return <Loading />;
   if (space.error) return <ErrorView error={space.error} onRetry={space.refetch} />;
@@ -50,14 +50,14 @@ function SpaceForm({ space }: { space?: Space }) {
         placeholder="Potager du bas"
         maxLength={100}
         autoFocus={!space}
-        error={apiFieldError(save.error, 'name')}
+        error={fieldError(save.error, 'name')}
       />
       <ChipSelect
         label="Type"
         options={spaceKindOptions}
         value={kind}
         onChange={setKind}
-        error={apiFieldError(save.error, 'kind')}
+        error={fieldError(save.error, 'kind')}
       />
       <Field
         label="Description"
@@ -66,7 +66,7 @@ function SpaceForm({ space }: { space?: Space }) {
         placeholder="Optionnel"
         maxLength={500}
         multiline
-        error={apiFieldError(save.error, 'description')}
+        error={fieldError(save.error, 'description')}
       />
 
       <FormError error={save.error} />

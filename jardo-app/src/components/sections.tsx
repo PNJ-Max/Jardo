@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { useJournal, useTasks } from '@/api/queries';
-import type { GardenTask, ItemKind } from '@/api/types';
+import type { GardenTask, Id, ItemKind } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
 import { TaskRow, useMarkDone } from '@/components/tasks';
 import { Button, SectionTitle, Tabs } from '@/components/ui';
@@ -13,9 +13,9 @@ import { createStyles, useTheme } from '@/theme';
 
 /** La cible des tâches et interventions d'un écran de détail. */
 export type Target = {
-  spaceId: number;
-  zoneId?: number | null;
-  itemId?: number | null;
+  spaceId: Id;
+  zoneId?: Id | null;
+  itemId?: Id | null;
   itemKind?: ItemKind;
   label: string;
 };
@@ -56,7 +56,7 @@ function targetNoun({ itemId, itemKind, zoneId }: Target) {
 type TaskGroup = { key: string; name: string; kind?: string; tasks: GardenTask[]; showTarget: boolean };
 
 /**
- * L'API renvoie avec les tâches d'une cible celles de ce qui la contient (un arrosage du carré vaut
+ * Le service renvoie avec les tâches d'une cible celles de ce qui la contient (un arrosage du carré vaut
  * pour ses plantes) et, pour un espace ou une zone, celles de ce qu'ils contiennent. La fiche sépare
  * ce qui appartient à la cible de ce qui vient d'ailleurs, rangé par provenance.
  */

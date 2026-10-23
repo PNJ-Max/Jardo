@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 
 import { usePlant, useSavePlant } from '@/api/queries';
-import type { Plant, QuantityUnit } from '@/api/types';
+import type { Id, Plant, QuantityUnit } from '@/api/types';
 import { ZoneSelect } from '@/components/zone-select';
 import {
-  apiFieldError,
+  fieldError,
   Button,
   ChipSelect,
   DateField,
@@ -32,18 +32,18 @@ const unitOptions = (Object.keys(quantityUnits) as QuantityUnit[]).map((unit) =>
 export default function PlantFormScreen() {
   const { id, spaceId, zoneId } = useLocalSearchParams<{ id?: string; spaceId?: string; zoneId?: string }>();
 
-  if (id) return <EditPlant id={Number(id)} />;
-  return <PlantForm spaceId={Number(spaceId)} defaultZoneId={zoneId ? Number(zoneId) : null} />;
+  if (id) return <EditPlant id={id} />;
+  return <PlantForm spaceId={spaceId!} defaultZoneId={zoneId || null} />;
 }
 
-function EditPlant({ id }: { id: number }) {
+function EditPlant({ id }: { id: Id }) {
   const plant = usePlant(id);
   if (plant.isPending) return <Loading />;
   if (plant.error) return <ErrorView error={plant.error} onRetry={plant.refetch} />;
   return <PlantForm plant={plant.data} spaceId={plant.data.spaceId} defaultZoneId={plant.data.zoneId} />;
 }
 
-function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: number; defaultZoneId: number | null }) {
+function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: Id; defaultZoneId: Id | null }) {
   const save = useSavePlant();
   const [name, setName] = useState(plant?.name ?? '');
   const [species, setSpecies] = useState(plant?.species ?? '');
@@ -54,7 +54,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
   const [plantedDate, setPlantedDate] = useState(plant?.plantedDate ?? null);
   const [zoneId, setZoneId] = useState(defaultZoneId);
 
-  // Validation locale minimale, pour guider la saisie. La vraie reste celle de l'API : ses
+  // Validation locale minimale, pour guider la saisie. La vraie reste celle du service : ses
   // messages s'affichent sous les champs en cas de refus.
   const quantity = parseDecimal(quantityText);
   const quantityError = quantityText && !(quantity && quantity > 0) ? 'Un nombre positif' : undefined;
@@ -91,7 +91,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
         placeholder="Tomates cerises"
         maxLength={100}
         autoFocus={!plant}
-        error={apiFieldError(save.error, 'name')}
+        error={fieldError(save.error, 'name')}
       />
       <Field
         label="Espèce"
@@ -99,7 +99,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
         onChangeText={setSpecies}
         placeholder="Optionnel"
         maxLength={100}
-        error={apiFieldError(save.error, 'species')}
+        error={fieldError(save.error, 'species')}
       />
       <Field
         label="Variété"
@@ -107,37 +107,37 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
         onChangeText={setVariety}
         placeholder="Optionnel"
         maxLength={100}
-        error={apiFieldError(save.error, 'variety')}
+        error={fieldError(save.error, 'variety')}
       />
       <Field
         label="Quantité"
         value={quantityText}
         onChangeText={setQuantityText}
         keyboardType="decimal-pad"
-        error={quantityError ?? apiFieldError(save.error, 'quantity')}
+        error={quantityError ?? fieldError(save.error, 'quantity')}
       />
       <ChipSelect
         label="Unité"
         options={unitOptions}
         value={unit}
         onChange={setUnit}
-        error={apiFieldError(save.error, 'quantityUnit')}
+        error={fieldError(save.error, 'quantityUnit')}
       />
       <DateField
         label="Semis"
         optional
         value={sownDate}
         onChange={setSownDate}
-        error={apiFieldError(save.error, 'sownDate')}
+        error={fieldError(save.error, 'sownDate')}
       />
       <DateField
         label="Plantation"
         optional
         value={plantedDate}
         onChange={setPlantedDate}
-        error={apiFieldError(save.error, 'plantedDate')}
+        error={fieldError(save.error, 'plantedDate')}
       />
-      <ZoneSelect spaceId={spaceId} value={zoneId} onChange={setZoneId} error={apiFieldError(save.error, 'zoneId')} />
+      <ZoneSelect spaceId={spaceId} value={zoneId} onChange={setZoneId} error={fieldError(save.error, 'zoneId')} />
 
       <FormError error={save.error} />
       <Button

@@ -1,57 +1,51 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { api, queryString } from './client';
+import { useServices } from '@/data/services';
+
 import type {
   CompleteTaskInput,
   DueHorizon,
-  Garden,
   GardenInput,
-  GardenMap,
   GardenTask,
-  JournalEntry,
+  Id,
   JournalEntryInput,
   JournalEntryKind,
-  Plant,
   PlantInput,
-  Space,
   SpaceInput,
-  TaskCompletion,
   TaskInput,
-  WoodPile,
   WoodPileInput,
-  Zone,
   ZoneInput,
 } from './types';
 
-export type TargetFilter = { spaceId?: number; zoneId?: number; itemId?: number };
+export type TargetFilter = { spaceId?: Id; zoneId?: Id; itemId?: Id };
 export type JournalFilter = TargetFilter & { kinds?: JournalEntryKind[] };
-type ItemFilter = { spaceId?: number; zoneId?: number; includeArchived?: boolean };
+type ItemFilter = { spaceId?: Id; zoneId?: Id; includeArchived?: boolean };
 
 // Clés de cache hiérarchiques : invalider ['tasks'] invalide aussi ['tasks', 'due', 'Week'].
-// Chaque famille porte le nom d'une ressource de l'API.
+// Chaque famille porte le nom d'une ressource, celle d'un service de src/data.
 export const keys = {
   garden: ['garden'] as const,
   gardenMap: ['gardenMap'] as const,
   spaces: ['spaces'] as const,
   spaceList: (includeArchived: boolean) => ['spaces', 'list', { includeArchived }] as const,
-  space: (id: number) => ['spaces', id] as const,
+  space: (id: Id) => ['spaces', id] as const,
   zones: ['zones'] as const,
-  spaceZones: (spaceId: number) => ['zones', 'space', spaceId] as const,
-  zone: (id: number) => ['zones', id] as const,
+  spaceZones: (spaceId: Id) => ['zones', 'space', spaceId] as const,
+  zone: (id: Id) => ['zones', id] as const,
   plants: ['plants'] as const,
   plantList: (filter: ItemFilter) => ['plants', 'list', filter] as const,
-  plant: (id: number) => ['plants', id] as const,
+  plant: (id: Id) => ['plants', id] as const,
   woodPiles: ['woodPiles'] as const,
   woodPileList: (filter: ItemFilter) => ['woodPiles', 'list', filter] as const,
-  woodPile: (id: number) => ['woodPiles', id] as const,
+  woodPile: (id: Id) => ['woodPiles', id] as const,
   journal: ['journal'] as const,
   journalList: (filter: JournalFilter) => ['journal', 'list', filter] as const,
-  entry: (id: number) => ['journal', id] as const,
+  entry: (id: Id) => ['journal', id] as const,
   tasks: ['tasks'] as const,
   taskList: (filter: TargetFilter) => ['tasks', 'list', filter] as const,
   dueTasks: ['tasks', 'due'] as const,
   dueTaskList: (horizon: DueHorizon) => ['tasks', 'due', horizon] as const,
-  task: (id: number) => ['tasks', id] as const,
+  task: (id: Id) => ['tasks', id] as const,
 };
 
 type Family = 'gardenMap' | 'spaces' | 'zones' | 'plants' | 'woodPiles' | 'journal' | 'tasks';
@@ -68,7 +62,7 @@ function useInvalidate(families: Family[]) {
 
 /**
  * Une intervention notée change les échéances des tâches, donc les compteurs des espaces, et
- * le stock des tas de bois : tout est recalculé par l'API à la lecture.
+ * le stock des tas de bois : tout est recalculé par les services à la lecture.
  */
 const afterJournalWrite: Family[] = ['journal', 'tasks', 'spaces', 'woodPiles'];
 
@@ -83,202 +77,213 @@ const afterStructureWrite: Family[] = ['gardenMap', 'spaces', 'zones', 'plants',
 
 // --- Jardin et espaces --------------------------------------------------------
 
-export const useGarden = () => useQuery({ queryKey: keys.garden, queryFn: () => api<Garden>('/api/garden') });
+export function useGarden() {
+  const { garden } = useServices();
+  return useQuery({ queryKey: keys.garden, queryFn: () => garden.get() });
+}
 
-/** Seul le nom du jardin change, et l'API le renvoie : pas de relecture. */
+/** Seul le nom du jardin change, et le service le renvoie : pas de relecture. */
 export function useSaveGarden() {
+  const { garden } = useServices();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: GardenInput) => api<Garden>('/api/garden', { method: 'PUT', body: input }),
-    onSuccess: (garden) => queryClient.setQueryData(keys.garden, garden),
+    mutationFn: (input: GardenInput) => garden.update(input),
+    onSuccess: (saved) => queryClient.setQueryData(keys.garden, saved),
   });
 }
 
-export const useGardenMap = () =>
-  useQuery({ queryKey: keys.gardenMap, queryFn: () => api<GardenMap>('/api/garden/map') });
+export function useGardenMap() {
+  const { gardenMap } = useServices();
+  return useQuery({ queryKey: keys.gardenMap, queryFn: () => gardenMap.get() });
+}
 
-export const useSpaces = (includeArchived = false) =>
-  useQuery({
-    queryKey: keys.spaceList(includeArchived),
-    queryFn: () => api<Space[]>(`/api/spaces${queryString({ includeArchived })}`),
-  });
+export function useSpaces(includeArchived = false) {
+  const { spaces } = useServices();
+  return useQuery({ queryKey: keys.spaceList(includeArchived), queryFn: () => spaces.getAll(includeArchived) });
+}
 
-export const useSpace = (id: number) =>
-  useQuery({ queryKey: keys.space(id), queryFn: () => api<Space>(`/api/spaces/${id}`) });
+export function useSpace(id: Id) {
+  const { spaces } = useServices();
+  return useQuery({ queryKey: keys.space(id), queryFn: () => spaces.getById(id) });
+}
 
 export function useSaveSpace() {
+  const { spaces } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: ({ id, input }: { id?: number; input: SpaceInput }) =>
-      id
-        ? api<Space>(`/api/spaces/${id}`, { method: 'PUT', body: input })
-        : api<Space>('/api/spaces', { method: 'POST', body: input }),
+    mutationFn: ({ id, input }: { id?: Id; input: SpaceInput }) => (id ? spaces.update(id, input) : spaces.create(input)),
     onSuccess: invalidate,
   });
 }
 
 export function useSetSpaceArchived() {
+  const { spaces } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: ({ id, archived }: { id: number; archived: boolean }) =>
-      api<Space>(`/api/spaces/${id}/${archived ? 'archive' : 'unarchive'}`, { method: 'POST' }),
+    mutationFn: ({ id, archived }: { id: Id; archived: boolean }) => spaces.setArchived(id, archived),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteSpace() {
+  const { spaces } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: (id: number) => api<void>(`/api/spaces/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: Id) => spaces.delete(id),
     onSuccess: () => void invalidate(),
   });
 }
 
 // --- Zones --------------------------------------------------------------------
 
-export const useZones = (spaceId: number) =>
-  useQuery({ queryKey: keys.spaceZones(spaceId), queryFn: () => api<Zone[]>(`/api/spaces/${spaceId}/zones`) });
+export function useZones(spaceId: Id) {
+  const { zones } = useServices();
+  return useQuery({ queryKey: keys.spaceZones(spaceId), queryFn: () => zones.getBySpace(spaceId) });
+}
 
 /** Les zones de plusieurs espaces, dans le même cache que `useZones`. */
-export const useZonesOf = (spaceIds: number[]) =>
-  useQueries({
+export function useZonesOf(spaceIds: Id[]) {
+  const { zones } = useServices();
+  return useQueries({
     queries: spaceIds.map((spaceId) => ({
       queryKey: keys.spaceZones(spaceId),
-      queryFn: () => api<Zone[]>(`/api/spaces/${spaceId}/zones`),
+      queryFn: () => zones.getBySpace(spaceId),
     })),
     combine: (results) => results.flatMap((result) => result.data ?? []),
   });
+}
 
-export const useZone = (id: number) =>
-  useQuery({ queryKey: keys.zone(id), queryFn: () => api<Zone>(`/api/zones/${id}`) });
+export function useZone(id: Id) {
+  const { zones } = useServices();
+  return useQuery({ queryKey: keys.zone(id), queryFn: () => zones.getById(id) });
+}
 
 export function useSaveZone() {
+  const { zones } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: ({ id, spaceId, input }: { id?: number; spaceId?: number; input: ZoneInput }) =>
-      id
-        ? api<Zone>(`/api/zones/${id}`, { method: 'PUT', body: input })
-        : api<Zone>(`/api/spaces/${spaceId}/zones`, { method: 'POST', body: input }),
+    mutationFn: ({ id, spaceId, input }: { id?: Id; spaceId?: Id; input: ZoneInput }) =>
+      id ? zones.update(id, input) : zones.create(spaceId!, input),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteZone() {
+  const { zones } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: (id: number) => api<void>(`/api/zones/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: Id) => zones.delete(id),
     onSuccess: () => void invalidate(),
   });
 }
 
 // --- Plantes ------------------------------------------------------------------
 
-export const usePlants = (filter: ItemFilter = {}) =>
-  useQuery({
-    queryKey: keys.plantList(filter),
-    queryFn: () => api<Plant[]>(`/api/plants${queryString(filter)}`),
-  });
+export function usePlants(filter: ItemFilter = {}) {
+  const { plants } = useServices();
+  return useQuery({ queryKey: keys.plantList(filter), queryFn: () => plants.getAll(filter) });
+}
 
-export const usePlant = (id: number) =>
-  useQuery({ queryKey: keys.plant(id), queryFn: () => api<Plant>(`/api/plants/${id}`) });
+export function usePlant(id: Id) {
+  const { plants } = useServices();
+  return useQuery({ queryKey: keys.plant(id), queryFn: () => plants.getById(id) });
+}
 
 export function useSavePlant() {
+  const { plants } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: ({ id, input }: { id?: number; input: PlantInput }) =>
-      id
-        ? api<Plant>(`/api/plants/${id}`, { method: 'PUT', body: input })
-        : api<Plant>('/api/plants', { method: 'POST', body: input }),
+    mutationFn: ({ id, input }: { id?: Id; input: PlantInput }) => (id ? plants.update(id, input) : plants.create(input)),
     onSuccess: invalidate,
   });
 }
 
 export function useSetPlantArchived() {
+  const { plants } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: ({ id, archived }: { id: number; archived: boolean }) =>
-      api<Plant>(`/api/plants/${id}/${archived ? 'archive' : 'unarchive'}`, { method: 'POST' }),
+    mutationFn: ({ id, archived }: { id: Id; archived: boolean }) => plants.setArchived(id, archived),
     onSuccess: invalidate,
   });
 }
 
 export function useDeletePlant() {
+  const { plants } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: (id: number) => api<void>(`/api/plants/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: Id) => plants.delete(id),
     onSuccess: () => void invalidate(),
   });
 }
 
 // --- Tas de bois --------------------------------------------------------------
 
-export const useWoodPiles = (filter: ItemFilter = {}) =>
-  useQuery({
-    queryKey: keys.woodPileList(filter),
-    queryFn: () => api<WoodPile[]>(`/api/wood-piles${queryString(filter)}`),
-  });
+export function useWoodPiles(filter: ItemFilter = {}) {
+  const { woodPiles } = useServices();
+  return useQuery({ queryKey: keys.woodPileList(filter), queryFn: () => woodPiles.getAll(filter) });
+}
 
-export const useWoodPile = (id: number) =>
-  useQuery({ queryKey: keys.woodPile(id), queryFn: () => api<WoodPile>(`/api/wood-piles/${id}`) });
+export function useWoodPile(id: Id) {
+  const { woodPiles } = useServices();
+  return useQuery({ queryKey: keys.woodPile(id), queryFn: () => woodPiles.getById(id) });
+}
 
 export function useSaveWoodPile() {
+  const { woodPiles } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: ({ id, input }: { id?: number; input: WoodPileInput }) =>
-      id
-        ? api<WoodPile>(`/api/wood-piles/${id}`, { method: 'PUT', body: input })
-        : api<WoodPile>('/api/wood-piles', { method: 'POST', body: input }),
+    mutationFn: ({ id, input }: { id?: Id; input: WoodPileInput }) =>
+      id ? woodPiles.update(id, input) : woodPiles.create(input),
     onSuccess: invalidate,
   });
 }
 
 export function useSetWoodPileArchived() {
+  const { woodPiles } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: ({ id, archived }: { id: number; archived: boolean }) =>
-      api<WoodPile>(`/api/wood-piles/${id}/${archived ? 'archive' : 'unarchive'}`, { method: 'POST' }),
+    mutationFn: ({ id, archived }: { id: Id; archived: boolean }) => woodPiles.setArchived(id, archived),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteWoodPile() {
+  const { woodPiles } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: (id: number) => api<void>(`/api/wood-piles/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: Id) => woodPiles.delete(id),
     onSuccess: () => void invalidate(),
   });
 }
 
 // --- Journal ------------------------------------------------------------------
 
-/** Du plus récent au plus ancien, trié par l'API. */
-export const useJournal = (filter: JournalFilter = {}) =>
-  useQuery({
-    queryKey: keys.journalList(filter),
-    queryFn: () =>
-      api<JournalEntry[]>(
-        `/api/journal${queryString({ spaceId: filter.spaceId, zoneId: filter.zoneId, itemId: filter.itemId, kind: filter.kinds })}`,
-      ),
-  });
+/** Du plus récent au plus ancien, trié par le service. */
+export function useJournal(filter: JournalFilter = {}) {
+  const { journal } = useServices();
+  return useQuery({ queryKey: keys.journalList(filter), queryFn: () => journal.getAll(filter) });
+}
 
-export const useJournalEntry = (id: number) =>
-  useQuery({ queryKey: keys.entry(id), queryFn: () => api<JournalEntry>(`/api/journal/${id}`) });
+export function useJournalEntry(id: Id) {
+  const { journal } = useServices();
+  return useQuery({ queryKey: keys.entry(id), queryFn: () => journal.getById(id) });
+}
 
 export function useSaveJournalEntry() {
+  const { journal } = useServices();
   const invalidate = useInvalidate(afterJournalWrite);
   return useMutation({
-    mutationFn: ({ id, input }: { id?: number; input: JournalEntryInput }) =>
-      id
-        ? api<JournalEntry>(`/api/journal/${id}`, { method: 'PUT', body: input })
-        : api<JournalEntry>('/api/journal', { method: 'POST', body: input }),
+    mutationFn: ({ id, input }: { id?: Id; input: JournalEntryInput }) =>
+      id ? journal.update(id, input) : journal.create(input),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteJournalEntry() {
+  const { journal } = useServices();
   const invalidate = useInvalidate(afterJournalWrite);
   return useMutation({
-    mutationFn: (id: number) => api<void>(`/api/journal/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: Id) => journal.delete(id),
     onSuccess: () => void invalidate(),
   });
 }
@@ -286,57 +291,56 @@ export function useDeleteJournalEntry() {
 // --- Tâches -------------------------------------------------------------------
 
 /** Les tâches d'une cible, celles de sa zone et de son espace comprises. */
-export const useTasks = (filter: TargetFilter = {}) =>
-  useQuery({
-    queryKey: keys.taskList(filter),
-    queryFn: () => api<GardenTask[]>(`/api/tasks${queryString(filter)}`),
-  });
+export function useTasks(filter: TargetFilter = {}) {
+  const { tasks } = useServices();
+  return useQuery({ queryKey: keys.taskList(filter), queryFn: () => tasks.getAll(filter) });
+}
 
 /**
  * Les tâches dues de tout le jardin, les plus en retard d'abord. `Week` ajoute les sept
  * prochains jours aux retards et à aujourd'hui.
  */
-export const useDueTasks = (horizon: DueHorizon) =>
-  useQuery({
-    queryKey: keys.dueTaskList(horizon),
-    queryFn: () => api<GardenTask[]>(`/api/tasks/due${queryString({ horizon })}`),
-  });
+export function useDueTasks(horizon: DueHorizon) {
+  const { tasks } = useServices();
+  return useQuery({ queryKey: keys.dueTaskList(horizon), queryFn: () => tasks.getDue(horizon) });
+}
 
-export const useTask = (id: number) =>
-  useQuery({ queryKey: keys.task(id), queryFn: () => api<GardenTask>(`/api/tasks/${id}`) });
+export function useTask(id: Id) {
+  const { tasks } = useServices();
+  return useQuery({ queryKey: keys.task(id), queryFn: () => tasks.getById(id) });
+}
 
 export function useSaveTask() {
+  const { tasks } = useServices();
   const invalidate = useInvalidate(afterTaskWrite);
   return useMutation({
-    mutationFn: ({ id, input }: { id?: number; input: TaskInput }) =>
-      id
-        ? api<GardenTask>(`/api/tasks/${id}`, { method: 'PUT', body: input })
-        : api<GardenTask>('/api/tasks', { method: 'POST', body: input }),
+    mutationFn: ({ id, input }: { id?: Id; input: TaskInput }) => (id ? tasks.update(id, input) : tasks.create(input)),
     onSuccess: invalidate,
   });
 }
 
 export function useDeleteTask() {
+  const { tasks } = useServices();
   const invalidate = useInvalidate(afterTaskWrite);
   return useMutation({
-    mutationFn: (id: number) => api<void>(`/api/tasks/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: Id) => tasks.delete(id),
     onSuccess: () => void invalidate(),
   });
 }
 
 /**
  * « Fait » note l'intervention au journal. La tâche quitte aussitôt les listes de tâches dues,
- * sans attendre l'API ; si elle refuse, les listes d'avant sont restaurées. Le rechargement qui
- * suit la replace là où sa nouvelle échéance la met (cette semaine, par exemple). Supprimer
- * l'entrée renvoyée annule le « Fait ».
+ * sans attendre l'écriture ; si elle est refusée, les listes d'avant sont restaurées. Le
+ * rechargement qui suit la replace là où sa nouvelle échéance la met (cette semaine, par
+ * exemple). Supprimer l'entrée renvoyée annule le « Fait ».
  */
 export function useCompleteTask() {
+  const { tasks } = useServices();
   const queryClient = useQueryClient();
   const invalidate = useInvalidate(afterJournalWrite);
 
   return useMutation({
-    mutationFn: ({ id, input }: { id: number; input?: CompleteTaskInput }) =>
-      api<TaskCompletion>(`/api/tasks/${id}/done`, { method: 'POST', body: input ?? {} }),
+    mutationFn: ({ id, input }: { id: Id; input?: CompleteTaskInput }) => tasks.complete(id, input),
 
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: keys.dueTasks });

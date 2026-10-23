@@ -2,28 +2,63 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import PlantScreen from '@/app/plant/[id]';
+import { addDays } from '@/domain/dates';
+import { today } from '@/lib/dates';
 
-import { mockApi } from '../../test/api';
-import { plant, task } from '../../test/fixtures';
-import { renderScreen } from '../../test/render';
+import { createTestServices, renderScreen } from '../../test/render';
 
-const onPlant = task({ id: 1, title: 'Pincer les fleurs', kind: 'Pruning', status: 'Ok', itemId: 6, itemName: 'Laitues', zoneId: 4, zoneName: 'Carré 4' });
-const onZone = task({ id: 2, title: 'Arroser le carré', status: 'DueSoon', zoneId: 4, zoneName: 'Carré 4' });
-const onSpace = task({ id: 3, title: 'Désherber les allées', kind: 'Other', status: 'Overdue', daysOverdue: 4 });
+const inDays = (days: number) => addDays(today(), days);
 
-function setup(tasks = [onPlant, onZone, onSpace]) {
-  jest.mocked(useLocalSearchParams).mockReturnValue({ id: '6' });
-  return mockApi({
-    'GET /api/plants/6': { body: plant() },
-    'GET /api/tasks?itemId=6': { body: tasks },
-    'GET /api/journal?itemId=6': { body: [] },
+/** Les laitues du carré 4, avec une tâche à elles, une de leur carré et une de tout le potager. */
+async function setup({ onlyZoneTask = false } = {}) {
+  const services = await createTestServices();
+  const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+  const carre = await services.zones.create(potager.id, { name: 'Carré 4' });
+  const laitues = await services.plants.create({
+    name: 'Laitues',
+    species: 'Lactuca sativa',
+    variety: 'Batavia blonde',
+    quantity: 12,
+    quantityUnit: 'Plants',
+    plantedDate: inDays(-30),
+    spaceId: potager.id,
+    zoneId: carre.id,
   });
+
+  if (!onlyZoneTask) {
+    await services.tasks.create({
+      kind: 'Pruning',
+      title: 'Pincer les fleurs',
+      recurrence: 'Once',
+      startDate: inDays(10),
+      spaceId: potager.id,
+      itemId: laitues.id,
+    });
+    await services.tasks.create({
+      kind: 'Other',
+      title: 'Désherber les allées',
+      recurrence: 'Once',
+      startDate: inDays(-4),
+      spaceId: potager.id,
+    });
+  }
+  await services.tasks.create({
+    kind: 'Watering',
+    title: 'Arroser le carré',
+    recurrence: 'Once',
+    startDate: today(),
+    spaceId: potager.id,
+    zoneId: carre.id,
+  });
+
+  jest.mocked(useLocalSearchParams).mockReturnValue({ id: laitues.id });
+  return { services, potager, carre, laitues };
 }
 
 describe('fiche plante', () => {
   it("garde l'en-tête visible et ouvre l'onglet Tâches", async () => {
-    setup();
-    await renderScreen(<PlantScreen />);
+    const { services } = await setup();
+    await renderScreen(<PlantScreen />, services);
 
     expect(await screen.findByText('Laitues')).toBeOnTheScreen();
     expect(screen.getByText('Carré 4 · Potager')).toBeOnTheScreen();
@@ -31,9 +66,9 @@ describe('fiche plante', () => {
     expect(await screen.findByText('Pincer les fleurs')).toBeOnTheScreen();
   });
 
-  it('range à part, repliées, les tâches de la zone et de l\'espace', async () => {
-    setup();
-    await renderScreen(<PlantScreen />);
+  it("range à part, repliées, les tâches de la zone et de l'espace", async () => {
+    const { services } = await setup();
+    await renderScreen(<PlantScreen />, services);
 
     expect(await screen.findByText('Valent aussi pour cette plante')).toBeOnTheScreen();
     expect(screen.getByText('Carré 4')).toBeOnTheScreen();
@@ -48,21 +83,21 @@ describe('fiche plante', () => {
   });
 
   it('crée une nouvelle tâche sur la plante, pas sur sa zone', async () => {
-    setup([onZone]);
-    await renderScreen(<PlantScreen />);
+    const { services, potager, carre, laitues } = await setup({ onlyZoneTask: true });
+    await renderScreen(<PlantScreen />, services);
 
     expect(await screen.findByText('Aucune tâche pour cette plante.')).toBeOnTheScreen();
     await fireEvent.press(screen.getByText('Ajouter une tâche à cette plante'));
 
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/task/form',
-      params: expect.objectContaining({ itemId: '6', itemKind: 'Plant', zoneId: '4', spaceId: '1' }),
+      params: expect.objectContaining({ itemId: laitues.id, itemKind: 'Plant', zoneId: carre.id, spaceId: potager.id }),
     });
   });
 
-  it('montre les détails et les actions dans l\'onglet Infos', async () => {
-    setup();
-    await renderScreen(<PlantScreen />);
+  it("montre les détails et les actions dans l'onglet Infos", async () => {
+    const { services } = await setup();
+    await renderScreen(<PlantScreen />, services);
 
     await fireEvent.press(await screen.findByRole('tab', { name: 'Infos' }));
 
@@ -72,10 +107,11 @@ describe('fiche plante', () => {
   });
 
   it("ne charge le journal qu'à l'ouverture de son onglet", async () => {
-    const calls = setup();
-    await renderScreen(<PlantScreen />);
+    const { services } = await setup();
+    const readJournal = jest.spyOn(services.journal, 'getAll');
+    await renderScreen(<PlantScreen />, services);
     await screen.findByText('Pincer les fleurs');
-    expect(calls.some((call) => call.path.startsWith('/api/journal'))).toBe(false);
+    expect(readJournal).not.toHaveBeenCalled();
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Journal' }));
 

@@ -10,7 +10,7 @@ import { usePullToRefresh } from '@/lib/refresh';
 import { createStyles, useTheme } from '@/theme';
 
 /**
- * Tout ce qui est à faire au jardin, toutes catégories. L'API renvoie les tâches de la semaine,
+ * Tout ce qui est à faire au jardin, toutes catégories. Le service renvoie les tâches de la semaine,
  * les plus en retard d'abord ; leur statut suffit à les ranger dans les trois sections.
  */
 export default function TodayScreen() {

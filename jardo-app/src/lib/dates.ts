@@ -1,4 +1,4 @@
-// Les dates du jardin (journal, échéances, semis…) sont des DateOnly côté API : "YYYY-MM-DD",
+// Les dates du jardin (journal, échéances, semis…) sont des jours sans heure : "YYYY-MM-DD",
 // sans heure ni fuseau. On les garde en chaîne. Passer par new Date("2026-10-02") les
 // interpréterait en UTC minuit, ce qui affiche la veille dans un fuseau négatif.
 

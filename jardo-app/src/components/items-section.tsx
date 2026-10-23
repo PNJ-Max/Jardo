@@ -3,12 +3,12 @@ import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { usePlants, useWoodPiles } from '@/api/queries';
-import type { SpaceKind, Zone } from '@/api/types';
+import type { Id, SpaceKind, Zone } from '@/api/types';
 import { PlantRow, WoodPileRow } from '@/components/items';
 import { Button, SectionTitle } from '@/components/ui';
 import { createStyles, useTheme } from '@/theme';
 
-type Scope = { spaceId: number; spaceKind: SpaceKind; zoneId?: number };
+type Scope = { spaceId: Id; spaceKind: SpaceKind; zoneId?: Id };
 
 /**
  * Les éléments d'un espace, groupés par zone, ou ceux d'une zone. Le type d'espace dit lesquels :
@@ -22,7 +22,7 @@ export function ItemsSection({ scope, zones }: { scope: Scope; zones?: Zone[] })
   );
 }
 
-type Groupable = { id: number; zoneId: number | null; isArchived: boolean };
+type Groupable = { id: Id; zoneId: Id | null; isArchived: boolean };
 
 /** Dans l'ordre des zones, puis les éléments sans zone. Sans zones, un seul groupe sans titre. */
 function groupByZone<T extends Groupable>(items: T[], zones: Zone[] | undefined) {

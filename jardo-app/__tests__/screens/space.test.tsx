@@ -2,29 +2,46 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { useLocalSearchParams } from 'expo-router';
 
 import SpaceScreen from '@/app/space/[id]';
+import { addDays } from '@/domain/dates';
+import { today } from '@/lib/dates';
 
-import { mockApi } from '../../test/api';
-import { plant, space, task } from '../../test/fixtures';
-import { renderScreen } from '../../test/render';
+import { createTestServices, renderScreen } from '../../test/render';
 
-const onSpace = task({ id: 1, title: 'Désherber les allées', kind: 'Other', status: 'Overdue', daysOverdue: 4 });
-const onItem = task({ id: 2, status: 'DueSoon', zoneId: 4, zoneName: 'Carré 4', itemId: 6, itemName: 'Laitues', itemKind: 'Plant' });
-const zone = { id: 4, spaceId: 1, name: 'Carré 4', description: null, createdAt: '2026-01-01T00:00:00Z', itemCount: 1 };
-
-function setup() {
-  jest.mocked(useLocalSearchParams).mockReturnValue({ id: '1' });
-  mockApi({
-    'GET /api/spaces/1': { body: space({ zoneCount: 1, itemCount: 1 }) },
-    'GET /api/spaces/1/zones': { body: [zone] },
-    'GET /api/tasks?spaceId=1': { body: [onSpace, onItem] },
-    'GET /api/plants?spaceId=1&includeArchived=true': { body: [plant()] },
+/** Le potager, son carré 4 et ses laitues ; une tâche sur tout l'espace, une sur les laitues. */
+async function setup() {
+  const services = await createTestServices();
+  const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+  const carre = await services.zones.create(potager.id, { name: 'Carré 4' });
+  const laitues = await services.plants.create({
+    name: 'Laitues',
+    quantity: 12,
+    quantityUnit: 'Plants',
+    spaceId: potager.id,
+    zoneId: carre.id,
   });
+  await services.tasks.create({
+    kind: 'Other',
+    title: 'Désherber les allées',
+    recurrence: 'Once',
+    startDate: addDays(today(), -4),
+    spaceId: potager.id,
+  });
+  await services.tasks.create({
+    kind: 'Watering',
+    recurrence: 'EveryNDays',
+    intervalDays: 3,
+    startDate: today(),
+    spaceId: potager.id,
+    itemId: laitues.id,
+  });
+
+  jest.mocked(useLocalSearchParams).mockReturnValue({ id: potager.id });
+  return services;
 }
 
 describe('fiche espace', () => {
-  it("replie les tâches de ses zones et éléments sous les siennes, en nommant leur cible", async () => {
-    setup();
-    await renderScreen(<SpaceScreen />);
+  it('replie les tâches de ses zones et éléments sous les siennes, en nommant leur cible', async () => {
+    await renderScreen(<SpaceScreen />, await setup());
 
     expect(await screen.findByText('Désherber les allées')).toBeOnTheScreen();
     expect(screen.getByText('Ajouter une tâche à cet espace')).toBeOnTheScreen();
@@ -37,8 +54,7 @@ describe('fiche espace', () => {
   });
 
   it("montre zones et plantes dans l'onglet Contenu", async () => {
-    setup();
-    await renderScreen(<SpaceScreen />);
+    await renderScreen(<SpaceScreen />, await setup());
 
     await fireEvent.press(await screen.findByRole('tab', { name: 'Contenu' }));
 

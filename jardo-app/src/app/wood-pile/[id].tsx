@@ -13,7 +13,7 @@ import { goBack } from '@/lib/navigation';
 
 export default function WoodPileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const pile = useWoodPile(Number(id));
+  const pile = useWoodPile(id);
 
   if (pile.isPending) return <Loading />;
   if (pile.error) return <ErrorView error={pile.error} onRetry={pile.refetch} />;

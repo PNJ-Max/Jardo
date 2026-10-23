@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 
 import { useSaveWoodPile, useWoodPile } from '@/api/queries';
-import type { WoodPile } from '@/api/types';
+import type { Id, WoodPile } from '@/api/types';
 import { ZoneSelect } from '@/components/zone-select';
-import { apiFieldError, Button, DateField, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
+import { fieldError, Button, DateField, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
 import { today } from '@/lib/dates';
 import { decimalText, parseDecimal } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
@@ -18,18 +18,18 @@ import { goBack } from '@/lib/navigation';
 export default function WoodPileFormScreen() {
   const { id, spaceId, zoneId } = useLocalSearchParams<{ id?: string; spaceId?: string; zoneId?: string }>();
 
-  if (id) return <EditWoodPile id={Number(id)} />;
-  return <WoodPileForm spaceId={Number(spaceId)} defaultZoneId={zoneId ? Number(zoneId) : null} />;
+  if (id) return <EditWoodPile id={id} />;
+  return <WoodPileForm spaceId={spaceId!} defaultZoneId={zoneId || null} />;
 }
 
-function EditWoodPile({ id }: { id: number }) {
+function EditWoodPile({ id }: { id: Id }) {
   const pile = useWoodPile(id);
   if (pile.isPending) return <Loading />;
   if (pile.error) return <ErrorView error={pile.error} onRetry={pile.refetch} />;
   return <WoodPileForm pile={pile.data} spaceId={pile.data.spaceId} defaultZoneId={pile.data.zoneId} />;
 }
 
-function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; spaceId: number; defaultZoneId: number | null }) {
+function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; spaceId: Id; defaultZoneId: Id | null }) {
   const save = useSaveWoodPile();
   const [name, setName] = useState(pile?.name ?? '');
   const [species, setSpecies] = useState(pile?.woodSpecies ?? '');
@@ -75,7 +75,7 @@ function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; space
         placeholder="Chêne 2026"
         maxLength={100}
         autoFocus={!pile}
-        error={apiFieldError(save.error, 'name')}
+        error={fieldError(save.error, 'name')}
       />
       <Field
         label="Essence"
@@ -83,14 +83,14 @@ function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; space
         onChangeText={setSpecies}
         placeholder="Chêne, hêtre, charme… (optionnel)"
         maxLength={100}
-        error={apiFieldError(save.error, 'woodSpecies')}
+        error={fieldError(save.error, 'woodSpecies')}
       />
       <Field
         label="Volume en stères"
         value={steresText}
         onChangeText={setSteresText}
         keyboardType="decimal-pad"
-        error={apiFieldError(save.error, 'initialSteres')}
+        error={fieldError(save.error, 'initialSteres')}
       />
       <Field
         label="Longueur des bûches (cm)"
@@ -98,18 +98,18 @@ function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; space
         onChangeText={setLogLengthText}
         keyboardType="number-pad"
         placeholder="Optionnel"
-        error={apiFieldError(save.error, 'logLengthCm')}
+        error={fieldError(save.error, 'logLengthCm')}
       />
-      <DateField label="Date de coupe" value={cutDate} onChange={setCutDate} error={apiFieldError(save.error, 'cutDate')} />
+      <DateField label="Date de coupe" value={cutDate} onChange={setCutDate} error={fieldError(save.error, 'cutDate')} />
       <Field
         label="Durée de séchage (mois)"
         value={dryingText}
         onChangeText={setDryingText}
         keyboardType="number-pad"
         hint="0 pour du bois acheté sec"
-        error={apiFieldError(save.error, 'dryingMonths')}
+        error={fieldError(save.error, 'dryingMonths')}
       />
-      <ZoneSelect spaceId={spaceId} value={zoneId} onChange={setZoneId} error={apiFieldError(save.error, 'zoneId')} />
+      <ZoneSelect spaceId={spaceId} value={zoneId} onChange={setZoneId} error={fieldError(save.error, 'zoneId')} />
 
       <FormError error={save.error} />
       <Button title="Enregistrer" onPress={submit} loading={save.isPending} disabled={!canSubmit} />

@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 
 import { useDeleteTask, useSaveTask, useSpace, useTask } from '@/api/queries';
-import type { GardenTask, ItemKind, JournalEntryKind, Space, TaskRecurrence } from '@/api/types';
+import type { GardenTask, Id, ItemKind, JournalEntryKind, Space, TaskRecurrence } from '@/api/types';
 import { FormTarget } from '@/components/form-target';
 import {
-  apiFieldError,
+  fieldError,
   Button,
   ChipSelect,
   DateField,
@@ -21,7 +21,7 @@ import { today } from '@/lib/dates';
 import { entryKinds, recurrenceOptions, targetLabel, taskKindsFor } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
 
-type Target = { spaceId: number; zoneId: number | null; itemId: number | null; itemKind: ItemKind | null; label: string };
+type Target = { spaceId: Id; zoneId: Id | null; itemId: Id | null; itemKind: ItemKind | null; label: string };
 
 const startDateLabels: Record<TaskRecurrence, string> = {
   EveryNDays: 'Première échéance',
@@ -44,13 +44,13 @@ export default function TaskFormScreen() {
     label?: string;
   }>();
 
-  if (params.id) return <EditTask id={Number(params.id)} />;
+  if (params.id) return <EditTask id={params.id} />;
   return (
     <TaskFormInSpace
       target={{
-        spaceId: Number(params.spaceId),
-        zoneId: params.zoneId ? Number(params.zoneId) : null,
-        itemId: params.itemId ? Number(params.itemId) : null,
+        spaceId: params.spaceId!,
+        zoneId: params.zoneId || null,
+        itemId: params.itemId || null,
         itemKind: params.itemKind ?? null,
         label: params.label ?? '',
       }}
@@ -58,7 +58,7 @@ export default function TaskFormScreen() {
   );
 }
 
-function EditTask({ id }: { id: number }) {
+function EditTask({ id }: { id: Id }) {
   const task = useTask(id);
   if (task.isPending) return <Loading />;
   if (task.error) return <ErrorView error={task.error} onRetry={task.refetch} />;
@@ -124,7 +124,7 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
         options={taskKindsFor(space.kind, target.itemKind).map((value) => ({ value, label: entryKinds[value].verb }))}
         value={kind}
         onChange={setKind}
-        error={apiFieldError(save.error, 'kind')}
+        error={fieldError(save.error, 'kind')}
       />
       <Field
         label="Titre"
@@ -132,14 +132,14 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
         onChangeText={setTitle}
         placeholder={kind === 'Other' ? 'Obligatoire : Rentrer le bois…' : 'Optionnel'}
         maxLength={100}
-        error={apiFieldError(save.error, 'title')}
+        error={fieldError(save.error, 'title')}
       />
       <ChipSelect
         label="Rythme"
         options={recurrenceOptions}
         value={recurrence}
         onChange={setRecurrence}
-        error={apiFieldError(save.error, 'recurrence')}
+        error={fieldError(save.error, 'recurrence')}
       />
       {recurrence === 'EveryNDays' && (
         <Field
@@ -147,14 +147,14 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
           value={intervalText}
           onChangeText={setIntervalText}
           keyboardType="number-pad"
-          error={intervalError ?? apiFieldError(save.error, 'intervalDays')}
+          error={intervalError ?? fieldError(save.error, 'intervalDays')}
         />
       )}
       <DateField
         label={startDateLabels[recurrence]}
         value={startDate}
         onChange={setStartDate}
-        error={apiFieldError(save.error, 'startDate')}
+        error={fieldError(save.error, 'startDate')}
       />
 
       <FormError error={save.error} />

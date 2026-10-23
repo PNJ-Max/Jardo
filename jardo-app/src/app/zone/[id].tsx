@@ -11,7 +11,7 @@ import { goBack } from '@/lib/navigation';
 
 export default function ZoneScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const zone = useZone(Number(id));
+  const zone = useZone(id);
 
   if (zone.isPending) return <Loading />;
   if (zone.error) return <ErrorView error={zone.error} onRetry={zone.refetch} />;
