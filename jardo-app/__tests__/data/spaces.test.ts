@@ -162,7 +162,7 @@ describe('SpaceService (ajouts au port)', () => {
   it('Un espace avec des tas de bois ne peut pas devenir un potager', async () => {
     const { service, addSpace, addWoodPile } = await setup();
     const bois = await addSpace('Bois', 'Firewood');
-    await addWoodPile(bois, 'Chêne', true);
+    await addWoodPile(bois, 'Chêne', { isArchived: true });
 
     await expect(service.update(bois.id, { name: 'Bois', kind: 'VegetableGarden' })).rejects.toMatchObject(refused);
   });

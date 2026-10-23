@@ -70,15 +70,19 @@ export async function createGardenFixtures() {
       return { id, zoneId: zone?.id ?? null };
     },
 
-    async addWoodPile(space: Space, name: string, isArchived = false): Promise<Item> {
+    async addWoodPile(
+      space: Space,
+      name: string,
+      { isArchived = false, initialSteres = 10, cutDate = '2025-01-01', dryingMonths = 12 } = {},
+    ): Promise<Item> {
       const id = await insert('garden_items', {
         item_type: 'WoodPile',
         space_id: space.id,
         name,
         is_archived: isArchived ? 1 : 0,
-        initial_steres: 10,
-        cut_date: '2025-01-01',
-        drying_months: 12,
+        initial_steres: initialSteres,
+        cut_date: cutDate,
+        drying_months: dryingMonths,
         created_at: epoch,
       });
       return { id, zoneId: null };
@@ -102,17 +106,24 @@ export async function createGardenFixtures() {
       recurrence: TaskRecurrence,
       startDate: DateOnly,
       space: Space,
-      { zone = null, item = null, intervalDays = null }: { zone?: Zone | null; item?: Item | null; intervalDays?: number | null } = {},
+      {
+        zone = null,
+        item = null,
+        intervalDays = null,
+        title = null,
+        createdAt = epoch,
+      }: { zone?: Zone | null; item?: Item | null; intervalDays?: number | null; title?: string | null; createdAt?: string } = {},
     ) {
       return insert('garden_tasks', {
         kind,
         recurrence,
         start_date: startDate,
         interval_days: intervalDays,
+        title,
         space_id: space.id,
         zone_id: item ? item.zoneId : (zone?.id ?? null),
         item_id: item?.id ?? null,
-        created_at: epoch,
+        created_at: createdAt,
       });
     },
 

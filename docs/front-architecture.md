@@ -167,8 +167,8 @@ de développement → Application → Stockage → « Effacer les données du si
 
 ### Services locaux
 
-Étape 3 de la même migration : un module par ressource, qui reprend les règles du service .NET du
-même nom. **Aucun écran ne les appelle encore** (étape 5).
+Étapes 3 et 4 de la même migration : un module par ressource, qui reprend les règles du service
+.NET du même nom. **Aucun écran ne les appelle encore** (étape 5).
 
 | Module | Équivalent .NET |
 |---|---|
@@ -177,8 +177,13 @@ même nom. **Aucun écran ne les appelle encore** (étape 5).
 | `spaces.ts` | `SpaceService` |
 | `zones.ts` | `ZoneService` |
 | `plants.ts` | `PlantService` |
-| `item-placement.ts` | `ItemPlacement` (partagé avec les tas de bois, étape 4) |
-| `task-queries.ts` | la part de `TaskQueries` dont `SpaceService` a besoin : le compte des tâches dues |
+| `wood-piles.ts` | `WoodPileService` |
+| `journal.ts` | `JournalService` |
+| `tasks.ts` | `TaskService` |
+| `item-placement.ts` | `ItemPlacement` (plantes et tas de bois) |
+| `intervention-target.ts` | `InterventionTarget` : la cible d'une entrée ou d'une tâche, et le filtre SQL d'une lecture par cible |
+| `wood-movements.ts` | `WoodMovements` : apports et consommations d'un tas, lus au journal |
+| `task-queries.ts` | `TaskQueries` : la lecture des tâches avec leur échéance (`GardenTask`) et le compte des tâches dues par espace |
 
 - **Une fabrique par service**, comme le constructeur d'une classe : `createSpaceService(db, clock)`
   rend l'objet qui porte `getAll`, `getById`, `create`, `update`, `setArchived`, `delete`, les
@@ -197,6 +202,11 @@ même nom. **Aucun écran ne les appelle encore** (étape 5).
   validation de forme que faisaient les DataAnnotations (`validation.ts`) lève un 400 avec les
   erreurs par champ, clés en PascalCase comme celles de l'API (`Name`, `Kind`…) : les formulaires
   les affichent sous le champ, en français.
+- **« Fait » et le stock de bois sont atomiques.** `tasks.complete` lit la tâche et note l'entrée
+  dans une seule transaction (`insertJournalEntry`, exportée par `journal.ts`, n'ouvre pas la
+  transaction elle-même). Le stock d'un tas se vérifie dans la transaction de l'écriture qui le
+  touche : il ne passe jamais sous zéro, même avec deux consommations tapées vite. À égalité
+  d'échéance et d'espace, les tâches suivent l'ordre de création (`rowid`).
 - **Le catalogue des modèles de carte** (`garden-layouts.ts`) est une constante. Les deux modèles
   posent les mêmes neuf emplacements ; un test le confronte à `SLOT_KEYS` de la carte.
 - **Tests** (`__tests__/data/`) : un fichier par service, d'abord les cas de l'original C#
