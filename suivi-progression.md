@@ -41,7 +41,12 @@ L'app tourne toujours sur l'API ; rien ne change à l'écran avant l'étape 5.
   (`node:sqlite`). Vérifié en mode web, où la base s'ouvre à condition de passer `web.output` en
   `"single"` et de n'ouvrir l'app que dans un onglet ; pas encore dans Expo Go
   ([détail](docs/front-architecture.md#données-locales-srcdata)).
-- [ ] 3. Services locaux : jardin, carte, espaces, zones, plantes
+- [x] 3. Services locaux, partie 1 (22/10/2026) : `jardo-app/src/data/` porte `GardenService`,
+  `GardenMapService`, `SpaceService`, `ZoneService`, `PlantService`, `ItemPlacement` et le
+  catalogue `GardenLayouts` (modèles `terraced-long` et `country-house`). Mêmes règles, réponses
+  de la même forme que les DTO, écritures en transaction, refus au format du ProblemDetails. Les
+  cas des tests C# correspondants sont portés en Jest sur la SQLite en mémoire. Aucun écran ne les
+  appelle encore ([détail](docs/front-architecture.md#services-locaux)).
 - [ ] 4. Services locaux : journal, tâches, tas de bois
 - [ ] 5. Bascule des écrans
 - [ ] 6. Retrait de l'API .NET
