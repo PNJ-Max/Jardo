@@ -2,12 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "jardo-api",
-      "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "Jardo.Api"],
-      "port": 5015
-    },
-    {
       "name": "jardo-web",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "jardo-app", "run", "web", "--", "--port", "8081"],

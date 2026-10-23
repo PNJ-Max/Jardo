@@ -14,45 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  changes:
-    name: Changements
-    runs-on: ubuntu-latest
-    outputs:
-      api: ${{ steps.filter.outputs.api }}
-      front: ${{ steps.filter.outputs.front }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v4
-        id: filter
-        with:
-          filters: |
-            api:
-              - 'Jardo.Api*/**'
-              - 'Jardo.slnx'
-              - '.github/workflows/ci.yml'
-            front:
-              - 'jardo-app/**'
-              - '.github/workflows/ci.yml'
-
-  api:
-    name: API
-    needs: changes
-    if: needs.changes.outputs.api == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: 10.x
-          cache: true
-          cache-dependency-path: '**/*.csproj'
-      - run: dotnet build
-      - run: dotnet test --no-build
-
   front:
     name: Front
-    needs: changes
-    if: needs.changes.outputs.front == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
