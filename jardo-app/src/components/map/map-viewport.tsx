@@ -138,6 +138,8 @@ export function MapViewport({ scene, labels, free, selected, onSelect, recenter 
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
+    // Sur le web, un écran quitté passe en display: none et mesure 0 × 0 : la carte garde son cadrage.
+    if (width === 0 || height === 0) return;
     setSize((prev) => (prev?.width === width && prev?.height === height ? prev : { width, height }));
   };
 

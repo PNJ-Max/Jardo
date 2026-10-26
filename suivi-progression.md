@@ -20,6 +20,13 @@ du jour en tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 
 découpée en neuf PR : les jetons, puis l'écran Aujourd'hui repensé (trié par urgence et par espace,
 semaine en tête, feuille de la tâche, « Tout arroser », « Reporter »), prioritaire.
 
+**Écran dédoublé en mode web, corrigé.** Après Jardin → espace → retour, Chrome laissait des restes
+d'image en double. Cause : un écran quitté passe en `display: none` sur le web et mesure 0 × 0. La
+carte recadrait alors vers une échelle nulle, puis se ré-animait au retour. Skia web 2.6 recréait
+aussi un contexte WebGL sur le même canvas, sans libérer le précédent. Désormais, la carte ignore
+cette taille nulle, et sur le web son canvas n'existe que tant que l'onglet Jardin a le focus. Rien
+ne change sur Android.
+
 **Le jardin se sauvegarde dans un fichier (étape 7, la dernière du « local d'abord »).**
 Réglages → Sauvegarde : « Exporter mon jardin » produit `jardo-AAAA-MM-JJ.json` (format et schéma
 versionnés, date, toutes les tables : espaces, zones, éléments, journal, tâches, carte) et l'ouvre
