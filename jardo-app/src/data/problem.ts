@@ -10,8 +10,8 @@ export type ProblemDetails = {
 };
 
 /**
- * Une règle refusée par un service. Même forme qu'`ApiError` (statut, problème, erreur par
- * champ) : les écrans la traitent sans changement à la bascule.
+ * Une règle refusée par un service. Même forme que l'`ApiError` de l'ancien client HTTP (statut,
+ * problème, erreur par champ) : les écrans l'ont traitée sans changement à la bascule.
  */
 export class ProblemError extends Error {
   constructor(

@@ -1,9 +1,9 @@
 # Front Jardo : architecture
 
 Application mobile Android pour gérer son jardin. Ses données vivent sur le téléphone, dans une
-base SQLite : l'app marche sans réseau ni serveur. L'API `Jardo.Api` est encore dans le dépôt
-mais n'est plus appelée ; son retrait est l'étape 6 de la
-[migration « local d'abord »](etude-architecture-donnees.md#plan-de-migration).
+base SQLite : l'app marche sans réseau ni serveur. L'ancienne API .NET `Jardo.Api` a été retirée
+de la [migration « local d'abord »](etude-architecture-donnees.md#plan-de-migration) (étape 6) ;
+le tag `api-dotnet` en garde le dernier état.
 
 ## Décision : Expo (React Native + TypeScript)
 
@@ -34,7 +34,6 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Framework | Expo SDK 57, TypeScript strict | Standard actuel de React Native |
 | Navigation | **Expo Router** | Routes basées sur les fichiers, onglets et piles prêts à l'emploi |
 | Cache des données | **TanStack Query** | Cache, rechargement, états chargement/erreur, mises à jour optimistes ; les hooks appellent les services locaux |
-| Client API (plus appelé) | `fetch` + types générés depuis le Swagger de l'API par `@hey-api/openapi-ts` | Gardé jusqu'au retrait de l'API (étape 6) |
 | Formulaires | `useState` + validation légère, erreurs des services sous les champs | Suffisant pour six formulaires simples |
 | Dates | `@react-native-community/datetimepicker` sur Android, `<input type="date">` sur le web | Recommandé par Expo et inclus dans Expo Go ; le module n'existe pas sur le web |
 | Style | `StyleSheet` + `src/theme/` (`useTheme`, `createStyles`) | Aucune dépendance ; suit le mode clair / sombre du téléphone, ou celui choisi dans les réglages ; jetons décrits dans la [charte graphique](charte-graphique.md) |
@@ -45,13 +44,13 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Carte du jardin | `@shopify/react-native-skia` (v2), `react-native-gesture-handler`, `react-native-reanimated` | Net à tout zoom, dessin sur le thread UI ; inclus dans Expo Go. Sur le web, `canvaskit.wasm` est copié dans `public/` par le script `postinstall`. Choix argumenté dans l'[étude de la carte](etude-carte-potager.md#essai-du-2110--décision) |
 | Notifications (plus tard) | `expo-notifications` | Rappel d'arrosage local |
 
-Rien de plus. Pas de Redux : TanStack Query couvre l'état serveur, et l'état local reste
+Rien de plus. Pas de Redux : TanStack Query couvre l'état des écrans, et l'état local reste
 dans `useState`.
 
 ## Structure
 
 ```
-jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
+jardo-app/                    (à la racine du repo)
 ├── src/app/                  écrans, un fichier = une route (Expo Router)
 │   ├── (tabs)/
 │   │   ├── index.tsx         Jardin : les espaces (accueil)
@@ -68,9 +67,7 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 │   └── map-preview.tsx       aperçu de la carte du jardin (avant l'onglet Jardin)
 ├── src/api/
 │   ├── types.ts              noms courts des contrats (Space, GardenTask…), la référence des écrans
-│   ├── queries.ts            hooks TanStack Query sur les services locaux, clés de cache, invalidations
-│   ├── generated/            types générés depuis le Swagger (plus utilisés, retirés à l'étape 6)
-│   └── client.ts             fetch, ApiError (plus appelé, retiré à l'étape 6)
+│   └── queries.ts            hooks TanStack Query sur les services locaux, clés de cache, invalidations
 ├── src/domain/               règles et calculs purs (échéances, bois, journal, types acceptés)
 ├── src/data/                 base locale SQLite : accès, schéma et migrations, jardin d'exemple,
 │                             un service par ressource, services.tsx (fournisseur des écrans)
@@ -90,8 +87,7 @@ jardo-app/                    (à la racine du repo, à côté de Jardo.Api)
 `src/api/types.ts` est la référence : il nomme pour les écrans les types écrits à la main dans
 `src/domain/types.ts` (vocabulaire, `Id`) et dans les services de `src/data/` (`Space`,
 `GardenTask`, `SpaceInput`…), de la forme des anciens DTO de l'API. Les identifiants sont des UUID
-en chaîne, dans les routes (`/space/<uuid>`), les paramètres et les formulaires. Les types générés
-de `src/api/generated/` ne servent plus ; ils partent avec l'API à l'étape 6.
+en chaîne, dans les routes (`/space/<uuid>`), les paramètres et les formulaires.
 
 ## Domaine (`src/domain/`)
 
@@ -166,7 +162,7 @@ de développement → Application → Stockage → « Effacer les données du si
 ### Services locaux
 
 Étapes 3 et 4 de la même migration : un module par ressource, qui reprend les règles du service
-.NET du même nom. Les écrans les appellent depuis l'étape 5.
+.NET du même nom (à lire au tag `api-dotnet`). Les écrans les appellent depuis l'étape 5.
 
 **Comment les écrans les atteignent.** `services.tsx` : `createServices(db, clock)` rend tous les
 services sur une même base, et `ServicesProvider` les met à disposition des hooks
@@ -240,22 +236,12 @@ qui échoue n'est pas retentée (`retry: false`), elle échouerait encore.
   les espaces ; un espace, une zone ou un élément, tout le jardin (`src/api/queries.ts`).
 - **Mobile-first, une main.** Les actions principales sont en bas de l'écran, avec de
   grandes zones de toucher.
-- **Commentaires** : comme dans le back, on explique *pourquoi*, pas ce que fait la ligne.
+- **Commentaires** : on explique *pourquoi*, pas ce que fait la ligne.
 
-## Connexion à l'API (plus utilisée)
+## Lancer et tester sur téléphone
 
-Depuis l'étape 5, l'app n'appelle plus l'API : en web comme dans Expo Go, il suffit de Metro.
-Ce qui suit décrit l'ancien branchement, retiré avec l'API à l'étape 6 : l'app en mode web dans le navigateur
-(`npm run web`, port 8081) ou sur un téléphone via Expo Go, l'API sur le port 5015. Par défaut
-rien n'est exposé sur le réseau ; le profil de lancement `lan` ouvre l'API au Wi-Fi local
-(voir [Tester sur téléphone](../jardo-app/README.md#tester-sur-téléphone)).
-
-- L'URL de l'API est résolue dans `src/api/client.ts` : `EXPO_PUBLIC_API_URL` si elle est
-  définie (`jardo-app/.env.local`), sinon, sur mobile, l'hôte du serveur Metro
-  (`Constants.expoConfig.hostUri`) sur le port 5015, sinon `http://localhost:5015` (web).
-- La politique CORS `FrontDev` de `Program.cs` autorise `http://localhost:8081`. Elle ne sert
-  qu'au mode web : une app native n'est pas soumise à CORS.
-- Test sur téléphone et hébergement HTTPS : plus tard, depuis le PC perso (voir la roadmap).
+En web (`npm run web`, port 8081) comme dans Expo Go, il suffit de Metro : aucun serveur, aucun
+réseau pour les données (voir [Tester sur téléphone](../jardo-app/README.md#tester-sur-téléphone)).
 
 ## Tests
 
@@ -281,7 +267,6 @@ dans `jardo-app/test/`.
 - **Une panne ou une attente** se provoque sur le service lui-même :
   `jest.spyOn(services.tasks, 'getDue').mockRejectedValueOnce(…)`, ou une implémentation qui
   attend une promesse libérée par le test pour observer l'écran pendant l'écriture.
-- `test/api.ts` (`mockApi`) ne sert plus qu'au test de `client.ts` ; tous deux partent à l'étape 6.
 - **La base locale se teste sur une vraie SQLite en mémoire** (`test/db.ts`, `node:sqlite` de
   Node, sans dépendance) : `await createTestDb()` rend une base migrée comme l'app l'ouvre,
   `createTestDb({ exampleGarden: true })` avec le jardin d'exemple, `createMemoryDb()` une base
