@@ -12,6 +12,13 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (26/10/2026)
 
+**Direction visuelle définie ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), pas
+encore mise en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la
+carte, tons chauds de la carte en accents, sections encadrées au lieu d'une carte par ligne, ciel
+du jour en tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur une
+[maquette comparative](https://claude.ai/artifact/XocpKweEQ2UFkqYXZSHKex). Mise en œuvre
+découpée en sept PR, à commencer par les jetons.
+
 **Le jardin se sauvegarde dans un fichier (étape 7, la dernière du « local d'abord »).**
 Réglages → Sauvegarde : « Exporter mon jardin » produit `jardo-AAAA-MM-JJ.json` (format et schéma
 versionnés, date, toutes les tables : espaces, zones, éléments, journal, tâches, carte) et l'ouvre
@@ -322,7 +329,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 **Phase 6 : après le MVP**
 - Refonte du design en premier : charte (couleurs, mode sombre), typographie, boutons, une
-  interface plus vivante, avec des skills de design (frontend-design).
+  interface plus vivante, avec des skills de design (frontend-design). Direction fixée le 26/10
+  ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)) ; mise en œuvre en sept PR.
 - Carte isométrique dans l'onglet Jardin (premier chantier, [étapes](docs/etude-carte-potager.md#étapes-livrables)),
   notifications, récoltes chiffrées, photos,
   catalogue d'espèces, autres types d'espaces, météo, foyer partagé.
