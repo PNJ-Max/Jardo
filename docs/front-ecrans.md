@@ -153,8 +153,8 @@ Il s'applique à toute tâche ; l'arrosage en est le premier cas. Statuts calcul
 | `DueSoon` | bleu eau pour l'arrosage | « À faire aujourd'hui » (« À arroser aujourd'hui ») |
 | `Overdue` | brique | « En retard de {daysOverdue} j » |
 
-La couleur et l'icône de `DueSoon` pour les tâches autres que l'arrosage sont à trancher avec
-les maquettes.
+Pour les tâches autres que l'arrosage, `DueSoon` passera en brun terre avec une icône soleil
+([direction visuelle](direction-visuelle.md#voyant-déchéance)).
 
 Ne pas se reposer sur la couleur seule : on ajoute toujours le texte ou une icône (accessibilité).
 Valeurs, icônes et contrastes : [charte graphique](charte-graphique.md#voyant-déchéance).

@@ -12,6 +12,14 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (26/10/2026)
 
+**Direction visuelle définie ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), pas
+encore mise en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la
+carte, tons chauds de la carte en accents, sections encadrées au lieu d'une carte par ligne, ciel
+du jour en tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur une
+[maquette comparative](https://claude.ai/artifact/XocpKweEQ2UFkqYXZSHKex). Mise en œuvre
+découpée en neuf PR : les jetons, puis l'écran Aujourd'hui repensé (trié par urgence et par espace,
+semaine en tête, feuille de la tâche, « Tout arroser », « Reporter »), prioritaire.
+
 **Écran dédoublé en mode web, corrigé.** Après Jardin → espace → retour, Chrome laissait des restes
 d'image en double. Cause : un écran quitté passe en `display: none` sur le web et mesure 0 × 0. La
 carte recadrait alors vers une échelle nulle, puis se ré-animait au retour. Skia web 2.6 recréait
@@ -284,7 +292,7 @@ journal d'interventions, tâches). L'API l'implémente en entier, le front en a 
   - Jardin : la carte isométrique (phase 6) ;
   - Journal : chargement progressif. L'API renvoie tout le journal d'un coup : il faudrait
     d'abord une pagination côté API (un curseur sur la date et l'identifiant, par exemple) ;
-  - « Fait » précisé : l'appui long se découvre mal, à revoir avec la refonte du design ;
+  - « Fait » précisé : l'appui long se découvre mal ; la direction visuelle le remplace par la feuille de la tâche ;
   - Zone et fiches : déplacer un élément vers un autre espace, archiver depuis la liste ;
   - Formulaires : contrôles locaux plus fins.
 - Pas de tests.
@@ -329,7 +337,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 **Phase 6 : après le MVP**
 - Refonte du design en premier : charte (couleurs, mode sombre), typographie, boutons, une
-  interface plus vivante, avec des skills de design (frontend-design).
+  interface plus vivante, avec des skills de design (frontend-design). Direction fixée le 26/10
+  ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)) ; mise en œuvre en neuf PR.
 - Carte isométrique dans l'onglet Jardin (premier chantier, [étapes](docs/etude-carte-potager.md#étapes-livrables)),
   notifications, récoltes chiffrées, photos,
   catalogue d'espèces, autres types d'espaces, météo, foyer partagé.

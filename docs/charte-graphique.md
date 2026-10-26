@@ -130,3 +130,5 @@ texte posé dessus est le fond sarcelle (`primaryText`), pas du blanc.
 
 - L'icône de l'app et le splash gardent la terre cuite et la crème de la première charte :
   à redessiner dans la nouvelle palette lors de la refonte du design (phase 6).
+- La [direction visuelle](direction-visuelle.md) ajoute des jetons (terre, lueur, pelouse, champs
+  remplis, rayons, `display`) : ils entreront dans ce document avec leur mise en œuvre.
