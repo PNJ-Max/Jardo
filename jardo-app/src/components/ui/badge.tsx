@@ -20,23 +20,22 @@ export function Badge({
   const styles = useStyles();
 
   return (
-    <View style={[styles.badge, { borderColor: color, backgroundColor: background }]}>
+    <View style={[styles.badge, { backgroundColor: background }]}>
       <Ionicons name={icon} size={14} color={color} />
       <Text style={[styles.text, { color }]}>{text}</Text>
     </View>
   );
 }
 
-const useStyles = createStyles(({ fonts, typography, spacing }) => ({
+const useStyles = createStyles(({ fonts, typography, spacing, radius }) => ({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 999,
-    borderWidth: 1,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
   },
   text: { ...typography.caption, fontFamily: fonts.bodySemiBold },
 }));

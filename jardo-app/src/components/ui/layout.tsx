@@ -27,20 +27,17 @@ export const screenStyles = StyleSheet.create({
   form: { padding: spacing.md, gap: spacing.md },
 });
 
-const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) => ({
+const useStyles = createStyles(({ colors, typography, spacing, radius }) => ({
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
   },
   sectionTitle: {
-    ...typography.caption,
-    fontFamily: fonts.bodySemiBold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    color: colors.textMuted,
+    ...typography.section,
+    color: colors.text,
     marginTop: spacing.md,
   },
 }));

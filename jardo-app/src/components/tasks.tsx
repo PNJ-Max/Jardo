@@ -47,7 +47,7 @@ export function useMarkDone() {
  */
 export function DueBadge({ task }: { task: GardenTask }) {
   const { due } = useTheme();
-  const { color, background } = due[task.status];
+  const { color, background } = due[task.status === 'DueSoon' && task.kind === 'Watering' ? 'Watering' : task.status];
 
   if (task.isCompleted) {
     return <Badge color={color} background={background} icon="checkmark-done-outline" text={`Faite le ${formatDate(task.lastDoneOn)}`} />;
@@ -60,7 +60,7 @@ export function DueBadge({ task }: { task: GardenTask }) {
       return task.kind === 'Watering' ? (
         <Badge color={color} background={background} icon="water-outline" text="À arroser aujourd'hui" />
       ) : (
-        <Badge color={color} background={background} icon="calendar-outline" text="À faire aujourd'hui" />
+        <Badge color={color} background={background} icon="sunny-outline" text="À faire aujourd'hui" />
       );
     case 'Ok':
       return (

@@ -37,20 +37,29 @@ Contrastes calculés selon WCAG 2.1. Le seuil visé est 4,5:1 (AA, texte courant
 | `leafPale` | `#A5D6A7` | Décor | |
 | `success` | `#1B5E20` | Tâche à jour | 7:1 sur `successTint` |
 | `successTint` | `#E8F5E9` | Fond de pastille « à jour » | |
-| `water` | `#2F6690` | À faire aujourd'hui, actions d'arrosage | 6,1:1 avec blanc, 5,2:1 sur `waterTint` |
-| `waterTint` | `#E3EEF6` | Fond de pastille « aujourd'hui » | |
+| `water` | `#2F6690` | Arrosage à faire aujourd'hui, actions d'arrosage | 6,1:1 avec blanc, 5,2:1 sur `waterTint` |
+| `waterTint` | `#E3EEF6` | Fond du voyant d'arrosage du jour | |
 | `danger` | `#A33A2A` | En retard, erreurs, suppression | 6,6:1 avec blanc, 5,2:1 sur `dangerTint` |
 | `dangerTint` | `#F6E0DA` | Fond de pastille « en retard » | |
+| `surfaceSunken` | `#EAF2E8` | Fond des champs remplis, du bouton fermer | `text` 11:1, `textMuted` 5,2:1 |
+| `tile` | `#E4F0DE` | Tuile des pictogrammes, type choisi | 6,7:1 avec `primary` |
+| `soil` | `#694B34` | À faire aujourd'hui, hors arrosage | 7,5:1 sur le fond, 7,9:1 sur blanc, 6,6:1 sur `soilTint` |
+| `soilTint` | `#F2EADF` | Fond du voyant `soil` | |
+| `glow` | `#F6C76E` | Lueur des fenêtres : « Fait », focus, lucioles. Décor | |
+| `lawn` | `#B3D6A9` | Sol des vignettes, onglet actif. Décor | 4,9:1 avec `primary` |
+| `skyTop` | `#D3EAEE` | Haut du ciel d'Aujourd'hui, fondu vers `background` | 4,7:1 avec `textMuted` |
 
 ## Voyant d'échéance
 
 Le voyant indique où en est une tâche du jardin ; l'arrosage en est le premier cas. Il combine
-**toujours** couleur, icône et texte : il doit rester lisible sans distinguer les couleurs.
+**toujours** couleur, icône et texte : il doit rester lisible sans distinguer les couleurs. Il n'a
+pas de bordure : un fond teinté de rayon 8 (`radius.sm`). Dans le thème, `due.DueSoon` est la terre et
+`due.Watering` le bleu de l'eau.
 
 | Statut | Couleur (texte / fond) | Icône Ionicons | Texte |
 |---|---|---|---|
 | `Ok` | `success` / `successTint` (vert) | `checkmark-circle-outline` | « Prochain : {date} » |
-| `DueSoon` | `water` / `waterTint` (bleu) | `water-outline` pour l'arrosage, `calendar-outline` sinon | « À faire aujourd'hui » |
+| `DueSoon` | `soil` / `soilTint` (terre) ; `water` / `waterTint` (bleu) pour l'arrosage | `sunny-outline` ; `water-outline` pour l'arrosage | « À faire aujourd'hui » ; « À arroser aujourd'hui » |
 | `Overdue` | `danger` / `dangerTint` (brique) | `warning-outline` | « En retard de {n} j » |
 
 ## Typographie
@@ -64,7 +73,9 @@ Le voyant indique où en est une tâche du jardin ; l'arrosage en est le premier
 
 | Jeton | Usage | Police | Taille / interligne |
 |---|---|---|---|
+| `display` | Date du jour, nom en tête de fiche, titre de formulaire | Nunito ExtraBold, approche −0,3 | 32 / 36 |
 | `title` | Titre d'écran | Nunito ExtraBold | 24 / 30 |
+| `section` | Titre de section, en casse de phrase, couleur `text` | Nunito ExtraBold | 17 / 22 |
 | `subtitle` | Nom d'un élément ou d'une zone, titre d'état vide, en-têtes | Nunito ExtraBold | 18 / 23 |
 | `body` | Corps de texte, boutons, champs | Nunito Regular | 15 / 21 |
 | `caption` | Légendes, pastilles, messages sous les champs | Nunito Regular | 13 / 18 |
@@ -75,7 +86,7 @@ Familles disponibles dans `theme.fonts` : `heading`, `body`, `bodyMedium`, `body
 
 ## Formes et espacements
 
-- Rayon des cartes, champs et boutons : 12.
+- Rayons (`theme.radius`) : `sm` 8 (voyant d'échéance), `md` 14 (cartes, champs, boutons, tuiles de pictogramme), `lg` 18 (surfaces groupées, tuiles de zone).
 - Pastilles et boutons ronds : entièrement arrondis.
 - Espacements : 4 / 8 / 16 / 24 (`spacing.xs` à `spacing.lg`).
 
@@ -125,10 +136,17 @@ texte posé dessus est le fond sarcelle (`primaryText`), pas du blanc.
 | `waterTint` | `#133B4C` | |
 | `danger` | `#E8826F` | 6,1:1 / 4,6:1, 4,9:1 sur `dangerTint` |
 | `dangerTint` | `#4A2620` | |
+| `surfaceSunken` | `#0C2E32` | `text` 12,9:1, `textMuted` 6,6:1 |
+| `tile` | `#164441` | 5:1 avec `primary` |
+| `soil` | `#D9B98F` | 8,8:1 sur le fond, 6,7:1 sur la carte, 7:1 sur `soilTint` |
+| `soilTint` | `#3A2F24` | |
+| `glow` | `#F4C76F` | Décor |
+| `lawn` | `#1D4A41` | Décor, 4,6:1 avec `primary` |
+| `skyTop` | `#03141A` | 8,6:1 avec `textMuted` |
 
 ## À reprendre
 
 - L'icône de l'app et le splash gardent la terre cuite et la crème de la première charte :
   à redessiner dans la nouvelle palette lors de la refonte du design (phase 6).
-- La [direction visuelle](direction-visuelle.md) ajoute des jetons (terre, lueur, pelouse, champs
-  remplis, rayons, `display`) : ils entreront dans ce document avec leur mise en œuvre.
+- La [direction visuelle](direction-visuelle.md) fixe l'usage de ces jetons ; ses composants
+  (pictogrammes, surfaces groupées, ciel du jour…) arrivent étape par étape.

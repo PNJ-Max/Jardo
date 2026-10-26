@@ -150,10 +150,10 @@ Il s'applique à toute tâche ; l'arrosage en est le premier cas. Statuts calcul
 | Statut | Couleur | Texte |
 |---|---|---|
 | `Ok` | sauge foncée | « Prochain : {date} » |
-| `DueSoon` | bleu eau pour l'arrosage | « À faire aujourd'hui » (« À arroser aujourd'hui ») |
+| `DueSoon` | brun terre ; bleu eau pour l'arrosage | « À faire aujourd'hui » (« À arroser aujourd'hui ») |
 | `Overdue` | brique | « En retard de {daysOverdue} j » |
 
-Pour les tâches autres que l'arrosage, `DueSoon` passera en brun terre avec une icône soleil
+Hors arrosage, `DueSoon` est brun terre avec une icône soleil ; le voyant n'a pas de bordure
 ([direction visuelle](direction-visuelle.md#voyant-déchéance)).
 
 Ne pas se reposer sur la couleur seule : on ajoute toujours le texte ou une icône (accessibilité).

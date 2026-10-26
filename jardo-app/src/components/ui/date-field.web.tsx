@@ -33,7 +33,7 @@ export function DateField(props: DateFieldProps) {
           minHeight: 48,
           boxSizing: 'border-box',
           paddingInline: spacing.md,
-          borderRadius: radius,
+          borderRadius: radius.md,
           border: `1px solid ${error ? colors.danger : colors.border}`,
           backgroundColor: colors.card,
           color: colors.text,

@@ -6,6 +6,7 @@ import { businessRule } from '@/data/problem';
 import type { Services } from '@/data/services';
 import { addDays } from '@/domain/dates';
 import { today } from '@/lib/dates';
+import { palettes } from '@/theme/colors';
 
 import { createTestServices, renderScreen } from '../../test/render';
 
@@ -61,6 +62,17 @@ describe("écran Aujourd'hui", () => {
     expect(screen.getByText('Traiter')).toBeOnTheScreen();
     // Le voyant vient du domaine : « Prochain : » reprend nextDueDate sans recalcul.
     expect(screen.getByText(/Prochain : /)).toBeOnTheScreen();
+  });
+
+  it("colore le voyant du jour en terre, et en bleu pour l'arrosage", async () => {
+    const services = await createTestServices();
+    await addDueToday(services);
+    const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+    await services.tasks.create({ kind: 'Watering', recurrence: 'Once', startDate: today(), spaceId: potager.id });
+    await renderScreen(<TodayScreen />, services);
+
+    expect(await screen.findByText("À faire aujourd'hui")).toHaveStyle({ color: palettes.light.soil });
+    expect(screen.getByText("À arroser aujourd'hui")).toHaveStyle({ color: palettes.light.water });
   });
 
   it("n'affiche pas les sections vides", async () => {

@@ -70,7 +70,7 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
     paddingLeft: spacing.md,
     paddingRight: spacing.sm,
     paddingVertical: spacing.sm,
-    borderRadius: radius,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.card,

@@ -15,7 +15,7 @@ export { fontAssets, fonts, typography } from './typography';
 
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24 };
 
-export const radius = 12;
+export const radius = { sm: 8, md: 14, lg: 18 };
 
 type DueStyle = { color: string; background: string };
 
@@ -25,13 +25,14 @@ export type Theme = {
   /**
    * Le voyant d'échéance d'une tâche, toujours accompagné d'une icône et d'un texte pour ne
    * jamais compter sur la couleur seule. `color` reste lisible en texte sur `background` comme
-   * sur le fond de l'écran.
+   * sur le fond de l'écran. `Watering` est l'échéance d'un arrosage, qui garde le bleu de l'eau ;
+   * `DueSoon` sert aux autres interventions.
    */
-  due: Record<DueStatus, DueStyle>;
+  due: Record<DueStatus | 'Watering', DueStyle>;
   typography: typeof typography;
   fonts: typeof fonts;
   spacing: typeof spacing;
-  radius: number;
+  radius: typeof radius;
   /** À passer au ThemeProvider d'Expo Router : en-têtes, onglets et fonds d'écran. */
   navigation: NavigationTheme;
 };
@@ -45,7 +46,8 @@ function createTheme(scheme: ColorScheme): Theme {
     colors,
     due: {
       Ok: { color: colors.success, background: colors.successTint },
-      DueSoon: { color: colors.water, background: colors.waterTint },
+      DueSoon: { color: colors.soil, background: colors.soilTint },
+      Watering: { color: colors.water, background: colors.waterTint },
       Overdue: { color: colors.danger, background: colors.dangerTint },
     },
     typography,
