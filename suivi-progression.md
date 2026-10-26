@@ -17,7 +17,8 @@ encore mise en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes ti
 carte, tons chauds de la carte en accents, sections encadrées au lieu d'une carte par ligne, ciel
 du jour en tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur une
 [maquette comparative](https://claude.ai/artifact/XocpKweEQ2UFkqYXZSHKex). Mise en œuvre
-découpée en sept PR, à commencer par les jetons.
+découpée en neuf PR : les jetons, puis l'écran Aujourd'hui repensé (trié par urgence et par espace,
+semaine en tête, feuille de la tâche, « Tout arroser », « Reporter »), prioritaire.
 
 **Le jardin se sauvegarde dans un fichier (étape 7, la dernière du « local d'abord »).**
 Réglages → Sauvegarde : « Exporter mon jardin » produit `jardo-AAAA-MM-JJ.json` (format et schéma
@@ -284,7 +285,7 @@ journal d'interventions, tâches). L'API l'implémente en entier, le front en a 
   - Jardin : la carte isométrique (phase 6) ;
   - Journal : chargement progressif. L'API renvoie tout le journal d'un coup : il faudrait
     d'abord une pagination côté API (un curseur sur la date et l'identifiant, par exemple) ;
-  - « Fait » précisé : l'appui long se découvre mal, à revoir avec la refonte du design ;
+  - « Fait » précisé : l'appui long se découvre mal ; la direction visuelle le remplace par la feuille de la tâche ;
   - Zone et fiches : déplacer un élément vers un autre espace, archiver depuis la liste ;
   - Formulaires : contrôles locaux plus fins.
 - Pas de tests.
@@ -330,7 +331,7 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 **Phase 6 : après le MVP**
 - Refonte du design en premier : charte (couleurs, mode sombre), typographie, boutons, une
   interface plus vivante, avec des skills de design (frontend-design). Direction fixée le 26/10
-  ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)) ; mise en œuvre en sept PR.
+  ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)) ; mise en œuvre en neuf PR.
 - Carte isométrique dans l'onglet Jardin (premier chantier, [étapes](docs/etude-carte-potager.md#étapes-livrables)),
   notifications, récoltes chiffrées, photos,
   catalogue d'espèces, autres types d'espaces, météo, foyer partagé.

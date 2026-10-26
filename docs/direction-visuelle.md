@@ -8,7 +8,17 @@ Maquette comparative (actuel / proposé, clair et sombre, sur Aujourd'hui, la fi
 le formulaire « Nouvel espace ») :
 [Jardo, direction visuelle](https://claude.ai/artifact/XocpKweEQ2UFkqYXZSHKex). Validée par
 Maxime le 26/10/2026 : le ciel du jour, les sections encadrées et le mode clair sur fond blanc
-sont retenus.
+sont retenus. Son second retour, après avoir parcouru l'app, a fait repenser l'écran Aujourd'hui
+([plus bas](#aujourdhui-repensé)), désormais prioritaire.
+
+## Ce qu'on garde
+
+Maxime aime, dans l'app actuelle, et la refonte n'y touche que par les jetons :
+
+- les onglets en haut des fiches (« beaucoup plus clair ») ;
+- l'onglet Contenu, avec ses carrés et ses rangs ;
+- le journal et ses filtres ;
+- la carte, « mignonne », un peu simple mais très bien pour une V1.
 
 ## Le constat
 
@@ -96,12 +106,13 @@ Dans l'ordre où ils seront refaits.
    Bold 16, puis voyant et cible côte à côte. Le bouton « Fait » à droite.
 3. **Bouton « Fait »** : pastille de 40 de haut, contour `primary` et texte « Fait ». Au toucher,
    elle se remplit, la coche devient une pousse, une lueur `glow` s'étend, retour haptique, puis
-   la ligne se replie et le message « Noté au journal : Arroser, Carré 2 · Annuler » monte.
-   L'appui long garde l'écran « Fait » précisé.
-4. **Ciel du jour** : en-tête d'Aujourd'hui, environ 210 de haut. Ciel `skyTop` fondu vers le
+   la ligne se replie et le message « Noté au journal : arroser, Carré 2 » monte, avec
+   « Annuler » et « Ajouter une note ».
+4. **Ciel du jour** : en-tête d'Aujourd'hui, environ 150 de haut. Ciel `skyTop` fondu vers le
    fond, ligne d'horizon du jardin (maison, arbre, serre, haie), soleil le jour, fenêtres allumées
-   et lucioles la nuit. Par-dessus : la date en `display` et une phrase (« 3 choses à faire au
-   jardin, dont 1 en retard » ; « Tout est fait pour aujourd'hui » quand c'est le cas).
+   et lucioles la nuit. Par-dessus : la date en `display` et une phrase (« 5 choses à faire au
+   jardin, dont 1 en retard » ; « Tout est fait pour aujourd'hui. Demain : arroser la serre »).
+   Le reste d'Aujourd'hui est décrit [plus bas](#aujourdhui-repensé).
 5. **Vignette d'espace** : la scène isométrique du type d'espace. En tête de fiche (environ 230 de
    haut, bouton retour rond posé dessus, sans barre de navigation), en petit dans la liste des
    espaces et dans le choix du type.
@@ -115,6 +126,52 @@ Dans l'ordre où ils seront refaits.
    actif est en `primary`, rempli de `lawn`.
 9. **États vides illustrés** : le jardin au repos (banc sous l'arbre le jour, fenêtre allumée la
    nuit), une phrase et l'action qui débloque (« Ajouter un espace »). Plus d'emoji.
+
+## Aujourd'hui, repensé
+
+Le retour de Maxime : l'écran n'est « pas vraiment trié » et « reste basique, juste avec un
+bouton Fait ». Les concurrents ([benchmark](benchmark-concurrents.md)) s'organisent autour d'un
+calendrier et de rappels groupés. Jardo n'a pas encore de catalogue d'espèces pour suggérer des
+tâches de saison (après le MVP) ; il a en revanche les tâches de l'utilisateur, leur rythme et
+leur historique, et le savoir de son jardin par espace. C'est avec cela qu'on trie.
+
+### Organisation, de haut en bas
+
+1. **Ciel du jour** : la date, et la phrase qui dit combien de choses attendent et combien sont
+   en retard.
+2. **La semaine** : sept jours, d'aujourd'hui à dans six jours. Sous chaque jour, un point s'il y
+   a quelque chose de prévu, rouge s'il y a du retard. Toucher un jour montre ce qui est prévu ce
+   jour-là, à faire en avance si l'on veut ; aujourd'hui est choisi à l'ouverture. Remplace la
+   section « Cette semaine ».
+3. **En retard** : à part, en tête, dans une surface bordée de `danger`. Les plus en retard
+   d'abord. La ligne dit de combien (« Carré 2, en retard de 2 jours »).
+4. **Aujourd'hui, par espace** : une surface par espace, coiffée de la vignette de l'espace et de
+   son nom, l'espace le plus chargé d'abord. Dans un espace, l'arrosage d'abord, puis les autres
+   interventions. La ligne ne répète pas l'échéance, puisque la section la donne : elle dit la
+   cible et le rythme (« Carré 1, tous les 3 jours »).
+5. **Dans le mois** : une ligne repliée qui nomme les tâches annuelles ou ponctuelles des trente
+   prochains jours (« Tailler les pommiers, traitement d'hiver du verger ») ; elle s'ouvre sur
+   leur liste. C'est le calendrier de saison du MVP, fait des tâches de l'utilisateur.
+
+Rien à faire aujourd'hui : l'état vide illustré, puis ce qui vient demain.
+
+### Interactions
+
+| Geste | Effet | Où il vit |
+|---|---|---|
+| « Fait » | Note l'intervention ; « Annuler » et « Ajouter une note » | Front |
+| Toucher une ligne | Feuille de la tâche : rythme, dernière fois (et dernière quantité pour une récolte), puis « Fait aujourd'hui », « Fait un autre jour, avec une note », « Reporter à demain », « Ouvrir la fiche ». Remplace l'appui long, qui se découvrait mal | Front, réutilise l'écran « Fait » précisé |
+| « Tout arroser » | Sur un espace qui a au moins deux arrosages dus : note un seul arrosage sur l'espace, qui vaut pour ses zones et ses éléments, retards compris | Front : la règle d'application d'une intervention à ce que la cible contient existe déjà |
+| Glisser à droite | « Fait » | Front (`react-native-gesture-handler`, installé) |
+| Glisser à gauche | « Reporter à demain » | Domaine (ci-dessous) |
+| Toucher un jour | Montre ce jour-là | Front, horizon de sept jours existant |
+
+**Reporter** demande un changement du domaine, le seul de cette refonte : l'échéance est
+recalculée à chaque lecture et rien ne la stocke. Il faut une date `postponedUntil` sur la tâche,
+qui repousse l'échéance calculée et s'efface au prochain « Fait » ; colonne ajoutée par migration
+SQLite, prise en compte par l'export et l'import, et cas de test dans le calcul d'échéance.
+
+« Dans le mois » demande un horizon `Month` dans `TaskQueries`, à côté de `Today` et `Week`.
 
 ## Illustrations
 
@@ -186,13 +243,21 @@ verts, et une capture clair / sombre dans la description.
 2. **Pictogrammes** : les onze pictogrammes et ceux de la barre d'onglets, un composant
    `KindIcon` ; branchés sur les lignes de tâche et le journal.
 3. **Surfaces et « Fait »** : `Group`, ligne de tâche refaite sur Aujourd'hui et les fiches,
-   bouton « Fait » animé avec haptique, message « Noté au journal ».
-4. **Ciel du jour** : en-tête d'Aujourd'hui, horizon jour et nuit, lucioles.
-5. **Vignettes d'espace** : les cinq scènes en cache, en tête de fiche, dans la liste des espaces ;
-   tuiles de zone dans l'onglet Contenu.
-6. **Formulaires** : champs remplis, bouton ancré, titre en `display`, choix du type d'espace sur
+   bouton « Fait » animé avec haptique, message « Noté au journal » avec « Ajouter une note ».
+4. **Aujourd'hui, l'organisation** : ciel du jour, bande de la semaine, « En retard » à part,
+   aujourd'hui par espace (icône du type en attendant les vignettes), « Dans le mois » avec
+   l'horizon `Month`.
+5. **Aujourd'hui, les gestes** : feuille de la tâche à la place de l'appui long, « Tout
+   arroser », glisser à droite pour « Fait ».
+6. **Reporter** : `postponedUntil` dans le domaine (migration, export et import, tests du calcul
+   d'échéance), puis « Reporter à demain » dans la feuille et en glissant à gauche.
+7. **Vignettes d'espace** : les cinq scènes en cache, en tête de fiche, dans la liste des espaces
+   et sur les groupes d'Aujourd'hui ; tuiles de zone dans l'onglet Contenu.
+8. **Formulaires** : champs remplis, bouton ancré, titre en `display`, choix du type d'espace sur
    les vignettes.
-7. **États vides et icône** : jardin au repos ; icône de l'app et splash redessinés dans la palette
+9. **États vides et icône** : jardin au repos ; icône de l'app et splash redessinés dans la palette
    v2 (le point « À reprendre » de la charte).
 
-Les étapes 2 et 4 sont indépendantes ; 3 attend 2, 6 attend 5.
+Aujourd'hui passe en premier, comme Maxime le demande : de 1 à 6, chaque étape attend la
+précédente. Les vignettes (7) ne dépendent que des jetons et peuvent avancer en parallèle de 2 à
+6 ; 8 et 9 attendent 7.
