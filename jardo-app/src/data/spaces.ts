@@ -58,7 +58,7 @@ const toSpace = (row: SpaceRow, dueTaskCount: number): Space => ({
   dueTaskCount,
 });
 
-const validate = (input: SpaceInput) =>
+export const validate = (input: SpaceInput) =>
   new Validation()
     .required('Name', 'Nom', input.name, 100)
     .optional('Description', 'Description', input.description, 500)

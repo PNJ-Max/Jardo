@@ -10,44 +10,25 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (23/10/2026)
+## Où on en est (26/10/2026)
 
-**L'API .NET est retirée du dépôt (étape 6 du « local d'abord »).** `Jardo.Api`, `Jardo.Api.Tests`,
-`Jardo.slnx`, le client HTTP et les types générés du front, le script `api:types`, le profil `lan`
-et le job API de la CI sont supprimés ; la CI ne garde que le job Front. Le tag `api-dotnet`
-pointe sur le dernier commit qui la contient (`git checkout api-dotnet`) : elle pourra revenir
-un jour comme serveur de synchronisation. `CLAUDE.md`, les README et les docs décrivent l'app
-seule. Expo Go ne demande plus que Metro : la règle de pare-feu « Jardo API (dev) » n'a plus
-d'objet (la commande pour la retirer est dans la PR), celle de Metro reste.
-
-**L'app marche sans API ni réseau (étape 5 du « local d'abord »).** Tous les écrans lisent et
-écrivent la base SQLite du téléphone : les hooks de `queries.ts` appellent les services de
-`src/data/` avec les mêmes clés de cache, les mêmes invalidations et le même « Fait » optimiste
-et annulable. `types.ts` est la référence, écrite à la main dans le domaine et les services ; les
-identifiants sont des UUID en chaîne dans les routes, les paramètres et les formulaires. Les
-erreurs des services s'affichent sous leur champ. La carte de l'onglet Jardin lit aussi la base
-locale (modèle `country-house` du jardin d'exemple). Les tests d'écran tournent sur la SQLite en
-mémoire au lieu de `mockApi`. Convention : « le voyant vient du domaine ». Vérifié par un parcours
-complet en mode web, API éteinte, en clair et en sombre ; **pas encore sur téléphone en mode
-avion**. Il faut
-recréer la base de dev d'une branche plus ancienne si elle date d'avant le modèle `country-house`.
-
-**La carte est l'accueil (étape 4 de l'[étude](docs/etude-carte-potager.md)).** L'onglet Jardin
-affiche la carte du modèle du jardin, lue par `useGardenMap()` (aujourd'hui dans la base locale). Chaque
-emplacement occupé porte le nom de son espace ou de sa zone, et le toucher (dessin ou étiquette)
-ouvre sa fiche ; un emplacement libre est voilé, sans étiquette, et ne fait rien. La bande
-« Hors carte », sous la carte, liste les espaces actifs sans emplacement et les carrés d'un
-potager de la carte qui n'en ont pas. Un bouton de l'en-tête bascule vers la liste des espaces,
-la voie des lecteurs d'écran. Sans carte configurée, ou pour un modèle que l'app ne dessine pas,
-l'onglet garde la liste. L'API accepte le modèle `country-house`, que prennent les jardins
-d'exemple (API et base locale). Changer de thème en cours de route recolore aussi l'en-tête et la
-barre d'onglets.
-L'aperçu de Réglages est retiré. Vérifié en mode web, vue mobile, en clair et en sombre ; **pas
-encore sur téléphone** (fluidité du pincement avec Skia, poids de l'APK). Il faut recréer la
-base de dev pour avoir le nouveau modèle.
+**Le jardin se sauvegarde dans un fichier (étape 7, la dernière du « local d'abord »).**
+Réglages → Sauvegarde : « Exporter mon jardin » produit `jardo-AAAA-MM-JJ.json` (format et schéma
+versionnés, date, toutes les tables : espaces, zones, éléments, journal, tâches, carte) et l'ouvre
+dans la feuille de partage ; sur le web, le fichier se télécharge. L'écran dit que le fichier
+contient tout le jardin. « Importer un jardin » choisit un fichier, le vérifie en entier avant
+d'écrire (format, version, colonnes, règles des services rejouées : cibles cohérentes, types
+acceptés, stock de bois jamais négatif, carte…), demande confirmation, puis remplace le jardin en
+une transaction ; un refus dit pourquoi et ne change rien. Les migrations futures ajoutent leur
+mise à niveau des exports, qu'un test exige. Vérifié par les tests (un export suivi d'un import
+redonne exactement le même jardin) et en mode web ; **pas encore sur téléphone** (feuille de
+partage, choix d'un fichier). La sauvegarde automatique d'Android reste à vérifier sur l'APK de
+test, avec la [procédure `adb shell bmgr`](docs/etude-architecture-donnees.md#vérifier-la-sauvegarde-automatique-sur-lapk).
+Nouvelles dépendances : `expo-sharing`, `expo-file-system`, `expo-document-picker` (incluses dans
+Expo Go).
 
 **Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
-Depuis l'étape 5, l'app tourne sur la base locale ; l'API, retirée à l'étape 6, n'existe plus que sous le tag `api-dotnet`.
+**Terminée le 26/10/2026.** L'app tourne sur la base locale depuis l'étape 5 ; l'API, retirée à l'étape 6, n'existe plus que sous le tag `api-dotnet`.
 
 - [x] 1. Domaine pur en TypeScript (22/10/2026) : `jardo-app/src/domain/` porte
   `DueDateCalculator`, `WoodPileCalculator`, `LatestInterventions` et le vocabulaire des types,
@@ -82,7 +63,47 @@ Depuis l'étape 5, l'app tourne sur la base locale ; l'API, retirée à l'étape
   `Jardo.Api`, `Jardo.Api.Tests`, `Jardo.slnx`, de `client.ts`, de `src/api/generated/`, du script
   `api:types` (et de `@hey-api/openapi-ts`), du profil `lan` et du job API de la CI. Docs mises
   à jour ; app inchangée.
-- [ ] 7. Sauvegarde
+- [x] 7. Sauvegarde (26/10/2026) : export d'un fichier JSON versionné par la feuille de partage
+  (téléchargé sur le web), import validé en entier puis confirmé, qui remplace le jardin en une
+  transaction ; mises à niveau des exports pour les migrations futures. La restauration
+  automatique d'Android reste à vérifier sur l'APK de test
+  ([détail](docs/etude-architecture-donnees.md#la-sauvegarde-livrée)).
+
+### Avant, le 23/10/2026
+
+**L'API .NET est retirée du dépôt (étape 6 du « local d'abord »).** `Jardo.Api`, `Jardo.Api.Tests`,
+`Jardo.slnx`, le client HTTP et les types générés du front, le script `api:types`, le profil `lan`
+et le job API de la CI sont supprimés ; la CI ne garde que le job Front. Le tag `api-dotnet`
+pointe sur le dernier commit qui la contient (`git checkout api-dotnet`) : elle pourra revenir
+un jour comme serveur de synchronisation. `CLAUDE.md`, les README et les docs décrivent l'app
+seule. Expo Go ne demande plus que Metro : la règle de pare-feu « Jardo API (dev) » n'a plus
+d'objet (la commande pour la retirer est dans la PR), celle de Metro reste.
+
+**L'app marche sans API ni réseau (étape 5 du « local d'abord »).** Tous les écrans lisent et
+écrivent la base SQLite du téléphone : les hooks de `queries.ts` appellent les services de
+`src/data/` avec les mêmes clés de cache, les mêmes invalidations et le même « Fait » optimiste
+et annulable. `types.ts` est la référence, écrite à la main dans le domaine et les services ; les
+identifiants sont des UUID en chaîne dans les routes, les paramètres et les formulaires. Les
+erreurs des services s'affichent sous leur champ. La carte de l'onglet Jardin lit aussi la base
+locale (modèle `country-house` du jardin d'exemple). Les tests d'écran tournent sur la SQLite en
+mémoire au lieu de `mockApi`. Convention : « le voyant vient du domaine ». Vérifié par un parcours
+complet en mode web, API éteinte, en clair et en sombre ; **pas encore sur téléphone en mode
+avion**. Il faut
+recréer la base de dev d'une branche plus ancienne si elle date d'avant le modèle `country-house`.
+
+**La carte est l'accueil (étape 4 de l'[étude](docs/etude-carte-potager.md)).** L'onglet Jardin
+affiche la carte du modèle du jardin, lue par `useGardenMap()` (aujourd'hui dans la base locale). Chaque
+emplacement occupé porte le nom de son espace ou de sa zone, et le toucher (dessin ou étiquette)
+ouvre sa fiche ; un emplacement libre est voilé, sans étiquette, et ne fait rien. La bande
+« Hors carte », sous la carte, liste les espaces actifs sans emplacement et les carrés d'un
+potager de la carte qui n'en ont pas. Un bouton de l'en-tête bascule vers la liste des espaces,
+la voie des lecteurs d'écran. Sans carte configurée, ou pour un modèle que l'app ne dessine pas,
+l'onglet garde la liste. L'API accepte le modèle `country-house`, que prennent les jardins
+d'exemple (API et base locale). Changer de thème en cours de route recolore aussi l'en-tête et la
+barre d'onglets.
+L'aperçu de Réglages est retiré. Vérifié en mode web, vue mobile, en clair et en sombre ; **pas
+encore sur téléphone** (fluidité du pincement avec Skia, poids de l'APK). Il faut recréer la
+base de dev pour avoir le nouveau modèle.
 
 ### Avant, le 22/10/2026
 

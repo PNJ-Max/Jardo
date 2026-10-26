@@ -210,7 +210,7 @@ renvoient.
 | Risque | Traitement |
 |---|---|
 | Lecture des données d'un téléphone volé ou rooté | Le bac à sable Android réserve la base à l'app. Pas de chiffrement au repos au départ : un jardin n'est pas une donnée sensible, et SQLCipher ne tourne pas dans Expo Go. À revoir si des données personnelles arrivent (photos géolocalisées, membres du foyer) |
-| Téléphone perdu ou changé | Sauvegarde automatique Android laissée active ([`android.allowBackup`](https://docs.expo.dev/versions/v57.0.0/config/app/), vrai par défaut) : la base part sur le Drive de l'utilisateur (25 Mo au plus, un seul instantané), restaurée à la réinstallation avec le même compte Google. Plus un export et un import manuels. La restauration se vérifie pour de vrai (étape 7). Dans Expo Go, la base appartient à Expo Go : la protection ne vaut que pour l'APK |
+| Téléphone perdu ou changé | Sauvegarde automatique Android laissée active ([`android.allowBackup`](https://docs.expo.dev/versions/v57.0.0/config/app/), vrai par défaut) : la base part sur le Drive de l'utilisateur (25 Mo au plus, un seul instantané), restaurée à la réinstallation avec le même compte Google. Plus un export et un import manuels, livrés à l'étape 7. La restauration se vérifie pour de vrai sur l'APK de test ([procédure](#vérifier-la-sauvegarde-automatique-sur-lapk)). Dans Expo Go, la base appartient à Expo Go : la protection ne vaut que pour l'APK |
 | Migration ratée après une mise à jour | Migrations en transaction, testées sur une base de la version précédente ; copie de la base avant chaque migration |
 | Base qui dépasse 25 Mo | Le texte d'un jardin en est loin. Les photos, prévues plus tard, dépasseraient vite le plafond : à traiter avec elles (exclusion de la sauvegarde automatique, export à part) |
 | Export partagé à n'importe qui | L'envoi est voulu par l'utilisateur, donc exempté de la déclaration de partage. Le fichier contient tout le jardin : l'écran d'export le dit |
@@ -280,6 +280,9 @@ utilisable à chaque étape.
    règles ajustées si besoin.
    *À la fin :* un test prouve qu'un export suivi d'un import redonne le même jardin, et une
    restauration réelle a été faite.
+   *Fait le 26/10/2026* pour l'export et l'import ([fichier et règles](#la-sauvegarde-livrée)).
+   La restauration automatique ne se vérifie que sur un build installé : elle revient à la
+   session de l'APK de test ([procédure](#vérifier-la-sauvegarde-automatique-sur-lapk)).
 
 **Ensuite, hors de cette migration :**
 
@@ -291,6 +294,91 @@ utilisable à chaque étape.
 - plus tard, la fiche publique. Un compte développeur personnel doit d'abord mener un
   [test fermé](https://support.google.com/googleplay/android-developer/answer/14151465) avec
   12 testeurs pendant 14 jours.
+
+## La sauvegarde livrée
+
+**Le fichier.** Réglages → « Exporter mon jardin » écrit `jardo-AAAA-MM-JJ.json` et l'ouvre dans
+la feuille de partage du téléphone ([`expo-sharing`](https://docs.expo.dev/versions/v57.0.0/sdk/sharing/),
+fichier écrit par [`expo-file-system`](https://docs.expo.dev/versions/v57.0.0/sdk/filesystem/) dans
+le cache de l'app). L'écran dit que le fichier contient tout le jardin. Le JSON porte une
+enveloppe et les lignes de chaque table, telles qu'en base et dans l'ordre d'insertion :
+
+```json
+{ "format": "jardo", "formatVersion": 1, "schemaVersion": 1, "exportedAt": "2026-10-26T17:56:45.900Z",
+  "tables": { "gardens": […], "spaces": […], "zones": […], "garden_items": […],
+              "journal_entries": […], "garden_tasks": […], "garden_map_slots": […] } }
+```
+
+`formatVersion` change si l'enveloppe change ; `schemaVersion` est la version de la base
+(`PRAGMA user_version`) dont viennent les lignes. Le jardin garde son identifiant : restaurer sur
+un nouveau téléphone redonne le même jardin, ce qu'une future synchronisation demandera.
+
+**L'import.** « Importer un jardin » choisit un fichier
+([`expo-document-picker`](https://docs.expo.dev/versions/v57.0.0/sdk/document-picker/)) et le
+vérifie en entier avant d'écrire quoi que ce soit (`readBackup`, `src/data/backup.ts`) :
+
+1. du JSON, au format `jardo`, d'une version connue. Un fichier d'une version plus récente de
+   l'app est refusé (« mettez l'app à jour ») ;
+2. chaque table et chaque colonne du schéma, rien de plus, et des valeurs du bon type ;
+3. les règles des services, rejouées sur le contenu (`src/data/backup-rules.ts`) : un seul jardin,
+   identifiants uniques, noms d'espaces et de zones uniques, champs validés comme dans les
+   formulaires, types acceptés par chaque espace, cohérence des cibles (la zone dans l'espace,
+   l'élément dans sa zone), champs selon le type d'intervention, rythme des tâches, stock de bois
+   jamais négatif, emplacements de la carte. Ce que la base contient déjà reste accepté : un espace
+   archivé garde ses éléments et son historique. La date future du journal n'est pas revérifiée,
+   elle dépend du jour de l'import.
+
+Le premier écart refuse tout le fichier, avec la ligne en cause et la règle. Sinon, une
+confirmation dit ce que contient le fichier et qu'il remplace le jardin actuel ; le remplacement
+se fait en une transaction, où les contraintes du schéma revérifient chaque ligne. Au moindre
+refus, rien n'a changé. Tous les écrans relisent ensuite.
+
+**Les migrations futures.** `backupUpgrades` tient une mise à niveau par migration : elle
+transforme les tables d'un export de la version précédente comme la migration a transformé la
+base. Un export ancien s'importe donc migré à la volée ; une migration qui ne peut pas se rejouer
+sur un fichier y lève un refus clair. Un test exige une entrée par migration, et un autre confronte
+les colonnes déclarées au schéma réel : ajouter une migration sans mettre la sauvegarde à jour
+fait échouer les tests.
+
+**Le mode web.** La feuille de partage du web ne partage pas un fichier local : l'export y est
+téléchargé, l'import lit le fichier choisi dans le navigateur (`src/lib/backup-file.web.ts`).
+Vérifié le 26/10/2026 dans le navigateur : export, refus d'un fichier trafiqué, import qui
+redonne le même jardin.
+
+### Vérifier la sauvegarde automatique sur l'APK
+
+La sauvegarde automatique d'Android (`android.allowBackup`, vrai par défaut, laissé tel quel)
+copie les fichiers de l'app, la base comprise, sur le Drive du compte Google. Elle ne se vérifie
+que sur un build installé : dans Expo Go, la base appartient à Expo Go. À faire lors de la session
+qui produira l'APK de test, d'après la [procédure d'Android](https://developer.android.com/identity/data/testingbackup) :
+
+1. Un téléphone Android 6 ou plus, connecté à Internet, avec un compte Google choisi comme compte
+   de sauvegarde (Paramètres → Google → Sauvegarde). Débogage USB activé, `adb devices` le voit.
+2. Installer l'APK, créer un petit jardin (un espace, une plante, une intervention, une tâche), puis
+   fermer l'app.
+3. Forcer une sauvegarde, `<package>` étant l'`android.package` d'`app.json` :
+
+   ```bash
+   adb shell bmgr enabled
+   adb shell bmgr list transports
+   adb shell bmgr backupnow <package>
+   ```
+
+   La dernière commande doit répondre `Package <package> with result: Success`. Sinon, lire
+   `adb logcat` (messages de `BackupManagerService`).
+4. Désinstaller puis réinstaller le même APK : la restauration a lieu à l'installation.
+
+   ```bash
+   adb uninstall <package>
+   adb install jardo.apk
+   ```
+
+5. Ouvrir l'app : le jardin doit être là, saisies les plus récentes comprises. La base est en mode
+   WAL : si les dernières saisies manquent, vérifier que le fichier `-wal` est bien sauvegardé
+   avant de toucher aux règles de sauvegarde.
+
+Le résultat se note ici et dans `suivi-progression.md`. Un réglage à ajuster (exclure un fichier,
+ou les photos plus tard) passe par la configuration Expo, jamais par le dossier `android/`.
 
 ## Plus tard : la synchronisation
 

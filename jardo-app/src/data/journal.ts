@@ -114,7 +114,7 @@ const toEntry = (row: JournalRow): JournalEntry => ({
   itemKind: row.item_type,
 });
 
-function validate(input: JournalEntryInput) {
+export function validate(input: JournalEntryInput) {
   new Validation()
     .date('Date', 'Date', input.date, { required: true })
     .oneOf('Kind', 'Type', input.kind, journalEntryKinds)
@@ -130,7 +130,7 @@ function validate(input: JournalEntryInput) {
     .done();
 }
 
-type Fields = {
+export type Fields = {
   note: string | null;
   quantity: number | null;
   quantityUnit: MeasureUnit | null;
@@ -139,7 +139,7 @@ type Fields = {
   treatment: string | null;
 };
 
-function ensureFieldsFitKind(kind: JournalEntryKind, { note, quantity, quantityUnit, heightCm, problem, treatment }: Fields) {
+export function ensureFieldsFitKind(kind: JournalEntryKind, { note, quantity, quantityUnit, heightCm, problem, treatment }: Fields) {
   const label = entryKindLabel(kind);
 
   if ((quantity !== null) !== (quantityUnit !== null)) {

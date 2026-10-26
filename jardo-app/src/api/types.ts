@@ -13,6 +13,7 @@ export type {
   SpaceKind,
   TaskRecurrence,
 } from '@/domain/types';
+export type { GardenBackup } from '@/data/backup';
 export type { Garden, GardenInput } from '@/data/garden';
 export type { GardenMap, GardenMapSlot } from '@/data/garden-map';
 export type { JournalEntry, JournalEntryInput } from '@/data/journal';

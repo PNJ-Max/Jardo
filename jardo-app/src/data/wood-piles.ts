@@ -82,7 +82,7 @@ const selectPiles = `
   LEFT JOIN zones z ON z.id = p.zone_id
   WHERE p.item_type = 'WoodPile'`;
 
-const validate = (input: WoodPileInput) =>
+export const validate = (input: WoodPileInput) =>
   new Validation()
     .required('Name', 'Nom', input.name, 100)
     .optional('WoodSpecies', 'Essence', input.woodSpecies, 100)

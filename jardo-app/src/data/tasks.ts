@@ -52,7 +52,7 @@ export type TaskCompletion = {
 /** Jusqu'où regarder les tâches dues : aujourd'hui et les retards, ou les sept prochains jours en plus. */
 export type DueHorizon = 'Today' | 'Week';
 
-const validate = (input: TaskInput) =>
+export const validate = (input: TaskInput) =>
   new Validation()
     .oneOf('Kind', 'Type', input.kind, journalEntryKinds)
     .optional('Title', 'Titre', input.title, 100)
@@ -63,6 +63,23 @@ const validate = (input: TaskInput) =>
     .id('ZoneId', 'Zone', input.zoneId, { nullable: true })
     .id('ItemId', 'Élément', input.itemId, { nullable: true })
     .done();
+
+export function ensureTaskFields(
+  kind: JournalEntryKind,
+  recurrence: TaskRecurrence,
+  intervalDays: number | null,
+  title: string | null,
+) {
+  if (recurrence === 'EveryNDays' && intervalDays === null) {
+    throw businessRule('Une tâche tous les N jours a besoin de son nombre de jours.');
+  }
+  if (recurrence !== 'EveryNDays' && intervalDays !== null) {
+    throw businessRule("Seule une tâche tous les N jours a un nombre de jours.");
+  }
+  if (kind === 'Other' && title === null) {
+    throw businessRule("Une tâche « autre » a besoin d'un titre pour dire ce qu'il y a à faire.");
+  }
+}
 
 // Tri en mémoire : l'échéance est calculée, pas stockée. Suffisant pour quelques dizaines de tâches.
 // `readTasks` rend les tâches dans l'ordre de création, que le tri stable garde à égalité.
@@ -99,16 +116,7 @@ export function createTaskService(db: Db, clock: Clock) {
   async function prepare(input: TaskInput, current: InterventionTarget | null) {
     const title = optionalText(input.title);
     const intervalDays = input.intervalDays ?? null;
-
-    if (input.recurrence === 'EveryNDays' && intervalDays === null) {
-      throw businessRule('Une tâche tous les N jours a besoin de son nombre de jours.');
-    }
-    if (input.recurrence !== 'EveryNDays' && intervalDays !== null) {
-      throw businessRule("Seule une tâche tous les N jours a un nombre de jours.");
-    }
-    if (input.kind === 'Other' && title === null) {
-      throw businessRule("Une tâche « autre » a besoin d'un titre pour dire ce qu'il y a à faire.");
-    }
+    ensureTaskFields(input.kind, input.recurrence, intervalDays, title);
 
     const target = await resolveInterventionTarget(
       db,
