@@ -34,6 +34,10 @@ export class ProblemError extends Error {
 export const businessRule = (detail: string) =>
   new ProblemError(400, { status: 400, title: 'Opération refusée', detail });
 
+/** Un fichier de sauvegarde que l'import refuse en bloc. */
+export const invalidBackup = (detail: string) =>
+  new ProblemError(400, { status: 400, title: 'Fichier refusé', detail });
+
 /** `NotFoundException` : la ressource demandée n'existe pas. */
 export const notFound = (resource: string, id: Id) =>
   new ProblemError(404, { status: 404, title: 'Ressource introuvable', detail: `${resource} ${id} est introuvable.` });

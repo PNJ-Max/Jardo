@@ -44,7 +44,7 @@ const toZone = (row: ZoneRow): Zone => ({
   itemCount: row.item_count,
 });
 
-const validate = (input: ZoneInput) =>
+export const validate = (input: ZoneInput) =>
   new Validation().required('Name', 'Nom', input.name, 100).optional('Description', 'Description', input.description, 500).done();
 
 /** Gestion des zones d'un espace (`ZoneService`). */

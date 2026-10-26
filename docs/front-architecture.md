@@ -38,6 +38,7 @@ Le front est une **vraie app native**, pas un site web installé. Le choix tient
 | Dates | `@react-native-community/datetimepicker` sur Android, `<input type="date">` sur le web | Recommandé par Expo et inclus dans Expo Go ; le module n'existe pas sur le web |
 | Style | `StyleSheet` + `src/theme/` (`useTheme`, `createStyles`) | Aucune dépendance ; suit le mode clair / sombre du téléphone, ou celui choisi dans les réglages ; jetons décrits dans la [charte graphique](charte-graphique.md) |
 | Réglages sur l'appareil | `@react-native-async-storage/async-storage` | Inclus dans Expo Go ; `localStorage` sur le web. Ne garde que l'apparence choisie |
+| Sauvegarde | `expo-sharing`, `expo-file-system`, `expo-document-picker` | Inclus dans Expo Go. Export dans la feuille de partage, import d'un fichier choisi ; sur le web, téléchargement et `File` du navigateur |
 | Base locale | `expo-sqlite` (fichier `jardo.db`), SQL écrit à la main ; `expo-crypto` pour les UUID | Inclus dans Expo Go ; choix argumentés dans l'[étude des données](etude-architecture-donnees.md#la-cible-technique). Ouverte et migrée au démarrage, lue et écrite par tous les écrans |
 | Polices | `@expo-google-fonts/nunito` + `expo-font` | Chargée au démarrage, écran de démarrage maintenu jusque-là |
 | Icônes | `@expo/vector-icons` (Ionicons) | Inclus dans Expo |
@@ -63,7 +64,7 @@ jardo-app/                    (à la racine du repo)
 │   ├── */form.tsx            formulaires en modale : space, zone, plant, wood-pile,
 │   │                         entry (intervention), task ; ?id= pour modifier
 │   ├── task/done.tsx         « Fait » en précisant le jour et une note (appui long)
-│   ├── settings.tsx          réglages : nom du jardin, apparence, version de l'app
+│   ├── settings.tsx          réglages : nom du jardin, sauvegarde, apparence, version de l'app
 │   └── map-preview.tsx       aperçu de la carte du jardin (avant l'onglet Jardin)
 ├── src/api/
 │   ├── types.ts              noms courts des contrats (Space, GardenTask…), la référence des écrans
@@ -76,7 +77,8 @@ jardo-app/                    (à la racine du repo)
 ├── src/components/map/       carte : gestes, rendu Skia, étiquettes
 ├── src/map/                  scènes de la carte dessinées par le code : projection, décor,
 │                             un fichier par modèle, emplacements
-├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation
+├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation,
+│                             fichier de sauvegarde (partage, choix ; variante web)
 ├── src/theme/                palettes clair / sombre, typographie, useTheme, createStyles,
 │                             apparence choisie (preference.ts)
 └── app.json                  configuration Expo
@@ -186,6 +188,7 @@ qui échoue n'est pas retentée (`retry: false`), elle échouerait encore.
 | `intervention-target.ts` | `InterventionTarget` : la cible d'une entrée ou d'une tâche, et le filtre SQL d'une lecture par cible |
 | `wood-movements.ts` | `WoodMovements` : apports et consommations d'un tas, lus au journal |
 | `task-queries.ts` | `TaskQueries` : la lecture des tâches avec leur échéance (`GardenTask`) et le compte des tâches dues par espace |
+| `backup.ts`, `backup-rules.ts` | Sans équivalent : l'export et l'import de tout le jardin ([format et règles](etude-architecture-donnees.md#la-sauvegarde-livrée)) |
 
 - **Une fabrique par service**, comme le constructeur d'une classe : `createSpaceService(db, clock)`
   rend l'objet qui porte `getAll`, `getById`, `create`, `update`, `setArchived`, `delete`, les

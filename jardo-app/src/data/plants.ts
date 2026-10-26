@@ -94,7 +94,13 @@ const toPlant = (row: PlantRow): Plant => ({
 const acceptsQuantity = (unit: QuantityUnit, quantity: number) =>
   quantity > 0 && (unit !== 'Plants' || Number.isInteger(quantity));
 
-function validate(input: PlantInput) {
+export function ensureQuantityFits(unit: QuantityUnit, quantity: number) {
+  if (!acceptsQuantity(unit, quantity)) {
+    throw businessRule(`La quantité ${quantity} ne convient pas : elle doit être positive, et un nombre de pieds est entier.`);
+  }
+}
+
+export function validate(input: PlantInput) {
   new Validation()
     .required('Name', 'Nom', input.name, 100)
     .optional('Species', 'Espèce', input.species, 100)
@@ -113,9 +119,7 @@ function plantParams(input: PlantInput): SqlValue[] {
   const quantity = input.quantity ?? 1;
   const quantityUnit = input.quantityUnit ?? 'Plants';
 
-  if (!acceptsQuantity(quantityUnit, quantity)) {
-    throw businessRule(`La quantité ${quantity} ne convient pas : elle doit être positive, et un nombre de pieds est entier.`);
-  }
+  ensureQuantityFits(quantityUnit, quantity);
 
   return [
     input.name.trim(),

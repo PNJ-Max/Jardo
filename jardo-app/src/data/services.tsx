@@ -1,5 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
 
+import { createBackupService } from './backup';
 import { systemClock, type Clock } from './clock';
 import type { Db } from './db';
 import { createGardenService } from './garden';
@@ -22,6 +23,7 @@ export function createServices(db: Db, clock: Clock = systemClock) {
     woodPiles: createWoodPileService(db, clock),
     journal: createJournalService(db, clock),
     tasks: createTaskService(db, clock),
+    backup: createBackupService(db, clock),
   };
 }
 

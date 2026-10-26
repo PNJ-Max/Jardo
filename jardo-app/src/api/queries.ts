@@ -1,10 +1,13 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useServices } from '@/data/services';
+import { pickBackupFile, saveBackupFile } from '@/lib/backup-file';
+import { toDateOnly } from '@/lib/dates';
 
 import type {
   CompleteTaskInput,
   DueHorizon,
+  GardenBackup,
   GardenInput,
   GardenTask,
   Id,
@@ -89,6 +92,42 @@ export function useSaveGarden() {
   return useMutation({
     mutationFn: (input: GardenInput) => garden.update(input),
     onSuccess: (saved) => queryClient.setQueryData(keys.garden, saved),
+  });
+}
+
+// --- Sauvegarde ---------------------------------------------------------------
+
+/** Tout le jardin dans un fichier JSON, ouvert dans la feuille de partage (téléchargé sur le web). */
+export function useExportGarden() {
+  const { backup } = useServices();
+  return useMutation({
+    mutationFn: async () => {
+      const file = await backup.export();
+      const name = `jardo-${toDateOnly(new Date(file.exportedAt))}.json`;
+      await saveBackupFile(name, JSON.stringify(file, null, 2));
+      return name;
+    },
+  });
+}
+
+/** Choisit un fichier et le vérifie en entier, sans rien écrire. Null si l'utilisateur renonce. */
+export function useReadBackupFile() {
+  const { backup } = useServices();
+  return useMutation({
+    mutationFn: async (): Promise<GardenBackup | null> => {
+      const text = await pickBackupFile();
+      return text === null ? null : backup.read(text);
+    },
+  });
+}
+
+/** Tout le jardin est remplacé : chaque écran relit. */
+export function useImportGarden() {
+  const { backup } = useServices();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: GardenBackup) => backup.replace(file),
+    onSuccess: () => queryClient.invalidateQueries(),
   });
 }
 
