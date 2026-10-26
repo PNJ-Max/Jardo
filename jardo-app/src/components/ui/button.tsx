@@ -68,7 +68,7 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
     gap: spacing.sm,
     minHeight: 48,
     paddingHorizontal: spacing.md,
-    borderRadius: radius,
+    borderRadius: radius.md,
   },
   buttonPrimary: { backgroundColor: colors.primary },
   buttonOutline: { borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.card },

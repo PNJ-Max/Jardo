@@ -94,7 +94,7 @@ export const useFieldStyles = createStyles(({ colors, fonts, typography, spacing
     minHeight: 48,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius,
+    borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     backgroundColor: colors.card,
     fontFamily: fonts.body,

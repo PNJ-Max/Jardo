@@ -24,7 +24,9 @@ export const fonts = {
 } as const satisfies Record<string, keyof typeof fontAssets>;
 
 export const typography = {
+  display: { fontFamily: fonts.heading, fontSize: 32, lineHeight: 36, letterSpacing: -0.3 },
   title: { fontFamily: fonts.heading, fontSize: 24, lineHeight: 30 },
+  section: { fontFamily: fonts.heading, fontSize: 17, lineHeight: 22 },
   subtitle: { fontFamily: fonts.heading, fontSize: 18, lineHeight: 23 },
   body: { fontFamily: fonts.body, fontSize: 15, lineHeight: 21 },
   caption: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18 },

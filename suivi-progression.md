@@ -12,13 +12,27 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (26/10/2026)
 
-**Direction visuelle définie ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), pas
-encore mise en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la
-carte, tons chauds de la carte en accents, sections encadrées au lieu d'une carte par ligne, ciel
-du jour en tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur une
-[maquette comparative](https://claude.ai/artifact/XocpKweEQ2UFkqYXZSHKex). Mise en œuvre
-découpée en neuf PR : les jetons, puis l'écran Aujourd'hui repensé (trié par urgence et par espace,
-semaine en tête, feuille de la tâche, « Tout arroser », « Reporter »), prioritaire.
+**Direction visuelle ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), en cours de mise
+en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la carte, tons
+chauds de la carte en accents, sections encadrées au lieu d'une carte par ligne, ciel du jour en
+tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur une
+[maquette comparative](https://claude.ai/artifact/XocpKweEQ2UFkqYXZSHKex). Neuf PR, Aujourd'hui
+(étapes 3 à 6) en priorité :
+
+- [x] 1. Jetons (26/10/2026) : couleurs `surfaceSunken`, `tile`, `soil`, `soilTint`, `glow`,
+  `lawn`, `skyTop`, échelle `radius.sm / md / lg` (les rayons de 12 passent à `md`, 14), styles
+  `display` et `section`. `SectionTitle` en casse de phrase, voyant sans bordure, `DueSoon` hors
+  arrosage en terre avec l'icône soleil (`due.Watering` garde le bleu). Contrastes dans la
+  [charte](docs/charte-graphique.md), gardés par un test. Le compteur et le rouge de « En retard »
+  dans `SectionTitle` viennent avec l'étape 4.
+- [ ] 2. Pictogrammes.
+- [ ] 3. Surfaces groupées et bouton « Fait ».
+- [ ] 4. Aujourd'hui, l'organisation.
+- [ ] 5. Aujourd'hui, les gestes.
+- [ ] 6. Reporter.
+- [ ] 7. Vignettes d'espace.
+- [ ] 8. Formulaires.
+- [ ] 9. États vides et icône.
 
 **Écran dédoublé en mode web, corrigé.** Après Jardin → espace → retour, Chrome laissait des restes
 d'image en double. Cause : un écran quitté passe en `display: none` sur le web et mesure 0 × 0. La
