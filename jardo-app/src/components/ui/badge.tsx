@@ -32,10 +32,11 @@ const useStyles = createStyles(({ fonts, typography, spacing, radius }) => ({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
+    flexShrink: 1,
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: radius.sm,
   },
-  text: { ...typography.caption, fontFamily: fonts.bodySemiBold },
+  text: { ...typography.caption, fontFamily: fonts.bodySemiBold, flexShrink: 1 },
 }));

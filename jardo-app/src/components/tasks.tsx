@@ -250,7 +250,7 @@ function DoneButton({ done, onPress, onLongPress, accessibilityLabel }: DoneButt
 
   return (
     <Animated.View style={popStyle}>
-      <Animated.View style={[styles.glow, glowStyle]} pointerEvents="none" />
+      <Animated.View style={[styles.glow, glowStyle]} />
       <Pressable
         onPress={(event) => {
           // Sans ça, sur le web, le clic remonte jusqu'à la ligne et ouvre la cible.
@@ -311,7 +311,7 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
   },
   doneFilled: { backgroundColor: colors.primary },
   doneText: { ...typography.caption, fontFamily: fonts.heading, fontSize: 14, lineHeight: 19 },
-  glow: { position: 'absolute', backgroundColor: colors.glow },
+  glow: { position: 'absolute', backgroundColor: colors.glow, pointerEvents: 'none' },
   glyph: { width: 18, height: 18 },
   glyphLayer: { position: 'absolute', top: 0, left: 0 },
 }));

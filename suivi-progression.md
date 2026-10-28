@@ -32,7 +32,15 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   ligne de liste n'affiche qu'une image, sans canvas. Sur les lignes de tâche et du journal (tuile
   `tile` de 44), les filtres du journal (choix sur `tile`) et la barre d'onglets (actif rempli de
   `lawn`). Le champ `icon` des types d'intervention disparaît.
-- [ ] 3. Surfaces groupées et bouton « Fait ».
+- [x] 3. Surfaces groupées et bouton « Fait » (28/10/2026) : `Group` (surface `card`, rayon 18,
+  filets entre lignes) remplace la carte par ligne pour les tâches d'Aujourd'hui (qui passe d'une
+  `SectionList` à un `ScrollView`, même organisation) et des fiches. Ligne de tâche : intervention
+  en Bold 16, voyant et cible, pastille « Fait » de 40 au contour `primary`. Au toucher (Reanimated,
+  coupé si le téléphone réduit les animations) : remplissage, coche qui devient pousse, lueur
+  `glow`, retour haptique (`expo-haptics` : `Confirm` sur Android, impact léger sur iOS, rien sur
+  le web) ; sur Aujourd'hui la ligne se replie et la tâche n'est notée qu'ensuite (1,2 s). Le
+  message « Noté au journal : arroser, Carottes », inversé, monte du bas avec « Ajouter une note »
+  (ouvre l'entrée notée) et « Annuler », qui ramène la ligne en fondu.
 - [ ] 4. Aujourd'hui, l'organisation.
 - [ ] 5. Aujourd'hui, les gestes.
 - [ ] 6. Reporter.
