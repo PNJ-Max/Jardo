@@ -91,6 +91,7 @@ export function AddZoneTile({ onPress }: { onPress: () => void }) {
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel="Ajouter une zone"
       style={({ pressed }) => [styles.tile, styles.addTile, pressed && { opacity: 0.7 }]}>
       <View style={[styles.square, styles.addSquare]}>
         <Ionicons name="add" size={24} color={colors.primary} />
