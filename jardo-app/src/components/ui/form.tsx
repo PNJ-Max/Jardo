@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { ProblemError } from '@/data/problem';
@@ -33,7 +34,7 @@ export function ChipSelect<T extends string | number>({
   scrollable,
 }: {
   label: string;
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; icon?: ReactNode }[];
   value: T | undefined;
   onChange: (value: T) => void;
   error?: string;
@@ -42,14 +43,23 @@ export function ChipSelect<T extends string | number>({
   scrollable?: boolean;
 }) {
   const styles = useFieldStyles();
+  // Un pictogramme disparaîtrait sur l'aplat `primary` : le choix passe alors sur la tuile.
+  const illustrated = options.some((option) => option.icon);
   const chips = options.map((option) => {
     const selected = option.value === value;
     return (
       <Pressable
         key={option.value}
         onPress={() => onChange(option.value)}
-        style={[styles.chip, selected && styles.chipSelected]}>
-        <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{option.label}</Text>
+        style={[
+          styles.chip,
+          option.icon !== undefined && styles.chipWithIcon,
+          selected && (illustrated ? styles.chipTile : styles.chipSelected),
+        ]}>
+        {option.icon}
+        <Text style={[styles.chipText, selected && (illustrated ? styles.chipTextTile : styles.chipTextSelected)]}>
+          {option.label}
+        </Text>
       </Pressable>
     );
   });
@@ -113,7 +123,10 @@ export const useFieldStyles = createStyles(({ colors, fonts, typography, spacing
     borderColor: colors.border,
     backgroundColor: colors.card,
   },
+  chipWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 10, paddingVertical: 6 },
   chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipTile: { backgroundColor: colors.tile, borderColor: colors.primary },
   chipText: { ...typography.body, color: colors.text },
   chipTextSelected: { color: colors.primaryText },
+  chipTextTile: { color: colors.primary, fontFamily: fonts.bodySemiBold },
 }));

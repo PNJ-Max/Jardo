@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { useCompleteTask, useDeleteJournalEntry } from '@/api/queries';
 import type { CompleteTaskInput, GardenTask } from '@/api/types';
+import { KindIcon } from '@/components/pictograms';
 import { useShowUndo } from '@/components/undo';
 import { Badge, Card } from '@/components/ui';
 import { notify } from '@/lib/confirm';
@@ -94,7 +95,7 @@ export function TaskRow({ task, onPress, onDone, showTarget = true }: TaskRowPro
   return (
     <Card onPress={onPress} style={styles.row}>
       <View style={styles.icon}>
-        <Ionicons name={entryKinds[task.kind].icon} size={16} color={colors.primary} />
+        <KindIcon kind={task.kind} />
       </View>
       <View style={styles.body}>
         <Text style={styles.title} numberOfLines={2}>
@@ -133,15 +134,15 @@ export function TaskRow({ task, onPress, onDone, showTarget = true }: TaskRowPro
   );
 }
 
-const useStyles = createStyles(({ colors, fonts, typography, spacing }) => ({
+const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm, paddingHorizontal: 12 },
   icon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.successTint,
+    backgroundColor: colors.tile,
   },
   body: { flex: 1, gap: 2 },
   title: { ...typography.body, fontFamily: fonts.bodySemiBold, color: colors.text },

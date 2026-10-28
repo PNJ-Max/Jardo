@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
 import { UndoProvider } from '@/components/undo';
@@ -30,4 +30,20 @@ export async function renderScreen(ui: ReactElement, services?: Services) {
     </ServicesProvider>,
   );
   return { ...utils, queryClient, services: resolved };
+}
+
+type RenderedNode = { props?: { source?: { uri?: string } }; children?: (RenderedNode | string)[] | null };
+
+/** Les pictogrammes affichés, « type:thème » (voir le mock de test/setup.ts), dans l'ordre de l'écran. */
+export function pictogramsOnScreen(): string[] {
+  const found: string[] = [];
+  const visit = (node: RenderedNode | string | null) => {
+    if (!node || typeof node === 'string') return;
+    const uri = node.props?.source?.uri;
+    if (uri?.startsWith('pictogram:')) found.push(uri.slice('pictogram:'.length));
+    node.children?.forEach(visit);
+  };
+  const tree = screen.toJSON() as RenderedNode | RenderedNode[] | null;
+  (Array.isArray(tree) ? tree : [tree]).forEach(visit);
+  return found;
 }

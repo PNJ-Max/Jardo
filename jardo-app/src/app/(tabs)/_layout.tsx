@@ -1,6 +1,6 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 
+import { TabIcon } from '@/components/pictograms';
 import { useTheme } from '@/theme';
 
 export default function TabLayout() {
@@ -22,21 +22,21 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Jardin',
-          tabBarIcon: ({ color, size }) => <Ionicons name="leaf-outline" size={size} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="garden" focused={focused} size={28} />,
         }}
       />
       <Tabs.Screen
         name="today"
         options={{
           title: "Aujourd'hui",
-          tabBarIcon: ({ color, size }) => <Ionicons name="today-outline" size={size} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="today" focused={focused} size={28} />,
         }}
       />
       <Tabs.Screen
         name="journal"
         options={{
           title: 'Journal',
-          tabBarIcon: ({ color, size }) => <Ionicons name="journal-outline" size={size} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="journal" focused={focused} size={28} />,
         }}
       />
     </Tabs>

@@ -10,7 +10,7 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (26/10/2026)
+## Où on en est (28/10/2026)
 
 **Direction visuelle ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), en cours de mise
 en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la carte, tons
@@ -25,7 +25,13 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   arrosage en terre avec l'icône soleil (`due.Watering` garde le bleu). Contrastes dans la
   [charte](docs/charte-graphique.md), gardés par un test. Le compteur et le rouge de « En retard »
   dans `SectionTitle` viennent avec l'étape 4.
-- [ ] 2. Pictogrammes.
+- [x] 2. Pictogrammes (28/10/2026) : les onze types d'intervention et les trois onglets,
+  dessinés en 32 × 32 dans `src/components/pictograms/` (trait `ink` de 1,6, palette du décor,
+  ombre au sol comme sur la carte ; la nuit, teintes moins profondes que la carte et feu qui luit).
+  Chaque dessin est enregistré une fois en SkPicture, puis rendu une fois par taille en PNG : une
+  ligne de liste n'affiche qu'une image, sans canvas. Sur les lignes de tâche et du journal (tuile
+  `tile` de 44), les filtres du journal (choix sur `tile`) et la barre d'onglets (actif rempli de
+  `lawn`). Le champ `icon` des types d'intervention disparaît.
 - [ ] 3. Surfaces groupées et bouton « Fait ».
 - [ ] 4. Aujourd'hui, l'organisation.
 - [ ] 5. Aujourd'hui, les gestes.
