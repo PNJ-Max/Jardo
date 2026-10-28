@@ -5,6 +5,7 @@ import { SectionList, View } from 'react-native';
 import { useJournal, useSpaces } from '@/api/queries';
 import type { JournalEntry, JournalEntryKind } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
+import { KindIcon } from '@/components/pictograms';
 import { ChipSelect, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
 import { formatDayHeading } from '@/lib/dates';
 import { entryKinds } from '@/lib/garden';
@@ -27,7 +28,11 @@ const allKinds = 'all';
 
 const kindOptions: { value: JournalEntryKind | typeof allKinds; label: string }[] = [
   { value: allKinds, label: 'Toutes' },
-  ...(Object.keys(entryKinds) as JournalEntryKind[]).map((kind) => ({ value: kind, label: entryKinds[kind].label })),
+  ...(Object.keys(entryKinds) as JournalEntryKind[]).map((kind) => ({
+    value: kind,
+    label: entryKinds[kind].label,
+    icon: <KindIcon kind={kind} size={24} />,
+  })),
 ];
 
 /** La chronologie de tout le jardin, la plus récente d'abord, filtrable par espace et par type. */

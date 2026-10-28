@@ -23,18 +23,18 @@ export const spaceKindOptions = (Object.keys(spaceKinds) as SpaceKind[]).map((ki
 }));
 
 /** `label` nomme l'intervention au journal, `verb` la tâche à faire. */
-export const entryKinds: Record<JournalEntryKind, { label: string; verb: string; icon: IconName }> = {
-  Watering: { label: 'Arrosage', verb: 'Arroser', icon: 'water-outline' },
-  Sowing: { label: 'Semis', verb: 'Semer', icon: 'leaf-outline' },
-  Planting: { label: 'Plantation', verb: 'Planter', icon: 'flower-outline' },
-  Pruning: { label: 'Taille', verb: 'Tailler', icon: 'cut-outline' },
-  Treatment: { label: 'Traitement', verb: 'Traiter', icon: 'medkit-outline' },
-  Fertilizing: { label: 'Fertilisation', verb: 'Fertiliser', icon: 'flask-outline' },
-  Harvest: { label: 'Récolte', verb: 'Récolter', icon: 'basket-outline' },
-  Observation: { label: 'Observation', verb: 'Observer', icon: 'eye-outline' },
-  WoodSupply: { label: 'Apport de bois', verb: 'Apporter du bois', icon: 'add-circle-outline' },
-  WoodConsumption: { label: 'Consommation de bois', verb: 'Consommer du bois', icon: 'flame-outline' },
-  Other: { label: 'Autre', verb: 'Autre', icon: 'ellipsis-horizontal-circle-outline' },
+export const entryKinds: Record<JournalEntryKind, { label: string; verb: string }> = {
+  Watering: { label: 'Arrosage', verb: 'Arroser' },
+  Sowing: { label: 'Semis', verb: 'Semer' },
+  Planting: { label: 'Plantation', verb: 'Planter' },
+  Pruning: { label: 'Taille', verb: 'Tailler' },
+  Treatment: { label: 'Traitement', verb: 'Traiter' },
+  Fertilizing: { label: 'Fertilisation', verb: 'Fertiliser' },
+  Harvest: { label: 'Récolte', verb: 'Récolter' },
+  Observation: { label: 'Observation', verb: 'Observer' },
+  WoodSupply: { label: 'Apport de bois', verb: 'Apporter du bois' },
+  WoodConsumption: { label: 'Consommation de bois', verb: 'Consommer du bois' },
+  Other: { label: 'Autre', verb: 'Autre' },
 };
 
 const plantCareKinds: JournalEntryKind[] = [

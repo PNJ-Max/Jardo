@@ -1,10 +1,10 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text, View } from 'react-native';
 
 import type { JournalEntry } from '@/api/types';
+import { KindIcon } from '@/components/pictograms';
 import { Card } from '@/components/ui';
 import { entryKinds, formatQuantity, measureUnits, targetLabel } from '@/lib/garden';
-import { createStyles, useTheme } from '@/theme';
+import { createStyles } from '@/theme';
 
 /** Les champs propres au type : quantité, hauteur, problème, traitement. */
 function entryDetails(entry: JournalEntry): string[] {
@@ -25,7 +25,6 @@ type JournalEntryRowProps = {
 };
 
 export function JournalEntryRow({ entry, onPress }: JournalEntryRowProps) {
-  const { colors } = useTheme();
   const styles = useStyles();
   const kind = entryKinds[entry.kind];
   const details = entryDetails(entry);
@@ -33,7 +32,7 @@ export function JournalEntryRow({ entry, onPress }: JournalEntryRowProps) {
   return (
     <Card onPress={onPress} style={styles.row}>
       <View style={styles.icon}>
-        <Ionicons name={kind.icon} size={20} color={colors.primary} />
+        <KindIcon kind={entry.kind} />
       </View>
       <View style={styles.body}>
         <Text style={styles.kind}>{kind.label}</Text>
@@ -45,15 +44,15 @@ export function JournalEntryRow({ entry, onPress }: JournalEntryRowProps) {
   );
 }
 
-const useStyles = createStyles(({ colors, fonts, typography, spacing }) => ({
+const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) => ({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   icon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.successTint,
+    backgroundColor: colors.tile,
   },
   body: { flex: 1, gap: 2 },
   kind: { ...typography.body, fontFamily: fonts.bodySemiBold, color: colors.text },

@@ -28,9 +28,10 @@ export function KindIcon({ kind, size = 32 }: { kind: JournalEntryKind; size?: n
   return <Pictogram id={`${kind}:${scheme}`} marks={() => kindMarks(kind, scheme)} size={size} />;
 }
 
-/** L'onglet actif est rempli de `lawn`. */
-export function TabIcon({ name, color, focused, size }: { name: TabName; color: string; focused: boolean; size: number }) {
-  const { colors } = useTheme();
+/** Les teintes de la barre d'onglets : l'onglet actif est en `primary`, rempli de `lawn`. */
+export function TabIcon({ name, focused, size }: { name: TabName; focused: boolean; size: number }) {
+  const { scheme, colors } = useTheme();
+  const color = focused ? colors.primary : colors.textMuted;
   const fill = focused ? colors.lawn : undefined;
-  return <Pictogram id={`tab-${name}:${color}:${fill ?? ''}`} marks={() => tabMarks(name, color, fill)} size={size} />;
+  return <Pictogram id={`tab-${name}:${scheme}:${focused}`} marks={() => tabMarks(name, color, fill)} size={size} />;
 }
