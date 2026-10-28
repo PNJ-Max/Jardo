@@ -46,9 +46,9 @@ const scenes: Record<SpaceKind, (kit: Kit) => void> = {
     drawBed(kit, 3.75, 2.95, 'seedlings');
   },
   Orchard: (kit) => {
-    drawGround(kit, 6.4, 5.6);
-    drawTree(kit, kit.pal, 1.9, 2.7, { r: 1.25, trunk: 1.4, fruit: kit.pal.apple });
-    drawTree(kit, kit.pal, 4.5, 3.9, { r: 1.15, trunk: 1.3, fruit: kit.pal.apple });
+    drawGround(kit, 6, 5.4);
+    drawTree(kit, kit.pal, 1.8, 2.6, { r: 1.45, trunk: 1.4, fruit: kit.pal.apple });
+    drawTree(kit, kit.pal, 4.3, 3.7, { r: 1.3, trunk: 1.3, fruit: kit.pal.apple });
   },
   SmallFruit: (kit) => {
     drawGround(kit, 6, 5);
@@ -64,9 +64,9 @@ const scenes: Record<SpaceKind, (kit: Kit) => void> = {
     drawWateringCan(kit, 4.3, 5.2);
   },
   Firewood: (kit) => {
-    drawGround(kit, 5.6, 4.6);
-    drawFirewood(kit, 0.6, 1.4);
-    drawWheelbarrow(kit, 4.55, 3.4);
+    drawGround(kit, 5, 4.3);
+    drawFirewood(kit, 0.5, 1.3);
+    drawWheelbarrow(kit, 4.1, 3.2);
   },
 };
 

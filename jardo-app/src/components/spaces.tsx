@@ -1,22 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text, View } from 'react-native';
 
-import type { Space, SpaceKind } from '@/api/types';
+import type { Space } from '@/api/types';
 import { ArchivedBadge } from '@/components/items';
 import { Badge, Card } from '@/components/ui';
+import { SpaceVignette } from '@/components/vignettes/space-vignette';
 import { spaceKinds } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
-
-export function SpaceKindIcon({ kind, size = 48 }: { kind: SpaceKind; size?: number }) {
-  const { colors } = useTheme();
-  const styles = useStyles();
-
-  return (
-    <View style={[styles.icon, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Ionicons name={spaceKinds[kind].icon} size={size / 2} color={colors.primary} />
-    </View>
-  );
-}
 
 function plural(count: number, singular: string, pluralForm: string) {
   return `${count} ${count > 1 ? pluralForm : singular}`;
@@ -37,7 +27,9 @@ export function SpaceRow({ space, onPress }: { space: Space; onPress: () => void
 
   return (
     <Card onPress={onPress} style={styles.row}>
-      <SpaceKindIcon kind={space.kind} />
+      <View style={styles.vignette}>
+        <SpaceVignette kind={space.kind} width={72} height={60} padding={4} />
+      </View>
       <View style={styles.body}>
         <Text style={styles.name}>{space.name}</Text>
         <Text style={styles.contents}>{contents}</Text>
@@ -58,8 +50,8 @@ export function SpaceRow({ space, onPress }: { space: Space; onPress: () => void
   );
 }
 
-const useStyles = createStyles(({ colors, typography, spacing }) => ({
-  icon: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.successTint },
+const useStyles = createStyles(({ colors, typography, spacing, radius }) => ({
+  vignette: { borderRadius: radius.md, backgroundColor: colors.tile, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   body: { flex: 1, gap: spacing.xs },
   name: { ...typography.subtitle, color: colors.text },

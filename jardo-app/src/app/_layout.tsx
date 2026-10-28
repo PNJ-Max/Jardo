@@ -69,7 +69,8 @@ export default function RootLayout() {
                   headerTitleStyle: { color: theme.colors.text, fontFamily: theme.fonts.heading },
                 }}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="space/[id]" options={{ title: 'Espace' }} />
+                {/* La vignette de l'espace tient lieu d'en-tête, avec son propre bouton retour. */}
+                <Stack.Screen name="space/[id]" options={{ title: 'Espace', headerShown: false }} />
                 <Stack.Screen name="zone/[id]" options={{ title: 'Zone' }} />
                 <Stack.Screen name="plant/[id]" options={{ title: 'Plante' }} />
                 <Stack.Screen name="wood-pile/[id]" options={{ title: 'Tas de bois' }} />

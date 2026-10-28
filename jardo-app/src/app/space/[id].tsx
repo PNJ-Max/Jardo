@@ -1,13 +1,16 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDeleteSpace, useSetSpaceArchived, useSpace, useZones } from '@/api/queries';
-import type { Id, Space } from '@/api/types';
-import { ArchivedBadge, Chevron } from '@/components/items';
+import type { Id, Space, SpaceKind, Zone } from '@/api/types';
+import { ArchivedBadge } from '@/components/items';
 import { ItemsSection } from '@/components/items-section';
 import { DetailScreen, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
-import { SpaceKindIcon } from '@/components/spaces';
-import { Button, Card, ErrorView, Loading, SectionTitle } from '@/components/ui';
+import { ErrorView, Loading, SectionTitle } from '@/components/ui';
+import { SpaceVignette } from '@/components/vignettes/space-vignette';
+import { AddZoneTile, ZoneTile } from '@/components/vignettes/zone-tile';
 import { confirm, notify } from '@/lib/confirm';
 import { spaceKinds } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
@@ -24,6 +27,7 @@ export default function SpaceScreen() {
 
 function SpaceDetail({ space }: { space: Space }) {
   const styles = useDetailStyles();
+  const ownStyles = useStyles();
   const zones = useZones(space.id);
   const archive = useSetSpaceArchived();
   const remove = useDeleteSpace();
@@ -47,14 +51,14 @@ function SpaceDetail({ space }: { space: Space }) {
 
   return (
     <DetailScreen
+      cover={<SpaceCover kind={space.kind} />}
       header={
         <>
-          <View style={styles.headerRow}>
-            <SpaceKindIcon kind={space.kind} size={48} />
-            <View style={styles.headerText}>
-              <Text style={styles.title}>{space.name}</Text>
-              <Text style={styles.subtitle}>{spaceSummary(space)}</Text>
-            </View>
+          <View style={styles.headerText}>
+            <Text style={ownStyles.name} accessibilityRole="header">
+              {space.name}
+            </Text>
+            <Text style={styles.subtitle}>{spaceSummary(space)}</Text>
           </View>
           {space.isArchived && <ArchivedBadge />}
         </>
@@ -94,6 +98,30 @@ function SpaceDetail({ space }: { space: Space }) {
   );
 }
 
+const coverHeight = 232;
+
+/** La vignette du type d'espace sur le ciel du jour, à la place de la barre de navigation. */
+function SpaceCover({ kind }: { kind: SpaceKind }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={{ height: coverHeight }}>
+      <SpaceVignette kind={kind} width={width} height={coverHeight} padding={16} paddingTop={insets.top + 24} sky />
+      <Pressable
+        onPress={goBack}
+        accessibilityRole="button"
+        accessibilityLabel="Retour"
+        hitSlop={8}
+        style={({ pressed }) => [styles.back, { top: insets.top + 14 }, pressed && { opacity: 0.7 }]}>
+        <Ionicons name="chevron-back" size={24} color={colors.text} />
+      </Pressable>
+    </View>
+  );
+}
+
 /** « Potager · 3 zones · 12 éléments » ; le type n'est pas répété quand il sert de nom. */
 function spaceSummary(space: Space) {
   const kind = spaceKinds[space.kind].label;
@@ -109,45 +137,56 @@ function spaceSummary(space: Space) {
 function ZonesSection({ spaceId, zones }: { spaceId: Id; zones: ReturnType<typeof useZones> }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const addZone = () => router.push({ pathname: '/zone/form', params: { spaceId: String(spaceId) } });
+
+  if (zones.isPending) return <ActivityIndicator color={colors.primary} />;
+  if (zones.error) return <Text style={styles.error}>{zones.error.message}</Text>;
+
+  const tiles: (Zone | 'add')[] = [...zones.data, 'add'];
+  const rows = Array.from({ length: Math.ceil(tiles.length / 2) }, (_, i) => tiles.slice(i * 2, i * 2 + 2));
 
   return (
     <View style={styles.section}>
       <SectionTitle>Zones</SectionTitle>
-      {zones.isPending ? (
-        <ActivityIndicator color={colors.primary} />
-      ) : zones.error ? (
-        <Text style={styles.error}>{zones.error.message}</Text>
-      ) : zones.data.length === 0 ? (
-        <Text style={styles.empty}>Pas de zone : l&apos;espace n&apos;est pas découpé.</Text>
-      ) : (
-        zones.data.map((zone) => (
-          <Card key={zone.id} onPress={() => router.push(`/zone/${zone.id}`)} style={styles.zone}>
-            <View style={styles.zoneText}>
-              <Text style={styles.zoneName}>{zone.name}</Text>
-              <Text style={styles.zoneCount}>
-                {zone.itemCount} {zone.itemCount > 1 ? 'éléments' : 'élément'}
-              </Text>
-            </View>
-            <Chevron />
-          </Card>
-        ))
-      )}
-      <Button
-        title="Ajouter une zone"
-        icon="add"
-        variant="secondary"
-        onPress={() => router.push({ pathname: '/zone/form', params: { spaceId: String(spaceId) } })}
-      />
+      {zones.data.length === 0 && <Text style={styles.empty}>Pas de zone : l&apos;espace n&apos;est pas découpé.</Text>}
+      {rows.map((row, i) => (
+        <View key={i} style={styles.row}>
+          {row.map((tile) =>
+            tile === 'add' ? (
+              <AddZoneTile key="add" onPress={addZone} />
+            ) : (
+              <ZoneTile
+                key={tile.id}
+                name={tile.name}
+                caption={`${tile.itemCount} ${tile.itemCount > 1 ? 'éléments' : 'élément'}`}
+                seed={tile.id}
+                plants={tile.itemCount}
+                onPress={() => router.push(`/zone/${tile.id}`)}
+              />
+            ),
+          )}
+          {row.length === 1 && <View style={styles.spacer} />}
+        </View>
+      ))}
     </View>
   );
 }
 
-const useStyles = createStyles(({ colors, fonts, typography, spacing }) => ({
+const useStyles = createStyles(({ colors, typography, spacing }) => ({
+  name: { ...typography.display, color: colors.text },
+  back: {
+    position: 'absolute',
+    left: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.card,
+  },
   section: { gap: spacing.sm },
+  row: { flexDirection: 'row', gap: spacing.sm + 2 },
+  spacer: { flex: 1 },
   empty: { ...typography.body, color: colors.textMuted },
   error: { ...typography.body, color: colors.danger },
-  zone: { flexDirection: 'row', alignItems: 'center' },
-  zoneText: { flex: 1, gap: 2 },
-  zoneName: { ...typography.body, fontFamily: fonts.bodySemiBold, color: colors.text },
-  zoneCount: { ...typography.caption, color: colors.textMuted },
 }));
