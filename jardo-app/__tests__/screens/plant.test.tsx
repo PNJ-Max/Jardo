@@ -66,6 +66,18 @@ describe('fiche plante', () => {
     expect(await screen.findByText('Pincer les fleurs')).toBeOnTheScreen();
   });
 
+  it('note « Fait » aussitôt, et la ligne reste sur la fiche avec sa nouvelle échéance', async () => {
+    const { services } = await setup();
+    await renderScreen(<PlantScreen />, services);
+
+    await fireEvent.press(await screen.findByLabelText(/^Fait : Pincer les fleurs/));
+
+    expect(await screen.findByText('Noté au journal : pincer les fleurs, Laitues')).toBeOnTheScreen();
+    expect(await screen.findByText(/^Faite le /)).toBeOnTheScreen();
+    expect(screen.getByText('Pincer les fleurs')).toBeOnTheScreen();
+    await expect(services.journal.getAll()).resolves.toHaveLength(1);
+  });
+
   it("range à part, repliées, les tâches de la zone et de l'espace", async () => {
     const { services } = await setup();
     await renderScreen(<PlantScreen />, services);
