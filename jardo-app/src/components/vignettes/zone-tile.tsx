@@ -37,9 +37,9 @@ function ZoneSquare({ seed, plants }: { seed: string; plants: number }) {
   const styles = useStyles();
   const layout = LAYOUTS[Math.min(plants, LAYOUTS.length - 1)];
   const style = plantStyleOf(seed);
-  const size = layout.length > 4 ? 11 : 13;
+  const size = layout.length > 4 ? 11 : layout.length > 2 ? 14 : layout.length > 1 ? 16 : 18;
   const [leaf, heart] =
-    style === 'lettuce' ? [pal.lettuce, pal.leafLight] : style === 'leafy' ? [pal.leafDark, pal.leaf] : [pal.leaf, null];
+    style === 'lettuce' ? [pal.lettuce, pal.leafLight] : style === 'leafy' ? [pal.leaf, pal.leafLight] : [pal.leaf, null];
 
   return (
     <View style={[styles.square, { backgroundColor: pal.wood, borderColor: pal.woodDark }]}>

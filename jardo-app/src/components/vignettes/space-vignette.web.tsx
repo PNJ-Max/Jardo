@@ -7,9 +7,10 @@ import type { SpaceVignetteProps } from './space-vignette-impl';
 
 export type { SpaceVignetteProps } from './space-vignette-impl';
 
-// Comme la carte : CanvasKit est chargé une fois, au premier affichage d'une vignette.
+// Comme la carte : CanvasKit est chargé une fois, au premier affichage d'une vignette. Une fiche
+// peut s'ouvrir directement (/space/…) : le fichier WebAssembly se cherche alors depuis la racine.
 const Vignette = lazy(async () => {
-  await LoadSkiaWeb();
+  await LoadSkiaWeb({ locateFile: (file) => `/${file}` });
   return import('./space-vignette-impl');
 });
 
