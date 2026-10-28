@@ -15,6 +15,17 @@ jest.mock('expo-router', () => ({
 // Skia ne tourne pas sous Jest : l'image d'un pictogramme n'y porte que sa clé, « type:thème ».
 jest.mock('@/components/pictograms/picture', () => ({ pictogramUri: (key: string) => `pictogram:${key}` }));
 
+// Le mock de Reanimated n'a pas useReducedMotion : par défaut, le téléphone ne réduit pas les animations.
+jest.mock('react-native-worklets', () => require('react-native-worklets/src/mock'));
+jest.mock('react-native-reanimated', () => ({ ...require('react-native-reanimated/mock'), useReducedMotion: jest.fn(() => false) }));
+
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(async () => {}),
+  performAndroidHapticsAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: 'light' },
+  AndroidHaptics: { Confirm: 'confirm' },
+}));
+
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );

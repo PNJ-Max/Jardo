@@ -1,10 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { SectionList, Text } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { useDueTasks } from '@/api/queries';
 import { TaskRow, useMarkDone } from '@/components/tasks';
-import { Card, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
+import { Card, Empty, ErrorView, Group, Loading, screenStyles, SectionTitle } from '@/components/ui';
 import { targetHref } from '@/lib/garden';
 import { usePullToRefresh } from '@/lib/refresh';
 import { createStyles, useTheme } from '@/theme';
@@ -17,6 +17,7 @@ export default function TodayScreen() {
   const { data, error, isPending, refetch } = useDueTasks('Week');
   const { markDone } = useMarkDone();
   const refresh = usePullToRefresh(refetch);
+  const styles = useStyles();
 
   if (isPending) return <Loading />;
   if (error) return <ErrorView error={error} onRetry={refetch} />;
@@ -29,22 +30,32 @@ export default function TodayScreen() {
   const nothingToday = !data.some((task) => task.status !== 'Ok');
 
   return (
-    <SectionList
+    <ScrollView
       style={screenStyles.screen}
       contentContainerStyle={[screenStyles.list, data.length === 0 && { flex: 1 }]}
-      sections={sections}
-      keyExtractor={(task) => String(task.id)}
-      stickySectionHeadersEnabled={false}
-      {...refresh}
-      ListHeaderComponent={nothingToday && data.length > 0 ? <NothingToday /> : null}
-      renderSectionHeader={({ section }) => <SectionTitle>{section.title}</SectionTitle>}
-      renderItem={({ item }) => (
-        <TaskRow task={item} onPress={() => router.push(targetHref(item))} onDone={() => markDone(item)} />
-      )}
-      ListEmptyComponent={
+      refreshControl={<RefreshControl {...refresh} />}>
+      {data.length === 0 ? (
         <Empty icon="checkmark-circle-outline" title="Rien à faire aujourd'hui 🌱" hint="Ni cette semaine, d'ailleurs." />
-      }
-    />
+      ) : (
+        nothingToday && <NothingToday />
+      )}
+      {sections.map((section) => (
+        <View key={section.title} style={styles.section}>
+          <SectionTitle>{section.title}</SectionTitle>
+          <Group>
+            {section.data.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                leavesOnDone
+                onPress={() => router.push(targetHref(task))}
+                onDone={() => markDone(task)}
+              />
+            ))}
+          </Group>
+        </View>
+      ))}
+    </ScrollView>
   );
 }
 
@@ -62,6 +73,7 @@ function NothingToday() {
 }
 
 const useStyles = createStyles(({ colors, typography, spacing }) => ({
+  section: { gap: spacing.sm },
   nothingToday: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nothingTodayText: { ...typography.subtitle, color: colors.text },
 }));

@@ -3,7 +3,7 @@ import { Image, PixelRatio, View } from 'react-native';
 import type { JournalEntryKind } from '@/api/types';
 import { useTheme } from '@/theme';
 
-import { kindMarks, tabMarks, type Mark, type TabName } from './drawings';
+import { doneMarks, kindMarks, tabMarks, type DoneGlyph, type Mark, type TabName } from './drawings';
 import { usePictogramRenderer } from './renderer';
 
 export type { TabName } from './drawings';
@@ -34,4 +34,8 @@ export function TabIcon({ name, focused, size }: { name: TabName; focused: boole
   const color = focused ? colors.primary : colors.textMuted;
   const fill = focused ? colors.lawn : undefined;
   return <Pictogram id={`tab-${name}:${scheme}:${focused}`} marks={() => tabMarks(name, color, fill)} size={size} />;
+}
+
+export function DoneIcon({ glyph, color, size }: { glyph: DoneGlyph; color: string; size: number }) {
+  return <Pictogram id={`done-${glyph}:${color}`} marks={() => doneMarks(glyph, color)} size={size} />;
 }
