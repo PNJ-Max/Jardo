@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { createStyles, spacing } from '@/theme';
@@ -12,6 +12,22 @@ export function Card({ children, onPress, style }: { children: ReactNode; onPres
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.7 }, style]}>
       {children}
     </Pressable>
+  );
+}
+
+/** Les lignes d'une section sur une même surface, séparées d'un filet, plutôt qu'une carte par ligne. */
+export function Group({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  const styles = useStyles();
+
+  return (
+    <View style={[styles.group, style]}>
+      {Children.toArray(children).map((child, index) => (
+        <Fragment key={isValidElement(child) && child.key !== null ? child.key : index}>
+          {index > 0 && <View style={styles.separator} />}
+          {child}
+        </Fragment>
+      ))}
+    </View>
   );
 }
 
@@ -35,6 +51,14 @@ const useStyles = createStyles(({ colors, typography, spacing, radius }) => ({
     borderColor: colors.border,
     padding: spacing.md,
   },
+  group: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  separator: { height: 1, backgroundColor: colors.border },
   sectionTitle: {
     ...typography.section,
     color: colors.text,

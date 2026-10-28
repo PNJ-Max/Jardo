@@ -7,7 +7,7 @@ import { useJournal, useTasks } from '@/api/queries';
 import type { GardenTask, Id, ItemKind } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
 import { TaskRow, useMarkDone } from '@/components/tasks';
-import { Button, SectionTitle, Tabs } from '@/components/ui';
+import { Button, Group, SectionTitle, Tabs } from '@/components/ui';
 import { formatDate } from '@/lib/dates';
 import { createStyles, useTheme } from '@/theme';
 
@@ -116,7 +116,7 @@ export function TasksSection({ target }: { target: Target }) {
       {own.length === 0 ? (
         <Text style={styles.empty}>Aucune tâche pour {noun}.</Text>
       ) : (
-        own.map((task) => renderTask(task, false))
+        <Group>{own.map((task) => renderTask(task, false))}</Group>
       )}
       <Button
         title={`Ajouter une tâche à ${noun}`}
@@ -170,7 +170,11 @@ function TaskGroupView({
           </Text>
         </View>
       </Pressable>
-      {open && <View style={styles.groupTasks}>{group.tasks.map((task) => renderTask(task, group.showTarget))}</View>}
+      {open && (
+        <View style={styles.groupTasks}>
+          <Group>{group.tasks.map((task) => renderTask(task, group.showTarget))}</Group>
+        </View>
+      )}
     </View>
   );
 }
@@ -318,5 +322,5 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing }) => ({
   groupName: { ...typography.body, fontFamily: fonts.bodySemiBold, color: colors.text },
   groupSummary: { ...typography.caption, color: colors.textMuted },
   // Le filet relie les tâches dépliées à l'en-tête du groupe : elles viennent d'ailleurs.
-  groupTasks: { gap: spacing.sm, marginLeft: 8, paddingLeft: spacing.sm + 2, borderLeftWidth: 2, borderLeftColor: colors.border },
+  groupTasks: { marginLeft: 8, paddingLeft: spacing.sm + 2, borderLeftWidth: 2, borderLeftColor: colors.border },
 }));

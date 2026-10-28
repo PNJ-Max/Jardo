@@ -279,3 +279,15 @@ export function tabMarks(name: TabName, color: string, fill?: string): Mark[] {
     ...lines.map((d): Mark => ({ d, stroke: color, width: 2 })),
   ];
 }
+
+export type DoneGlyph = 'check' | 'sprout';
+
+const doneDrawings: Record<DoneGlyph, string[]> = {
+  check: ['M6.7 16.7L12.7 22.7L25.3 10'],
+  sprout: ['M16 28V16', 'M16 17.3C16 12 12 9.3 6.7 9.3C6.7 14.7 10.7 17.3 16 17.3Z', 'M16 14.7C16 10 19.3 6.7 25.3 6.7C25.3 12 21.3 14.7 16 14.7Z'],
+};
+
+/** La coche du bouton « Fait », qui devient une pousse une fois la tâche notée. */
+export function doneMarks(glyph: DoneGlyph, color: string): Mark[] {
+  return doneDrawings[glyph].map((d): Mark => ({ d, stroke: color, width: 3.2 }));
+}
