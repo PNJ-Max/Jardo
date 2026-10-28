@@ -123,6 +123,18 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
     expect((await service.getDue('Week')).map((task) => task.id)).toEqual([late, inSixDays]);
   });
 
+  it("L'horizon du mois va jusqu'aux trente prochains jours", async () => {
+    const { service, addSpace, addTask } = await setup();
+    const verger = await addSpace('Verger', 'Orchard');
+    const late = await addTask('Pruning', 'Yearly', addDays(today, -40), verger);
+    const inSixDays = await addTask('Treatment', 'Once', addDays(today, 6), verger);
+    const inThirtyDays = await addTask('Pruning', 'Yearly', addDays(today, 30), verger);
+    await addTask('Treatment', 'Once', addDays(today, 31), verger);
+
+    expect((await service.getDue('Month')).map((task) => task.id)).toEqual([late, inSixDays, inThirtyDays]);
+    expect((await service.getDue('Week')).map((task) => task.id)).toEqual([late, inSixDays]);
+  });
+
   it('Les tâches faites ou archivées ne sont jamais dues', async () => {
     const { service, addSpace, addPlant, addWatering, addTask, addEntry } = await setup();
     const potager = await addSpace('Potager');
@@ -286,6 +298,7 @@ describe('TaskService : règles que TaskServiceTests.cs ne couvrait pas', () => 
       createdAt: new Date(2026, 5, 15, 12).toISOString(),
       spaceId: potager.id,
       spaceName: 'Potager',
+      spaceKind: 'VegetableGarden',
       zoneId: carre.id,
       zoneName: 'Carré 1',
       itemId: null,
