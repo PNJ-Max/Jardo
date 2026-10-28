@@ -3,7 +3,7 @@
 
 import type { JournalEntryKind } from '@/api/types';
 import { createKit, WINDOW_LIT, type Palette } from '@/map/decor';
-import { mix } from '@/map/scene';
+import { desaturate, mix } from '@/map/scene';
 import type { ColorScheme } from '@/theme';
 
 export const PICTOGRAM_SIZE = 32;
@@ -17,7 +17,13 @@ const INK: Record<ColorScheme, string> = { light: '#2E4A31', dark: '#CFE3D1' };
 const INK_WIDTH = 1.6;
 
 const day = createKit(false).pal;
-const palettes: Record<ColorScheme, Palette> = { light: day, dark: createKit(true).pal };
+// La nuit de la carte est trop profonde pour un objet de 32 posé sur une tuile sombre : ses
+// remplissages s'y éteignaient. Même teinte nocturne, moins appuyée.
+const dusk = (c: string) => mix(desaturate(c, 0.2), '#0A2B31', 0.3);
+const palettes: Record<ColorScheme, Palette> = {
+  light: day,
+  dark: Object.fromEntries(Object.entries(day).map(([k, v]) => [k, dusk(v)])) as Palette,
+};
 
 export const circle = (cx: number, cy: number, r: number) => ellipse(cx, cy, r, r);
 export const ellipse = (cx: number, cy: number, rx: number, ry: number) =>
@@ -54,7 +60,7 @@ function brush(scheme: ColorScheme): Brush {
     flat: (d, fill, opacity) => ({ d, fill, opacity }),
     line: (d, width = INK_WIDTH, color = ink) => ({ d, stroke: color, width }),
     lit: (color) => mix(color, '#FFFFFF', scheme === 'dark' ? 0.18 : 0.4),
-    ground: (cx, rx) => ({ d: ellipse(cx, 28.2, rx, 1.7), fill: pal.shadow, opacity: scheme === 'dark' ? 0.4 : 0.16 }),
+    ground: (cx, rx) => ({ d: ellipse(cx, 28.2, rx, 1.7), fill: day.shadow, opacity: scheme === 'dark' ? 0.45 : 0.16 }),
   };
 }
 
