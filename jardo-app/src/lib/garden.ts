@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 
-import type { Id, ItemKind, JournalEntryKind, MeasureUnit, QuantityUnit, SpaceKind, TaskRecurrence } from '@/api/types';
+import type { GardenTask, Id, ItemKind, JournalEntryKind, MeasureUnit, QuantityUnit, SpaceKind, TaskRecurrence } from '@/api/types';
 import type { IconName } from '@/components/ui';
 import { isEntryKindAllowedIn, isWoodKind } from '@/domain/kinds';
 
@@ -117,6 +117,14 @@ type Target = { spaceName: string; zoneName: string | null; itemName: string | n
 export function targetLabel({ itemName, zoneName, spaceName }: Target): string {
   return [itemName, zoneName, spaceName].filter(Boolean).join(' · ');
 }
+
+export const taskTitle = (task: Pick<GardenTask, 'title' | 'kind'>) => task.title ?? entryKinds[task.kind].verb;
+
+const lowerFirst = (text: string) => text.charAt(0).toLocaleLowerCase('fr') + text.slice(1);
+
+/** « arroser les tomates, Tomates » : l'intervention, puis la cible la plus précise. */
+export const taskPhrase = (task: GardenTask) =>
+  `${lowerFirst(taskTitle(task))}, ${task.itemName ?? task.zoneName ?? task.spaceName}`;
 
 /** L'écran qui montre la cible d'une tâche ou d'une intervention : la fiche de l'élément, sa zone ou son espace. */
 export function targetHref(target: {

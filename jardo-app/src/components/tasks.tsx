@@ -21,12 +21,8 @@ import { useShowUndo } from '@/components/undo';
 import { Badge } from '@/components/ui';
 import { notify } from '@/lib/confirm';
 import { formatDate } from '@/lib/dates';
-import { entryKinds, targetLabel } from '@/lib/garden';
+import { targetLabel, taskPhrase, taskTitle } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
-
-export const taskTitle = (task: GardenTask) => task.title ?? entryKinds[task.kind].verb;
-
-const lowerFirst = (text: string) => text.charAt(0).toLocaleLowerCase('fr') + text.slice(1);
 
 /** Les tâches dont le « Fait » vient d'être annulé : leur ligne revient en fondu. */
 const returningTasks = new Set<Id>();
@@ -48,7 +44,7 @@ export function useMarkDone() {
         onSuccess: ({ entry }) => {
           onSuccess?.();
           showUndo({
-            message: `Noté au journal : ${lowerFirst(taskTitle(task))}, ${task.itemName ?? task.zoneName ?? task.spaceName}`,
+            message: `Noté au journal : ${taskPhrase(task)}`,
             onUndo: () => {
               returningTasks.add(task.id);
               setTimeout(() => returningTasks.delete(task.id), 1000);
