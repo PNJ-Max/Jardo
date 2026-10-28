@@ -12,6 +12,9 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: jest.fn(() => ({})),
 }));
 
+// Skia ne tourne pas sous Jest : l'image d'un pictogramme n'y porte que sa clé, « type:thème ».
+jest.mock('@/components/pictograms/picture', () => ({ pictogramUri: (key: string) => `pictogram:${key}` }));
+
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );

@@ -8,7 +8,7 @@ import { addDays } from '@/domain/dates';
 import { today } from '@/lib/dates';
 import { palettes } from '@/theme/colors';
 
-import { createTestServices, renderScreen } from '../../test/render';
+import { createTestServices, pictogramsOnScreen, renderScreen } from '../../test/render';
 
 const inDays = (days: number) => addDays(today(), days);
 
@@ -73,6 +73,17 @@ describe("écran Aujourd'hui", () => {
 
     expect(await screen.findByText("À faire aujourd'hui")).toHaveStyle({ color: palettes.light.soil });
     expect(screen.getByText("À arroser aujourd'hui")).toHaveStyle({ color: palettes.light.water });
+  });
+
+  it("pose le pictogramme de l'intervention sur la ligne, sans rien changer à ce qui est lu", async () => {
+    const services = await createTestServices();
+    await addOverdue(services);
+    await addDueToday(services);
+    await renderScreen(<TodayScreen />, services);
+
+    expect(await screen.findByText('Tailler')).toBeOnTheScreen();
+    expect(pictogramsOnScreen()).toEqual(['Watering:light', 'Pruning:light']);
+    expect(screen.getByRole('button', { name: 'Fait : Arroser les tomates, Tomates · Potager' })).toBeOnTheScreen();
   });
 
   it("n'affiche pas les sections vides", async () => {
