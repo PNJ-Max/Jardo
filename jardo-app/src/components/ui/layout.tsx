@@ -31,9 +31,15 @@ export function Group({ children, style }: { children: ReactNode; style?: ViewSt
   );
 }
 
-export function SectionTitle({ children }: { children: ReactNode }) {
+/** `count` : le nombre de lignes de la section, en retrait ; `danger` pour « En retard ». */
+export function SectionTitle({ children, count, danger = false }: { children: ReactNode; count?: number; danger?: boolean }) {
   const styles = useStyles();
-  return <Text style={styles.sectionTitle}>{children}</Text>;
+  return (
+    <Text style={[styles.sectionTitle, danger && styles.sectionTitleDanger]}>
+      {children}
+      {count !== undefined && <Text style={styles.sectionCount}> {count}</Text>}
+    </Text>
+  );
 }
 
 // Le fond vient du thème de navigation : les écrans n'ont pas à le redéclarer.
@@ -64,4 +70,6 @@ const useStyles = createStyles(({ colors, typography, spacing, radius }) => ({
     color: colors.text,
     marginTop: spacing.md,
   },
+  sectionTitleDanger: { color: colors.danger },
+  sectionCount: { color: colors.textMuted, fontVariant: ['tabular-nums'] },
 }));

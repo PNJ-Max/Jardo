@@ -1,7 +1,7 @@
 import type { GardenTask, Id, SpaceKind } from '@/api/types';
 import { addDays, type DateOnly } from '@/domain/dates';
 
-import { taskPhrase } from './garden';
+import { lowerFirst, taskPhrase, taskTitle } from './garden';
 
 // L'organisation d'Aujourd'hui, à partir des tâches dues sur l'horizon `Month` : le service a déjà
 // calculé échéances et retards, l'écran ne fait que les ranger.
@@ -56,7 +56,19 @@ export function bySpace(tasks: readonly GardenTask[]): SpaceGroup[] {
 export const comingThisMonth = (tasks: readonly GardenTask[], today: DateOnly) =>
   tasks.filter((task) => task.recurrence !== 'EveryNDays' && task.nextDueDate !== null && task.nextDueDate > today);
 
-const things = (count: number) => `${count} ${count > 1 ? 'choses' : 'chose'}`;
+/**
+ * La ligne repliée de « Dans le mois » : « Tailler les pommiers, traiter (Verger) ». Une tâche sans
+ * titre ne dit que son intervention : sa cible la précise.
+ */
+export function monthSummary(tasks: readonly GardenTask[]): string {
+  const text = tasks
+    .map((task) => task.title ?? `${lowerFirst(taskTitle(task))} (${task.itemName ?? task.zoneName ?? task.spaceName})`)
+    .map((name, index) => (index === 0 ? name : lowerFirst(name)))
+    .join(', ');
+  return text.charAt(0).toLocaleUpperCase('fr') + text.slice(1);
+}
+
+const things =(count: number) => `${count} ${count > 1 ? 'choses' : 'chose'}`;
 
 /**
  * La phrase du ciel du jour : combien de choses attendent et combien sont en retard ; quand tout

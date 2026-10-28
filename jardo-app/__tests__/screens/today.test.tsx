@@ -5,10 +5,11 @@ import { Alert } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import TodayScreen from '@/app/(tabs)/today';
+import { longDay } from '@/components/today';
 import { businessRule } from '@/data/problem';
 import type { Services } from '@/data/services';
 import { addDays } from '@/domain/dates';
-import { today } from '@/lib/dates';
+import { formatDate, today } from '@/lib/dates';
 import { palettes } from '@/theme/colors';
 
 import { createTestServices, pictogramsOnScreen, renderScreen } from '../../test/render';
@@ -48,34 +49,136 @@ function deferred() {
 }
 
 describe("écran Aujourd'hui", () => {
-  it('range les tâches en retard, du jour et de la semaine dans leurs sections', async () => {
+  it("dit la date et combien de choses attendent, dont combien en retard", async () => {
     const services = await createTestServices();
     await addOverdue(services);
     await addDueToday(services);
     await addThisWeek(services);
     await renderScreen(<TodayScreen />, services);
 
-    expect(await screen.findByText('En retard')).toBeOnTheScreen();
-    expect(screen.getByText("Aujourd'hui")).toBeOnTheScreen();
-    expect(screen.getByText('Cette semaine')).toBeOnTheScreen();
-
-    expect(screen.getByText('Arroser les tomates')).toBeOnTheScreen();
-    expect(screen.getByText('En retard de 2 j')).toBeOnTheScreen();
-    expect(screen.getByText('Tailler')).toBeOnTheScreen();
-    expect(screen.getByText('Traiter')).toBeOnTheScreen();
-    // Le voyant vient du domaine : « Prochain : » reprend nextDueDate sans recalcul.
-    expect(screen.getByText(/Prochain : /)).toBeOnTheScreen();
+    expect(await screen.findByText(longDay(today()))).toBeOnTheScreen();
+    expect(screen.getByText('2 choses à faire au jardin, dont 1 en retard')).toBeOnTheScreen();
   });
 
-  it("colore le voyant du jour en terre, et en bleu pour l'arrosage", async () => {
+  it("met les retards à part, les plus en retard d'abord, en disant de combien", async () => {
+    const services = await createTestServices();
+    const { spaceId } = await addOverdue(services);
+    await services.tasks.create({ kind: 'Sowing', recurrence: 'Once', startDate: inDays(-1), spaceId });
+    await renderScreen(<TodayScreen />, services);
+
+    expect(await screen.findByText(/^En retard/)).toHaveStyle({ color: palettes.light.danger });
+    expect(screen.getAllByText(/^en retard de/).map((node) => node.props.children)).toEqual([
+      'en retard de 2 jours',
+      'en retard de 1 jour',
+    ]);
+    expect(screen.getByText(/^Tomates · Potager,/)).toBeOnTheScreen();
+    expect(screen.queryByText(/^Aujourd'hui/)).not.toBeOnTheScreen();
+  });
+
+  it("range aujourd'hui par espace, le plus chargé d'abord et l'arrosage en tête, avec la cible et le rythme", async () => {
     const services = await createTestServices();
     await addDueToday(services);
     const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
-    await services.tasks.create({ kind: 'Watering', recurrence: 'Once', startDate: today(), spaceId: potager.id });
+    const carre = await services.zones.create(potager.id, { name: 'Carré 1' });
+    await services.tasks.create({ kind: 'Pruning', recurrence: 'Once', startDate: today(), spaceId: potager.id });
+    await services.tasks.create({
+      kind: 'Watering',
+      recurrence: 'EveryNDays',
+      intervalDays: 3,
+      startDate: today(),
+      spaceId: potager.id,
+      zoneId: carre.id,
+    });
     await renderScreen(<TodayScreen />, services);
 
-    expect(await screen.findByText("À faire aujourd'hui")).toHaveStyle({ color: palettes.light.soil });
-    expect(screen.getByText("À arroser aujourd'hui")).toHaveStyle({ color: palettes.light.water });
+    expect(await screen.findByText(/^Aujourd'hui/)).toBeOnTheScreen();
+    expect(screen.getAllByText(/^(Potager|Verger)$/).map((node) => node.props.children)).toEqual(['Potager', 'Verger']);
+    expect(pictogramsOnScreen().filter((key) => !key.startsWith('done-'))).toEqual([
+      'Watering:light',
+      'Pruning:light',
+      'Pruning:light',
+    ]);
+    expect(screen.getByText('Carré 1, tous les 3 jours')).toBeOnTheScreen();
+    expect(screen.getAllByText('Une seule fois')).toHaveLength(2);
+    // La section donne l'échéance : la ligne ne la répète pas.
+    expect(screen.queryByText("À faire aujourd'hui")).not.toBeOnTheScreen();
+    expect(screen.queryByText('Traiter')).not.toBeOnTheScreen();
+  });
+
+  it('montre la semaine, et ce qui est prévu le jour touché', async () => {
+    const services = await createTestServices();
+    await addOverdue(services);
+    await addDueToday(services);
+    await addThisWeek(services);
+    await renderScreen(<TodayScreen />, services);
+
+    const days = await screen.findAllByRole('tab');
+    expect(days).toHaveLength(7);
+    expect(days[0]).toHaveAccessibleName("Aujourd'hui, du retard");
+    expect(days[0]).toBeSelected();
+    expect(days[1]).toHaveAccessibleName(`${longDay(inDays(1))}, rien de prévu`);
+    expect(days[4]).toHaveAccessibleName(`${longDay(inDays(4))}, quelque chose de prévu`);
+    expect(screen.queryByText('Traiter')).not.toBeOnTheScreen();
+
+    await fireEvent.press(days[4]);
+
+    expect(screen.getByRole('tab', { selected: true })).toHaveAccessibleName(`${longDay(inDays(4))}, quelque chose de prévu`);
+    expect(screen.getByText(new RegExp(`^${longDay(inDays(4))}`))).toBeOnTheScreen();
+    expect(screen.getByText('Traiter')).toBeOnTheScreen();
+    expect(screen.queryByText('Tailler')).not.toBeOnTheScreen();
+    // Les retards restent en tête, quel que soit le jour.
+    expect(screen.getByText('Arroser les tomates')).toBeOnTheScreen();
+
+    await fireEvent.press(days[1]);
+    expect(screen.getByText(/^Demain/)).toBeOnTheScreen();
+    expect(screen.getByText('Rien de prévu ce jour-là.')).toBeOnTheScreen();
+  });
+
+  it('replie « Dans le mois » sur une ligne qui nomme les tâches annuelles et ponctuelles, et la déplie', async () => {
+    const services = await createTestServices();
+    const verger = await services.spaces.create({ name: 'Verger', kind: 'Orchard' });
+    await services.tasks.create({
+      kind: 'Pruning',
+      title: 'Tailler les pommiers',
+      recurrence: 'Yearly',
+      startDate: inDays(12),
+      spaceId: verger.id,
+    });
+    await services.tasks.create({ kind: 'Treatment', recurrence: 'Once', startDate: inDays(20), spaceId: verger.id });
+    await services.tasks.create({ kind: 'Watering', recurrence: 'EveryNDays', intervalDays: 3, startDate: inDays(2), spaceId: verger.id });
+    await renderScreen(<TodayScreen />, services);
+
+    const line = await screen.findByRole('button', { name: /Tailler les pommiers, traiter \(Verger\)/ });
+    expect(line).toBeCollapsed();
+    expect(screen.queryByText('Tailler les pommiers')).not.toBeOnTheScreen();
+
+    await fireEvent.press(line);
+
+    expect(line).toBeExpanded();
+    expect(screen.getByText('Tailler les pommiers')).toBeOnTheScreen();
+    expect(screen.getByText(`Verger, ${formatDate(inDays(12))}`)).toBeOnTheScreen();
+    expect(screen.getByText('Traiter')).toBeOnTheScreen();
+    expect(screen.queryByText('Arroser')).not.toBeOnTheScreen();
+  });
+
+  it("dit qu'il n'y a rien à faire aujourd'hui, puis ce qui vient demain", async () => {
+    const services = await createTestServices();
+    const serre = await services.spaces.create({ name: 'Serre', kind: 'Greenhouse' });
+    await services.tasks.create({ kind: 'Watering', title: 'Arroser la serre', recurrence: 'Once', startDate: inDays(1), spaceId: serre.id });
+    await renderScreen(<TodayScreen />, services);
+
+    expect(await screen.findByText("Rien à faire aujourd'hui")).toBeOnTheScreen();
+    expect(screen.getByText("Tout est fait pour aujourd'hui. Demain : arroser la serre, Serre.")).toBeOnTheScreen();
+    expect(screen.getByText(/^Demain/)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Fait : Arroser la serre, Serre' })).toBeOnTheScreen();
+  });
+
+  it("montre l'état vide quand il n'y a aucune tâche", async () => {
+    await renderScreen(<TodayScreen />);
+
+    expect(await screen.findByText("Rien à faire aujourd'hui")).toBeOnTheScreen();
+    expect(screen.getByText("Tout est fait pour aujourd'hui.")).toBeOnTheScreen();
+    expect(screen.queryByText(/^Demain/)).not.toBeOnTheScreen();
   });
 
   it("pose le pictogramme de l'intervention sur la ligne, sans rien changer à ce qui est lu", async () => {
@@ -87,32 +190,6 @@ describe("écran Aujourd'hui", () => {
     expect(await screen.findByText('Tailler')).toBeOnTheScreen();
     expect(pictogramsOnScreen().filter((key) => !key.startsWith('done-'))).toEqual(['Watering:light', 'Pruning:light']);
     expect(screen.getByRole('button', { name: 'Fait : Arroser les tomates, Tomates · Potager' })).toBeOnTheScreen();
-  });
-
-  it("n'affiche pas les sections vides", async () => {
-    const services = await createTestServices();
-    await addDueToday(services);
-    await renderScreen(<TodayScreen />, services);
-
-    expect(await screen.findByText("Aujourd'hui")).toBeOnTheScreen();
-    expect(screen.queryByText('En retard')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Cette semaine')).not.toBeOnTheScreen();
-  });
-
-  it("dit « rien aujourd'hui » avant de montrer les tâches de la semaine", async () => {
-    const services = await createTestServices();
-    await addThisWeek(services);
-    await renderScreen(<TodayScreen />, services);
-
-    expect(await screen.findByText("Rien à faire aujourd'hui 🌱")).toBeOnTheScreen();
-    expect(screen.getByText('Cette semaine')).toBeOnTheScreen();
-  });
-
-  it("montre l'état vide quand il n'y a aucune tâche", async () => {
-    await renderScreen(<TodayScreen />);
-
-    expect(await screen.findByText("Rien à faire aujourd'hui 🌱")).toBeOnTheScreen();
-    expect(screen.getByText("Ni cette semaine, d'ailleurs.")).toBeOnTheScreen();
   });
 
   it("affiche l'erreur de lecture et permet de réessayer", async () => {
@@ -162,7 +239,7 @@ describe("écran Aujourd'hui", () => {
       await letRowFold();
 
       await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
-      expect(screen.queryByText('En retard')).not.toBeOnTheScreen();
+      expect(screen.queryByText(/^En retard/)).not.toBeOnTheScreen();
       expect(screen.getByText('Tailler')).toBeOnTheScreen();
 
       gate.resolve();
@@ -224,6 +301,24 @@ describe("écran Aujourd'hui", () => {
       expect(screen.queryByText(noted)).not.toBeOnTheScreen();
       await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
       await expect(services.journal.getAll()).resolves.toHaveLength(1);
+    });
+
+    it("note en avance une tâche d'un autre jour, et l'annulation la ramène", async () => {
+      const services = await createTestServices();
+      await addThisWeek(services);
+      await renderScreen(<TodayScreen />, services);
+
+      await fireEvent.press((await screen.findAllByRole('tab'))[4]);
+      await fireEvent.press(screen.getByLabelText(/^Fait : Traiter/));
+      await letRowFold();
+
+      expect(await screen.findByText('Noté au journal : traiter, Serre')).toBeOnTheScreen();
+      await waitFor(() => expect(screen.queryByLabelText(/^Fait : Traiter/)).not.toBeOnTheScreen());
+
+      await fireEvent.press(screen.getByText('Annuler'));
+
+      expect(await screen.findByLabelText(/^Fait : Traiter/)).toBeOnTheScreen();
+      await expect(services.journal.getAll()).resolves.toEqual([]);
     });
 
     it("remet la tâche et prévient quand l'écriture est refusée", async () => {

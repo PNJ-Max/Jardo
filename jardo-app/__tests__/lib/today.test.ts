@@ -1,6 +1,16 @@
 import type { GardenTask } from '@/api/types';
 import { addDays, daysBetween } from '@/domain/dates';
-import { bySpace, comingThisMonth, lateness, overdueTasks, rhythm, skyPhrase, tasksOn, weekDays } from '@/lib/today';
+import {
+  bySpace,
+  comingThisMonth,
+  lateness,
+  monthSummary,
+  overdueTasks,
+  rhythm,
+  skyPhrase,
+  tasksOn,
+  weekDays,
+} from '@/lib/today';
 
 const today = '2026-10-28';
 let nextId = 0;
@@ -94,6 +104,17 @@ describe('comingThisMonth', () => {
     const tasks = [task(5), yearly, task(0, { recurrence: 'Once', intervalDays: null }), once, task(-2, { recurrence: 'Yearly' })];
 
     expect(comingThisMonth(tasks, today)).toEqual([yearly, once]);
+  });
+
+  it('nomme les tâches sur une ligne, la cible précisant celles sans titre', () => {
+    const tasks = [
+      task(12, { ...verger, title: 'Tailler les pommiers' }),
+      task(20, { ...verger, kind: 'Treatment', title: "Traitement d'hiver du verger" }),
+      task(25, { kind: 'Sowing', zoneName: 'Carré 1' }),
+    ];
+
+    expect(monthSummary(tasks)).toBe("Tailler les pommiers, traitement d'hiver du verger, semer (Carré 1)");
+    expect(monthSummary(tasks.slice(2))).toBe('Semer (Carré 1)');
   });
 });
 

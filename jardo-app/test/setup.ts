@@ -38,6 +38,13 @@ jest.mock('@/components/vignettes/space-vignette', () => {
     SpaceVignette: ({ width, height }: { width: number; height: number }) => createElement(View, { style: { width, height } }),
   };
 });
+jest.mock('@/components/vignettes/sky-scene', () => {
+  const { createElement } = require('react');
+  const { View } = require('react-native');
+  return {
+    SkyScene: ({ width, height }: { width: number; height: number }) => createElement(View, { style: { width, height } }),
+  };
+});
 
 // Le module natif d'expo-crypto n'existe pas sous Jest ; Node tire des UUID v4 de la même façon.
 jest.mock('expo-crypto', () => ({ randomUUID: () => require('node:crypto').randomUUID() }));

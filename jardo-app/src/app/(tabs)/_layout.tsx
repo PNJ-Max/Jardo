@@ -29,6 +29,8 @@ export default function TabLayout() {
         name="today"
         options={{
           title: "Aujourd'hui",
+          // Le ciel du jour tient lieu d'en-tête.
+          headerShown: false,
           tabBarIcon: ({ focused }) => <TabIcon name="today" focused={focused} size={28} />,
         }}
       />

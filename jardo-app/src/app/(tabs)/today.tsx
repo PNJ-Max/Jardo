@@ -1,65 +1,114 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
+import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { useDueTasks } from '@/api/queries';
-import { TaskRow, useMarkDone } from '@/components/tasks';
-import { Card, Empty, ErrorView, Group, Loading, screenStyles, SectionTitle } from '@/components/ui';
-import { targetHref } from '@/lib/garden';
+import type { GardenTask } from '@/api/types';
+import {
+  longDay,
+  MonthAhead,
+  OverdueSection,
+  SpaceGroups,
+  TodaySky,
+  useTaskRow,
+  WeekStrip,
+  type RenderTask,
+} from '@/components/today';
+import { Card, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
+import { addDays, type DateOnly } from '@/domain/dates';
+import { today as currentDay } from '@/lib/dates';
 import { usePullToRefresh } from '@/lib/refresh';
+import { bySpace, comingThisMonth, overdueTasks, skyPhrase, tasksOn, weekDays } from '@/lib/today';
 import { createStyles, useTheme } from '@/theme';
 
 /**
- * Tout ce qui est à faire au jardin, toutes catégories. Le service renvoie les tâches de la semaine,
- * les plus en retard d'abord ; leur statut suffit à les ranger dans les trois sections.
+ * Tout ce qui est à faire au jardin, toutes catégories, sur les trente prochains jours : le ciel du
+ * jour, la semaine, les retards à part, le jour choisi par espace, puis le calendrier du mois.
  */
 export default function TodayScreen() {
-  const { data, error, isPending, refetch } = useDueTasks('Week');
-  const { markDone } = useMarkDone();
+  const { data, error, isPending, refetch } = useDueTasks('Month');
   const refresh = usePullToRefresh(refetch);
+  const row = useTaskRow();
   const styles = useStyles();
+  const today = currentDay();
+  const [selected, setSelected] = useState(today);
 
   if (isPending) return <Loading />;
   if (error) return <ErrorView error={error} onRetry={refetch} />;
 
-  const sections = [
-    { title: 'En retard', data: data.filter((task) => task.status === 'Overdue') },
-    { title: "Aujourd'hui", data: data.filter((task) => task.status === 'DueSoon') },
-    { title: 'Cette semaine', data: data.filter((task) => task.status === 'Ok') },
-  ].filter((section) => section.data.length > 0);
-  const nothingToday = !data.some((task) => task.status !== 'Ok');
+  const overdue = overdueTasks(data);
+  const coming = comingThisMonth(data, today);
 
   return (
     <ScrollView
       style={screenStyles.screen}
-      contentContainerStyle={[screenStyles.list, data.length === 0 && { flex: 1 }]}
+      contentContainerStyle={styles.content}
       refreshControl={<RefreshControl {...refresh} />}>
-      {data.length === 0 ? (
-        <Empty icon="checkmark-circle-outline" title="Rien à faire aujourd'hui 🌱" hint="Ni cette semaine, d'ailleurs." />
-      ) : (
-        nothingToday && <NothingToday />
-      )}
-      {sections.map((section) => (
-        <View key={section.title} style={styles.section}>
-          <SectionTitle>{section.title}</SectionTitle>
-          <Group>
-            {section.data.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                leavesOnDone
-                onPress={() => router.push(targetHref(task))}
-                onDone={() => markDone(task)}
-              />
-            ))}
-          </Group>
-        </View>
-      ))}
+      <TodaySky date={today} phrase={skyPhrase(data, today)} />
+      <View style={styles.body}>
+        <WeekStrip days={weekDays(data, today)} selected={selected} onSelect={setSelected} />
+        {overdue.length > 0 && <OverdueSection tasks={overdue} row={row} />}
+        {selected === today ? (
+          <TodayTasks tasks={data} today={today} nothingLate={overdue.length === 0} row={row} />
+        ) : (
+          <DayTasks tasks={tasksOn(data, selected)} date={selected} today={today} row={row} />
+        )}
+        {coming.length > 0 && <MonthAhead tasks={coming} row={row} />}
+      </View>
     </ScrollView>
   );
 }
 
-/** Rien de dû, mais des tâches dans la semaine : on le dit avant de les montrer. */
+type DayProps = { tasks: GardenTask[]; today: DateOnly; row: RenderTask };
+
+/** Aujourd'hui, par espace ; rien à faire du tout : on le dit, puis ce qui vient demain. */
+function TodayTasks({ tasks, today, nothingLate, row }: DayProps & { nothingLate: boolean }) {
+  const styles = useStyles();
+  const due = tasksOn(tasks, today);
+  const tomorrow = tasksOn(tasks, addDays(today, 1));
+
+  if (due.length > 0) {
+    return (
+      <View style={styles.section}>
+        <SectionTitle count={due.length}>Aujourd&apos;hui</SectionTitle>
+        <SpaceGroups groups={bySpace(due)} row={row} />
+      </View>
+    );
+  }
+  if (!nothingLate) return null;
+
+  return (
+    <>
+      <NothingToday />
+      {tomorrow.length > 0 && (
+        <View style={styles.section}>
+          <SectionTitle count={tomorrow.length}>Demain</SectionTitle>
+          <SpaceGroups groups={bySpace(tomorrow)} row={row} />
+        </View>
+      )}
+    </>
+  );
+}
+
+/** Un autre jour de la semaine : ce qui est prévu, à faire en avance si l'on veut. */
+function DayTasks({ tasks, date, today, row }: DayProps & { date: DateOnly }) {
+  const styles = useStyles();
+
+  return (
+    <View style={styles.section}>
+      <SectionTitle count={tasks.length}>{date === addDays(today, 1) ? 'Demain' : longDay(date)}</SectionTitle>
+      {tasks.length === 0 ? (
+        <Text style={styles.hint}>Rien de prévu ce jour-là.</Text>
+      ) : (
+        <>
+          <Text style={styles.hint}>Prévu ce jour-là, faisable dès maintenant.</Text>
+          <SpaceGroups groups={bySpace(tasks)} row={row} />
+        </>
+      )}
+    </View>
+  );
+}
+
 function NothingToday() {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -67,13 +116,16 @@ function NothingToday() {
   return (
     <Card style={styles.nothingToday}>
       <Ionicons name="checkmark-circle-outline" size={28} color={colors.success} />
-      <Text style={styles.nothingTodayText}>Rien à faire aujourd&apos;hui 🌱</Text>
+      <Text style={styles.nothingTodayText}>Rien à faire aujourd&apos;hui</Text>
     </Card>
   );
 }
 
 const useStyles = createStyles(({ colors, typography, spacing }) => ({
+  content: { paddingBottom: 96 },
+  body: { paddingHorizontal: spacing.md, gap: spacing.md },
   section: { gap: spacing.sm },
+  hint: { ...typography.body, color: colors.textMuted },
   nothingToday: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nothingTodayText: { ...typography.subtitle, color: colors.text },
 }));

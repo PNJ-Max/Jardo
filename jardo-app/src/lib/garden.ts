@@ -120,7 +120,7 @@ export function targetLabel({ itemName, zoneName, spaceName }: Target): string {
 
 export const taskTitle = (task: Pick<GardenTask, 'title' | 'kind'>) => task.title ?? entryKinds[task.kind].verb;
 
-const lowerFirst = (text: string) => text.charAt(0).toLocaleLowerCase('fr') + text.slice(1);
+export const lowerFirst = (text: string) => text.charAt(0).toLocaleLowerCase('fr') + text.slice(1);
 
 /** « arroser les tomates, Tomates » : l'intervention, puis la cible la plus précise. */
 export const taskPhrase = (task: GardenTask) =>
