@@ -36,7 +36,15 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
 - [ ] 4. Aujourd'hui, l'organisation.
 - [ ] 5. Aujourd'hui, les gestes.
 - [ ] 6. Reporter.
-- [ ] 7. Vignettes d'espace.
+- [x] 7. Vignettes d'espace (28/10/2026) : les cinq scènes (potager, verger, petits fruits, serre,
+  bois) dessinées avec `decor.ts` sur un pan de pelouse, de jour en clair et de nuit en sombre,
+  enregistrées une fois en `SkPicture` par type et par thème (`components/vignettes/`). En tête de
+  la fiche d'un espace (sur le ciel du jour, bouton retour rond, plus de barre de navigation) et
+  dans la liste des espaces ; `SpaceVignette` servira aux groupes d'Aujourd'hui (étape 4) et au
+  choix du type (étape 8). Zones de l'onglet Contenu en tuiles : carré de terre bordé de bois
+  garni de 0 à 6 plantes, « Ajouter une zone » en pointillés. Sur le web, le canvas libère son
+  contexte WebGL après chaque rendu et n'existe que sur l'écran qui a le focus (même cause que
+  l'écran dédoublé).
 - [ ] 8. Formulaires.
 - [ ] 9. États vides et icône.
 

@@ -19,5 +19,14 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
+// Skia ne tourne pas sous Jest : une vignette d'espace n'y est qu'une boîte vide de sa taille.
+jest.mock('@/components/vignettes/space-vignette', () => {
+  const { createElement } = require('react');
+  const { View } = require('react-native');
+  return {
+    SpaceVignette: ({ width, height }: { width: number; height: number }) => createElement(View, { style: { width, height } }),
+  };
+});
+
 // Le module natif d'expo-crypto n'existe pas sous Jest ; Node tire des UUID v4 de la même façon.
 jest.mock('expo-crypto', () => ({ randomUUID: () => require('node:crypto').randomUUID() }));

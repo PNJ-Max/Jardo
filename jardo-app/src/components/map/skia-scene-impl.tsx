@@ -75,7 +75,7 @@ function polygonPath(points: number[]) {
   return builder.close().detach();
 }
 
-function drawShapes(canvas: SkCanvas, shapes: Shape[]) {
+export function drawShapes(canvas: SkCanvas, shapes: Shape[]) {
   const fill = Skia.Paint();
   fill.setAntiAlias(true);
   const stroke = Skia.Paint();

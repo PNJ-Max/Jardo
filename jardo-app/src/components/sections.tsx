@@ -272,13 +272,14 @@ export type DetailTab = { key: string; label: string; render: () => ReactNode };
  * Une fiche : l'en-tête et les onglets restent en place, seul le contenu de l'onglet défile. Un
  * onglet n'est rendu, et ses données chargées, qu'une fois ouvert.
  */
-export function DetailScreen({ header, tabs }: { header: ReactNode; tabs: DetailTab[] }) {
+export function DetailScreen({ cover, header, tabs }: { cover?: ReactNode; header: ReactNode; tabs: DetailTab[] }) {
   const styles = useDetailStyles();
   const [active, setActive] = useState(tabs[0].key);
   const current = tabs.find((tab) => tab.key === active) ?? tabs[0];
 
   return (
     <View style={styles.frame}>
+      {cover}
       <View style={styles.header}>{header}</View>
       <Tabs tabs={tabs} value={current.key} onChange={setActive} />
       {/* Une clé par onglet : chacun repart de son haut plutôt que de la position du précédent. */}
