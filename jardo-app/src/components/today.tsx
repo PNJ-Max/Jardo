@@ -2,17 +2,18 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { GardenTask } from '@/api/types';
-import { TaskRow, useMarkDone } from '@/components/tasks';
+import type { GardenTask, Id } from '@/api/types';
+import { celebrateMs, doneFeedback, foldMs, TaskRow, useMarkDone, useWaterAll } from '@/components/tasks';
 import { Group, SectionTitle } from '@/components/ui';
 import { SkyScene } from '@/components/vignettes/sky-scene';
 import { SpaceVignette } from '@/components/vignettes/space-vignette';
 import type { DateOnly } from '@/domain/dates';
 import { formatDate, parseDateOnly } from '@/lib/dates';
 import { targetHref, targetLabel } from '@/lib/garden';
-import { lateness, monthSummary, rhythm, type SpaceGroup, type WeekDay } from '@/lib/today';
+import { dueWaterings, lateness, monthSummary, rhythm, type SpaceGroup, type WeekDay } from '@/lib/today';
 import { createStyles, useTheme } from '@/theme';
 
 const capitalize = (text: string) => text.charAt(0).toLocaleUpperCase('fr') + text.slice(1);
@@ -97,25 +98,50 @@ export function WeekStrip({
 
 export type RenderTask = (task: GardenTask, detail: ReactNode) => ReactNode;
 
+/** « Tout arroser » un espace : ses arrosages dus partent ensemble. */
+export type WaterAll = (group: SpaceGroup, tasks: readonly GardenTask[]) => void;
+
 /**
- * Les lignes d'Aujourd'hui : « Fait » les retire, avec annulation. À appeler par l'écran, qui reste
- * monté : une section dont la dernière ligne part se démonte, et les rappels de « Fait » (le
- * message « Noté au journal ») ne viendraient plus.
+ * Pour proposer « Tout arroser » sur un espace qui a au moins deux arrosages dus : les tâches dues
+ * lues, retards compris.
  */
-export function useTaskRow(): RenderTask {
+export type Water = { due: readonly GardenTask[]; onWaterAll: WaterAll; busy: boolean };
+
+/**
+ * Les lignes d'Aujourd'hui : « Fait », le glissement ou la feuille les retirent, avec annulation ;
+ * « Tout arroser » retire d'un coup les arrosages dus d'un espace, où qu'ils soient affichés. À
+ * appeler par l'écran, qui reste monté : une section dont la dernière ligne part se démonte, et
+ * les rappels de l'écriture (le message « Noté au journal ») ne viendraient plus.
+ */
+export function useTaskRow(): { row: RenderTask; waterAll: WaterAll; watering: boolean } {
   const { markDone } = useMarkDone();
-  return function renderTask(task, detail) {
-    return (
-      <TaskRow
-        key={task.id}
-        task={task}
-        leavesOnDone
-        detail={detail}
-        onPress={() => router.push(targetHref(task))}
-        onDone={() => markDone(task)}
-      />
-    );
+  const { waterAll } = useWaterAll();
+  const reduceMotion = useReducedMotion();
+  const [leaving, setLeaving] = useState<ReadonlySet<Id>>(new Set());
+
+  const row: RenderTask = (task, detail) => (
+    <TaskRow
+      key={task.id}
+      task={task}
+      leavesOnDone
+      gestures
+      leaving={leaving.has(task.id)}
+      detail={detail}
+      onPress={() => router.push(targetHref(task))}
+      onDone={() => markDone(task)}
+    />
+  );
+
+  // Comme « Fait » : les lignes célèbrent et se replient avant l'écriture, qui les retire des listes.
+  const waterAllRows: WaterAll = (group, tasks) => {
+    setLeaving(new Set(tasks.map((task) => task.id)));
+    doneFeedback();
+    const note = () => waterAll(group, tasks, () => setLeaving(new Set()));
+    if (reduceMotion) note();
+    else setTimeout(note, celebrateMs + foldMs);
   };
+
+  return { row, waterAll: waterAllRows, watering: leaving.size > 0 };
 }
 
 /** « En retard », à part : bordée de danger, la ligne dit de combien. */
@@ -149,24 +175,59 @@ function withinSpace(task: GardenTask) {
 }
 
 /** Une surface par espace, coiffée de sa vignette et de son nom. */
-export function SpaceGroups({ groups, row }: { groups: SpaceGroup[]; row: RenderTask }) {
+export function SpaceGroups({ groups, row, water }: { groups: SpaceGroup[]; row: RenderTask; water?: Water }) {
   const styles = useStyles();
 
-  return groups.map((group) => (
-    <Group key={group.spaceId}>
-      <Pressable
-        onPress={() => router.push(`/space/${group.spaceId}`)}
-        accessibilityRole="link"
-        style={({ pressed }) => [styles.spaceHeader, pressed && styles.pressed]}>
-        <SpaceVignette kind={group.spaceKind} width={56} height={44} padding={2} />
-        <Text style={styles.spaceName} numberOfLines={1}>
-          {group.spaceName}
-        </Text>
-        <Text style={styles.spaceCount}>{group.tasks.length}</Text>
-      </Pressable>
-      {group.tasks.map((task) => row(task, withinSpace(task)))}
-    </Group>
-  ));
+  return groups.map((group) => {
+    const waterings = water ? dueWaterings(water.due, group.spaceId) : [];
+    return (
+      <Group key={group.spaceId}>
+        <View style={styles.spaceHeader}>
+          <Pressable
+            onPress={() => router.push(`/space/${group.spaceId}`)}
+            accessibilityRole="link"
+            style={({ pressed }) => [styles.spaceLink, pressed && styles.pressed]}>
+            <SpaceVignette kind={group.spaceKind} width={56} height={44} padding={2} />
+            <Text style={styles.spaceName} numberOfLines={1}>
+              {group.spaceName}
+            </Text>
+            <Text style={styles.spaceCount}>{group.tasks.length}</Text>
+          </Pressable>
+          {water && waterings.length >= 2 && (
+            <WaterAllButton
+              count={waterings.length}
+              spaceName={group.spaceName}
+              disabled={water.busy}
+              onPress={() => water.onWaterAll(group, waterings)}
+            />
+          )}
+        </View>
+        {group.tasks.map((task) => row(task, withinSpace(task)))}
+      </Group>
+    );
+  });
+}
+
+type WaterAllButtonProps = { count: number; spaceName: string; disabled: boolean; onPress: () => void };
+
+/** Pastille de l'eau dans l'en-tête de l'espace. */
+function WaterAllButton({ count, spaceName, disabled, onPress }: WaterAllButtonProps) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={`Tout arroser : ${spaceName}, ${count} arrosages`}
+      accessibilityHint="Note un seul arrosage sur l'espace, qui vaut pour ses zones et ses éléments"
+      hitSlop={8}
+      style={({ pressed }) => [styles.waterAll, (pressed || disabled) && { opacity: 0.6 }]}>
+      <Ionicons name="water" size={16} color={colors.water} />
+      <Text style={styles.waterAllText}>Tout arroser</Text>
+    </Pressable>
+  );
 }
 
 /** Le calendrier de saison : une ligne repliée qui nomme les tâches, et s'ouvre sur leur liste. */
@@ -211,9 +272,23 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
   section: { gap: spacing.sm },
   late: { color: colors.danger, fontFamily: fonts.bodyMedium },
   pressed: { backgroundColor: colors.surfaceSunken },
-  spaceHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, paddingHorizontal: 12 },
+  spaceHeader: { flexDirection: 'row', alignItems: 'center' },
+  spaceLink: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, paddingHorizontal: 12 },
   spaceName: { ...typography.section, color: colors.text, flex: 1 },
   spaceCount: { ...typography.body, color: colors.textMuted, fontVariant: ['tabular-nums'] },
+  waterAll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 36,
+    marginRight: 12,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: colors.water,
+    backgroundColor: colors.waterTint,
+  },
+  waterAllText: { ...typography.caption, fontFamily: fonts.heading, fontSize: 14, lineHeight: 19, color: colors.water },
   monthLine: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 14 },
   monthSummary: { ...typography.body, color: colors.text, flex: 1 },
 }));
