@@ -54,7 +54,21 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   et le rythme. « Dans le mois » : les tâches annuelles et ponctuelles à venir, sur une ligne
   repliée qui s'ouvre sur leur liste. Rien à faire : on le dit, puis ce qui vient demain.
   `SectionTitle` prend le compteur et le rouge. La direction ne prévoit pas de place pour la météo.
-- [ ] 5. Aujourd'hui, les gestes.
+- [x] 5. Aujourd'hui, les gestes (29/10/2026) : toucher une ligne ouvre la feuille de la tâche
+  (`components/task-sheet.tsx`, une modale qui monte du bas) : le rythme, la dernière fois
+  (« Il y a 9 jours, mar. 20 oct. »), la dernière quantité pour une récolte, puis « Fait
+  aujourd'hui » (la ligne joue le même « Fait » que son bouton), « Fait un autre jour, avec une
+  note » (l'écran « Fait » précisé) et « Ouvrir la fiche ». Elle remplace l'appui long sur « Fait »
+  d'Aujourd'hui (les fiches le gardent) ; « Reporter à demain » viendra entre « Fait aujourd'hui »
+  et les autres actions. « Tout arroser » dans l'en-tête d'un espace qui a au moins deux arrosages
+  dus, retards compris : un seul arrosage noté sur l'espace, qui vaut pour ses zones et ses
+  éléments ; les lignes célèbrent et se replient ensemble, puis « Noté au journal : arroser tout
+  l'espace, Potager » avec « Ajouter une note » et « Annuler ». Glisser une ligne à droite
+  (`react-native-gesture-handler`, `GestureHandlerRootView` à la racine) découvre « Fait » et, lâchée
+  au-delà de 112 points ou d'un geste vif, la fait comme le bouton (animation, haptique,
+  annulation) ; le geste ne démarre que vers la droite et cède au défilement. Le bouton et la
+  feuille en sont l'alternative au toucher ; quand le téléphone réduit les animations, la feuille
+  s'ouvre sans glisser et « Tout arroser » note aussitôt, comme « Fait ».
 - [ ] 6. Reporter.
 - [x] 7. Vignettes d'espace (28/10/2026) : les cinq scènes (potager, verger, petits fruits, serre,
   bois) dessinées avec `decor.ts` sur un pan de pelouse, de jour en clair et de nuit en sombre,
@@ -347,7 +361,6 @@ journal d'interventions, tâches). L'API l'implémente en entier, le front en a 
   - Jardin : la carte isométrique (phase 6) ;
   - Journal : chargement progressif. L'API renvoie tout le journal d'un coup : il faudrait
     d'abord une pagination côté API (un curseur sur la date et l'identifiant, par exemple) ;
-  - « Fait » précisé : l'appui long se découvre mal ; la direction visuelle le remplace par la feuille de la tâche ;
   - Zone et fiches : déplacer un élément vers un autre espace, archiver depuis la liste ;
   - Formulaires : contrôles locaux plus fins.
 - Pas de tests.
