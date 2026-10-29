@@ -24,6 +24,8 @@ import { formatDate } from '@/lib/dates';
 import { targetLabel, taskPhrase, taskTitle } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
 
+export { taskTitle } from '@/lib/garden';
+
 /** Les tâches dont le « Fait » vient d'être annulé : leur ligne revient en fondu. */
 const returningTasks = new Set<Id>();
 

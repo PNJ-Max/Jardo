@@ -5,10 +5,10 @@ import { ScrollView } from 'react-native';
 import { useTask } from '@/api/queries';
 import type { GardenTask } from '@/api/types';
 import { FormTarget } from '@/components/form-target';
-import { useMarkDone } from '@/components/tasks';
+import { taskTitle, useMarkDone } from '@/components/tasks';
 import { Button, DateField, ErrorView, Field, Loading, screenStyles } from '@/components/ui';
 import { today } from '@/lib/dates';
-import { targetLabel, taskTitle } from '@/lib/garden';
+import { targetLabel } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
 
 /**
