@@ -17,6 +17,11 @@ type SwipeToDoneProps = {
   testId: string;
   enabled: boolean;
   onDone: () => void;
+  /**
+   * Au début et à la fin d'un glissement. Sur le web, le clic qui termine le glissement arrive
+   * encore jusqu'à la ligne : elle s'en sert pour l'ignorer.
+   */
+  onSwiping: () => void;
   children: ReactNode;
 };
 
@@ -25,7 +30,7 @@ type SwipeToDoneProps = {
  * bouton. Le geste ne démarre que vers la droite et cède au défilement vertical. Le bouton
  * « Fait » et la feuille de la tâche en sont l'alternative au toucher.
  */
-export function SwipeToDone({ testId, enabled, onDone, children }: SwipeToDoneProps) {
+export function SwipeToDone({ testId, enabled, onDone, onSwiping, children }: SwipeToDoneProps) {
   const { colors } = useTheme();
   const styles = useStyles();
   const offset = useSharedValue(0);
@@ -36,10 +41,14 @@ export function SwipeToDone({ testId, enabled, onDone, children }: SwipeToDonePr
     .activeOffsetX(16)
     .failOffsetX(-16)
     .failOffsetY([-12, 12])
+    .onStart(() => {
+      scheduleOnRN(onSwiping);
+    })
     .onUpdate((event) => {
       offset.set(Math.max(0, event.translationX));
     })
     .onEnd((event) => {
+      scheduleOnRN(onSwiping);
       const done =
         event.translationX > doneThreshold || (event.translationX > flickMin && event.velocityX > flickVelocity);
       if (done) scheduleOnRN(onDone);

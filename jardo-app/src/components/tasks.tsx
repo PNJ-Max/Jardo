@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -194,6 +194,7 @@ export function TaskRow({
   const reduceMotion = useReducedMotion();
   const [done, setDone] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const lastSwipe = useRef(0);
   const [returning] = useState(() => returningTasks.delete(task.id));
   const open = useSharedValue(1);
   const height = useSharedValue(0);
@@ -239,8 +240,13 @@ export function TaskRow({
 
   const row = (
     <Pressable
-      onPress={gestures ? () => setSheetOpen(true) : onPress}
-      accessibilityRole="button"
+      onPress={
+        gestures
+          ? () => {
+              if (Date.now() - lastSwipe.current > 300) setSheetOpen(true);
+            }
+          : onPress
+      }
       accessibilityHint={gestures ? 'Ouvre la feuille de la tâche : rythme, dernière fois, et les façons de la noter' : undefined}
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
       <View style={styles.icon}>
@@ -286,7 +292,13 @@ export function TaskRow({
       }}
       style={foldStyle}>
       {gestures ? (
-        <SwipeToDone testId={`swipe:${task.id}`} enabled={canBeDone && !celebrating} onDone={markDone}>
+        <SwipeToDone
+          testId={`swipe:${task.id}`}
+          enabled={canBeDone && !celebrating}
+          onDone={markDone}
+          onSwiping={() => {
+            lastSwipe.current = Date.now();
+          }}>
           {row}
         </SwipeToDone>
       ) : (

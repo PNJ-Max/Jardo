@@ -303,4 +303,19 @@ describe('glisser une ligne à droite', () => {
     expect(screen.getByLabelText(/^Fait : Arroser les tomates/)).toBeEnabled();
     await expect(services.journal.getAll()).resolves.toEqual([]);
   });
+
+  it("n'ouvre pas la feuille sur le toucher qui termine le glissement", async () => {
+    const services = await createTestServices();
+    const { tomatoWatering } = await addPotager(services);
+    await renderScreen(<TodayScreen />, services);
+    await screen.findByText('Arroser les tomates');
+
+    await swipe(tomatoWatering.id, 60);
+    await fireEvent.press(screen.getByText('Arroser les tomates'));
+    expect(screen.queryByText("Fait aujourd'hui")).not.toBeOnTheScreen();
+
+    await act(() => jest.advanceTimersByTime(400));
+    await fireEvent.press(screen.getByText('Arroser les tomates'));
+    expect(screen.getByText("Fait aujourd'hui")).toBeOnTheScreen();
+  });
 });
