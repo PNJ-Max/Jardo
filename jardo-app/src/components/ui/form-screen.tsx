@@ -80,7 +80,7 @@ export function FormScreen({ title, submitLabel, onSubmit, loading, disabled, er
 }
 
 const useStyles = createStyles(({ colors, typography, spacing }) => ({
-  page: { flex: 1 },
+  page: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
