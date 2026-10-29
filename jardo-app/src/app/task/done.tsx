@@ -1,12 +1,11 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 
 import { useTask } from '@/api/queries';
 import type { GardenTask } from '@/api/types';
 import { FormTarget } from '@/components/form-target';
 import { taskTitle, useMarkDone } from '@/components/tasks';
-import { Button, DateField, ErrorView, Field, Loading, screenStyles } from '@/components/ui';
+import { DateField, Field, FormPending, FormScreen } from '@/components/ui';
 import { today } from '@/lib/dates';
 import { targetLabel } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
@@ -20,8 +19,7 @@ export default function TaskDoneScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const task = useTask(id);
 
-  if (task.isPending) return <Loading />;
-  if (task.error) return <ErrorView error={task.error} onRetry={task.refetch} />;
+  if (task.isPending || task.error) return <FormPending title="Fait" error={task.error} onRetry={task.refetch} />;
   return <TaskDoneForm task={task.data} />;
 }
 
@@ -33,9 +31,7 @@ function TaskDoneForm({ task }: { task: GardenTask }) {
   const submit = () => markDone(task, { date, note: note.trim() || null }, goBack);
 
   return (
-    <ScrollView style={screenStyles.screen} contentContainerStyle={screenStyles.form}>
-      <Stack.Screen options={{ title: taskTitle(task) }} />
-
+    <FormScreen title={taskTitle(task)} submitLabel="Noter comme fait" onSubmit={submit} loading={isPending}>
       <FormTarget label={targetLabel(task)} />
       <DateField label="Fait le" noFuture value={date} onChange={setDate} />
       <Field
@@ -46,8 +42,6 @@ function TaskDoneForm({ task }: { task: GardenTask }) {
         maxLength={1000}
         multiline
       />
-
-      <Button title="Noter comme fait" icon="checkmark" onPress={submit} loading={isPending} />
-    </ScrollView>
+    </FormScreen>
   );
 }

@@ -1,20 +1,16 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 
 import { usePlant, useSavePlant } from '@/api/queries';
 import type { Id, Plant, QuantityUnit } from '@/api/types';
 import { ZoneSelect } from '@/components/zone-select';
 import {
   fieldError,
-  Button,
   ChipSelect,
   DateField,
-  ErrorView,
   Field,
-  FormError,
-  Loading,
-  screenStyles,
+  FormPending,
+  FormScreen,
 } from '@/components/ui';
 import { decimalText, parseDecimal, quantityUnits } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
@@ -38,8 +34,9 @@ export default function PlantFormScreen() {
 
 function EditPlant({ id }: { id: Id }) {
   const plant = usePlant(id);
-  if (plant.isPending) return <Loading />;
-  if (plant.error) return <ErrorView error={plant.error} onRetry={plant.refetch} />;
+  if (plant.isPending || plant.error) {
+    return <FormPending title="Modifier la plante" error={plant.error} onRetry={plant.refetch} />;
+  }
   return <PlantForm plant={plant.data} spaceId={plant.data.spaceId} defaultZoneId={plant.data.zoneId} />;
 }
 
@@ -81,9 +78,13 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
   };
 
   return (
-    <ScrollView style={screenStyles.screen} contentContainerStyle={screenStyles.form}>
-      <Stack.Screen options={{ title: plant ? 'Modifier la plante' : 'Nouvelle plante' }} />
-
+    <FormScreen
+      title={plant ? 'Modifier la plante' : 'Nouvelle plante'}
+      submitLabel={plant ? 'Enregistrer les modifications' : 'Créer la plante'}
+      onSubmit={submit}
+      loading={save.isPending}
+      disabled={!name.trim() || !quantity || !!quantityError}
+      error={save.error}>
       <Field
         label="Nom"
         value={name}
@@ -138,14 +139,6 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
         error={fieldError(save.error, 'plantedDate')}
       />
       <ZoneSelect spaceId={spaceId} value={zoneId} onChange={setZoneId} error={fieldError(save.error, 'zoneId')} />
-
-      <FormError error={save.error} />
-      <Button
-        title="Enregistrer"
-        onPress={submit}
-        loading={save.isPending}
-        disabled={!name.trim() || !quantity || !!quantityError}
-      />
-    </ScrollView>
+    </FormScreen>
   );
 }

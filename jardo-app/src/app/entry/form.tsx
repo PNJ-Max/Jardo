@@ -1,6 +1,5 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 
 import { useDeleteJournalEntry, useJournalEntry, useSaveJournalEntry, useSpace } from '@/api/queries';
 import type { Id, JournalEntry, JournalEntryKind, MeasureUnit, Space } from '@/api/types';
@@ -10,11 +9,9 @@ import {
   Button,
   ChipSelect,
   DateField,
-  ErrorView,
   Field,
-  FormError,
-  Loading,
-  screenStyles,
+  FormPending,
+  FormScreen,
 } from '@/components/ui';
 import { confirm, notify } from '@/lib/confirm';
 import { today } from '@/lib/dates';
@@ -55,16 +52,24 @@ export default function EntryFormScreen() {
 
 function EditEntry({ id }: { id: Id }) {
   const entry = useJournalEntry(id);
-  if (entry.isPending) return <Loading />;
-  if (entry.error) return <ErrorView error={entry.error} onRetry={entry.refetch} />;
+  if (entry.isPending || entry.error) {
+    return <FormPending title="Corriger l'intervention" error={entry.error} onRetry={entry.refetch} />;
+  }
   return <EntryFormInSpace entry={entry.data} target={{ ...entry.data, label: targetLabel(entry.data) }} />;
 }
 
 /** Les types d'intervention proposés dépendent du type d'espace. */
 function EntryFormInSpace({ entry, target }: { entry?: JournalEntry; target: Target }) {
   const space = useSpace(target.spaceId);
-  if (space.isPending) return <Loading />;
-  if (space.error) return <ErrorView error={space.error} onRetry={space.refetch} />;
+  if (space.isPending || space.error) {
+    return (
+      <FormPending
+        title={entry ? "Corriger l'intervention" : 'Noter une intervention'}
+        error={space.error}
+        onRetry={space.refetch}
+      />
+    );
+  }
   return <EntryForm entry={entry} target={target} space={space.data} />;
 }
 
@@ -121,9 +126,13 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
   };
 
   return (
-    <ScrollView style={screenStyles.screen} contentContainerStyle={screenStyles.form}>
-      <Stack.Screen options={{ title: entry ? "Corriger l'intervention" : 'Noter une intervention' }} />
-
+    <FormScreen
+      title={entry ? "Corriger l'intervention" : 'Noter une intervention'}
+      submitLabel={entry ? 'Enregistrer les modifications' : "Noter l'intervention"}
+      onSubmit={submit}
+      loading={save.isPending}
+      disabled={!canSubmit}
+      error={save.error}>
       {target.label ? <FormTarget label={target.label} /> : null}
       <ChipSelect
         label="Intervention"
@@ -193,9 +202,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
         error={fieldError(save.error, 'note')}
       />
 
-      <FormError error={save.error} />
-      <Button title="Enregistrer" onPress={submit} loading={save.isPending} disabled={!canSubmit} />
       {entry && <Button title="Supprimer" icon="trash-outline" variant="danger" onPress={deleteEntry} loading={remove.isPending} />}
-    </ScrollView>
+    </FormScreen>
   );
 }
