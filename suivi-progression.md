@@ -10,7 +10,7 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (28/10/2026)
+## Où on en est (29/10/2026)
 
 **Direction visuelle ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), en cours de mise
 en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la carte, tons
@@ -53,7 +53,14 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   garni de 0 à 6 plantes, « Ajouter une zone » en pointillés. Sur le web, le canvas libère son
   contexte WebGL après chaque rendu et n'existe que sur l'écran qui a le focus (même cause que
   l'écran dédoublé).
-- [ ] 8. Formulaires.
+- [x] 8. Formulaires (29/10/2026) : les sept formulaires (espace, zone, plante, tas de bois,
+  intervention, tâche, « Fait » précisé) passent par `FormScreen` (`components/ui/form-screen.tsx`) :
+  titre en `display` avec bouton fermer rond (la modale n'a plus de barre de navigation), champs
+  qui défilent, bouton principal ancré en bas qui dit ce qu'il fait (« Créer l'espace »,
+  « Enregistrer les modifications »…) et refus du service (règle sans champ) juste au-dessus de lui.
+  Champs remplis (`surfaceSunken`, sans bordure au repos), anneau `primary` de 2 au focus,
+  `danger` à l'erreur ; l'erreur d'un champ reste sous ce champ. Choix du type d'espace sur les
+  vignettes des cinq types (`SpaceKindSelect`, `radio`). Les règles et les champs ne changent pas.
 - [ ] 9. États vides et icône.
 
 **Écran dédoublé en mode web, corrigé.** Après Jardin → espace → retour, Chrome laissait des restes

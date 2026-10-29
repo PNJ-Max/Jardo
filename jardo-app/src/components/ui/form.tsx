@@ -1,8 +1,11 @@
 import { useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, TextInput, View, type TextInputProps, type TextStyle } from 'react-native';
 
 import { ProblemError } from '@/data/problem';
 import { createStyles, useTheme } from '@/theme';
+
+// Le navigateur dessine sinon son propre anneau de focus par-dessus celui du thème.
+const noBrowserRing = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null;
 
 type FieldProps = TextInputProps & { label: string; error?: string; hint?: string };
 
@@ -16,7 +19,7 @@ export function Field({ label, error, hint, style, onFocus, onBlur, ...input }: 
       <Text style={styles.label}>{label}</Text>
       <TextInput
         placeholderTextColor={colors.textMuted}
-        style={[styles.input, input.multiline && styles.inputMultiline, focused && styles.inputFocused, error ? styles.inputError : null, style]}
+        style={[styles.input, noBrowserRing, input.multiline && styles.inputMultiline, focused && styles.inputFocused, error ? styles.inputError : null, style]}
         onFocus={(event) => {
           setFocused(true);
           onFocus?.(event);
@@ -120,8 +123,6 @@ export const useFieldStyles = createStyles(({ colors, fonts, typography, spacing
     fontFamily: fonts.body,
     fontSize: 16,
     color: colors.text,
-    // Le navigateur dessine sinon son propre anneau par-dessus celui du thème.
-    outlineWidth: 0,
   },
   inputMultiline: { minHeight: 96, paddingTop: spacing.sm + 4, textAlignVertical: 'top' },
   inputFocused: { borderColor: colors.primary },
