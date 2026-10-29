@@ -1,4 +1,4 @@
-import { vignetteDrawing } from '@/components/vignettes/scenes';
+import { horizonDrawing, vignetteDrawing } from '@/components/vignettes/scenes';
 import { spaceKinds } from '@/domain/types';
 
 describe("vignettes d'espace", () => {
@@ -16,5 +16,20 @@ describe("vignettes d'espace", () => {
     };
 
     expect(fill('dark')).not.toBe(fill('light'));
+  });
+});
+
+describe("horizon du ciel d'Aujourd'hui", () => {
+  it('dessine le jardin de jour, sans lucioles', () => {
+    const { scene, fireflies } = horizonDrawing('light');
+
+    expect(scene.shapes.length).toBeGreaterThan(50);
+    expect(fireflies).toBeNull();
+  });
+
+  it('allume les lucioles la nuit, à part pour clignoter', () => {
+    const { fireflies } = horizonDrawing('dark');
+
+    expect(fireflies?.shapes.length).toBeGreaterThan(0);
   });
 });

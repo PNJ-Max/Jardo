@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -21,12 +21,10 @@ import { useShowUndo } from '@/components/undo';
 import { Badge } from '@/components/ui';
 import { notify } from '@/lib/confirm';
 import { formatDate } from '@/lib/dates';
-import { entryKinds, targetLabel } from '@/lib/garden';
+import { targetLabel, taskPhrase, taskTitle } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
 
-export const taskTitle = (task: GardenTask) => task.title ?? entryKinds[task.kind].verb;
-
-const lowerFirst = (text: string) => text.charAt(0).toLocaleLowerCase('fr') + text.slice(1);
+export { taskTitle } from '@/lib/garden';
 
 /** Les tâches dont le « Fait » vient d'être annulé : leur ligne revient en fondu. */
 const returningTasks = new Set<Id>();
@@ -48,7 +46,7 @@ export function useMarkDone() {
         onSuccess: ({ entry }) => {
           onSuccess?.();
           showUndo({
-            message: `Noté au journal : ${lowerFirst(taskTitle(task))}, ${task.itemName ?? task.zoneName ?? task.spaceName}`,
+            message: `Noté au journal : ${taskPhrase(task)}`,
             onUndo: () => {
               returningTasks.add(task.id);
               setTimeout(() => returningTasks.delete(task.id), 1000);
@@ -127,10 +125,12 @@ type TaskRowProps = {
   leavesOnDone?: boolean;
   /** Faux quand l'écran nomme déjà la cible : la fiche de l'élément, ou le groupe d'une zone. */
   showTarget?: boolean;
+  /** Remplace voyant et cible quand la section donne déjà l'échéance (Aujourd'hui). */
+  detail?: ReactNode;
 };
 
 /** Une ligne d'une surface groupée (`Group`) : pictogramme, intervention, voyant et cible, « Fait ». */
-export function TaskRow({ task, onPress, onDone, leavesOnDone = false, showTarget = true }: TaskRowProps) {
+export function TaskRow({ task, onPress, onDone, leavesOnDone = false, showTarget = true, detail }: TaskRowProps) {
   const styles = useStyles();
   const reduceMotion = useReducedMotion();
   const [done, setDone] = useState(false);
@@ -183,14 +183,20 @@ export function TaskRow({ task, onPress, onDone, leavesOnDone = false, showTarge
           <Text style={styles.title} numberOfLines={2}>
             {title}
           </Text>
-          <View style={styles.meta}>
-            <DueBadge task={task} />
-            {showTarget && (
-              <Text style={styles.target} numberOfLines={1}>
-                {targetLabel(task)}
-              </Text>
-            )}
-          </View>
+          {detail !== undefined ? (
+            <Text style={styles.detail} numberOfLines={2}>
+              {detail}
+            </Text>
+          ) : (
+            <View style={styles.meta}>
+              <DueBadge task={task} />
+              {showTarget && (
+                <Text style={styles.target} numberOfLines={1}>
+                  {targetLabel(task)}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
         {onDone && !task.isCompleted && (
           <DoneButton
@@ -296,6 +302,7 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
   title: { ...typography.body, fontFamily: fonts.bodySemiBold, fontSize: 16, lineHeight: 22, color: colors.text },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.sm, rowGap: 2 },
   target: { ...typography.caption, color: colors.textMuted, flexShrink: 1 },
+  detail: { ...typography.caption, color: colors.textMuted },
   done: {
     flexDirection: 'row',
     alignItems: 'center',

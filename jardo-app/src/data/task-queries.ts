@@ -1,7 +1,7 @@
 import type { DateOnly } from '@/domain/dates';
 import { calculateDueState } from '@/domain/due-date';
 import { latestInterventions, type InterventionRow } from '@/domain/latest-interventions';
-import type { DueStatus, Id, ItemKind, JournalEntryKind, TaskRecurrence } from '@/domain/types';
+import type { DueStatus, Id, ItemKind, JournalEntryKind, SpaceKind, TaskRecurrence } from '@/domain/types';
 import { toDateOnly } from '@/lib/dates';
 
 import type { Db, SqlValue } from './db';
@@ -19,6 +19,7 @@ export type GardenTask = {
   createdAt: string;
   spaceId: Id;
   spaceName: string;
+  spaceKind: SpaceKind;
   zoneId: Id | null;
   zoneName: string | null;
   /** Null pour une tâche sur une zone ou sur tout l'espace. */
@@ -47,13 +48,14 @@ type TaskRow = TargetNames & {
   interval_days: number | null;
   created_at: string;
   space_id: Id;
+  space_kind: SpaceKind;
   zone_id: Id | null;
   item_id: Id | null;
 };
 
 export const selectTasks = `
   SELECT t.id, t.kind, t.title, t.recurrence, t.start_date, t.interval_days, t.created_at,
-    t.space_id, s.name AS space_name, t.zone_id, z.name AS zone_name,
+    t.space_id, s.name AS space_name, s.kind AS space_kind, t.zone_id, z.name AS zone_name,
     t.item_id, i.name AS item_name, i.item_type
   FROM garden_tasks t
   JOIN spaces s ON s.id = t.space_id
@@ -129,6 +131,7 @@ async function withDueStates(db: Db, rows: readonly TaskRow[], today: DateOnly):
       createdAt: row.created_at,
       spaceId: row.space_id,
       spaceName: row.space_name,
+      spaceKind: row.space_kind,
       zoneId: row.zone_id,
       zoneName: row.zone_name,
       itemId: row.item_id,

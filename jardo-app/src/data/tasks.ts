@@ -49,8 +49,13 @@ export type TaskCompletion = {
   entry: JournalEntry;
 };
 
-/** Jusqu'où regarder les tâches dues : aujourd'hui et les retards, ou les sept prochains jours en plus. */
-export type DueHorizon = 'Today' | 'Week';
+/**
+ * Jusqu'où regarder les tâches dues, retards compris : aujourd'hui, les sept jours d'aujourd'hui à
+ * dans six jours, ou les trente prochains jours.
+ */
+export type DueHorizon = 'Today' | 'Week' | 'Month';
+
+const horizonDays: Record<DueHorizon, number> = { Today: 0, Week: 6, Month: 30 };
 
 export const validate = (input: TaskInput) =>
   new Validation()
@@ -155,7 +160,7 @@ export function createTaskService(db: Db, clock: Clock) {
      */
     async getDue(horizon: DueHorizon): Promise<GardenTask[]> {
       const now = today();
-      const limit = horizon === 'Today' ? now : addDays(now, 6);
+      const limit = addDays(now, horizonDays[horizon]);
 
       const tasks = await readTasks(db, activeTasks, [], now);
       return orderByDueDate(tasks.filter((task) => task.nextDueDate !== null && task.nextDueDate <= limit));
