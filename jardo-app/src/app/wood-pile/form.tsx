@@ -1,11 +1,10 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 
 import { useSaveWoodPile, useWoodPile } from '@/api/queries';
 import type { Id, WoodPile } from '@/api/types';
 import { ZoneSelect } from '@/components/zone-select';
-import { fieldError, Button, DateField, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
+import { fieldError, DateField, Field, FormPending, FormScreen } from '@/components/ui';
 import { today } from '@/lib/dates';
 import { decimalText, parseDecimal } from '@/lib/garden';
 import { goBack } from '@/lib/navigation';
@@ -24,8 +23,9 @@ export default function WoodPileFormScreen() {
 
 function EditWoodPile({ id }: { id: Id }) {
   const pile = useWoodPile(id);
-  if (pile.isPending) return <Loading />;
-  if (pile.error) return <ErrorView error={pile.error} onRetry={pile.refetch} />;
+  if (pile.isPending || pile.error) {
+    return <FormPending title="Modifier le tas" error={pile.error} onRetry={pile.refetch} />;
+  }
   return <WoodPileForm pile={pile.data} spaceId={pile.data.spaceId} defaultZoneId={pile.data.zoneId} />;
 }
 
@@ -65,9 +65,13 @@ function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; space
   };
 
   return (
-    <ScrollView style={screenStyles.screen} contentContainerStyle={screenStyles.form}>
-      <Stack.Screen options={{ title: pile ? 'Modifier le tas' : 'Nouveau tas de bois' }} />
-
+    <FormScreen
+      title={pile ? 'Modifier le tas' : 'Nouveau tas de bois'}
+      submitLabel={pile ? 'Enregistrer les modifications' : 'Créer le tas'}
+      onSubmit={submit}
+      loading={save.isPending}
+      disabled={!canSubmit}
+      error={save.error}>
       <Field
         label="Nom"
         value={name}
@@ -110,9 +114,6 @@ function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; space
         error={fieldError(save.error, 'dryingMonths')}
       />
       <ZoneSelect spaceId={spaceId} value={zoneId} onChange={setZoneId} error={fieldError(save.error, 'zoneId')} />
-
-      <FormError error={save.error} />
-      <Button title="Enregistrer" onPress={submit} loading={save.isPending} disabled={!canSubmit} />
-    </ScrollView>
+    </FormScreen>
   );
 }

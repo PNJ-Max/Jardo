@@ -1,10 +1,9 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 
 import { useSaveZone, useZone } from '@/api/queries';
 import type { Id, Zone } from '@/api/types';
-import { fieldError, Button, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
+import { fieldError, Field, FormPending, FormScreen } from '@/components/ui';
 import { goBack } from '@/lib/navigation';
 
 /**
@@ -19,8 +18,9 @@ export default function ZoneFormScreen() {
 
 function EditZone({ id }: { id: Id }) {
   const zone = useZone(id);
-  if (zone.isPending) return <Loading />;
-  if (zone.error) return <ErrorView error={zone.error} onRetry={zone.refetch} />;
+  if (zone.isPending || zone.error) {
+    return <FormPending title="Modifier la zone" error={zone.error} onRetry={zone.refetch} />;
+  }
   return <ZoneForm zone={zone.data} spaceId={zone.data.spaceId} />;
 }
 
@@ -36,9 +36,13 @@ function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: Id }) {
     );
 
   return (
-    <ScrollView style={screenStyles.screen} contentContainerStyle={screenStyles.form}>
-      <Stack.Screen options={{ title: zone ? 'Modifier la zone' : 'Nouvelle zone' }} />
-
+    <FormScreen
+      title={zone ? 'Modifier la zone' : 'Nouvelle zone'}
+      submitLabel={zone ? 'Enregistrer les modifications' : 'Créer la zone'}
+      onSubmit={submit}
+      loading={save.isPending}
+      disabled={!name.trim()}
+      error={save.error}>
       <Field
         label="Nom"
         value={name}
@@ -57,9 +61,6 @@ function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: Id }) {
         multiline
         error={fieldError(save.error, 'description')}
       />
-
-      <FormError error={save.error} />
-      <Button title="Enregistrer" onPress={submit} loading={save.isPending} disabled={!name.trim()} />
-    </ScrollView>
+    </FormScreen>
   );
 }

@@ -1,21 +1,33 @@
-import type { ReactNode } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { Platform, Pressable, ScrollView, Text, TextInput, View, type TextInputProps, type TextStyle } from 'react-native';
 
 import { ProblemError } from '@/data/problem';
 import { createStyles, useTheme } from '@/theme';
 
+// Le navigateur dessine sinon son propre anneau de focus par-dessus celui du thème.
+const noBrowserRing = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null;
+
 type FieldProps = TextInputProps & { label: string; error?: string; hint?: string };
 
-export function Field({ label, error, hint, style, ...input }: FieldProps) {
+export function Field({ label, error, hint, style, onFocus, onBlur, ...input }: FieldProps) {
   const { colors } = useTheme();
   const styles = useFieldStyles();
+  const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
         placeholderTextColor={colors.textMuted}
-        style={[styles.input, error ? styles.inputError : null, style]}
+        style={[styles.input, noBrowserRing, input.multiline && styles.inputMultiline, focused && styles.inputFocused, error ? styles.inputError : null, style]}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         {...input}
       />
       {error ? <Text style={styles.error}>{error}</Text> : hint ? <Text style={styles.hint}>{hint}</Text> : null}
@@ -102,15 +114,18 @@ export const useFieldStyles = createStyles(({ colors, fonts, typography, spacing
   label: { ...typography.body, fontFamily: fonts.bodySemiBold, color: colors.text },
   input: {
     minHeight: 48,
-    borderWidth: 1,
-    borderColor: colors.border,
+    // L'anneau de focus ou d'erreur prend la place de cette bordure transparente : rien ne bouge.
+    borderWidth: 2,
+    borderColor: 'transparent',
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.card,
+    backgroundColor: colors.surfaceSunken,
     fontFamily: fonts.body,
     fontSize: 16,
     color: colors.text,
   },
+  inputMultiline: { minHeight: 96, paddingTop: spacing.sm + 4, textAlignVertical: 'top' },
+  inputFocused: { borderColor: colors.primary },
   inputError: { borderColor: colors.danger },
   error: { ...typography.caption, color: colors.danger },
   hint: { ...typography.caption, color: colors.textMuted },
@@ -120,8 +135,8 @@ export const useFieldStyles = createStyles(({ colors, fonts, typography, spacing
     paddingVertical: spacing.sm,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+    borderColor: 'transparent',
+    backgroundColor: colors.surfaceSunken,
   },
   chipWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 10, paddingVertical: 6 },
   chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },

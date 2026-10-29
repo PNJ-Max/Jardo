@@ -19,7 +19,7 @@ async function fill(logLength: string) {
   const volume = screen.getAllByDisplayValue('').find((input) => !input.props.placeholder)!;
   await fireEvent.changeText(volume, '4,5');
   await fireEvent.changeText(screen.getByPlaceholderText('Optionnel'), logLength);
-  await fireEvent.press(screen.getByText('Enregistrer'));
+  await fireEvent.press(screen.getByText('Créer le tas'));
 }
 
 describe('formulaire de tas de bois', () => {

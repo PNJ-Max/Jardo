@@ -132,6 +132,9 @@ mais sa zone de toucher dépasse 48 dp.
   partir d'une date, une seule fois).
 - **« Fait » précisé :** jour (pas de date future) et note.
 - Les erreurs de validation renvoyées par l'API (ProblemDetails) s'affichent sous le champ concerné.
+- **Présentation commune** : titre en `display` et bouton fermer en tête, champs remplis, bouton principal
+  ancré en bas qui dit ce qu'il fait ; une règle refusée sans champ s'affiche au-dessus de ce bouton.
+  Le type d'un espace se choisit sur la vignette de chacun des cinq types.
 
 ## 8. Réglages
 

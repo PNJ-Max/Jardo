@@ -1,6 +1,5 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 
 import { useDeleteTask, useSaveTask, useSpace, useTask } from '@/api/queries';
 import type { GardenTask, Id, ItemKind, JournalEntryKind, Space, TaskRecurrence } from '@/api/types';
@@ -10,11 +9,9 @@ import {
   Button,
   ChipSelect,
   DateField,
-  ErrorView,
   Field,
-  FormError,
-  Loading,
-  screenStyles,
+  FormPending,
+  FormScreen,
 } from '@/components/ui';
 import { confirm, notify } from '@/lib/confirm';
 import { today } from '@/lib/dates';
@@ -60,16 +57,20 @@ export default function TaskFormScreen() {
 
 function EditTask({ id }: { id: Id }) {
   const task = useTask(id);
-  if (task.isPending) return <Loading />;
-  if (task.error) return <ErrorView error={task.error} onRetry={task.refetch} />;
+  if (task.isPending || task.error) {
+    return <FormPending title="Modifier la tâche" error={task.error} onRetry={task.refetch} />;
+  }
   return <TaskFormInSpace task={task.data} target={{ ...task.data, label: targetLabel(task.data) }} />;
 }
 
 /** Les types de tâche proposés dépendent de la cible : son élément, sinon son espace. */
 function TaskFormInSpace({ task, target }: { task?: GardenTask; target: Target }) {
   const space = useSpace(target.spaceId);
-  if (space.isPending) return <Loading />;
-  if (space.error) return <ErrorView error={space.error} onRetry={space.refetch} />;
+  if (space.isPending || space.error) {
+    return (
+      <FormPending title={task ? 'Modifier la tâche' : 'Nouvelle tâche'} error={space.error} onRetry={space.refetch} />
+    );
+  }
   return <TaskForm task={task} target={target} space={space.data} />;
 }
 
@@ -115,9 +116,13 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
   };
 
   return (
-    <ScrollView style={screenStyles.screen} contentContainerStyle={screenStyles.form}>
-      <Stack.Screen options={{ title: task ? 'Modifier la tâche' : 'Nouvelle tâche' }} />
-
+    <FormScreen
+      title={task ? 'Modifier la tâche' : 'Nouvelle tâche'}
+      submitLabel={task ? 'Enregistrer les modifications' : 'Créer la tâche'}
+      onSubmit={submit}
+      loading={save.isPending}
+      disabled={!canSubmit}
+      error={save.error}>
       {target.label ? <FormTarget label={target.label} /> : null}
       <ChipSelect
         label="À faire"
@@ -157,9 +162,7 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
         error={fieldError(save.error, 'startDate')}
       />
 
-      <FormError error={save.error} />
-      <Button title="Enregistrer" onPress={submit} loading={save.isPending} disabled={!canSubmit} />
       {task && <Button title="Supprimer" icon="trash-outline" variant="danger" onPress={deleteTask} loading={remove.isPending} />}
-    </ScrollView>
+    </FormScreen>
   );
 }

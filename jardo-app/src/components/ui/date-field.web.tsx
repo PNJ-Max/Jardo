@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { today } from '@/lib/dates';
@@ -14,6 +15,7 @@ export function DateField(props: DateFieldProps) {
   const { label, value, noFuture, optional, error, hint } = props;
   const { colors, fonts, radius, scheme, spacing } = useTheme();
   const fieldStyles = useFieldStyles();
+  const [focused, setFocused] = useState(false);
 
   return (
     <View style={fieldStyles.field}>
@@ -24,6 +26,8 @@ export function DateField(props: DateFieldProps) {
         value={value ?? ''}
         max={noFuture ? today() : undefined}
         required={!optional}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         onChange={(event) => {
           const next = event.target.value;
           if (next) props.onChange(next);
@@ -34,8 +38,9 @@ export function DateField(props: DateFieldProps) {
           boxSizing: 'border-box',
           paddingInline: spacing.md,
           borderRadius: radius.md,
-          border: `1px solid ${error ? colors.danger : colors.border}`,
-          backgroundColor: colors.card,
+          border: `2px solid ${error ? colors.danger : focused ? colors.primary : 'transparent'}`,
+          outline: 'none',
+          backgroundColor: colors.surfaceSunken,
           color: colors.text,
           fontFamily: fonts.body,
           fontSize: 16,

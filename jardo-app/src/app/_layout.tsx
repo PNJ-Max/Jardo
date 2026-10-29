@@ -75,13 +75,13 @@ export default function RootLayout() {
                 <Stack.Screen name="plant/[id]" options={{ title: 'Plante' }} />
                 <Stack.Screen name="wood-pile/[id]" options={{ title: 'Tas de bois' }} />
                 {/* Les formulaires s'ouvrent en modale : on y entre pour une action, puis on revient. */}
-                <Stack.Screen name="space/form" options={{ presentation: 'modal', title: 'Espace' }} />
-                <Stack.Screen name="zone/form" options={{ presentation: 'modal', title: 'Zone' }} />
-                <Stack.Screen name="plant/form" options={{ presentation: 'modal', title: 'Plante' }} />
-                <Stack.Screen name="wood-pile/form" options={{ presentation: 'modal', title: 'Tas de bois' }} />
-                <Stack.Screen name="entry/form" options={{ presentation: 'modal', title: 'Intervention' }} />
-                <Stack.Screen name="task/form" options={{ presentation: 'modal', title: 'Tâche' }} />
-                <Stack.Screen name="task/done" options={{ presentation: 'modal', title: 'Fait' }} />
+                <Stack.Screen name="space/form" options={{ presentation: 'modal', title: 'Espace', headerShown: false }} />
+                <Stack.Screen name="zone/form" options={{ presentation: 'modal', title: 'Zone', headerShown: false }} />
+                <Stack.Screen name="plant/form" options={{ presentation: 'modal', title: 'Plante', headerShown: false }} />
+                <Stack.Screen name="wood-pile/form" options={{ presentation: 'modal', title: 'Tas de bois', headerShown: false }} />
+                <Stack.Screen name="entry/form" options={{ presentation: 'modal', title: 'Intervention', headerShown: false }} />
+                <Stack.Screen name="task/form" options={{ presentation: 'modal', title: 'Tâche', headerShown: false }} />
+                <Stack.Screen name="task/done" options={{ presentation: 'modal', title: 'Fait', headerShown: false }} />
                 <Stack.Screen name="settings" options={{ title: 'Réglages' }} />
               </Stack>
             </UndoProvider>

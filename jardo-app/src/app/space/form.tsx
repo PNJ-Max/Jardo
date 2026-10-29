@@ -1,11 +1,10 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 
 import { useSaveSpace, useSpace } from '@/api/queries';
 import type { Id, Space, SpaceKind } from '@/api/types';
-import { fieldError, Button, ChipSelect, ErrorView, Field, FormError, Loading, screenStyles } from '@/components/ui';
-import { spaceKindOptions } from '@/lib/garden';
+import { SpaceKindSelect } from '@/components/space-kind-select';
+import { fieldError, Field, FormPending, FormScreen } from '@/components/ui';
 import { goBack } from '@/lib/navigation';
 
 /**
@@ -20,8 +19,9 @@ export default function SpaceFormScreen() {
 
 function EditSpace({ id }: { id: Id }) {
   const space = useSpace(id);
-  if (space.isPending) return <Loading />;
-  if (space.error) return <ErrorView error={space.error} onRetry={space.refetch} />;
+  if (space.isPending || space.error) {
+    return <FormPending title="Modifier l'espace" error={space.error} onRetry={space.refetch} />;
+  }
   return <SpaceForm space={space.data} />;
 }
 
@@ -40,9 +40,13 @@ function SpaceForm({ space }: { space?: Space }) {
   };
 
   return (
-    <ScrollView style={screenStyles.screen} contentContainerStyle={screenStyles.form}>
-      <Stack.Screen options={{ title: space ? "Modifier l'espace" : 'Nouvel espace' }} />
-
+    <FormScreen
+      title={space ? "Modifier l'espace" : 'Nouvel espace'}
+      submitLabel={space ? 'Enregistrer les modifications' : "Créer l'espace"}
+      onSubmit={submit}
+      loading={save.isPending}
+      disabled={!name.trim() || !kind}
+      error={save.error}>
       <Field
         label="Nom"
         value={name}
@@ -52,13 +56,7 @@ function SpaceForm({ space }: { space?: Space }) {
         autoFocus={!space}
         error={fieldError(save.error, 'name')}
       />
-      <ChipSelect
-        label="Type"
-        options={spaceKindOptions}
-        value={kind}
-        onChange={setKind}
-        error={fieldError(save.error, 'kind')}
-      />
+      <SpaceKindSelect value={kind} onChange={setKind} error={fieldError(save.error, 'kind')} />
       <Field
         label="Description"
         value={description}
@@ -68,9 +66,6 @@ function SpaceForm({ space }: { space?: Space }) {
         multiline
         error={fieldError(save.error, 'description')}
       />
-
-      <FormError error={save.error} />
-      <Button title="Enregistrer" onPress={submit} loading={save.isPending} disabled={!name.trim() || !kind} />
-    </ScrollView>
+    </FormScreen>
   );
 }
