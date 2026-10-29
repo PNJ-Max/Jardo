@@ -1,8 +1,10 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 
 import { useServices } from '@/data/services';
+import type { DateOnly } from '@/domain/dates';
 import { pickBackupFile, saveBackupFile } from '@/lib/backup-file';
 import { toDateOnly } from '@/lib/dates';
+import { isDueWatering } from '@/lib/today';
 
 import type {
   CompleteTaskInput,
@@ -368,6 +370,17 @@ export function useDeleteTask() {
 }
 
 /**
+ * Retire des listes de tâches dues, sans attendre l'écriture, les tâches qu'elle va noter ; rend
+ * les listes d'avant, à restaurer si l'écriture est refusée.
+ */
+async function leaveDueLists(queryClient: QueryClient, leaves: (task: GardenTask) => boolean) {
+  await queryClient.cancelQueries({ queryKey: keys.dueTasks });
+  const previous = queryClient.getQueriesData<GardenTask[]>({ queryKey: keys.dueTasks });
+  queryClient.setQueriesData<GardenTask[]>({ queryKey: keys.dueTasks }, (old) => old?.filter((task) => !leaves(task)));
+  return { previous };
+}
+
+/**
  * « Fait » note l'intervention au journal. La tâche quitte aussitôt les listes de tâches dues,
  * sans attendre l'écriture ; si elle est refusée, les listes d'avant sont restaurées. Le
  * rechargement qui suit la replace là où sa nouvelle échéance la met (cette semaine, par
@@ -381,14 +394,28 @@ export function useCompleteTask() {
   return useMutation({
     mutationFn: ({ id, input }: { id: Id; input?: CompleteTaskInput }) => tasks.complete(id, input),
 
-    onMutate: async ({ id }) => {
-      await queryClient.cancelQueries({ queryKey: keys.dueTasks });
-      const previous = queryClient.getQueriesData<GardenTask[]>({ queryKey: keys.dueTasks });
-      queryClient.setQueriesData<GardenTask[]>({ queryKey: keys.dueTasks }, (old) =>
-        old?.filter((task) => task.id !== id),
-      );
-      return { previous };
+    onMutate: ({ id }) => leaveDueLists(queryClient, (task) => task.id === id),
+    onError: (_error, _variables, context) => {
+      context?.previous.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
     },
+    onSettled: invalidate,
+  });
+}
+
+/**
+ * « Tout arroser » : un seul arrosage noté sur l'espace, qui vaut pour ses zones et ses éléments.
+ * Comme avec « Fait », ses arrosages dus, retards compris, quittent aussitôt les listes. Supprimer
+ * l'entrée renvoyée annule.
+ */
+export function useWaterSpace() {
+  const { journal } = useServices();
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidate(afterJournalWrite);
+
+  return useMutation({
+    mutationFn: ({ spaceId, date }: { spaceId: Id; date: DateOnly }) => journal.create({ date, kind: 'Watering', spaceId }),
+
+    onMutate: ({ spaceId }) => leaveDueLists(queryClient, (task) => isDueWatering(task, spaceId)),
     onError: (_error, _variables, context) => {
       context?.previous.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
     },
