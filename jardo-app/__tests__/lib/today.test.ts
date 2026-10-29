@@ -1,12 +1,15 @@
-import type { GardenTask } from '@/api/types';
+import type { GardenTask, JournalEntry } from '@/api/types';
 import { addDays, daysBetween } from '@/domain/dates';
 import {
   bySpace,
   comingThisMonth,
+  dueWaterings,
+  lastHarvest,
   lateness,
   monthSummary,
   overdueTasks,
   rhythm,
+  sinceDone,
   skyPhrase,
   tasksOn,
   weekDays,
@@ -144,5 +147,71 @@ describe('rhythm et lateness', () => {
     expect(rhythm({ recurrence: 'Once', intervalDays: null })).toBe('une seule fois');
     expect(lateness(1)).toBe('en retard de 1 jour');
     expect(lateness(4)).toBe('en retard de 4 jours');
+  });
+});
+
+describe('sinceDone', () => {
+  it('dit la dernière fois en jours', () => {
+    expect(sinceDone(null, today)).toBe('Pas encore faite');
+    expect(sinceDone(today, today)).toBe("Aujourd'hui");
+    expect(sinceDone(addDays(today, -1), today)).toBe('Hier');
+    expect(sinceDone(addDays(today, -12), today)).toBe('Il y a 12 jours');
+  });
+});
+
+describe('lastHarvest', () => {
+  const harvest = (date: string, extra: Partial<JournalEntry>): JournalEntry => ({
+    id: `e-${date}`,
+    date,
+    kind: 'Harvest',
+    note: null,
+    quantity: 1,
+    quantityUnit: 'Kilograms',
+    heightCm: null,
+    problem: null,
+    treatment: null,
+    createdAt: `${date}T12:00:00.000Z`,
+    spaceId: 'potager',
+    spaceName: 'Potager',
+    zoneId: null,
+    zoneName: null,
+    itemId: null,
+    itemName: null,
+    itemKind: null,
+    ...extra,
+  });
+
+  it("prend la plus récente chiffrée qui vaut pour la cible : l'élément, sa zone ou son espace", () => {
+    const tomatoes = task(0, { kind: 'Harvest', zoneId: 'carre', itemId: 'tomates' });
+    const entries = [
+      harvest('2026-10-27', { itemId: 'courgettes', zoneId: 'carre', quantity: 9 }),
+      harvest('2026-10-26', { itemId: 'tomates', zoneId: 'carre', quantity: null }),
+      harvest('2026-10-25', { zoneId: 'carre', quantity: 2 }),
+      harvest('2026-10-20', { itemId: 'tomates', zoneId: 'carre', quantity: 3 }),
+    ];
+
+    expect(lastHarvest(entries, tomatoes)?.date).toBe('2026-10-25');
+  });
+
+  it("ne compte pas la récolte d'un élément pour sa zone", () => {
+    const carre = task(0, { kind: 'Harvest', zoneId: 'carre' });
+    const entries = [harvest('2026-10-27', { itemId: 'tomates', zoneId: 'carre' }), harvest('2026-10-20', {})];
+
+    expect(lastHarvest(entries, carre)?.date).toBe('2026-10-20');
+    expect(lastHarvest(entries.slice(0, 1), carre)).toBeUndefined();
+  });
+});
+
+describe('dueWaterings', () => {
+  it("garde les arrosages dus de l'espace, retards compris", () => {
+    const tasks = [
+      task(-2, { kind: 'Watering', itemId: 'tomates' }),
+      task(0, { kind: 'Watering', zoneId: 'carre' }),
+      task(2, { kind: 'Watering' }),
+      task(0),
+      task(0, { kind: 'Watering', ...verger }),
+    ];
+
+    expect(dueWaterings(tasks, 'potager')).toEqual([tasks[0], tasks[1]]);
   });
 });

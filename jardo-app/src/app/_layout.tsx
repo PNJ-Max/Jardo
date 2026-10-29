@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { UndoProvider } from '@/components/undo';
 import { databaseName, initDatabase } from '@/data/database';
@@ -56,38 +57,40 @@ export default function RootLayout() {
   if (!ready) return null;
 
   return (
-    <SQLiteProvider databaseName={databaseName} onInit={initDatabase}>
-      <HideSplashScreen />
-      <LocalServices>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider value={theme.navigation}>
-            <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-            <UndoProvider>
-              <Stack
-                screenOptions={{
-                  headerTintColor: theme.colors.primary,
-                  headerTitleStyle: { color: theme.colors.text, fontFamily: theme.fonts.heading },
-                }}>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                {/* La vignette de l'espace tient lieu d'en-tête, avec son propre bouton retour. */}
-                <Stack.Screen name="space/[id]" options={{ title: 'Espace', headerShown: false }} />
-                <Stack.Screen name="zone/[id]" options={{ title: 'Zone' }} />
-                <Stack.Screen name="plant/[id]" options={{ title: 'Plante' }} />
-                <Stack.Screen name="wood-pile/[id]" options={{ title: 'Tas de bois' }} />
-                {/* Les formulaires s'ouvrent en modale : on y entre pour une action, puis on revient. */}
-                <Stack.Screen name="space/form" options={{ presentation: 'modal', title: 'Espace', headerShown: false }} />
-                <Stack.Screen name="zone/form" options={{ presentation: 'modal', title: 'Zone', headerShown: false }} />
-                <Stack.Screen name="plant/form" options={{ presentation: 'modal', title: 'Plante', headerShown: false }} />
-                <Stack.Screen name="wood-pile/form" options={{ presentation: 'modal', title: 'Tas de bois', headerShown: false }} />
-                <Stack.Screen name="entry/form" options={{ presentation: 'modal', title: 'Intervention', headerShown: false }} />
-                <Stack.Screen name="task/form" options={{ presentation: 'modal', title: 'Tâche', headerShown: false }} />
-                <Stack.Screen name="task/done" options={{ presentation: 'modal', title: 'Fait', headerShown: false }} />
-                <Stack.Screen name="settings" options={{ title: 'Réglages' }} />
-              </Stack>
-            </UndoProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </LocalServices>
-    </SQLiteProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SQLiteProvider databaseName={databaseName} onInit={initDatabase}>
+        <HideSplashScreen />
+        <LocalServices>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider value={theme.navigation}>
+              <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
+              <UndoProvider>
+                <Stack
+                  screenOptions={{
+                    headerTintColor: theme.colors.primary,
+                    headerTitleStyle: { color: theme.colors.text, fontFamily: theme.fonts.heading },
+                  }}>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  {/* La vignette de l'espace tient lieu d'en-tête, avec son propre bouton retour. */}
+                  <Stack.Screen name="space/[id]" options={{ title: 'Espace', headerShown: false }} />
+                  <Stack.Screen name="zone/[id]" options={{ title: 'Zone' }} />
+                  <Stack.Screen name="plant/[id]" options={{ title: 'Plante' }} />
+                  <Stack.Screen name="wood-pile/[id]" options={{ title: 'Tas de bois' }} />
+                  {/* Les formulaires s'ouvrent en modale : on y entre pour une action, puis on revient. */}
+                  <Stack.Screen name="space/form" options={{ presentation: 'modal', title: 'Espace', headerShown: false }} />
+                  <Stack.Screen name="zone/form" options={{ presentation: 'modal', title: 'Zone', headerShown: false }} />
+                  <Stack.Screen name="plant/form" options={{ presentation: 'modal', title: 'Plante', headerShown: false }} />
+                  <Stack.Screen name="wood-pile/form" options={{ presentation: 'modal', title: 'Tas de bois', headerShown: false }} />
+                  <Stack.Screen name="entry/form" options={{ presentation: 'modal', title: 'Intervention', headerShown: false }} />
+                  <Stack.Screen name="task/form" options={{ presentation: 'modal', title: 'Tâche', headerShown: false }} />
+                  <Stack.Screen name="task/done" options={{ presentation: 'modal', title: 'Fait', headerShown: false }} />
+                  <Stack.Screen name="settings" options={{ title: 'Réglages' }} />
+                </Stack>
+              </UndoProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </LocalServices>
+      </SQLiteProvider>
+    </GestureHandlerRootView>
   );
 }
