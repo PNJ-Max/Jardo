@@ -10,7 +10,7 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (28/10/2026)
+## Où on en est (29/10/2026)
 
 **Direction visuelle ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), en cours de mise
 en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la carte, tons
@@ -41,7 +41,19 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   le web) ; sur Aujourd'hui la ligne se replie et la tâche n'est notée qu'ensuite (1,2 s). Le
   message « Noté au journal : arroser, Carottes », inversé, monte du bas avec « Ajouter une note »
   (ouvre l'entrée notée) et « Annuler », qui ramène la ligne en fondu.
-- [ ] 4. Aujourd'hui, l'organisation.
+- [x] 4. Aujourd'hui, l'organisation (29/10/2026) : l'écran lit les tâches dues sur trente jours
+  (nouvel horizon `Month` de `getDue`, la tâche porte aussi le type de son espace) et les range avec
+  `lib/today.ts`. Ciel du jour à la place de la barre de navigation : la date en `display`, la
+  phrase (« 11 choses à faire au jardin, dont 8 en retard » ; « Tout est fait pour aujourd'hui.
+  Demain : … »), l'horizon du jardin dessiné avec `decor.ts` (haie, fruitier, serre, maison,
+  conifères ; soleil le jour, fenêtre allumée et lucioles qui clignotent la nuit). La semaine,
+  d'aujourd'hui à dans six jours, un point sous chaque jour prévu, rouge pour le retard ; toucher
+  un jour montre ce qui y est prévu, faisable en avance. « En retard » à part, bordé de `danger`,
+  les plus en retard d'abord (« Tomates · Potager, en retard de 2 jours »). Le jour choisi par
+  espace, coiffé de sa vignette, le plus chargé d'abord, l'arrosage en tête ; la ligne dit la cible
+  et le rythme. « Dans le mois » : les tâches annuelles et ponctuelles à venir, sur une ligne
+  repliée qui s'ouvre sur leur liste. Rien à faire : on le dit, puis ce qui vient demain.
+  `SectionTitle` prend le compteur et le rouge. La direction ne prévoit pas de place pour la météo.
 - [ ] 5. Aujourd'hui, les gestes.
 - [ ] 6. Reporter.
 - [x] 7. Vignettes d'espace (28/10/2026) : les cinq scènes (potager, verger, petits fruits, serre,
