@@ -78,6 +78,20 @@ describe('fiche espace', () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: '/zone/form', params: { spaceId: verger.id } });
   });
 
+  it("garde l'accès aux éléments archivés d'un espace sans zone", async () => {
+    const services = await createTestServices();
+    const verger = await services.spaces.create({ name: 'Verger', kind: 'Orchard' });
+    const tomates = await services.plants.create({ name: 'Tomates', quantity: 6, quantityUnit: 'Plants', spaceId: verger.id });
+    await services.plants.setArchived(tomates.id, true);
+    jest.mocked(useLocalSearchParams).mockReturnValue({ id: verger.id });
+    await renderScreen(<SpaceScreen />, services);
+
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Contenu' }));
+
+    expect(await screen.findByText('Voir les archivés (1)')).toBeOnTheScreen();
+    expect(screen.queryByText("Rien n'y pousse encore")).not.toBeOnTheScreen();
+  });
+
   it('ouvre une zone depuis sa tuile, et en ajoute une depuis la tuile vide', async () => {
     const { services, carre } = await setup();
     await renderScreen(<SpaceScreen />, services);

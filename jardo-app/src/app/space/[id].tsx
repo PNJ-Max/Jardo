@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useDeleteSpace, useSetSpaceArchived, useSpace, useZones } from '@/api/queries';
+import { useDeleteSpace, usePlants, useSetSpaceArchived, useSpace, useWoodPiles, useZones } from '@/api/queries';
 import type { Id, Space, SpaceKind, Zone } from '@/api/types';
 import { ArchivedBadge } from '@/components/items';
 import { ItemsSection } from '@/components/items-section';
@@ -68,15 +68,7 @@ function SpaceDetail({ space }: { space: Space }) {
         {
           key: 'contents',
           label: 'Contenu',
-          render: () =>
-            space.zoneCount === 0 && space.itemCount === 0 ? (
-              <EmptySpace space={space} />
-            ) : (
-              <>
-                <ZonesSection spaceId={space.id} zones={zones} />
-                <ItemsSection scope={{ spaceId: space.id, spaceKind: space.kind }} zones={zones.data} />
-              </>
-            ),
+          render: () => <SpaceContents space={space} zones={zones} />,
         },
         { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
         {
@@ -135,6 +127,26 @@ function spaceSummary(space: Space) {
   ]
     .filter(Boolean)
     .join(' · ');
+}
+
+/**
+ * Zones et éléments, ou l'invitation à remplir l'espace s'il n'a rien, archivés compris :
+ * `itemCount` ne compte pas les archivés. Les deux listes sont celles d'`ItemsSection`, servies par
+ * le cache ; celle qui ne correspond pas au type d'espace revient vide.
+ */
+function SpaceContents({ space, zones }: { space: Space; zones: ReturnType<typeof useZones> }) {
+  const filter = { spaceId: space.id, includeArchived: true };
+  const plants = usePlants(filter);
+  const woodPiles = useWoodPiles(filter);
+  const items = space.kind === 'Firewood' ? woodPiles : plants;
+
+  if (space.zoneCount === 0 && items.data?.length === 0) return <EmptySpace space={space} />;
+  return (
+    <>
+      <ZonesSection spaceId={space.id} zones={zones} />
+      <ItemsSection scope={{ spaceId: space.id, spaceKind: space.kind }} zones={zones.data} />
+    </>
+  );
 }
 
 /** Ni zone ni élément : on propose d'y mettre quelque chose, ou de le découper d'abord. */

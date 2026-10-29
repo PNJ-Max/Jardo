@@ -317,7 +317,7 @@ export function drawBench({ p, pal }: Kit, x0: number, y0: number, length = 1.5)
   });
 }
 
-export const GREENHOUSE_SIZE ={ w: 2.75, d: 3.6, h: 2.05, ridge: 2.95 };
+export const GREENHOUSE_SIZE = { w: 2.75, d: 3.6, h: 2.05, ridge: 2.95 };
 
 export function drawGreenhouse({ p, pal, isNight }: Kit, x0: number, y0: number) {
   const { w, d, h, ridge: hr } = GREENHOUSE_SIZE;
