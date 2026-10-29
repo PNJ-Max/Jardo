@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
@@ -14,12 +14,12 @@ import {
   WeekStrip,
   type RenderTask,
 } from '@/components/today';
-import { Card, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
+import { Button, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
 import { addDays, type DateOnly } from '@/domain/dates';
 import { today as currentDay } from '@/lib/dates';
 import { usePullToRefresh } from '@/lib/refresh';
 import { bySpace, comingThisMonth, overdueTasks, skyPhrase, tasksOn, weekDays } from '@/lib/today';
-import { createStyles, useTheme } from '@/theme';
+import { createStyles } from '@/theme';
 
 /**
  * Tout ce qui est à faire au jardin, toutes catégories, sur les trente prochains jours : le ciel du
@@ -110,14 +110,12 @@ function DayTasks({ tasks, date, today, row }: DayProps & { date: DateOnly }) {
 }
 
 function NothingToday() {
-  const { colors } = useTheme();
-  const styles = useStyles();
-
   return (
-    <Card style={styles.nothingToday}>
-      <Ionicons name="checkmark-circle-outline" size={28} color={colors.success} />
-      <Text style={styles.nothingTodayText}>Rien à faire aujourd&apos;hui</Text>
-    </Card>
+    <Empty
+      title="Rien à faire aujourd'hui"
+      hint="Le jardin se repose. Les rappels se programment depuis la fiche d'un espace ou d'une plante.">
+      <Button title="Ouvrir le jardin" variant="secondary" onPress={() => router.push('/')} />
+    </Empty>
   );
 }
 
@@ -126,6 +124,4 @@ const useStyles = createStyles(({ colors, typography, spacing }) => ({
   body: { paddingHorizontal: spacing.md, gap: spacing.md },
   section: { gap: spacing.sm },
   hint: { ...typography.body, color: colors.textMuted },
-  nothingToday: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  nothingTodayText: { ...typography.subtitle, color: colors.text },
 }));

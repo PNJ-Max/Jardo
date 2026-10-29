@@ -6,7 +6,7 @@ import { useJournal, useSpaces } from '@/api/queries';
 import type { JournalEntry, JournalEntryKind } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
 import { KindIcon } from '@/components/pictograms';
-import { ChipSelect, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
+import { Button, ChipSelect, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
 import { formatDayHeading } from '@/lib/dates';
 import { entryKinds } from '@/lib/garden';
 import { usePullToRefresh } from '@/lib/refresh';
@@ -84,13 +84,22 @@ export default function JournalScreen() {
         isPending ? (
           <Loading />
         ) : filtered ? (
-          <Empty icon="search-outline" title="Rien de noté" hint="Aucune intervention ne correspond à ces filtres." />
+          <Empty title="Rien de noté" hint="Aucune intervention ne correspond à ces filtres.">
+            <Button
+              title="Effacer les filtres"
+              variant="secondary"
+              onPress={() => {
+                setSpaceId(allSpaces);
+                setKind(allKinds);
+              }}
+            />
+          </Empty>
         ) : (
           <Empty
-            icon="journal-outline"
             title="Le journal est vide"
-            hint="Les interventions notées au jardin, et les tâches faites, s'afficheront ici."
-          />
+            hint="Les interventions notées depuis la fiche d'un espace, et les tâches faites, s'afficheront ici.">
+            <Button title="Ouvrir le jardin" variant="secondary" onPress={() => router.push('/')} />
+          </Empty>
         )
       }
     />

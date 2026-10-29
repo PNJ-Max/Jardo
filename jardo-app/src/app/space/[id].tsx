@@ -8,7 +8,7 @@ import type { Id, Space, SpaceKind, Zone } from '@/api/types';
 import { ArchivedBadge } from '@/components/items';
 import { ItemsSection } from '@/components/items-section';
 import { DetailScreen, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
-import { ErrorView, Loading, SectionTitle } from '@/components/ui';
+import { Button, Empty, ErrorView, Loading, SectionTitle } from '@/components/ui';
 import { SpaceVignette } from '@/components/vignettes/space-vignette';
 import { AddZoneTile, ZoneTile } from '@/components/vignettes/zone-tile';
 import { confirm, notify } from '@/lib/confirm';
@@ -68,12 +68,15 @@ function SpaceDetail({ space }: { space: Space }) {
         {
           key: 'contents',
           label: 'Contenu',
-          render: () => (
-            <>
-              <ZonesSection spaceId={space.id} zones={zones} />
-              <ItemsSection scope={{ spaceId: space.id, spaceKind: space.kind }} zones={zones.data} />
-            </>
-          ),
+          render: () =>
+            space.zoneCount === 0 && space.itemCount === 0 ? (
+              <EmptySpace space={space} />
+            ) : (
+              <>
+                <ZonesSection spaceId={space.id} zones={zones} />
+                <ItemsSection scope={{ spaceId: space.id, spaceKind: space.kind }} zones={zones.data} />
+              </>
+            ),
         },
         { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
         {
@@ -132,6 +135,29 @@ function spaceSummary(space: Space) {
   ]
     .filter(Boolean)
     .join(' · ');
+}
+
+/** Ni zone ni élément : on propose d'y mettre quelque chose, ou de le découper d'abord. */
+function EmptySpace({ space }: { space: Space }) {
+  const params = { spaceId: String(space.id) };
+  const firewood = space.kind === 'Firewood';
+
+  return (
+    <Empty
+      title={firewood ? 'Pas encore de bois ici' : "Rien n'y pousse encore"}
+      hint={
+        firewood
+          ? "Ajoutez un tas de bois, ou découpez d'abord l'espace en zones (abri, bûcher…)."
+          : "Ajoutez une plante, ou découpez d'abord l'espace en zones (carrés, rangs, planches…)."
+      }>
+      <Button
+        title={firewood ? 'Ajouter un tas de bois' : 'Ajouter une plante'}
+        icon="add"
+        onPress={() => router.push({ pathname: firewood ? '/wood-pile/form' : '/plant/form', params })}
+      />
+      <Button title="Ajouter une zone" variant="secondary" onPress={() => router.push({ pathname: '/zone/form', params })} />
+    </Empty>
+  );
 }
 
 function ZonesSection({ spaceId, zones }: { spaceId: Id; zones: ReturnType<typeof useZones> }) {
