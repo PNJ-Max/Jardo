@@ -1,5 +1,5 @@
-import type { GardenTask, Id, SpaceKind } from '@/api/types';
-import { addDays, type DateOnly } from '@/domain/dates';
+import type { GardenTask, Id, JournalEntry, SpaceKind } from '@/api/types';
+import { addDays, daysBetween, type DateOnly } from '@/domain/dates';
 
 import { lowerFirst, taskPhrase, taskTitle } from './garden';
 
@@ -104,3 +104,33 @@ export function rhythm(task: Pick<GardenTask, 'recurrence' | 'intervalDays'>): s
 
 /** « en retard de 2 jours ». */
 export const lateness = (days: number) => `en retard de ${days} ${days > 1 ? 'jours' : 'jour'}`;
+
+/** « Hier », « Il y a 12 jours » : la dernière fois, dans la feuille de la tâche. */
+export function sinceDone(lastDoneOn: DateOnly | null, today: DateOnly): string {
+  if (lastDoneOn === null) return 'Pas encore faite';
+  const days = daysBetween(lastDoneOn, today);
+  if (days <= 0) return "Aujourd'hui";
+  return days === 1 ? 'Hier' : `Il y a ${days} jours`;
+}
+
+/**
+ * La dernière récolte chiffrée qui vaut pour la cible de la tâche, selon la règle du journal :
+ * celle de l'élément, de sa zone ou de son espace, jamais celle d'un élément pour sa zone.
+ * `entries` : les récoltes lues pour la cible, les plus récentes d'abord.
+ */
+export function lastHarvest(entries: readonly JournalEntry[], task: GardenTask): JournalEntry | undefined {
+  const counts = (entry: JournalEntry) =>
+    entry.spaceId === task.spaceId &&
+    (entry.itemId !== null ? entry.itemId === task.itemId : entry.zoneId === null || entry.zoneId === task.zoneId);
+  return entries.find((entry) => entry.kind === 'Harvest' && entry.quantity !== null && counts(entry));
+}
+
+/**
+ * Un arrosage dû de l'espace, retards compris : « Tout arroser » les note tous d'un seul arrosage
+ * sur l'espace, qui vaut pour ses zones et ses éléments.
+ */
+export const isDueWatering = (task: GardenTask, spaceId: Id) =>
+  task.spaceId === spaceId && task.kind === 'Watering' && task.status !== 'Ok';
+
+/** Les arrosages dus de l'espace : « Tout arroser » est proposé à partir de deux. */
+export const dueWaterings = (tasks: readonly GardenTask[], spaceId: Id) => tasks.filter((task) => isDueWatering(task, spaceId));

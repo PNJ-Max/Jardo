@@ -13,6 +13,7 @@ import {
   useTaskRow,
   WeekStrip,
   type RenderTask,
+  type Water,
 } from '@/components/today';
 import { Button, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
 import { addDays, type DateOnly } from '@/domain/dates';
@@ -28,7 +29,7 @@ import { createStyles } from '@/theme';
 export default function TodayScreen() {
   const { data, error, isPending, refetch } = useDueTasks('Month');
   const refresh = usePullToRefresh(refetch);
-  const row = useTaskRow();
+  const { row, waterAll, watering } = useTaskRow();
   const styles = useStyles();
   const today = currentDay();
   const [selected, setSelected] = useState(today);
@@ -49,7 +50,13 @@ export default function TodayScreen() {
         <WeekStrip days={weekDays(data, today)} selected={selected} onSelect={setSelected} />
         {overdue.length > 0 && <OverdueSection tasks={overdue} row={row} />}
         {selected === today ? (
-          <TodayTasks tasks={data} today={today} nothingLate={overdue.length === 0} row={row} />
+          <TodayTasks
+            tasks={data}
+            today={today}
+            nothingLate={overdue.length === 0}
+            row={row}
+            water={{ due: data, onWaterAll: waterAll, busy: watering }}
+          />
         ) : (
           <DayTasks tasks={tasksOn(data, selected)} date={selected} today={today} row={row} />
         )}
@@ -62,7 +69,7 @@ export default function TodayScreen() {
 type DayProps = { tasks: GardenTask[]; today: DateOnly; row: RenderTask };
 
 /** Aujourd'hui, par espace ; rien à faire du tout : on le dit, puis ce qui vient demain. */
-function TodayTasks({ tasks, today, nothingLate, row }: DayProps & { nothingLate: boolean }) {
+function TodayTasks({ tasks, today, nothingLate, row, water }: DayProps & { nothingLate: boolean; water: Water }) {
   const styles = useStyles();
   const due = tasksOn(tasks, today);
   const tomorrow = tasksOn(tasks, addDays(today, 1));
@@ -71,7 +78,7 @@ function TodayTasks({ tasks, today, nothingLate, row }: DayProps & { nothingLate
     return (
       <View style={styles.section}>
         <SectionTitle count={due.length}>Aujourd&apos;hui</SectionTitle>
-        <SpaceGroups groups={bySpace(due)} row={row} />
+        <SpaceGroups groups={bySpace(due)} row={row} water={water} />
       </View>
     );
   }
