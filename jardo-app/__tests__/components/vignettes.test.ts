@@ -19,6 +19,15 @@ describe("vignettes d'espace", () => {
   });
 });
 
+describe('jardin au repos', () => {
+  it('allume la lampe la nuit seulement', () => {
+    const glows = (scheme: 'light' | 'dark') => vignetteDrawing('Resting', scheme).shapes.filter((s) => s.kind === 'glow');
+
+    expect(glows('light')).toHaveLength(0);
+    expect(glows('dark').length).toBeGreaterThan(0);
+  });
+});
+
 describe("horizon du ciel d'Aujourd'hui", () => {
   it('dessine le jardin de jour, sans lucioles', () => {
     const { scene, fireflies } = horizonDrawing('light');

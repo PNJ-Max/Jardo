@@ -1,14 +1,13 @@
 import { Canvas, createPicture, Group, LinearGradient, Picture, Rect, Skia, type SkPicture } from '@shopify/react-native-skia';
 
 import { drawShapes } from '@/components/map/skia-scene-impl';
-import type { SpaceKind } from '@/domain/types';
 import type { Bounds } from '@/map/scene';
 import { useTheme } from '@/theme';
 
-import { vignetteDrawing, type VignetteScheme } from './scenes';
+import { vignetteDrawing, type VignetteKind, type VignetteScheme } from './scenes';
 
 export type SpaceVignetteProps = {
-  kind: SpaceKind;
+  kind: VignetteKind;
   width: number;
   height: number;
   /** Marge laissée autour de la scène ; `top` s'ajoute à la marge commune (bouton posé dessus, encoche). */
@@ -22,7 +21,7 @@ export type SpaceVignetteProps = {
 // fait que reposer l'image.
 const cache = new Map<string, { picture: SkPicture; bounds: Bounds }>();
 
-function vignette(kind: SpaceKind, scheme: VignetteScheme) {
+function vignette(kind: VignetteKind, scheme: VignetteScheme) {
   const key = `${kind}/${scheme}`;
   let entry = cache.get(key);
   if (!entry) {

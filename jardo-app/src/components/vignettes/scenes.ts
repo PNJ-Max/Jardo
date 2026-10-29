@@ -1,17 +1,20 @@
 // Scènes des vignettes d'espace, dessinées avec le pinceau de la carte : un pan de jardin posé
 // sur sa tranche de terre, de jour en mode clair et de nuit en mode sombre. Chaque scène place
-// son socle en x de 0 à w et en y de 0 à d, en mètres. L'horizon du ciel d'Aujourd'hui suit.
+// son socle en x de 0 à w et en y de 0 à d, en mètres. Le jardin au repos des états vides et
+// l'horizon du ciel d'Aujourd'hui suivent.
 
 import type { SpaceKind } from '@/domain/types';
 import {
   createKit,
   drawBed,
+  drawBench,
   drawBush,
   drawConifer,
   drawFireflies,
   drawFirewood,
   drawGreenhouse,
   drawHouse,
+  drawLamp,
   drawPot,
   drawTree,
   drawWateringCan,
@@ -22,6 +25,9 @@ import {
 import { project, type Bounds, type Shape } from '@/map/scene';
 
 export type VignetteScheme = 'light' | 'dark';
+
+/** Un type d'espace, ou le jardin au repos des états vides. */
+export type VignetteKind = SpaceKind | 'Resting';
 
 export type VignetteDrawing = { shapes: Shape[]; bounds: Bounds };
 
@@ -40,7 +46,7 @@ function drawRowStrip({ p, pal }: Kit, x0: number, x1: number, y: number) {
   p.layer(p.ground, () => p.rect(x0, y - 0.45, x1, y + 0.45, 0.002, pal.mulch));
 }
 
-const scenes: Record<SpaceKind, (kit: Kit) => void> = {
+const scenes: Record<VignetteKind, (kit: Kit) => void> = {
   VegetableGarden: (kit) => {
     drawGround(kit, 6.9, 5.4);
     drawBed(kit, 0.55, 0.5, 'summer');
@@ -71,9 +77,17 @@ const scenes: Record<SpaceKind, (kit: Kit) => void> = {
     drawFirewood(kit, 0.5, 1.3);
     drawWheelbarrow(kit, 4.1, 3.2);
   },
+  // Le banc sous l'arbre, la lampe à côté, allumée la nuit.
+  Resting: (kit) => {
+    drawGround(kit, 4.8, 3.4);
+    drawTree(kit, kit.pal, 1.3, 1.1, { r: 1.35, trunk: 1.5 });
+    drawBench(kit, 1.55, 1.45);
+    drawPot(kit, 3.4, 2.2);
+    drawLamp(kit, 4.0, 1.25);
+  },
 };
 
-export function vignetteDrawing(kind: SpaceKind, scheme: VignetteScheme): VignetteDrawing {
+export function vignetteDrawing(kind: VignetteKind, scheme: VignetteScheme): VignetteDrawing {
   const kit = createKit(scheme === 'dark');
   scenes[kind](kit);
   return kit.p.shapes();

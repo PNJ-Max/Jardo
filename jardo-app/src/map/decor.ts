@@ -302,7 +302,22 @@ export function drawPatioSet({ p, pal }: Kit, x: number, y: number) {
   chair(x + 0.5, y - 0.18, 1);
 }
 
-export const GREENHOUSE_SIZE = { w: 2.75, d: 3.6, h: 2.05, ridge: 2.95 };
+/** Banc de jardin le long de x, dossier côté fond ; (x0, y0) est son coin arrière gauche. */
+export function drawBench({ p, pal }: Kit, x0: number, y0: number, length = 1.5) {
+  const x1 = x0 + length;
+  const y1 = y0 + 0.45;
+  p.layer(p.shadows, () => p.shadowHull(rectFootprint(x0, y0, x1, y1), 0.6, pal.shadow, 0.13));
+  p.object(depth((x0 + x1) / 2, (y0 + y1) / 2), () => {
+    for (const x of [x0 + 0.08, x1 - 0.14]) {
+      p.box(x, y0, 0, x + 0.06, y0 + 0.06, 0.95, pal.woodDark);
+      p.box(x, y1 - 0.1, 0, x + 0.06, y1 - 0.04, 0.42, pal.woodDark);
+    }
+    p.box(x0, y0 + 0.02, 0.42, x1, y1, 0.47, { top: pal.fenceTop, side: pal.wood });
+    for (const z of [0.6, 0.8]) p.box(x0, y0 - 0.02, z, x1, y0 + 0.04, z + 0.12, { top: pal.fenceTop, side: pal.wood });
+  });
+}
+
+export const GREENHOUSE_SIZE ={ w: 2.75, d: 3.6, h: 2.05, ridge: 2.95 };
 
 export function drawGreenhouse({ p, pal, isNight }: Kit, x0: number, y0: number) {
   const { w, d, h, ridge: hr } = GREENHOUSE_SIZE;
