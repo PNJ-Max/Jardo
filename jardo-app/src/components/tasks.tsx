@@ -14,13 +14,15 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { useCompleteTask, useDeleteJournalEntry } from '@/api/queries';
+import { useCompleteTask, useDeleteJournalEntry, useWaterSpace } from '@/api/queries';
 import type { CompleteTaskInput, GardenTask, Id } from '@/api/types';
 import { DoneIcon, KindIcon } from '@/components/pictograms';
+import { SwipeToDone } from '@/components/swipe-to-done';
+import { TaskSheet } from '@/components/task-sheet';
 import { useShowUndo } from '@/components/undo';
 import { Badge } from '@/components/ui';
 import { notify } from '@/lib/confirm';
-import { formatDate } from '@/lib/dates';
+import { formatDate, today } from '@/lib/dates';
 import { targetLabel, taskPhrase, taskTitle } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
 
@@ -28,6 +30,11 @@ export { taskTitle } from '@/lib/garden';
 
 /** Les tâches dont le « Fait » vient d'être annulé : leur ligne revient en fondu. */
 const returningTasks = new Set<Id>();
+
+export function markReturning(ids: readonly Id[]) {
+  ids.forEach((id) => returningTasks.add(id));
+  setTimeout(() => ids.forEach((id) => returningTasks.delete(id)), 1000);
+}
 
 /**
  * « Fait », puis quelques secondes pour l'annuler : l'annulation supprime l'entrée que « Fait » a
@@ -48,8 +55,7 @@ export function useMarkDone() {
           showUndo({
             message: `Noté au journal : ${taskPhrase(task)}`,
             onUndo: () => {
-              returningTasks.add(task.id);
-              setTimeout(() => returningTasks.delete(task.id), 1000);
+              markReturning([task.id]);
               removeEntry.mutate(entry.id, { onError: (e) => notify("Le « Fait » n'a pas été annulé", e.message) });
             },
             action: input?.note
@@ -65,6 +71,40 @@ export function useMarkDone() {
     );
 
   return { markDone, isPending: complete.isPending };
+}
+
+/**
+ * « Tout arroser » un espace : un seul arrosage noté sur l'espace pour tous ses arrosages dus, puis
+ * quelques secondes pour l'annuler, comme « Fait ». `onSettled` vient après l'écriture, réussie
+ * ou refusée.
+ */
+export function useWaterAll() {
+  const water = useWaterSpace();
+  const removeEntry = useDeleteJournalEntry();
+  const showUndo = useShowUndo();
+
+  const waterAll = (space: { spaceId: Id; spaceName: string }, tasks: readonly GardenTask[], onSettled: () => void) =>
+    water.mutate(
+      { spaceId: space.spaceId, date: today() },
+      {
+        onSuccess: (entry) =>
+          showUndo({
+            message: `Noté au journal : arroser tout l'espace, ${space.spaceName}`,
+            onUndo: () => {
+              markReturning(tasks.map((task) => task.id));
+              removeEntry.mutate(entry.id, { onError: (e) => notify("L'arrosage n'a pas été annulé", e.message) });
+            },
+            action: {
+              label: 'Ajouter une note',
+              onPress: () => router.push({ pathname: '/entry/form', params: { id: String(entry.id) } }),
+            },
+          }),
+        onError: (e) => notify("L'arrosage n'a pas été noté", e.message),
+        onSettled,
+      },
+    );
+
+  return { waterAll };
 }
 
 /**
@@ -101,11 +141,11 @@ export function DueBadge({ task }: { task: GardenTask }) {
 }
 
 /** Remplissage, coche → pousse et lueur ; puis, si la tâche quitte la liste, le repli de la ligne. */
-const celebrateMs = 800;
-const foldMs = 400;
+export const celebrateMs = 800;
+export const foldMs = 400;
 
 /** Sur le web, rien : la vibration du navigateur serait un bourdonnement, pas un toucher. */
-function doneFeedback() {
+export function doneFeedback() {
   if (Platform.OS === 'android') void Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm);
   else if (Platform.OS === 'ios') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 }
@@ -114,8 +154,8 @@ type TaskRowProps = {
   task: GardenTask;
   onPress: () => void;
   /**
-   * Affiche le bouton « Fait ». Absent pour une tâche ponctuelle déjà faite. Un appui long ouvre
-   * l'écran où préciser la date et une note.
+   * Affiche le bouton « Fait ». Absent pour une tâche ponctuelle déjà faite. Sans `gestures`, un
+   * appui long ouvre l'écran où préciser la date et une note.
    */
   onDone?: () => void;
   /**
@@ -127,13 +167,33 @@ type TaskRowProps = {
   showTarget?: boolean;
   /** Remplace voyant et cible quand la section donne déjà l'échéance (Aujourd'hui). */
   detail?: ReactNode;
+  /**
+   * Aujourd'hui : toucher la ligne ouvre la feuille de la tâche, qui remplace l'appui long et
+   * propose `onPress` sous « Ouvrir la fiche » ; glisser la ligne à droite la fait.
+   */
+  gestures?: boolean;
+  /**
+   * La tâche part avec d'autres (« Tout arroser ») : la ligne célèbre et se replie sans se noter,
+   * l'écran note pour toutes. Repassé à faux (écriture refusée), elle se rouvre.
+   */
+  leaving?: boolean;
 };
 
 /** Une ligne d'une surface groupée (`Group`) : pictogramme, intervention, voyant et cible, « Fait ». */
-export function TaskRow({ task, onPress, onDone, leavesOnDone = false, showTarget = true, detail }: TaskRowProps) {
+export function TaskRow({
+  task,
+  onPress,
+  onDone,
+  leavesOnDone = false,
+  showTarget = true,
+  detail,
+  gestures = false,
+  leaving = false,
+}: TaskRowProps) {
   const styles = useStyles();
   const reduceMotion = useReducedMotion();
   const [done, setDone] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [returning] = useState(() => returningTasks.delete(task.id));
   const open = useSharedValue(1);
   const height = useSharedValue(0);
@@ -146,8 +206,17 @@ export function TaskRow({ task, onPress, onDone, leavesOnDone = false, showTarge
       : { height: height.get() * progress, opacity: progress, overflow: 'hidden' };
   });
 
+  useEffect(() => {
+    if (!leaving || reduceMotion) return;
+    open.set(withDelay(celebrateMs, withTiming(0, { duration: foldMs, easing: Easing.inOut(Easing.quad) })));
+    return () => open.set(withTiming(1, { duration: 300 }));
+  }, [leaving, reduceMotion, open]);
+
+  const celebrating = done || leaving;
+  const canBeDone = onDone !== undefined && !task.isCompleted;
+
   const markDone = () => {
-    if (!onDone) return;
+    if (!onDone || celebrating) return;
     setDone(true);
     doneFeedback();
     if (leavesOnDone && !reduceMotion) {
@@ -168,6 +237,47 @@ export function TaskRow({ task, onPress, onDone, leavesOnDone = false, showTarge
     if (!leavesOnDone) setTimeout(() => setDone(false), celebrateMs + foldMs);
   };
 
+  const row = (
+    <Pressable
+      onPress={gestures ? () => setSheetOpen(true) : onPress}
+      accessibilityRole="button"
+      accessibilityHint={gestures ? 'Ouvre la feuille de la tâche : rythme, dernière fois, et les façons de la noter' : undefined}
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
+      <View style={styles.icon}>
+        <KindIcon kind={task.kind} />
+      </View>
+      <View style={styles.body}>
+        <Text style={styles.title} numberOfLines={2}>
+          {title}
+        </Text>
+        {detail !== undefined ? (
+          <Text style={styles.detail} numberOfLines={2}>
+            {detail}
+          </Text>
+        ) : (
+          <View style={styles.meta}>
+            <DueBadge task={task} />
+            {showTarget && (
+              <Text style={styles.target} numberOfLines={1}>
+                {targetLabel(task)}
+              </Text>
+            )}
+          </View>
+        )}
+      </View>
+      {canBeDone && (
+        <DoneButton
+          done={celebrating}
+          onPress={markDone}
+          onLongPress={
+            gestures ? undefined : () => router.push({ pathname: '/task/done', params: { id: String(task.id) } })
+          }
+          accessibilityLabel={`Fait : ${title}, ${targetLabel(task)}`}
+        />
+      )}
+    </Pressable>
+  );
+
   return (
     <Animated.View
       entering={returning ? FadeIn.duration(300) : undefined}
@@ -175,43 +285,27 @@ export function TaskRow({ task, onPress, onDone, leavesOnDone = false, showTarge
         if (open.get() === 1) height.set(event.nativeEvent.layout.height);
       }}
       style={foldStyle}>
-      <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
-        <View style={styles.icon}>
-          <KindIcon kind={task.kind} />
-        </View>
-        <View style={styles.body}>
-          <Text style={styles.title} numberOfLines={2}>
-            {title}
-          </Text>
-          {detail !== undefined ? (
-            <Text style={styles.detail} numberOfLines={2}>
-              {detail}
-            </Text>
-          ) : (
-            <View style={styles.meta}>
-              <DueBadge task={task} />
-              {showTarget && (
-                <Text style={styles.target} numberOfLines={1}>
-                  {targetLabel(task)}
-                </Text>
-              )}
-            </View>
-          )}
-        </View>
-        {onDone && !task.isCompleted && (
-          <DoneButton
-            done={done}
-            onPress={markDone}
-            onLongPress={() => router.push({ pathname: '/task/done', params: { id: String(task.id) } })}
-            accessibilityLabel={`Fait : ${title}, ${targetLabel(task)}`}
-          />
-        )}
-      </Pressable>
+      {gestures ? (
+        <SwipeToDone testId={`swipe:${task.id}`} enabled={canBeDone && !celebrating} onDone={markDone}>
+          {row}
+        </SwipeToDone>
+      ) : (
+        row
+      )}
+      {gestures && (
+        <TaskSheet
+          task={task}
+          visible={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          onDone={markDone}
+          onOpen={onPress}
+        />
+      )}
     </Animated.View>
   );
 }
 
-type DoneButtonProps = { done: boolean; onPress: () => void; onLongPress: () => void; accessibilityLabel: string };
+type DoneButtonProps = { done: boolean; onPress: () => void; onLongPress?: () => void; accessibilityLabel: string };
 
 /** Pastille au contour `primary` ; une fois touchée, elle se remplit, sa coche devient une pousse et une lueur s'étend. */
 function DoneButton({ done, onPress, onLongPress, accessibilityLabel }: DoneButtonProps) {
@@ -263,14 +357,17 @@ function DoneButton({ done, onPress, onLongPress, accessibilityLabel }: DoneButt
           event.stopPropagation();
           onPress();
         }}
-        onLongPress={(event) => {
-          event.stopPropagation();
-          onLongPress();
-        }}
+        onLongPress={
+          onLongPress &&
+          ((event) => {
+            event.stopPropagation();
+            onLongPress();
+          })
+        }
         disabled={done}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        accessibilityHint="Appui long pour préciser la date ou ajouter une note"
+        accessibilityHint={onLongPress && 'Appui long pour préciser la date ou ajouter une note'}
         hitSlop={8}
         style={({ pressed }) => [styles.done, done && styles.doneFilled, pressed && { opacity: 0.6 }]}>
         <View style={styles.glyph}>
