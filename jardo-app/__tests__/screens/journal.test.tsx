@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { router } from 'expo-router';
 
 import JournalScreen from '@/app/(tabs)/journal';
 import { today } from '@/lib/dates';
@@ -33,5 +34,24 @@ describe('écran Journal', () => {
 
     await waitFor(() => expect(screen.queryByText('Pucerons')).not.toBeOnTheScreen());
     expect(await screen.findByText('Premières tomates')).toBeOnTheScreen();
+  });
+
+  it("propose d'effacer des filtres qui ne laissent rien", async () => {
+    await renderScreen(<JournalScreen />, await gardenWithTwoEntries());
+
+    expect(await screen.findByText('Pucerons')).toBeOnTheScreen();
+    fireEvent.press(screen.getAllByText('Taille')[0]);
+    expect(await screen.findByText('Rien de noté')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByText('Effacer les filtres'));
+    expect(await screen.findByText('Pucerons')).toBeOnTheScreen();
+  });
+
+  it('renvoie au jardin quand le journal est vide', async () => {
+    await renderScreen(<JournalScreen />);
+
+    expect(await screen.findByText('Le journal est vide')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByText('Ouvrir le jardin'));
+    expect(router.push).toHaveBeenCalledWith('/');
   });
 });

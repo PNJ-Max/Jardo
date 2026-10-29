@@ -87,7 +87,14 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   Champs remplis (`surfaceSunken`, sans bordure au repos), anneau `primary` de 2 au focus,
   `danger` à l'erreur ; l'erreur d'un champ reste sous ce champ. Choix du type d'espace sur les
   vignettes des cinq types (`SpaceKindSelect`, `radio`). Les règles et les champs ne changent pas.
-- [ ] 9. États vides et icône.
+- [x] 9. États vides et icône (29/10/2026) : le jardin au repos (banc sous l'arbre, pot, lampe
+  allumée la nuit), sixième scène des vignettes (`drawBench` dans `decor.ts`), pose `Empty` sur les
+  états vides avec une phrase et l'action qui débloque : jardin sans espace (« Ajouter un espace »),
+  rien à faire aujourd'hui et journal vide (« Ouvrir le jardin » : on note et on programme depuis
+  les fiches), journal filtré sans résultat (« Effacer les filtres »), espace ni découpé ni garni
+  (« Ajouter une plante » ou un tas de bois, « Ajouter une zone »). Icône et splash redessinés au
+  pinceau de la carte par `assets/source/icons.ts` : la pousse en pot, sur le `primary` pour
+  l'icône, sur les fonds de l'app pour les splashs ; monochrome avec un jour sous le bord du pot.
 
 **Écran dédoublé en mode web, corrigé.** Après Jardin → espace → retour, Chrome laissait des restes
 d'image en double. Cause : un écran quitté passe en `display: none` sur le web et mesure 0 × 0. La

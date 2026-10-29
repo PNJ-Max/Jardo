@@ -91,11 +91,9 @@ function SpaceList() {
         ListHeaderComponent={garden.data ? <Text style={styles.gardenName}>{garden.data.name}</Text> : null}
         renderItem={({ item }) => <SpaceRow space={item} onPress={() => router.push(`/space/${item.id}`)} />}
         ListEmptyComponent={
-          <Empty
-            icon="leaf-outline"
-            title="Votre jardin est vide"
-            hint="Ajoutez un premier espace : un potager, un verger, un tas de bois…"
-          />
+          <Empty title="Votre jardin est vide" hint="Ajoutez un premier espace : un potager, un verger, un tas de bois…">
+            <Button title="Ajouter un espace" icon="add" onPress={() => router.push('/space/form')} />
+          </Empty>
         }
         ListFooterComponent={
           archivedCount > 0 ? (

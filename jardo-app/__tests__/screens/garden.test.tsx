@@ -93,6 +93,8 @@ describe('écran Jardin sans carte', () => {
     await renderScreen(<GardenScreen />, await setup());
 
     expect(await screen.findByText('Votre jardin est vide')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByText('Ajouter un espace'));
+    expect(router.push).toHaveBeenCalledWith('/space/form');
   });
 });
 

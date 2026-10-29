@@ -3,12 +3,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useDeleteSpace, useSetSpaceArchived, useSpace, useZones } from '@/api/queries';
+import { useDeleteSpace, usePlants, useSetSpaceArchived, useSpace, useWoodPiles, useZones } from '@/api/queries';
 import type { Id, Space, SpaceKind, Zone } from '@/api/types';
 import { ArchivedBadge } from '@/components/items';
 import { ItemsSection } from '@/components/items-section';
 import { DetailScreen, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
-import { ErrorView, Loading, SectionTitle } from '@/components/ui';
+import { Button, Empty, ErrorView, Loading, SectionTitle } from '@/components/ui';
 import { SpaceVignette } from '@/components/vignettes/space-vignette';
 import { AddZoneTile, ZoneTile } from '@/components/vignettes/zone-tile';
 import { confirm, notify } from '@/lib/confirm';
@@ -68,12 +68,7 @@ function SpaceDetail({ space }: { space: Space }) {
         {
           key: 'contents',
           label: 'Contenu',
-          render: () => (
-            <>
-              <ZonesSection spaceId={space.id} zones={zones} />
-              <ItemsSection scope={{ spaceId: space.id, spaceKind: space.kind }} zones={zones.data} />
-            </>
-          ),
+          render: () => <SpaceContents space={space} zones={zones} />,
         },
         { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
         {
@@ -132,6 +127,49 @@ function spaceSummary(space: Space) {
   ]
     .filter(Boolean)
     .join(' · ');
+}
+
+/**
+ * Zones et éléments, ou l'invitation à remplir l'espace s'il n'a rien, archivés compris :
+ * `itemCount` ne compte pas les archivés. Les deux listes sont celles d'`ItemsSection`, servies par
+ * le cache ; celle qui ne correspond pas au type d'espace revient vide.
+ */
+function SpaceContents({ space, zones }: { space: Space; zones: ReturnType<typeof useZones> }) {
+  const filter = { spaceId: space.id, includeArchived: true };
+  const plants = usePlants(filter);
+  const woodPiles = useWoodPiles(filter);
+  const items = space.kind === 'Firewood' ? woodPiles : plants;
+
+  if (space.zoneCount === 0 && items.data?.length === 0) return <EmptySpace space={space} />;
+  return (
+    <>
+      <ZonesSection spaceId={space.id} zones={zones} />
+      <ItemsSection scope={{ spaceId: space.id, spaceKind: space.kind }} zones={zones.data} />
+    </>
+  );
+}
+
+/** Ni zone ni élément : on propose d'y mettre quelque chose, ou de le découper d'abord. */
+function EmptySpace({ space }: { space: Space }) {
+  const params = { spaceId: String(space.id) };
+  const firewood = space.kind === 'Firewood';
+
+  return (
+    <Empty
+      title={firewood ? 'Pas encore de bois ici' : "Rien n'y pousse encore"}
+      hint={
+        firewood
+          ? "Ajoutez un tas de bois, ou découpez d'abord l'espace en zones (abri, bûcher…)."
+          : "Ajoutez une plante, ou découpez d'abord l'espace en zones (carrés, rangs, planches…)."
+      }>
+      <Button
+        title={firewood ? 'Ajouter un tas de bois' : 'Ajouter une plante'}
+        icon="add"
+        onPress={() => router.push({ pathname: firewood ? '/wood-pile/form' : '/plant/form', params })}
+      />
+      <Button title="Ajouter une zone" variant="secondary" onPress={() => router.push({ pathname: '/zone/form', params })} />
+    </Empty>
+  );
 }
 
 function ZonesSection({ spaceId, zones }: { spaceId: Id; zones: ReturnType<typeof useZones> }) {

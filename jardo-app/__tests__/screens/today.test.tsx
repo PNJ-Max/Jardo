@@ -179,6 +179,8 @@ describe("écran Aujourd'hui", () => {
     expect(await screen.findByText("Rien à faire aujourd'hui")).toBeOnTheScreen();
     expect(screen.getByText("Tout est fait pour aujourd'hui.")).toBeOnTheScreen();
     expect(screen.queryByText(/^Demain/)).not.toBeOnTheScreen();
+    await fireEvent.press(screen.getByText('Ouvrir le jardin'));
+    expect(router.push).toHaveBeenCalledWith('/');
   });
 
   it("pose le pictogramme de l'intervention sur la ligne, sans rien changer à ce qui est lu", async () => {

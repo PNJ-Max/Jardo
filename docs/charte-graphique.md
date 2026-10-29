@@ -96,21 +96,27 @@ Familles disponibles dans `theme.fonts` : `heading`, `body`, `bodyMedium`, `body
 
 ### Icône de l'app
 
-Une pousse de deux feuilles dans un pot en terre cuite, sur fond crème. Pas de texte :
-la silhouette doit rester lisible à 48 dp.
+Une pousse de deux feuilles dans un pot en terre cuite évasé, dessinée au pinceau de la carte
+(même projection, même lumière, mêmes arêtes que les vignettes) : `assets/source/icons.ts`
+produit les SVG. Pas de texte : la silhouette doit rester lisible à 48 dp.
 
 | Élément | Couleur |
 |---|---|
-| Fond (icône adaptative, splash clair) | `#FCF9EA` crème |
-| Bord du pot | `#9E5B28` |
-| Corps du pot | `#DB9558` terre cuite |
-| Tige et grande feuille | `#4E6040` (`#A8BBA3` sur le splash sombre) |
-| Petite feuille | `#97A87A` sauge |
-| Fond du splash sombre | `#1C211A` |
+| Fond de l'icône (adaptative, iOS, favicon) | `#1B5E20`, le `primary` clair |
+| Corps du pot, ombré par la lumière de la carte | `#CF8E5B` terre cuite (`pot` du décor) |
+| Bord du pot | `#AE6F3E` (`potRim`) |
+| Terre | `#694B34` (`soilBed`) |
+| Tige | `#3E8A4B` (`leafDark`) |
+| Grande feuille | `#5EA864` (`leaf`) |
+| Petite feuille | `#A5D6A7` (`leafLight`, le vert moyen de la palette claire) |
+| Fond du splash clair | `#F6FAF6`, le `background` clair |
+| Fond du splash sombre | `#092328`, le `background` sombre ; le motif y garde les teintes du jour, passées de 15 % vers ce fond |
 
-- Sources SVG dans [`jardo-app/assets/source/`](../jardo-app/assets/source/), avec la commande de régénération des PNG.
-- Le motif reste dans la zone de sécurité des icônes adaptatives (cercle de 66 dp sur le calque de 108 dp) :
-  aucun masque de lanceur ne le rogne.
+- Sources SVG dans [`jardo-app/assets/source/`](../jardo-app/assets/source/), avec la commande de régénération des PNG
+  et un [aperçu](../jardo-app/assets/source/apercu.png) sous les masques des lanceurs.
+- Le motif tient dans un cercle de rayon 30 sur le calque de 108 dp, à l'intérieur de la zone de sécurité
+  des icônes adaptatives (cercle de 66 dp) : aucun masque de lanceur ne le rogne.
+- L'ombre au sol n'est posée que sur le fond vert de l'icône ; les splashs n'en ont pas.
 - L'icône monochrome (icônes thématiques Android 13+) reprend la silhouette, avec un jour entre le bord et le corps du pot.
 
 ## Mode sombre
@@ -146,7 +152,5 @@ texte posé dessus est le fond sarcelle (`primaryText`), pas du blanc.
 
 ## À reprendre
 
-- L'icône de l'app et le splash gardent la terre cuite et la crème de la première charte :
-  à redessiner dans la nouvelle palette lors de la refonte du design (phase 6).
 - La [direction visuelle](direction-visuelle.md) fixe l'usage de ces jetons ; ses composants
   (pictogrammes, surfaces groupées, ciel du jour…) arrivent étape par étape.
