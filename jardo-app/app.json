@@ -7,7 +7,16 @@
     "icon": "./assets/images/icon.png",
     "scheme": "jardo",
     "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.pnjmax.jardo"
+    },
     "android": {
+      "package": "com.pnjmax.jardo",
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#1B5E20",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

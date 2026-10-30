@@ -118,6 +118,18 @@ test, avec la [procédure `adb shell bmgr`](docs/etude-architecture-donnees.md#v
 Nouvelles dépendances : `expo-sharing`, `expo-file-system`, `expo-document-picker` (incluses dans
 Expo Go).
 
+**Dépôt prêt pour l'APK de test (30/10/2026).** `jardo-app/eas.json` : `development` (client de
+développement, distribution interne), `preview` (APK, distribution interne) et `production` (AAB) ;
+`appVersionSource: remote`, recommandé par la doc d'Expo : EAS tient le `versionCode` et l'incrémente
+(`autoIncrement` sur `preview` et `production`), sans commit à chaque build. `app.json` : identifiant
+`com.pnjmax.jardo` (Android et iOS), définitif à la première publication sur le Play Store ; permissions
+de stockage et `SYSTEM_ALERT_WINDOW` retirées (`INTERNET` reste, nécessaire au profil `development`).
+Sauvegarde automatique d'Android : `allowBackup` vrai par défaut, la base `expo-sqlite` est dans
+`files/SQLite`, donc sauvegardée (25 Mo) sans réglage ; à confirmer sur un téléphone. `expo-doctor` propre
+après `expo install --fix` (cinq montées de patch du SDK 57 ; entrées `@emnapi/core` et `@emnapi/runtime`
+du lockfile conservées). Reste à Maxime : compte Expo, `eas init`, premier build ;
+[guide pas à pas](docs/guide-apk-test.md).
+
 **Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
 **Terminée le 26/10/2026.** L'app tourne sur la base locale depuis l'étape 5 ; l'API, retirée à l'étape 6, n'existe plus que sous le tag `api-dotnet`.
 
@@ -420,7 +432,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 **Phase 7 : vers le Play Store**
 - Test sur téléphone (Expo Go), données sur le téléphone ([migration en sept PR](docs/etude-architecture-donnees.md#plan-de-migration)),
-  APK pour la famille par EAS, puis fiche Play Store.
+  APK pour la famille par EAS ([dépôt prêt, guide](docs/guide-apk-test.md) ; premier build à lancer par Maxime),
+  puis fiche Play Store.
 
 ## À décider
 

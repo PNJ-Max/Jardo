@@ -45,6 +45,11 @@ Le téléphone (Android) et le PC doivent être sur le **même Wi-Fi**, et le PC
 - *« Project is incompatible with this version of Expo Go »* : mettre à jour Expo Go.
 - *Adresse du PC changée* (box qui redistribue les IP) : relancer Metro, l'app relit l'adresse.
 
+## Installer un APK de test
+
+Pour produire un APK à installer chez des proches (compte Expo, build EAS, mises à jour, puis tests
+internes du Play Store) : [`../docs/guide-apk-test.md`](../docs/guide-apk-test.md).
+
 ## Vérifier
 
 ```bash
