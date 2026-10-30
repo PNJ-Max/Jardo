@@ -17,6 +17,8 @@ export type GardenTask = {
   intervalDays: number | null;
   startDate: DateOnly;
   createdAt: string;
+  /** « Reporter » : l'échéance ne tombe pas avant ce jour. Null sans report. */
+  postponedUntil: DateOnly | null;
   spaceId: Id;
   spaceName: string;
   spaceKind: SpaceKind;
@@ -47,6 +49,7 @@ type TaskRow = TargetNames & {
   start_date: DateOnly;
   interval_days: number | null;
   created_at: string;
+  postponed_until: DateOnly | null;
   space_id: Id;
   space_kind: SpaceKind;
   zone_id: Id | null;
@@ -54,7 +57,7 @@ type TaskRow = TargetNames & {
 };
 
 export const selectTasks = `
-  SELECT t.id, t.kind, t.title, t.recurrence, t.start_date, t.interval_days, t.created_at,
+  SELECT t.id, t.kind, t.title, t.recurrence, t.start_date, t.interval_days, t.created_at, t.postponed_until,
     t.space_id, s.name AS space_name, s.kind AS space_kind, t.zone_id, z.name AS zone_name,
     t.item_id, i.name AS item_name, i.item_type
   FROM garden_tasks t
@@ -118,6 +121,7 @@ async function withDueStates(db: Db, rows: readonly TaskRow[], today: DateOnly):
       intervalDays: row.interval_days,
       lastDoneOn: latestByKind.get(row.kind)!.forTarget(row.space_id, row.zone_id, row.item_id),
       createdOn: toDateOnly(new Date(row.created_at)),
+      postponedUntil: row.postponed_until,
       today,
     });
 
@@ -129,6 +133,7 @@ async function withDueStates(db: Db, rows: readonly TaskRow[], today: DateOnly):
       intervalDays: row.interval_days,
       startDate: row.start_date,
       createdAt: row.created_at,
+      postponedUntil: row.postponed_until,
       spaceId: row.space_id,
       spaceName: row.space_name,
       spaceKind: row.space_kind,

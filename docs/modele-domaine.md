@@ -190,6 +190,17 @@ d'application du journal :
   compte pas : un arrosage de la semaine dernière ne ferme pas un « arroser » ponctuel créé
   aujourd'hui. Le jour de création compte, lui : un premier traitement noté le jour même où l'on
   crée « renouveler dans dix jours » clôt la tâche (la comparaison se fait au jour, pas à l'heure).
+- **Reporter : l'échéance ne tombe pas avant le jour du report** (`postponedUntil`, seule date
+  stockée sur la tâche). L'échéance est la plus tardive des deux : celle que donne le tableau, et
+  le report. Le report ne s'efface donc pas en base, il cesse d'agir. Toute intervention qui vaut
+  pour la cible, notée le jour du report ou après, pousse l'échéance du tableau au moins au
+  lendemain : que la tâche soit faite par « Fait », par une entrée notée au journal ou par un
+  arrosage de tout l'espace, le report à demain n'a plus d'effet. Une intervention datée d'avant
+  le report ne l'annule pas. Un report arrivé à son jour sans que la tâche soit faite la rend due
+  ce jour-là, puis en retard depuis ce jour. Une tâche ne se reporte qu'à un jour à venir, après
+  son échéance : ni une tâche ponctuelle close, ni un report qui ne repousse rien. L'app ne
+  propose que « demain », pour une tâche due ; un report plus lointain que le rythme de la tâche
+  tiendrait jusqu'à sa date, même faite avant. Annuler un report remet le précédent tel quel.
 
 Le voyant vaut pour toute tâche : `Ok` (échéance future ou tâche ponctuelle close), `DueSoon`
 (échéance aujourd'hui), `Overdue` (échéance passée, avec le nombre de jours de retard). Faire

@@ -49,6 +49,13 @@ export type TaskCompletion = {
   entry: JournalEntry;
 };
 
+export type TaskPostponement = {
+  /** La tâche, échéance recalculée. */
+  task: GardenTask;
+  /** Le report d'avant, souvent null : le remettre annule « Reporter ». */
+  previous: DateOnly | null;
+};
+
 /**
  * Jusqu'où regarder les tâches dues, retards compris : aujourd'hui, les sept jours d'aujourd'hui à
  * dans six jours, ou les trente prochains jours.
@@ -68,6 +75,9 @@ export const validate = (input: TaskInput) =>
     .id('ZoneId', 'Zone', input.zoneId, { nullable: true })
     .id('ItemId', 'Élément', input.itemId, { nullable: true })
     .done();
+
+export const validatePostponement = (until: DateOnly | null) =>
+  new Validation().date('PostponedUntil', 'Reporter au', until).done();
 
 export function ensureTaskFields(
   kind: JournalEntryKind,
@@ -245,6 +255,38 @@ export function createTaskService(db: Db, clock: Clock) {
       });
 
       return { task: await getById(id), entry: await journal.getById(entryId) };
+    },
+
+    /**
+     * « Reporter » : l'échéance ne tombe pas avant `until`, un jour à venir après elle. Rien n'est
+     * noté au journal, et la prochaine intervention notée sur la cible rend le report sans effet.
+     */
+    async postpone(id: Id, until: DateOnly): Promise<TaskPostponement> {
+      new Validation().date('PostponedUntil', 'Reporter au', until, { required: true }).done();
+      if (until <= today()) throw businessRule('Une tâche se reporte à un jour à venir.');
+
+      const previous = await db.transaction(async () => {
+        const task = await getById(id);
+        if (task.nextDueDate === null) throw businessRule("Cette tâche ponctuelle est déjà faite : il n'y a rien à reporter.");
+        if (task.nextDueDate >= until) throw businessRule("Cette tâche n'est pas due avant ce jour-là : il n'y a rien à reporter.");
+
+        await db.run('UPDATE garden_tasks SET postponed_until = ? WHERE id = ?', [until, id]);
+        return task.postponedUntil;
+      });
+
+      return { task: await getById(id), previous };
+    },
+
+    /** Annule « Reporter » : remet le report d'avant tel quel, même passé, ou aucun. */
+    async restorePostponement(id: Id, previous: DateOnly | null): Promise<GardenTask> {
+      validatePostponement(previous);
+
+      await db.transaction(async () => {
+        await existing(id);
+        await db.run('UPDATE garden_tasks SET postponed_until = ? WHERE id = ?', [previous, id]);
+      });
+
+      return getById(id);
     },
   };
 }

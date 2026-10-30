@@ -32,6 +32,12 @@ export type DueInput = {
    * la semaine dernière ne ferme pas un « arroser » ponctuel créé aujourd'hui.
    */
   createdOn: DateOnly;
+  /**
+   * « Reporter » : l'échéance ne tombe pas avant ce jour. Une intervention notée le jour du report
+   * ou après pousse l'échéance calculée au moins au lendemain : le report à demain n'a alors plus
+   * d'effet, sans qu'il faille l'effacer.
+   */
+  postponedUntil: DateOnly | null;
   today: DateOnly;
 };
 
@@ -45,13 +51,16 @@ export function calculateDueState({
   intervalDays,
   lastDoneOn,
   createdOn,
+  postponedUntil,
   today,
 }: DueInput): DueState {
-  const nextDueDate = nextDue(recurrence, startDate, intervalDays, lastDoneOn, createdOn);
+  const calculated = nextDue(recurrence, startDate, intervalDays, lastDoneOn, createdOn);
 
-  if (nextDueDate === null) {
+  if (calculated === null) {
     return { lastDoneOn, nextDueDate: null, status: 'Ok', daysOverdue: 0 };
   }
+
+  const nextDueDate = postponedUntil !== null && postponedUntil > calculated ? postponedUntil : calculated;
 
   const daysLate = daysBetween(nextDueDate, today);
   const status: DueStatus = daysLate > 0 ? 'Overdue' : daysLate === 0 ? 'DueSoon' : 'Ok';

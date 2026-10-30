@@ -10,13 +10,13 @@ const longAgo = '2020-01-01';
 const ago = (days: number) => addDays(today, -days);
 
 const everyNDays = (intervalDays: number, lastDoneOn: string | null, startDate = '2026-01-01'): DueState =>
-  calculateDueState({ recurrence: 'EveryNDays', startDate, intervalDays, lastDoneOn, createdOn: longAgo, today });
+  calculateDueState({ recurrence: 'EveryNDays', startDate, intervalDays, lastDoneOn, createdOn: longAgo, postponedUntil: null, today });
 
 const yearly = (startDate: string, lastDoneOn: string | null): DueState =>
-  calculateDueState({ recurrence: 'Yearly', startDate, intervalDays: null, lastDoneOn, createdOn: longAgo, today });
+  calculateDueState({ recurrence: 'Yearly', startDate, intervalDays: null, lastDoneOn, createdOn: longAgo, postponedUntil: null, today });
 
 const once = (date: string, createdOn: string, lastDoneOn: string | null): DueState =>
-  calculateDueState({ recurrence: 'Once', startDate: date, intervalDays: null, lastDoneOn, createdOn, today });
+  calculateDueState({ recurrence: 'Once', startDate: date, intervalDays: null, lastDoneOn, createdOn, postponedUntil: null, today });
 
 describe('échéance des tâches', () => {
   it('une tâche faite aujourd\'hui est à jour jusqu\'à la prochaine échéance', () => {
@@ -77,6 +77,7 @@ describe('échéance des tâches', () => {
         intervalDays: null,
         lastDoneOn: null,
         createdOn: longAgo,
+        postponedUntil: null,
         today,
       }),
     ).toThrow(RangeError);
@@ -136,5 +137,81 @@ describe('échéance des tâches', () => {
     expect(state.nextDueDate).toBe(addDays(today, 3));
     expect(state.status).toBe('Ok');
     expect(state.lastDoneOn).toBe(ago(1));
+  });
+});
+
+describe('report des tâches', () => {
+  const tomorrow = addDays(today, 1);
+
+  const postponed = (
+    input: { recurrence?: 'EveryNDays' | 'Yearly' | 'Once'; startDate?: string; intervalDays?: number | null; lastDoneOn: string | null },
+    postponedUntil: string | null,
+  ): DueState =>
+    calculateDueState({
+      recurrence: input.recurrence ?? 'EveryNDays',
+      startDate: input.startDate ?? '2026-01-01',
+      intervalDays: input.intervalDays === undefined ? 3 : input.intervalDays,
+      lastDoneOn: input.lastDoneOn,
+      createdOn: longAgo,
+      postponedUntil,
+      today,
+    });
+
+  it('une tâche du jour reportée à demain est à jour jusqu\'à demain', () => {
+    expect(postponed({ lastDoneOn: ago(3) }, tomorrow)).toEqual({
+      lastDoneOn: ago(3),
+      nextDueDate: tomorrow,
+      status: 'Ok',
+      daysOverdue: 0,
+    });
+  });
+
+  it('une tâche en retard reportée à demain sort du retard', () => {
+    const state = postponed({ lastDoneOn: ago(8) }, tomorrow);
+
+    expect(state.status).toBe('Ok');
+    expect(state.daysOverdue).toBe(0);
+  });
+
+  it('un report arrivé à son jour rend la tâche due ce jour-là, puis en retard depuis ce jour', () => {
+    expect(postponed({ lastDoneOn: ago(9) }, today)).toMatchObject({ status: 'DueSoon', nextDueDate: today });
+    expect(postponed({ lastDoneOn: ago(9) }, ago(2))).toMatchObject({ status: 'Overdue', daysOverdue: 2 });
+  });
+
+  it("ne rapproche jamais l'échéance", () => {
+    expect(postponed({ lastDoneOn: today }, tomorrow).nextDueDate).toBe(addDays(today, 3));
+  });
+
+  // Peu importe d'où vient l'intervention (« Fait », une entrée notée au journal, « Tout arroser »
+  // sur l'espace) : le calcul ne voit que la dernière qui vaut pour la cible.
+  it.each([
+    ['tous les jours', { intervalDays: 1 }],
+    ['tous les 3 jours', { intervalDays: 3 }],
+    ['chaque année', { recurrence: 'Yearly' as const, startDate: '2026-02-01', intervalDays: null }],
+  ])('s\'efface au « Fait » suivant, noté le jour du report (%s)', (_, task) => {
+    expect(postponed({ ...task, lastDoneOn: null }, tomorrow).nextDueDate).toBe(tomorrow);
+
+    const doneToday = postponed({ ...task, lastDoneOn: today }, tomorrow);
+
+    expect(doneToday).toEqual(postponed({ ...task, lastDoneOn: today }, null));
+    expect(doneToday.status).toBe('Ok');
+  });
+
+  it("s'efface au « Fait » noté le lendemain du report, le jour où elle était reportée", () => {
+    expect(postponed({ lastDoneOn: tomorrow }, tomorrow)).toEqual(postponed({ lastDoneOn: tomorrow }, null));
+  });
+
+  it('reste close pour une tâche ponctuelle faite', () => {
+    const state = postponed({ recurrence: 'Once', startDate: ago(2), intervalDays: null, lastDoneOn: today }, tomorrow);
+
+    expect(state.nextDueDate).toBeNull();
+    expect(state.status).toBe('Ok');
+  });
+
+  it('repousse une tâche ponctuelle pas encore faite', () => {
+    const state = postponed({ recurrence: 'Once', startDate: ago(2), intervalDays: null, lastDoneOn: null }, tomorrow);
+
+    expect(state.nextDueDate).toBe(tomorrow);
+    expect(state.status).toBe('Ok');
   });
 });
