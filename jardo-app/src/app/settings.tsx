@@ -5,6 +5,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useExportGarden, useGarden, useImportGarden, useReadBackupFile, useSaveGarden } from '@/api/queries';
 import type { Garden, GardenBackup } from '@/api/types';
 import { fieldError, Button, Card, ChipSelect, Field, FormError, screenStyles, SectionTitle } from '@/components/ui';
+import { WeatherSection } from '@/components/weather';
 import { confirm } from '@/lib/confirm';
 import { formatLongDate, toDateOnly } from '@/lib/dates';
 import { formatQuantity } from '@/lib/garden';
@@ -39,6 +40,8 @@ export default function SettingsScreen() {
       </View>
 
       <GardenBackupSection onImported={() => setImports((count) => count + 1)} />
+
+      <WeatherSection />
 
       <View style={styles.section}>
         <SectionTitle>Apparence</SectionTitle>

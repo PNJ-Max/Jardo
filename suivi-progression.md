@@ -10,7 +10,27 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (29/10/2026)
+## Où on en est (30/10/2026)
+
+**Météo, avec Open-Meteo (30/10/2026).** Réglages → Météo : on cherche une ville par son nom
+(géocodage d'Open-Meteo, sans GPS ni permission de localisation), on choisit un résultat (nom,
+région, pays), on la voit et on peut la retirer.
+- **Aujourd'hui** :
+  - le ciel dit le temps du jour (« Averses · 5° à 15° · 6 mm ») avec un pictogramme dessiné, et
+    cache son soleil quand il fait gris ;
+  - la semaine porte un pictogramme par jour ;
+  - les groupes qui ont un arrosage (sauf la serre) reçoivent une note douce à partir de 5 mm
+    tombés la veille ou prévus dans la journée (« Il a plu 8 mm hier : l'arrosage peut
+    attendre. »). Aucune échéance ne change.
+- **Hors ligne d'abord** : la ville et la dernière prévision sont gardées sur le téléphone
+  (AsyncStorage, comme l'apparence, sans migration). Le réseau est appelé au plus toutes les trois
+  heures, au retour sur l'app. Une prévision de plus de six heures dit de quand elle date. Sans
+  ville ou sans prévision, rien ne s'affiche.
+- **Licence** : l'API gratuite d'Open-Meteo est **réservée à l'usage non commercial**. Elle
+  suffit pour le test chez les proches ; une version payante ou avec publicité sur le Play Store
+  demandera un abonnement (voir « À décider »).
+- **Vérifications** : sur le web avec une vraie ville (Namur), en clair et en sombre ; pas encore
+  sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#météo).
 
 **Direction visuelle ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), en cours de mise
 en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la carte, tons
@@ -423,6 +443,12 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   APK pour la famille par EAS, puis fiche Play Store.
 
 ## À décider
+
+- **Météo pour une version commerciale.** L'API gratuite d'Open-Meteo exclut les apps avec
+  abonnement ou publicité. Avant une telle version : un abonnement Open-Meteo (API Standard, environ
+  29 $ par mois, avec une clé qu'il faudra protéger, sans doute par un relais) ou une autre source,
+  par exemple Météo-France, sous Licence Ouverte. Voir les
+  [conditions](docs/front-architecture.md#conditions-dutilisation-dopen-meteo).
 
 - **E-mail pro dans l'historique Git.** Le dépôt est public et ses premiers commits portent
   l'adresse professionnelle. Option : réécrire l'historique puis forcer le push.

@@ -48,3 +48,8 @@ jest.mock('@/components/vignettes/sky-scene', () => {
 
 // Le module natif d'expo-crypto n'existe pas sous Jest ; Node tire des UUID v4 de la même façon.
 jest.mock('expo-crypto', () => ({ randomUUID: () => require('node:crypto').randomUUID() }));
+
+// Les tests n'appellent jamais le réseau : ceux de la météo bouchonnent fetch eux-mêmes.
+global.fetch = jest.fn(async () => {
+  throw new Error('Pas de réseau dans les tests.');
+});
