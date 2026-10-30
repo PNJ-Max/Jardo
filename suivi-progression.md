@@ -10,7 +10,16 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (29/10/2026)
+## Où on en est (30/10/2026)
+
+**Étude du catalogue d'espèces ([`docs/etude-catalogue-especes.md`](docs/etude-catalogue-especes.md)),
+à valider par Maxime.** Le catalogue propose et n'impose rien : il préremplit les champs vides,
+montre un calendrier et des conseils, et propose des rappels qu'on ajoute d'un toucher. Premier
+lot de 63 espèces, variété en champ libre, climat du jardin en cinq choix qui décalent les
+fenêtres par quinzaines. Fiches écrites par nous (aucun jeu ouvert n'a de calendrier en français,
+et le partage à l'identique est écarté), rangées dans une constante TypeScript, `species_id`
+facultatif sur la plante. Neuf PR, dont deux migrations qui passent après celle de « Reporter ».
+Neuf points à trancher en fin d'étude.
 
 **Direction visuelle ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), en cours de mise
 en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la carte, tons
@@ -416,7 +425,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)) ; mise en œuvre en neuf PR.
 - Carte isométrique dans l'onglet Jardin (premier chantier, [étapes](docs/etude-carte-potager.md#étapes-livrables)),
   notifications, récoltes chiffrées, photos,
-  catalogue d'espèces, autres types d'espaces, météo, foyer partagé.
+  catalogue d'espèces ([étude](docs/etude-catalogue-especes.md#7-plan-de-mise-en-œuvre)), autres
+  types d'espaces, météo, foyer partagé.
 
 **Phase 7 : vers le Play Store**
 - Test sur téléphone (Expo Go), données sur le téléphone ([migration en sept PR](docs/etude-architecture-donnees.md#plan-de-migration)),
