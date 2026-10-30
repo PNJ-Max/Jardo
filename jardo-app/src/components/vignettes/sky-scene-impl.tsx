@@ -67,7 +67,7 @@ export default function SkyScene({ width, height, horizonHeight }: SkySceneProps
   const fireflyOpacity = useDerivedValue(() => blink.get());
 
   return (
-    <Canvas style={{ width, height }}>
+    <Canvas style={{ width, height }} aria-hidden>
       <Rect x={0} y={0} width={width} height={height}>
         <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 0, y: height }} colors={[colors.skyTop, colors.background]} />
       </Rect>

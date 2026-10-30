@@ -12,6 +12,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontFamily: fonts.bodySemiBold },
+        // La barre a une hauteur fixe : un libellé agrandi y serait rogné.
+        tabBarAllowFontScaling: false,
         // Les fonds viennent aussi du thème : celui du ThemeProvider n'est pas relu par les onglets
         // quand on change de thème en cours de route, et le titre devenait illisible.
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },

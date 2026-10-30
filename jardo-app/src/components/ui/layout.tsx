@@ -9,7 +9,10 @@ export function Card({ children, onPress, style }: { children: ReactNode; onPres
   if (!onPress) return <View style={[styles.card, style]}>{children}</View>;
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.7 }, style]}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.card, pressed && { opacity: 0.7 }, style]}>
       {children}
     </Pressable>
   );
@@ -35,7 +38,7 @@ export function Group({ children, style }: { children: ReactNode; style?: ViewSt
 export function SectionTitle({ children, count, danger = false }: { children: ReactNode; count?: number; danger?: boolean }) {
   const styles = useStyles();
   return (
-    <Text style={[styles.sectionTitle, danger && styles.sectionTitleDanger]}>
+    <Text accessibilityRole="header" style={[styles.sectionTitle, danger && styles.sectionTitleDanger]}>
       {children}
       {count !== undefined && <Text style={styles.sectionCount}> {count}</Text>}
     </Text>

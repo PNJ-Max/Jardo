@@ -52,7 +52,9 @@ function PlantDetail({ plant }: { plant: Plant }) {
       header={
         <>
           <View style={styles.headerText}>
-            <Text style={styles.title}>{plant.name}</Text>
+            <Text style={styles.title} accessibilityRole="header">
+              {plant.name}
+            </Text>
             <Text style={styles.subtitle}>{[plant.zoneName, plant.spaceName].filter(Boolean).join(' · ')}</Text>
           </View>
           {keyFacts !== '' && <Text style={styles.fact}>{keyFacts}</Text>}

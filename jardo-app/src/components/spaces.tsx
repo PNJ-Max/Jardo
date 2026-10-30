@@ -45,7 +45,7 @@ export function SpaceRow({ space, onPress }: { space: Space; onPress: () => void
           <Badge {...due.Ok} icon="checkmark-circle-outline" text="À jour" />
         )}
       </View>
-      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+      <Ionicons aria-hidden name="chevron-forward" size={20} color={colors.textMuted} />
     </Card>
   );
 }

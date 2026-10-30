@@ -99,7 +99,7 @@ describe('fiche plante', () => {
     await renderScreen(<PlantScreen />, services);
 
     expect(await screen.findByText('Aucune tâche pour cette plante.')).toBeOnTheScreen();
-    await fireEvent.press(screen.getByText('Ajouter une tâche à cette plante'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ajouter une tâche à cette plante' }));
 
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/task/form',

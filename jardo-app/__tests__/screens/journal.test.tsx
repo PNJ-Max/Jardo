@@ -30,10 +30,12 @@ describe('écran Journal', () => {
     await renderScreen(<JournalScreen />, await gardenWithTwoEntries());
 
     expect(await screen.findByText('Pucerons')).toBeOnTheScreen();
-    fireEvent.press(screen.getAllByText('Récolte')[0]);
+    expect(screen.getByRole('radio', { name: 'Toutes', selected: true })).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('radio', { name: 'Récolte' }));
 
     await waitFor(() => expect(screen.queryByText('Pucerons')).not.toBeOnTheScreen());
     expect(await screen.findByText('Premières tomates')).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Récolte', selected: true })).toBeOnTheScreen();
   });
 
   it("propose d'effacer des filtres qui ne laissent rien", async () => {
@@ -43,7 +45,7 @@ describe('écran Journal', () => {
     fireEvent.press(screen.getAllByText('Taille')[0]);
     expect(await screen.findByText('Rien de noté')).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByText('Effacer les filtres'));
+    fireEvent.press(screen.getByRole('button', { name: 'Effacer les filtres' }));
     expect(await screen.findByText('Pucerons')).toBeOnTheScreen();
   });
 
@@ -51,7 +53,7 @@ describe('écran Journal', () => {
     await renderScreen(<JournalScreen />);
 
     expect(await screen.findByText('Le journal est vide')).toBeOnTheScreen();
-    await fireEvent.press(screen.getByText('Ouvrir le jardin'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ouvrir le jardin' }));
     expect(router.push).toHaveBeenCalledWith('/');
   });
 });

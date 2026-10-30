@@ -58,7 +58,7 @@ export function WoodPileRow({ pile, onPress }: { pile: WoodPile; onPress: () => 
 
 export function Chevron() {
   const { colors } = useTheme();
-  return <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />;
+  return <Ionicons aria-hidden name="chevron-forward" size={20} color={colors.textMuted} />;
 }
 
 const useStyles = createStyles(({ colors, fonts, typography, spacing }) => ({

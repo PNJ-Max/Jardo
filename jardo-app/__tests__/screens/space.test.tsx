@@ -1,5 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Dimensions } from 'react-native';
 
 import SpaceScreen from '@/app/space/[id]';
 import { addDays } from '@/domain/dates';
@@ -72,7 +73,7 @@ describe('fiche espace', () => {
     await fireEvent.press(await screen.findByRole('tab', { name: 'Contenu' }));
     expect(await screen.findByText("Rien n'y pousse encore")).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByText('Ajouter une plante'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ajouter une plante' }));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/plant/form', params: { spaceId: verger.id } });
     await fireEvent.press(screen.getByText('Ajouter une zone'));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/zone/form', params: { spaceId: verger.id } });
@@ -102,6 +103,31 @@ describe('fiche espace', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Ajouter une zone' }));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/zone/form', params: { spaceId: carre.spaceId } });
+  });
+
+  describe('zones et grande police', () => {
+    const window = Dimensions.get('window');
+    afterEach(() => Dimensions.set({ window }));
+
+    async function zoneTiles(fontScale: number) {
+      Dimensions.set({ window: { ...window, fontScale } });
+      const { services } = await setup();
+      await renderScreen(<SpaceScreen />, services);
+      await fireEvent.press(await screen.findByRole('tab', { name: 'Contenu' }));
+      return [await screen.findByRole('button', { name: 'Carré 4, 1 élément' }), screen.getByRole('button', { name: 'Ajouter une zone' })];
+    }
+
+    it("range deux tuiles par ligne à la taille de police par défaut", async () => {
+      const [zone, add] = await zoneTiles(1);
+
+      expect(zone.parent).toBe(add.parent);
+    });
+
+    it("passe à une tuile par ligne quand la police est agrandie, faute de place pour le texte", async () => {
+      const [zone, add] = await zoneTiles(2);
+
+      expect(zone.parent).not.toBe(add.parent);
+    });
   });
 
   it("revient en arrière depuis le bouton posé sur la vignette, faute de barre de navigation", async () => {

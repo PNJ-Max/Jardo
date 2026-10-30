@@ -46,7 +46,9 @@ function ZoneDetail({ zone, space }: { zone: Zone; space: Space }) {
     <DetailScreen
       header={
         <View style={styles.headerText}>
-          <Text style={styles.title}>{zone.name}</Text>
+          <Text style={styles.title} accessibilityRole="header">
+            {zone.name}
+          </Text>
           <Text style={styles.subtitle}>
             Zone de {space.name} · {zone.itemCount} {zone.itemCount > 1 ? 'éléments' : 'élément'}
           </Text>

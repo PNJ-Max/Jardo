@@ -20,7 +20,7 @@ describe('formulaire de tâche', () => {
 
     expect(screen.getByText('Nouvelle tâche')).toBeOnTheScreen();
     await fireEvent.press(await screen.findByText('Arroser'));
-    await fireEvent.press(screen.getByText('Créer la tâche'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Créer la tâche' }));
 
     await waitFor(() => expect(router.back).toHaveBeenCalled());
     await expect(services.tasks.getAll()).resolves.toMatchObject([
@@ -37,7 +37,7 @@ describe('formulaire de tâche', () => {
     await fireEvent.changeText(screen.getByDisplayValue('3'), '400');
 
     expect(screen.getByText('Entre 1 et 365 jours')).toBeOnTheScreen();
-    await fireEvent.press(screen.getByText('Créer la tâche'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Créer la tâche' }));
     await expect(services.tasks.getAll()).resolves.toEqual([]);
   });
 
@@ -57,7 +57,7 @@ describe('formulaire de tâche', () => {
     expect(screen.getByText('Modifier la tâche')).toBeOnTheScreen();
     expect(screen.getByText('Supprimer')).toBeOnTheScreen();
     await fireEvent.changeText(screen.getByDisplayValue('3'), '5');
-    await fireEvent.press(screen.getByText('Enregistrer les modifications'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
 
     await waitFor(() => expect(router.back).toHaveBeenCalled());
     await expect(services.tasks.getAll()).resolves.toMatchObject([{ intervalDays: 5 }]);

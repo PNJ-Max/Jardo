@@ -13,10 +13,12 @@ type ButtonProps = {
   icon?: IconName;
   loading?: boolean;
   disabled?: boolean;
+  /** Pour un bouton qui replie ou déplie une zone : l'état est alors annoncé. */
+  expanded?: boolean;
   style?: ViewStyle;
 };
 
-export function Button({ title, onPress, variant = 'primary', icon, loading, disabled, style }: ButtonProps) {
+export function Button({ title, onPress, variant = 'primary', icon, loading, disabled, expanded, style }: ButtonProps) {
   const { colors } = useTheme();
   const styles = useStyles();
   const isPrimary = variant === 'primary';
@@ -26,6 +28,11 @@ export function Button({ title, onPress, variant = 'primary', icon, loading, dis
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      // Le texte cède la place à l'indicateur pendant le chargement : le nom ne doit pas disparaître.
+      accessibilityLabel={title}
+      aria-busy={loading}
+      aria-expanded={expanded}
       style={({ pressed }) => [
         styles.button,
         isPrimary ? styles.buttonPrimary : styles.buttonOutline,
@@ -46,14 +53,15 @@ export function Button({ title, onPress, variant = 'primary', icon, loading, dis
 }
 
 /** Bouton rond flottant en bas à droite : l'action « ajouter » d'un écran de liste. */
-export function Fab({ onPress, icon = 'add' }: { onPress: () => void; icon?: IconName }) {
+export function Fab({ onPress, icon = 'add', label = 'Ajouter' }: { onPress: () => void; icon?: IconName; label?: string }) {
   const { colors } = useTheme();
   const styles = useStyles();
 
   return (
     <Pressable
       onPress={onPress}
-      accessibilityLabel="Ajouter"
+      accessibilityRole="button"
+      accessibilityLabel={label}
       style={({ pressed }) => [styles.fab, pressed && { opacity: 0.8 }]}>
       <Ionicons name={icon} size={28} color={colors.primaryText} />
     </Pressable>

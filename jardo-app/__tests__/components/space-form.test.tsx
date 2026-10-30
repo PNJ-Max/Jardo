@@ -8,7 +8,7 @@ import { createTestServices, renderScreen } from '../../test/render';
 async function fillAndSubmit(name: string) {
   await fireEvent.changeText(screen.getByPlaceholderText('Potager du bas'), name);
   await fireEvent.press(screen.getByText('Verger'));
-  await fireEvent.press(screen.getByText("Créer l'espace"));
+  await fireEvent.press(screen.getByRole('button', { name: "Créer l'espace" }));
 }
 
 describe("formulaire d'espace", () => {
@@ -72,7 +72,7 @@ describe("formulaire d'espace", () => {
     expect(screen.getByText("Modifier l'espace")).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'Serre' })).toBeSelected();
     await fireEvent.changeText(screen.getByDisplayValue('Serre'), 'Grande serre');
-    await fireEvent.press(screen.getByText('Enregistrer les modifications'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
 
     await waitFor(() => expect(router.back).toHaveBeenCalled());
     await expect(services.spaces.getAll()).resolves.toMatchObject([{ name: 'Grande serre', kind: 'Greenhouse' }]);
@@ -81,7 +81,7 @@ describe("formulaire d'espace", () => {
   it("n'enregistre rien sans nom ni type", async () => {
     const { services } = await renderScreen(<SpaceFormScreen />);
 
-    await fireEvent.press(screen.getByText("Créer l'espace"));
+    await fireEvent.press(screen.getByRole('button', { name: "Créer l'espace" }));
 
     await expect(services.spaces.getAll()).resolves.toEqual([]);
   });

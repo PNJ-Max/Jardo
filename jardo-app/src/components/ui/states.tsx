@@ -24,7 +24,7 @@ export function ErrorView({ error, onRetry }: { error: Error; onRetry?: () => vo
 
   return (
     <View style={styles.center}>
-      <Ionicons name="cloud-offline-outline" size={40} color={colors.textMuted} />
+      <Ionicons aria-hidden name="cloud-offline-outline" size={40} color={colors.textMuted} />
       <Text style={styles.centerText}>{error.message}</Text>
       {onRetry && <Button title="Réessayer" variant="secondary" onPress={onRetry} />}
     </View>
