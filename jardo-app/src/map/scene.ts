@@ -2,6 +2,8 @@
 // éclairage et primitives. Les coordonnées du monde sont en mètres : x en travers du jardin,
 // y de la maison vers le fond, z vers le haut.
 
+import { swayOf, type Sway } from './motion';
+
 export type Point = [number, number];
 type Vec3 = [number, number, number];
 
@@ -13,6 +15,15 @@ export type Shape =
   | { kind: 'glow'; cx: number; cy: number; rx: number; ry: number; color: string; opacity: number };
 
 export type Bounds = { minX: number; minY: number; maxX: number; maxY: number };
+
+/**
+ * Tranche de la scène, dans l'ordre d'affichage : un décor fixe, ou un objet animé qui se
+ * balance (`sway`) ou rebondit avec les emplacements qu'il dessine (`tags`).
+ */
+export type ScenePart = { shapes: Shape[]; sway?: Sway; tags?: string[] };
+
+/** Feuillage qui se balance : pied en (x, y), hauteur et écart du sommet, en mètres. */
+export type SwaySpec = { x: number; y: number; height: number; reach: number };
 
 /** Pixels de scène par mètre. */
 export const UNIT = 30;
@@ -167,8 +178,9 @@ export function contains(polygon: Point[], [x, y]: Point) {
  * des couches à part.
  */
 export class Painter {
-  private objects: { depth: number; order: number; shapes: Shape[] }[] = [];
+  private objects: { depth: number; order: number; shapes: Shape[]; sway?: Sway; tags: string[] }[] = [];
   private current: Shape[] = [];
+  private tags: string[] = [];
   private bounds: Bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
   readonly ground: Shape[] = [];
   readonly shadows: Shape[] = [];
@@ -181,12 +193,27 @@ export class Painter {
   ) {}
 
   /** Les formes dessinées dans `draw` forment un objet, placé à la profondeur donnée. */
-  object(depthValue: number, draw: () => void, order = 0) {
+  object(depthValue: number, draw: () => void, order = 0, sway?: SwaySpec) {
     const previous = this.current;
     this.current = [];
     draw();
-    this.objects.push({ depth: depthValue, order, shapes: this.current });
+    this.objects.push({
+      depth: depthValue,
+      order,
+      shapes: this.current,
+      // Le sommet, à la hauteur `height`, s'écarte au plus de `reach` à l'écran.
+      sway: sway && swayOf(project(sway.x, sway.y, 0), sway.reach / (sway.height * CP)),
+      tags: this.tags,
+    });
     this.current = previous;
+  }
+
+  /** Les objets dessinés dans `draw` portent l'étiquette `tag`, en plus de celles qui l'entourent. */
+  within(tag: string, draw: () => void) {
+    const previous = this.tags;
+    this.tags = [...previous, tag];
+    draw();
+    this.tags = previous;
   }
 
   /** Les formes dessinées dans `draw` vont dans une couche donnée. */
@@ -197,12 +224,33 @@ export class Painter {
     this.current = previous;
   }
 
+  private sorted() {
+    return this.objects.slice().sort((a, b) => a.depth - b.depth || a.order - b.order);
+  }
+
   shapes(): { shapes: Shape[]; bounds: Bounds } {
-    const sorted = this.objects.slice().sort((a, b) => a.depth - b.depth || a.order - b.order);
     return {
-      shapes: [...this.ground, ...this.shadows, ...sorted.flatMap((o) => o.shapes), ...this.lights],
+      shapes: [...this.ground, ...this.shadows, ...this.sorted().flatMap((o) => o.shapes), ...this.lights],
       bounds: this.bounds,
     };
+  }
+
+  /** La scène en tranches : le décor fixe entre deux objets animés tient dans une seule tranche. */
+  parts(): { parts: ScenePart[]; bounds: Bounds } {
+    const parts: ScenePart[] = [];
+    let still: Shape[] = [...this.ground, ...this.shadows];
+    for (const { shapes, sway, tags } of this.sorted()) {
+      if (!sway && tags.length === 0) {
+        still.push(...shapes);
+        continue;
+      }
+      if (still.length > 0) parts.push({ shapes: still });
+      still = [];
+      parts.push({ shapes, ...(sway && { sway }), ...(tags.length > 0 && { tags }) });
+    }
+    still.push(...this.lights);
+    if (still.length > 0) parts.push({ shapes: still });
+    return { parts, bounds: this.bounds };
   }
 
   private grow([x, y]: Point, r = 0) {

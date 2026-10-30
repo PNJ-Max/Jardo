@@ -2,7 +2,7 @@
 // docs/etude-carte-potager.md), emprises, étiquettes et toucher.
 
 import type { Kit } from './decor';
-import { contains, project, silhouette, type Bounds, type Point, type Shape } from './scene';
+import { contains, project, silhouette, type Bounds, type Point, type ScenePart } from './scene';
 
 export const SLOT_KEYS = [
   'orchard',
@@ -29,10 +29,13 @@ export type SceneSlot = {
   hit: Point[];
   /** Pointe de l'étiquette, à l'écran. */
   anchor: Point;
+  /** Centre de l'emprise au sol, à l'écran : le point fixe du rebond. */
+  pivot: Point;
 };
 
 export type Scene = {
-  shapes: Shape[];
+  /** Le dessin en tranches, dans l'ordre d'affichage. */
+  parts: ScenePart[];
   /** Tout le dessin. */
   bounds: Bounds;
   /** Le jardin : le cadrage de départ. */
@@ -42,6 +45,8 @@ export type Scene = {
   slots: Record<SlotKey, SceneSlot>;
   /** Couleur du sol au-delà du dessin. */
   background: string;
+  /** Places des lucioles à l'écran, la nuit : elles sont animées à part du décor. */
+  fireflies: Point[];
 };
 
 export type SlotSpec = {
@@ -63,6 +68,7 @@ export function slotAt(scene: Scene, point: Point): SlotKey | null {
 }
 
 type Box = { x0: number; y0: number; x1: number; y1: number; z: number };
+type Vec3 = [number, number, number];
 
 /** Emprise à l'écran d'une boîte en mètres. */
 function screenBounds(box: Box): Bounds {
@@ -81,10 +87,10 @@ function screenBounds(box: Box): Bounds {
 export function finishScene(
   { p }: Kit,
   specs: Record<SlotKey, SlotSpec>,
-  { focus, limits }: { focus: Box; limits: Box },
+  { focus, limits, fireflies = [] }: { focus: Box; limits: Box; fireflies?: Vec3[] },
   background: string,
 ): Scene {
-  const { shapes, bounds } = p.shapes();
+  const { parts, bounds } = p.parts();
   const slots = Object.fromEntries(
     SLOT_KEYS.map((key) => {
       const { footprint, height, surface = 0, anchor } = specs[key];
@@ -94,9 +100,22 @@ export function finishScene(
           outline: footprint.map(([x, y]) => project(x, y, surface)),
           hit: silhouette(footprint, height),
           anchor: project(...anchor),
+          pivot: project(
+            footprint.reduce((sum, [x]) => sum + x, 0) / footprint.length,
+            footprint.reduce((sum, [, y]) => sum + y, 0) / footprint.length,
+            0,
+          ),
         },
       ];
     }),
   ) as Record<SlotKey, SceneSlot>;
-  return { shapes, bounds, focus: screenBounds(focus), limits: screenBounds(limits), slots, background };
+  return {
+    parts,
+    bounds,
+    focus: screenBounds(focus),
+    limits: screenBounds(limits),
+    slots,
+    background,
+    fireflies: fireflies.map((point) => project(...point)),
+  };
 }
