@@ -6,7 +6,7 @@ import { formatLongDate, parseDateOnly, toDateOnly } from '@/lib/dates';
 import { createStyles, useTheme } from '@/theme';
 
 import type { DateFieldProps } from './date-field-props';
-import { useFieldStyles } from './form';
+import { FieldMessage, useFieldStyles } from './form';
 
 /**
  * Champ de date sur téléphone : un tap ouvre le calendrier natif d'Android. On passe par l'API
@@ -40,7 +40,7 @@ export function DateField(props: DateFieldProps) {
             error ? fieldStyles.inputError : null,
             pressed && { opacity: 0.7 },
           ]}>
-          <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+          <Ionicons aria-hidden name="calendar-outline" size={20} color={colors.primary} />
           <Text style={value ? styles.value : styles.placeholder}>
             {value ? formatLongDate(value) : 'Choisir une date'}
           </Text>
@@ -48,14 +48,15 @@ export function DateField(props: DateFieldProps) {
         {optional && value && (
           <Pressable
             onPress={() => props.optional && props.onChange(null)}
+            accessibilityRole="button"
             accessibilityLabel={`Effacer : ${label}`}
             hitSlop={8}
             style={styles.clear}>
-            <Ionicons name="close-circle-outline" size={24} color={colors.textMuted} />
+            <Ionicons aria-hidden name="close-circle-outline" size={24} color={colors.textMuted} />
           </Pressable>
         )}
       </View>
-      {error ? <Text style={fieldStyles.error}>{error}</Text> : hint ? <Text style={fieldStyles.hint}>{hint}</Text> : null}
+      <FieldMessage error={error} hint={hint} />
     </View>
   );
 }

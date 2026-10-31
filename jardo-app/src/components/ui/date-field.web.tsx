@@ -5,7 +5,7 @@ import { today } from '@/lib/dates';
 import { useTheme } from '@/theme';
 
 import type { DateFieldProps } from './date-field-props';
-import { useFieldStyles } from './form';
+import { FieldMessage, useFieldStyles } from './form';
 
 /**
  * Champ de date dans le navigateur. Le sélecteur natif d'Android n'existe pas sur le web : on
@@ -48,7 +48,7 @@ export function DateField(props: DateFieldProps) {
           colorScheme: scheme,
         }}
       />
-      {error ? <Text style={fieldStyles.error}>{error}</Text> : hint ? <Text style={fieldStyles.hint}>{hint}</Text> : null}
+      <FieldMessage error={error} hint={hint} />
     </View>
   );
 }

@@ -26,7 +26,7 @@ describe("formulaire d'intervention", () => {
 
     expect(screen.getByText('Noter une intervention')).toBeOnTheScreen();
     await fireEvent.press(await screen.findByText('Arrosage'));
-    await fireEvent.press(screen.getByText("Noter l'intervention"));
+    await fireEvent.press(screen.getByRole('button', { name: "Noter l'intervention" }));
 
     await waitFor(() => expect(router.back).toHaveBeenCalled());
     await expect(services.journal.getAll()).resolves.toMatchObject([{ kind: 'Watering', date: today() }]);
@@ -45,7 +45,7 @@ describe("formulaire d'intervention", () => {
     await act(async () => {
       jest.mocked(DateTimePickerAndroid.open).mock.lastCall![0].onValueChange!({} as never, new Date(year, month - 1, day));
     });
-    await fireEvent.press(screen.getByText("Noter l'intervention"));
+    await fireEvent.press(screen.getByRole('button', { name: "Noter l'intervention" }));
 
     expect(
       await screen.findByText(`La date ${future} est dans le futur : le journal ne note que ce qui a été fait.`),
@@ -63,7 +63,7 @@ describe("formulaire d'intervention", () => {
     await screen.findByDisplayValue('');
     expect(screen.getByText("Corriger l'intervention")).toBeOnTheScreen();
     await fireEvent.changeText(screen.getByPlaceholderText('Optionnel'), 'Au goutte-à-goutte');
-    await fireEvent.press(screen.getByText('Enregistrer les modifications'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
 
     await waitFor(() => expect(router.back).toHaveBeenCalled());
     await expect(services.journal.getAll()).resolves.toMatchObject([{ note: 'Au goutte-à-goutte' }]);

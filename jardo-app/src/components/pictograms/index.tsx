@@ -1,9 +1,10 @@
 import { Image, PixelRatio, View } from 'react-native';
 
 import type { JournalEntryKind } from '@/api/types';
+import type { WeatherKind } from '@/lib/weather';
 import { useTheme } from '@/theme';
 
-import { doneMarks, kindMarks, tabMarks, type DoneGlyph, type Mark, type TabName } from './drawings';
+import { doneMarks, kindMarks, tabMarks, weatherMarks, type DoneGlyph, type Mark, type TabName } from './drawings';
 import { usePictogramRenderer } from './renderer';
 
 export type { TabName } from './drawings';
@@ -34,6 +35,11 @@ export function TabIcon({ name, focused, size }: { name: TabName; focused: boole
   const color = focused ? colors.primary : colors.textMuted;
   const fill = focused ? colors.lawn : undefined;
   return <Pictogram id={`tab-${name}:${scheme}:${focused}`} marks={() => tabMarks(name, color, fill)} size={size} />;
+}
+
+export function WeatherIcon({ kind, size = 32 }: { kind: WeatherKind; size?: number }) {
+  const { scheme } = useTheme();
+  return <Pictogram id={`weather-${kind}:${scheme}`} marks={() => weatherMarks(kind, scheme)} size={size} />;
 }
 
 export function DoneIcon({ glyph, color, size }: { glyph: DoneGlyph; color: string; size: number }) {

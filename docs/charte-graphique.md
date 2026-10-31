@@ -150,6 +150,45 @@ texte posé dessus est le fond sarcelle (`primaryText`), pas du blanc.
 | `lawn` | `#1D4A41` | Décor, 4,6:1 avec `primary` |
 | `skyTop` | `#03141A` | 8,6:1 avec `textMuted` |
 
+## Accessibilité
+
+Les règles que tout composant tient ; `__tests__/components/accessibility.test.tsx` garde celles des
+composants partagés.
+
+- **Rôle et nom.** Tout élément touchable a un rôle (`button`, `link`, `tab`, `radio`…) et un nom
+  qui se comprend hors contexte : « Ajouter un espace », pas « Ajouter ». `Button` pose
+  `accessibilityRole="button"` et se nomme par son titre, même quand l'indicateur de chargement
+  remplace le texte. Un bouton à icône seule a un `accessibilityLabel` (« Fermer », « Retour »,
+  « Effacer : Récolte »). Un champ se nomme par son libellé : le `Text` voisin n'est pas relié au
+  `TextInput` sur Android.
+- **États.** `aria-selected` pour une puce, un onglet ou le type d'espace choisi (avec
+  `aria-checked` pour un `radio`), `aria-expanded` pour ce qui se replie (`expanded` sur `Button`),
+  `aria-busy` pendant un chargement, `disabled` sur le `Pressable`. Les props `aria-*`, et non
+  `accessibilityState`, parce que React Native Web ignore ce dernier. Un groupe de choix a le rôle
+  `radiogroup` et son libellé ; il n'est pas `accessible`, sans quoi TalkBack ne lirait plus ses
+  éléments.
+- **Cibles tactiles : 48 dp au moins, `hitSlop` compris.** Un contrôle plus petit se complète d'un
+  `hitSlop` qui ne mord pas sur le voisin (une pastille de 40 prend 4 de chaque côté, entre deux
+  lignes séparées de 8). Un bouton de barre d'en-tête mesure 48 × 48.
+- **Titres.** Le titre d'un écran et d'une section a le rôle `header` (`SectionTitle`, nom d'une
+  fiche, date d'Aujourd'hui).
+- **Formulaires.** L'ordre de lecture suit l'ordre visuel : cible, champs, bouton d'action ancré en
+  bas. L'erreur d'un champ est une zone vive (`accessibilityLiveRegion="polite"`, via
+  `FieldMessage`), annoncée à son apparition, et lue avec le champ (`accessibilityHint`).
+- **Images décoratives cachées** (`aria-hidden`) : pictogrammes, icônes à côté d'un texte, canvas des
+  vignettes et du ciel. Ce que l'image dit est toujours dit par le texte voisin ou par le nom du
+  contrôle. La carte du jardin a pour alternative la liste des espaces, une bascule nommée dans
+  l'en-tête de l'onglet Jardin.
+- **Grandes polices (échelle de 1,3 à 2).** Rien d'important n'est coupé ni ne se chevauche : pas de
+  hauteur fixe sur un texte (`minHeight`, jamais `height`), pas de `numberOfLines` sur ce qui nomme ou
+  date quelque chose, une disposition qui passe d'une colonne à une autre quand la place manque (les
+  tuiles de zone passent à une par ligne au-delà de 1,3). Ce qui a une hauteur imposée (libellés de
+  la barre d'onglets) ne grandit pas : `tabBarAllowFontScaling: false`, `maxFontSizeMultiplier` de 1,3
+  sur les onglets d'une fiche.
+- **Tester.** Rôle et nom par `getByRole(role, { name })`, état par `{ selected: true }`, jamais par
+  le texte seul. Sur le web, vérifier qu'aucun `<button>` n'en contient un autre : un `Button` ne se
+  pose pas dans un élément touchable qui a le rôle `button` (`Card` avec `onPress`, ligne de liste).
+
 ## À reprendre
 
 - La [direction visuelle](direction-visuelle.md) fixe l'usage de ces jetons ; ses composants

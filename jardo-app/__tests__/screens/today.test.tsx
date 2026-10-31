@@ -179,7 +179,7 @@ describe("écran Aujourd'hui", () => {
     expect(await screen.findByText("Rien à faire aujourd'hui")).toBeOnTheScreen();
     expect(screen.getByText("Tout est fait pour aujourd'hui.")).toBeOnTheScreen();
     expect(screen.queryByText(/^Demain/)).not.toBeOnTheScreen();
-    await fireEvent.press(screen.getByText('Ouvrir le jardin'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ouvrir le jardin' }));
     expect(router.push).toHaveBeenCalledWith('/');
   });
 
@@ -201,7 +201,7 @@ describe("écran Aujourd'hui", () => {
     await renderScreen(<TodayScreen />, services);
 
     expect(await screen.findByText('Base indisponible')).toBeOnTheScreen();
-    await fireEvent.press(screen.getByText('Réessayer'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Réessayer' }));
     expect(await screen.findByText('Tailler')).toBeOnTheScreen();
   });
 

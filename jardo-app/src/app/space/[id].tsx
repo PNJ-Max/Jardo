@@ -175,13 +175,16 @@ function EmptySpace({ space }: { space: Space }) {
 function ZonesSection({ spaceId, zones }: { spaceId: Id; zones: ReturnType<typeof useZones> }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { fontScale } = useWindowDimensions();
   const addZone = () => router.push({ pathname: '/zone/form', params: { spaceId: String(spaceId) } });
 
   if (zones.isPending) return <ActivityIndicator color={colors.primary} />;
   if (zones.error) return <Text style={styles.error}>{zones.error.message}</Text>;
 
   const tiles: (Zone | 'add')[] = [...zones.data, 'add'];
-  const rows = Array.from({ length: Math.ceil(tiles.length / 2) }, (_, i) => tiles.slice(i * 2, i * 2 + 2));
+  // Deux carrés de front ne laissent plus de place au texte d'une grande police : un par ligne.
+  const perRow = fontScale > 1.3 ? 1 : 2;
+  const rows = Array.from({ length: Math.ceil(tiles.length / perRow) }, (_, i) => tiles.slice(i * perRow, (i + 1) * perRow));
 
   return (
     <View style={styles.section}>
@@ -203,7 +206,7 @@ function ZonesSection({ spaceId, zones }: { spaceId: Id; zones: ReturnType<typeo
               />
             ),
           )}
-          {row.length === 1 && <View style={styles.spacer} />}
+          {perRow === 2 && row.length === 1 && <View style={styles.spacer} />}
         </View>
       ))}
     </View>

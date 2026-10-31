@@ -21,9 +21,9 @@ export function Tabs<T extends string>({ tabs, value, onChange }: TabsProps<T>) 
             key={tab.key}
             onPress={() => onChange(tab.key)}
             accessibilityRole="tab"
-            accessibilityState={{ selected }}
+            aria-selected={selected}
             style={({ pressed }) => [styles.tab, pressed && { opacity: 0.6 }]}>
-            <Text style={[styles.label, selected && styles.labelSelected]} numberOfLines={1}>
+            <Text style={[styles.label, selected && styles.labelSelected]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
               {tab.label}
             </Text>
             <View style={[styles.indicator, selected && styles.indicatorSelected]} />

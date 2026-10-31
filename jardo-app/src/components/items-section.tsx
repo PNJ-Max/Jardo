@@ -114,6 +114,7 @@ function Groups<T extends Groupable>({ title, query, zones, emptyText, renderIte
           title={showArchived ? 'Masquer les archivés' : `Voir les archivés (${archivedCount})`}
           icon="archive-outline"
           variant="secondary"
+          expanded={showArchived}
           onPress={() => setShowArchived(!showArchived)}
         />
       )}

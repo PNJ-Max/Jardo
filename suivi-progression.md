@@ -21,6 +21,26 @@ et le partage à l'identique est écarté), rangées dans une constante TypeScri
 facultatif sur la plante. Neuf PR, dont deux migrations qui passent après celle de « Reporter ».
 Neuf points à trancher en fin d'étude.
 
+**Météo, avec Open-Meteo (30/10/2026).** Réglages → Météo : on cherche une ville par son nom
+(géocodage d'Open-Meteo, sans GPS ni permission de localisation), on choisit un résultat (nom,
+région, pays), on la voit et on peut la retirer.
+- **Aujourd'hui** :
+  - le ciel dit le temps du jour (« Averses · 5° à 15° · 6 mm ») avec un pictogramme dessiné, et
+    cache son soleil quand il fait gris ;
+  - la semaine porte un pictogramme par jour ;
+  - les groupes qui ont un arrosage (sauf la serre) reçoivent une note douce à partir de 5 mm
+    tombés la veille ou prévus dans la journée (« Il a plu 8 mm hier : l'arrosage peut
+    attendre. »). Aucune échéance ne change.
+- **Hors ligne d'abord** : la ville et la dernière prévision sont gardées sur le téléphone
+  (AsyncStorage, comme l'apparence, sans migration). Le réseau est appelé au plus toutes les trois
+  heures, au retour sur l'app. Une prévision de plus de six heures dit de quand elle date. Sans
+  ville ou sans prévision, rien ne s'affiche.
+- **Licence** : l'API gratuite d'Open-Meteo est **réservée à l'usage non commercial**. Elle
+  suffit pour le test chez les proches ; une version payante ou avec publicité sur le Play Store
+  demandera un abonnement (voir « À décider »).
+- **Vérifications** : sur le web avec une vraie ville (Namur), en clair et en sombre ; pas encore
+  sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#météo).
+
 **Direction visuelle ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), en cours de mise
 en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la carte, tons
 chauds de la carte en accents, sections encadrées au lieu d'une carte par ligne, ciel du jour en
@@ -115,6 +135,16 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   (« Ajouter une plante » ou un tas de bois, « Ajouter une zone »). Icône et splash redessinés au
   pinceau de la carte par `assets/source/icons.ts` : la pousse en pot, sur le `primary` pour
   l'icône, sur les fonds de l'app pour les splashs ; monochrome avec un jour sous le bord du pot.
+
+**Passe d'accessibilité (30/10/2026).** `Button` a enfin le rôle `button` (il se nomme par son
+titre, même en chargement) ; les cartes touchables aussi. Puces de filtre et type d'espace sont des
+`radio` dans un `radiogroup` nommé, l'état dans `aria-selected` / `aria-checked` (React Native Web
+ignore `accessibilityState`). Champs nommés par leur libellé, erreur annoncée à son apparition et lue
+avec le champ. Titres en `header`, icônes et canvas décoratifs cachés, boutons d'en-tête à 48 dp,
+pastilles à 40 + 4 de `hitSlop`. Grandes polices : tuiles de zone à une par ligne au-delà de 1,3,
+barre d'onglets à taille fixe. Règles dans la [charte](docs/charte-graphique.md) ; tests dans
+`__tests__/components/accessibility.test.tsx`. Les écrans d'Aujourd'hui, la carte et les fichiers
+modifiés par d'autres sessions restent à reprendre : liste dans la PR.
 
 **La carte s'anime (étape 5 de l'[étude](docs/etude-carte-potager.md#tranché-à-létape-5-animations), 30/10/2026).**
 Les arbres, conifères et buissons se balancent lentement, chacun à sa phase et à sa période, sous
@@ -469,6 +499,12 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   puis fiche Play Store.
 
 ## À décider
+
+- **Météo pour une version commerciale.** L'API gratuite d'Open-Meteo exclut les apps avec
+  abonnement ou publicité. Avant une telle version : un abonnement Open-Meteo (API Standard, environ
+  29 $ par mois, avec une clé qu'il faudra protéger, sans doute par un relais) ou une autre source,
+  par exemple Météo-France, sous Licence Ouverte. Voir les
+  [conditions](docs/front-architecture.md#conditions-dutilisation-dopen-meteo).
 
 - **E-mail pro dans l'historique Git.** Le dépôt est public et ses premiers commits portent
   l'adresse professionnelle. Option : réécrire l'historique puis forcer le push.

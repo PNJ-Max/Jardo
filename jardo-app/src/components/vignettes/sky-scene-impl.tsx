@@ -20,6 +20,8 @@ export type SkySceneProps = {
   height: number;
   /** Hauteur réservée à l'horizon, en bas. */
   horizonHeight: number;
+  /** Le soleil du jour ; caché quand il fait gris. */
+  sun?: boolean;
 };
 
 const toPicture = ({ shapes, bounds: { minX, minY, maxX, maxY } }: VignetteDrawing) =>
@@ -49,8 +51,8 @@ const fireflyCycleMs = 3400;
 const sideMargin = 12;
 const groundFade = 16;
 
-/** Le ciel du jour : fondu de `skyTop` vers le fond, soleil le jour, horizon du jardin en bas, lucioles la nuit. */
-export default function SkyScene({ width, height, horizonHeight }: SkySceneProps) {
+/** Le ciel du jour : fondu de `skyTop` vers le fond, soleil les jours clairs, horizon du jardin en bas, lucioles la nuit. */
+export default function SkyScene({ width, height, horizonHeight, sun = true }: SkySceneProps) {
   const { scheme, colors } = useTheme();
   const reduceMotion = useReducedMotion();
   const { ground, groundBottom, scene, fireflies, bounds } = horizon(scheme);
@@ -67,12 +69,12 @@ export default function SkyScene({ width, height, horizonHeight }: SkySceneProps
   const fireflyOpacity = useDerivedValue(() => blink.get());
 
   return (
-    <Canvas style={{ width, height }}>
+    <Canvas style={{ width, height }} aria-hidden>
       <Rect x={0} y={0} width={width} height={height}>
         <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 0, y: height }} colors={[colors.skyTop, colors.background]} />
       </Rect>
       <Group transform={[{ translateX: x }, { translateY: y }, { scale }]}>
-        {!fireflies && (
+        {!fireflies && sun && (
           <Group>
             <Circle cx={horizonSun[0]} cy={horizonSun[1]} r={48} color={colors.glow} opacity={0.35}>
               <BlurMask blur={18} style="normal" />

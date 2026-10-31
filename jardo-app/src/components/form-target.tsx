@@ -10,7 +10,7 @@ export function FormTarget({ label }: { label: string }) {
 
   return (
     <View style={styles.row}>
-      <Ionicons name="location-outline" size={18} color={colors.textMuted} />
+      <Ionicons aria-hidden name="location-outline" size={18} color={colors.textMuted} />
       <Text style={styles.text}>{label}</Text>
     </View>
   );

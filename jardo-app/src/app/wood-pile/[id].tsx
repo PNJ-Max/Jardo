@@ -50,7 +50,9 @@ function WoodPileDetail({ pile }: { pile: WoodPile }) {
       header={
         <>
           <View style={styles.headerText}>
-            <Text style={styles.title}>{pile.name}</Text>
+            <Text style={styles.title} accessibilityRole="header">
+              {pile.name}
+            </Text>
             <Text style={styles.subtitle}>{[pile.zoneName, pile.spaceName].filter(Boolean).join(' · ')}</Text>
           </View>
           <Text style={styles.fact}>

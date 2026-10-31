@@ -1,7 +1,7 @@
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 
 import type { SpaceKind } from '@/api/types';
-import { useFieldStyles } from '@/components/ui/form';
+import { FieldMessage, useFieldStyles } from '@/components/ui/form';
 import { SpaceVignette } from '@/components/vignettes/space-vignette';
 import { spaceKindOptions } from '@/lib/garden';
 import { createStyles, spacing } from '@/theme';
@@ -28,7 +28,7 @@ export function SpaceKindSelect({
   return (
     <View style={fieldStyles.field}>
       <Text style={fieldStyles.label}>Type</Text>
-      <View style={styles.grid}>
+      <View style={styles.grid} accessibilityRole="radiogroup" accessibilityLabel="Type">
         {spaceKindOptions.map((option) => {
           const selected = option.value === value;
           return (
@@ -36,7 +36,8 @@ export function SpaceKindSelect({
               key={option.value}
               onPress={() => onChange(option.value)}
               accessibilityRole="radio"
-              accessibilityState={{ selected }}
+              aria-selected={selected}
+              aria-checked={selected}
               accessibilityLabel={option.label}
               style={({ pressed }) => [styles.tile, { width }, selected && styles.tileSelected, pressed && { opacity: 0.7 }]}>
               <SpaceVignette kind={option.value} width={width - 8} height={Math.round(width * 0.7)} padding={2} />
@@ -45,7 +46,7 @@ export function SpaceKindSelect({
           );
         })}
       </View>
-      {error ? <Text style={fieldStyles.error}>{error}</Text> : null}
+      <FieldMessage error={error} />
     </View>
   );
 }

@@ -73,9 +73,7 @@ export function ZoneTile({ name, caption, seed, plants, onPress }: ZoneTileProps
       style={({ pressed }) => [styles.tile, pressed && { opacity: 0.7 }]}>
       <ZoneSquare seed={seed} plants={plants} />
       <View style={styles.text}>
-        <Text style={styles.name} numberOfLines={2}>
-          {name}
-        </Text>
+        <Text style={styles.name}>{name}</Text>
         <Text style={styles.caption}>{caption}</Text>
       </View>
     </Pressable>
@@ -94,7 +92,7 @@ export function AddZoneTile({ onPress }: { onPress: () => void }) {
       accessibilityLabel="Ajouter une zone"
       style={({ pressed }) => [styles.tile, styles.addTile, pressed && { opacity: 0.7 }]}>
       <View style={[styles.square, styles.addSquare]}>
-        <Ionicons name="add" size={24} color={colors.primary} />
+        <Ionicons aria-hidden name="add" size={24} color={colors.primary} />
       </View>
       <Text style={[styles.name, styles.addLabel]}>Ajouter une zone</Text>
     </Pressable>
