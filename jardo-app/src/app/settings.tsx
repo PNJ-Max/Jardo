@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { useExportGarden, useGarden, useImportGarden, useReadBackupFile, useSaveGarden } from '@/api/queries';
 import type { Garden, GardenBackup } from '@/api/types';
+import { RemindersSection } from '@/components/reminders';
 import { fieldError, Button, Card, ChipSelect, Field, FormError, screenStyles, SectionTitle } from '@/components/ui';
 import { WeatherSection } from '@/components/weather';
 import { confirm } from '@/lib/confirm';
@@ -17,7 +18,7 @@ const themeOptions: { value: ThemePreference; label: string }[] = [
   { value: 'dark', label: 'Sombre' },
 ];
 
-/** Réglages : le jardin, enregistré dans la base locale ; l'apparence, mémorisée sur l'appareil. */
+/** Réglages : le jardin, enregistré dans la base locale ; les rappels, la météo et l'apparence, mémorisés sur l'appareil. */
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -40,6 +41,8 @@ export default function SettingsScreen() {
       </View>
 
       <GardenBackupSection onImported={() => setImports((count) => count + 1)} />
+
+      <RemindersSection />
 
       <WeatherSection />
 

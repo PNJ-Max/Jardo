@@ -12,6 +12,22 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (31/10/2026)
 
+**Rappels par notification locale (31/10/2026).** L'app rappelle ce qui est à faire, même
+fermée : ce sont des notifications programmées sur le téléphone, sans serveur ni push.
+- **Réglages → Rappels** : un interrupteur, désactivé par défaut, et l'heure du rappel (8 h par
+  défaut), gardés dans AsyncStorage sans migration. La permission est demandée à l'activation,
+  jamais au lancement. Refusée ou retirée ensuite, la section le dit et propose d'ouvrir les
+  réglages du téléphone.
+- **Le rappel du jour** n'arrive que s'il y a quelque chose à faire, en une phrase : « 3 choses au
+  jardin aujourd'hui, dont 1 en retard : arroser (Potager), tailler (Verger)… ». Le toucher
+  ouvre Aujourd'hui.
+- **Deux semaines programmées d'avance**, calculées depuis les tâches dues (report compris). Elles
+  sont reprogrammées après chaque écriture qui change les tâches dues et au retour sur l'app.
+  Les limites : 64 notifications en attente sur iOS, 500 alarmes sur Android.
+- **Web** : pas de rappels, la section n'apparaît pas.
+- **Vérifications** : tests Jest ; web vérifié (Réglages sans la section, sans erreur) ; pas
+  encore sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#rappels).
+
 **Catalogue d'espèces, PR 1 : le domaine et les 12 premières fiches.** Aucun écran ni aucune
 migration : le catalogue existe dans le code, prêt pour le lien plante → espèce (PR 2).
 - **Domaine** (`src/domain/species.ts`) : quinzaines (`Mar1`, `May2`), cinq climats qui décalent

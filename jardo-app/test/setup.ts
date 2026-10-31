@@ -5,7 +5,7 @@ jest.mock('react-native-safe-area-context', () => require('react-native-safe-are
 // Le routeur réel exige une arborescence de navigation ; les tests ne vérifient que les
 // appels de navigation.
 jest.mock('expo-router', () => ({
-  router: { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) },
+  router: { push: jest.fn(), replace: jest.fn(), navigate: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) },
   Stack: { Screen: () => null },
   // Les boutons de l'en-tête de l'onglet Jardin sont déclarés par l'écran : on les y rend.
   Tabs: { Screen: ({ options }: { options?: { headerRight?: () => unknown } }) => options?.headerRight?.() ?? null },
@@ -46,6 +46,21 @@ jest.mock('@/components/vignettes/sky-scene', () => {
     SkyScene: ({ width, height }: { width: number; height: number }) => createElement(View, { style: { width, height } }),
   };
 });
+
+// Les notifications sont natives : par défaut, la permission n'est pas encore demandée et sera donnée.
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  getPermissionsAsync: jest.fn(async () => ({ granted: false, status: 'undetermined', canAskAgain: true })),
+  requestPermissionsAsync: jest.fn(async () => ({ granted: true, status: 'granted', canAskAgain: true })),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  cancelAllScheduledNotificationsAsync: jest.fn(async () => {}),
+  scheduleNotificationAsync: jest.fn(async () => 'notification'),
+  getLastNotificationResponse: jest.fn(() => null),
+  clearLastNotificationResponse: jest.fn(),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  AndroidImportance: { DEFAULT: 3 },
+  SchedulableTriggerInputTypes: { DATE: 'date' },
+}));
 
 // Le module natif d'expo-crypto n'existe pas sous Jest ; Node tire des UUID v4 de la même façon.
 jest.mock('expo-crypto', () => ({ randomUUID: () => require('node:crypto').randomUUID() }));
