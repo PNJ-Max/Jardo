@@ -20,6 +20,6 @@ export type { JournalEntry, JournalEntryInput } from '@/data/journal';
 export type { Plant, PlantInput } from '@/data/plants';
 export type { ProblemDetails } from '@/data/problem';
 export type { Space, SpaceInput } from '@/data/spaces';
-export type { CompleteTaskInput, DueHorizon, GardenTask, TaskCompletion, TaskInput } from '@/data/tasks';
+export type { CompleteTaskInput, DueHorizon, GardenTask, TaskCompletion, TaskInput, TaskPostponement } from '@/data/tasks';
 export type { WoodPile, WoodPileInput } from '@/data/wood-piles';
 export type { Zone, ZoneInput } from '@/data/zones';

@@ -130,6 +130,10 @@ INSERT INTO gardens (id, name, created_at) VALUES (
   strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 );
 `,
+  `
+-- « Reporter » : l'échéance d'une tâche ne tombe pas avant ce jour.
+ALTER TABLE garden_tasks ADD COLUMN postponed_until TEXT;
+`,
 ];
 
 /** Amène la base à la dernière version, une migration par transaction. */

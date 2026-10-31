@@ -77,6 +77,7 @@ export const backupColumns = {
     zone_id: 'text?',
     item_id: 'text?',
     created_at: 'instant',
+    postponed_until: 'text?',
   },
   garden_map_slots: { id: 'text', garden_id: 'text', slot_key: 'text', space_id: 'text', zone_id: 'text?' },
 } as const satisfies Record<string, Record<string, ColumnType>>;
@@ -114,7 +115,12 @@ type LooseTables = Record<string, Record<string, unknown>[]>;
  * Un export d'une version précédente s'importe ainsi migré à la volée. Un test exige une entrée
  * par migration : une migration qui ne peut pas se rejouer sur un export y lève `invalidBackup`.
  */
-export const backupUpgrades: readonly ((tables: LooseTables) => LooseTables)[] = [];
+export const backupUpgrades: readonly ((tables: LooseTables) => LooseTables)[] = [
+  (tables) => ({
+    ...tables,
+    garden_tasks: tables.garden_tasks?.map((task) => ({ ...task, postponed_until: null })),
+  }),
+];
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
