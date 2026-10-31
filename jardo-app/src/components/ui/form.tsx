@@ -18,6 +18,9 @@ export function Field({ label, error, hint, style, onFocus, onBlur, ...input }: 
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
+        // Le libellé est un Text voisin : sans ceci, le lecteur d'écran annonce un champ sans nom.
+        accessibilityLabel={label}
+        accessibilityHint={error ?? hint}
         placeholderTextColor={colors.textMuted}
         style={[styles.input, noBrowserRing, input.multiline && styles.inputMultiline, focused && styles.inputFocused, error ? styles.inputError : null, style]}
         onFocus={(event) => {
@@ -30,9 +33,23 @@ export function Field({ label, error, hint, style, onFocus, onBlur, ...input }: 
         }}
         {...input}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      <FieldMessage error={error} hint={hint} />
     </View>
   );
+}
+
+/** L'erreur d'un champ (annoncée à son apparition), à défaut son indication. */
+export function FieldMessage({ error, hint }: { error?: string; hint?: string }) {
+  const styles = useFieldStyles();
+
+  if (error) {
+    return (
+      <Text accessibilityLiveRegion="polite" style={styles.error}>
+        {error}
+      </Text>
+    );
+  }
+  return hint ? <Text style={styles.hint}>{hint}</Text> : null;
 }
 
 /** Liste de choix sous forme de pastilles : plus rapide au doigt qu'un menu déroulant. */
@@ -63,6 +80,13 @@ export function ChipSelect<T extends string | number>({
       <Pressable
         key={option.value}
         onPress={() => onChange(option.value)}
+        accessibilityRole="radio"
+        aria-selected={selected}
+        aria-checked={selected}
+        // Le pictogramme est décoratif : seul le texte nomme la pastille.
+        accessibilityLabel={option.label}
+        // 40 de haut, 48 au doigt : la marge ne mord pas sur la pastille voisine (8 d'écart).
+        hitSlop={{ top: 4, bottom: 4 }}
         style={[
           styles.chip,
           option.icon !== undefined && styles.chipWithIcon,
@@ -80,13 +104,20 @@ export function ChipSelect<T extends string | number>({
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       {scrollable ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chips}
+          accessibilityRole="radiogroup"
+          accessibilityLabel={label}>
           {chips}
         </ScrollView>
       ) : (
-        <View style={styles.chips}>{chips}</View>
+        <View style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel={label}>
+          {chips}
+        </View>
       )}
-      {error ? <Text style={styles.error}>{error}</Text> : hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      <FieldMessage error={error} hint={hint} />
     </View>
   );
 }
@@ -97,10 +128,8 @@ export function ChipSelect<T extends string | number>({
  * (zone introuvable, règle métier refusée…).
  */
 export function FormError({ error }: { error: Error | null }) {
-  const styles = useFieldStyles();
-
   if (!error || (error instanceof ProblemError && error.problem.errors)) return null;
-  return <Text style={styles.error}>{error.message}</Text>;
+  return <FieldMessage error={error.message} />;
 }
 
 /** Message de validation d'un champ, renvoyé par un service. */
@@ -131,6 +160,8 @@ export const useFieldStyles = createStyles(({ colors, fonts, typography, spacing
   hint: { ...typography.caption, color: colors.textMuted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
+    minHeight: 40,
+    justifyContent: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 999,

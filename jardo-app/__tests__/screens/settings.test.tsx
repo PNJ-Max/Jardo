@@ -35,7 +35,7 @@ describe('réglages', () => {
 
     expect(screen.queryByText('Enregistrer le nom')).not.toBeOnTheScreen();
     await fireEvent.changeText(await screen.findByDisplayValue('Jardin des Tilleuls'), '  Jardin de Maxime ');
-    await fireEvent.press(screen.getByText('Enregistrer le nom'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer le nom' }));
 
     expect(await screen.findByText('Nom enregistré.')).toBeOnTheScreen();
     await expect(services.garden.get()).resolves.toMatchObject({ name: 'Jardin de Maxime' });
@@ -47,7 +47,7 @@ describe('réglages', () => {
 
     // maxLength borne la saisie au clavier, pas changeText : le service reste juge.
     await fireEvent.changeText(await screen.findByDisplayValue('Jardin des Tilleuls'), 'a'.repeat(101));
-    await fireEvent.press(screen.getByText('Enregistrer le nom'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer le nom' }));
 
     expect(await screen.findByText('Le champ « Nom » ne doit pas dépasser 100 caractères.')).toBeOnTheScreen();
   });
@@ -64,7 +64,7 @@ describe('réglages', () => {
     await renderScreen(<SettingsScreen />, await setup());
 
     expect(await screen.findByText(/Le fichier exporté contient tout le jardin/)).toBeOnTheScreen();
-    await fireEvent.press(screen.getByText('Exporter mon jardin'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Exporter mon jardin' }));
 
     const name = `jardo-${today()}.json`;
     expect(await screen.findByText(`Fichier exporté : ${name}.`)).toBeOnTheScreen();
@@ -79,7 +79,7 @@ describe('réglages', () => {
     jest.mocked(confirm).mockResolvedValue(true);
     await renderScreen(<SettingsScreen />, services);
 
-    await fireEvent.press(await screen.findByText('Importer un jardin'));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Importer un jardin' }));
 
     expect(await screen.findByText('Jardin importé.')).toBeOnTheScreen();
     expect(confirm).toHaveBeenCalledWith(
@@ -97,7 +97,7 @@ describe('réglages', () => {
     jest.mocked(confirm).mockResolvedValue(false);
     await renderScreen(<SettingsScreen />, services);
 
-    await fireEvent.press(await screen.findByText('Importer un jardin'));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Importer un jardin' }));
 
     expect(confirm).toHaveBeenCalled();
     await expect(services.garden.get()).resolves.toMatchObject({ name: 'Jardin des Tilleuls' });
@@ -109,7 +109,7 @@ describe('réglages', () => {
     jest.mocked(pickBackupFile).mockResolvedValue('{ "format": "jardo", ');
     await renderScreen(<SettingsScreen />, services);
 
-    await fireEvent.press(await screen.findByText('Importer un jardin'));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Importer un jardin' }));
 
     expect(await screen.findByText(/^Import impossible, rien n'a été modifié\. .*pas du JSON valide/)).toBeOnTheScreen();
     expect(confirm).not.toHaveBeenCalled();

@@ -82,10 +82,10 @@ describe('écran Jardin sans carte', () => {
     expect(await screen.findByText('Potager')).toBeOnTheScreen();
     expect(screen.queryByText('Ancien verger')).not.toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByText('Voir les espaces archivés (1)'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Voir les espaces archivés (1)' }));
     expect(screen.getByText('Ancien verger')).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByText('Masquer les espaces archivés'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Masquer les espaces archivés' }));
     expect(screen.queryByText('Ancien verger')).not.toBeOnTheScreen();
   });
 

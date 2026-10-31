@@ -107,6 +107,16 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   pinceau de la carte par `assets/source/icons.ts` : la pousse en pot, sur le `primary` pour
   l'icône, sur les fonds de l'app pour les splashs ; monochrome avec un jour sous le bord du pot.
 
+**Passe d'accessibilité (30/10/2026).** `Button` a enfin le rôle `button` (il se nomme par son
+titre, même en chargement) ; les cartes touchables aussi. Puces de filtre et type d'espace sont des
+`radio` dans un `radiogroup` nommé, l'état dans `aria-selected` / `aria-checked` (React Native Web
+ignore `accessibilityState`). Champs nommés par leur libellé, erreur annoncée à son apparition et lue
+avec le champ. Titres en `header`, icônes et canvas décoratifs cachés, boutons d'en-tête à 48 dp,
+pastilles à 40 + 4 de `hitSlop`. Grandes polices : tuiles de zone à une par ligne au-delà de 1,3,
+barre d'onglets à taille fixe. Règles dans la [charte](docs/charte-graphique.md) ; tests dans
+`__tests__/components/accessibility.test.tsx`. Les écrans d'Aujourd'hui, la carte et les fichiers
+modifiés par d'autres sessions restent à reprendre : liste dans la PR.
+
 **La carte s'anime (étape 5 de l'[étude](docs/etude-carte-potager.md#tranché-à-létape-5-animations), 30/10/2026).**
 Les arbres, conifères et buissons se balancent lentement, chacun à sa phase et à sa période, sous
 des rafales qui traversent la scène ; les haies taillées restent droites. Toucher un espace ou une

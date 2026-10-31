@@ -48,7 +48,7 @@ export default function SpaceVignette({ kind, width, height, padding = 0, paddin
   return (
     // Sur le web, un dessin immobile n'a pas besoin de garder son contexte WebGL : une liste de
     // vignettes dépasserait sinon la limite du navigateur.
-    <Canvas style={{ width, height }} __destroyWebGLContextAfterRender>
+    <Canvas style={{ width, height }} aria-hidden __destroyWebGLContextAfterRender>
       {sky && (
         <Rect x={0} y={0} width={width} height={height}>
           <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 0, y: height }} colors={[colors.skyTop, colors.background]} />

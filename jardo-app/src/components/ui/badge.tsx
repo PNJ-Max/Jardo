@@ -21,7 +21,7 @@ export function Badge({
 
   return (
     <View style={[styles.badge, { backgroundColor: background }]}>
-      <Ionicons name={icon} size={14} color={color} />
+      <Ionicons aria-hidden name={icon} size={14} color={color} />
       <Text style={[styles.text, { color }]}>{text}</Text>
     </View>
   );

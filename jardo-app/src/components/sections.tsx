@@ -158,9 +158,9 @@ function TaskGroupView({
       <Pressable
         onPress={() => setOpen(!open)}
         accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
+        aria-expanded={open}
         style={({ pressed }) => [styles.groupHeader, pressed && { opacity: 0.6 }]}>
-        <Ionicons name={open ? 'chevron-down' : 'chevron-forward'} size={18} color={colors.textMuted} />
+        <Ionicons aria-hidden name={open ? 'chevron-down' : 'chevron-forward'} size={18} color={colors.textMuted} />
         <View style={styles.groupText}>
           <Text style={styles.groupName}>{group.name}</Text>
           <Text style={styles.groupSummary}>

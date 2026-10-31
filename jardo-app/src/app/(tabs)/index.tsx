@@ -88,7 +88,13 @@ function SpaceList() {
         data={shown}
         keyExtractor={(space) => String(space.id)}
         {...refresh}
-        ListHeaderComponent={garden.data ? <Text style={styles.gardenName}>{garden.data.name}</Text> : null}
+        ListHeaderComponent={
+          garden.data ? (
+            <Text style={styles.gardenName} accessibilityRole="header">
+              {garden.data.name}
+            </Text>
+          ) : null
+        }
         renderItem={({ item }) => <SpaceRow space={item} onPress={() => router.push(`/space/${item.id}`)} />}
         ListEmptyComponent={
           <Empty title="Votre jardin est vide" hint="Ajoutez un premier espace : un potager, un verger, un tas de bois…">
@@ -101,13 +107,14 @@ function SpaceList() {
               title={showArchived ? 'Masquer les espaces archivés' : `Voir les espaces archivés (${archivedCount})`}
               icon="archive-outline"
               variant="secondary"
+              expanded={showArchived}
               onPress={() => setShowArchived(!showArchived)}
               style={styles.archivedToggle}
             />
           ) : null
         }
       />
-      <Fab onPress={() => router.push('/space/form')} />
+      <Fab onPress={() => router.push('/space/form')} label="Ajouter un espace" />
     </View>
   );
 }
@@ -116,5 +123,5 @@ const useStyles = createStyles(({ colors, typography, spacing }) => ({
   gardenName: { ...typography.title, color: colors.text, marginBottom: spacing.sm },
   archivedToggle: { marginTop: spacing.sm },
   headerActions: { flexDirection: 'row', alignItems: 'center', paddingRight: spacing.sm },
-  headerButton: { paddingHorizontal: spacing.sm },
+  headerButton: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
 }));
