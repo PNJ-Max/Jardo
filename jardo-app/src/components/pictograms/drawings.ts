@@ -65,6 +65,12 @@ function brush(scheme: ColorScheme): Brush {
   };
 }
 
+const tomatoAt = ({ pal, object, flat, lit }: Brush, x: number, y: number, r: number) =>
+  object(circle(x, y, r), pal.tomato, [
+    flat(circle(x - r * 0.4, y - r * 0.35, r * 0.28), lit(pal.tomato)),
+    flat(`M${x - 1.7} ${y - r + 0.7}Q${x} ${y - r - 0.9} ${x + 1.7} ${y - r + 0.7}Q${x} ${y - r + 1.6} ${x - 1.7} ${y - r + 0.7}Z`, pal.leafDark),
+  ]);
+
 const kindDrawings: Record<JournalEntryKind, (b: Brush) => Mark[]> = {
   Watering: ({ pal, object, flat, line, lit, ground }) => [
     ground(15.5, 10),
@@ -155,12 +161,9 @@ const kindDrawings: Record<JournalEntryKind, (b: Brush) => Mark[]> = {
     ]),
   ],
 
-  Harvest: ({ pal, object, flat, line, lit, ground }) => {
-    const tomato = (x: number, y: number, r: number) =>
-      object(circle(x, y, r), pal.tomato, [
-        flat(circle(x - r * 0.4, y - r * 0.35, r * 0.28), lit(pal.tomato)),
-        flat(`M${x - 1.7} ${y - r + 0.7}Q${x} ${y - r - 0.9} ${x + 1.7} ${y - r + 0.7}Q${x} ${y - r + 1.6} ${x - 1.7} ${y - r + 0.7}Z`, pal.leafDark),
-      ]);
+  Harvest: (b) => {
+    const { pal, object, line, ground } = b;
+    const tomato = (x: number, y: number, r: number) => tomatoAt(b, x, y, r);
     return [
       ground(16, 10.5),
       line('M9.6 18C9.6 7.4 22.4 7.4 22.4 18', 3.6),
@@ -330,4 +333,90 @@ const weatherDrawings: Record<WeatherKind, (b: Brush) => Mark[]> = {
 
 export function weatherMarks(kind: WeatherKind, scheme: ColorScheme): Mark[] {
   return weatherDrawings[kind](brush(scheme));
+}
+
+/** Les catégories du catalogue d'espèces (docs/etude-catalogue-especes.md) : légume, aromatique, fruitier, petit fruit. */
+export const SPECIES_CATEGORIES = ['Vegetable', 'Herb', 'FruitTree', 'SmallFruit'] as const;
+export type SpeciesCategory = (typeof SPECIES_CATEGORIES)[number];
+
+/** Une feuille en amande de (x0, y0) à (x1, y1), large de `w` de part et d'autre de sa nervure. */
+function leaf(x0: number, y0: number, x1: number, y1: number, w: number) {
+  const [dx, dy] = [x1 - x0, y1 - y0];
+  const len = Math.hypot(dx, dy);
+  const [nx, ny] = [(-dy / len) * w, (dx / len) * w];
+  const [mx, my] = [(x0 + x1) / 2, (y0 + y1) / 2];
+  const n = (v: number) => +v.toFixed(2);
+  return `M${x0} ${y0}Q${n(mx + nx)} ${n(my + ny)} ${x1} ${y1}Q${n(mx - nx)} ${n(my - ny)} ${x0} ${y0}Z`;
+}
+
+const categoryDrawings: Record<SpeciesCategory, (b: Brush) => Mark[]> = {
+  Vegetable: (b) => {
+    const { pal, object, line, ground } = b;
+    const stem = 'M13.6 28C13.2 21 14.8 13 13.8 5.4';
+    return [
+      ground(15.5, 9.5),
+      ...object(rect(14.8, 3, 16.6, 28, 0.6), pal.wood),
+      line(stem, 3.6),
+      line(stem, 1.8, pal.leafDark),
+      line('M12.6 18.6L16.6 17.6', 1.1),
+      line('M12.8 10.8L16.6 10', 1.1),
+      ...object('M13.8 21C10 21.8 6.4 20.2 5 16.8C9 15.8 12.6 17.4 13.8 21Z', pal.leaf),
+      ...object('M14 12.4C10.6 12.8 7.8 11 7 8C10.6 7.4 13.4 9.2 14 12.4Z', pal.leafDark),
+      ...object('M14.2 16C17 13.8 21.2 13.4 24.8 15C22 17.4 18 17.8 14.2 16Z', pal.leaf),
+      ...object('M14 8.4C15.2 5.8 17.8 4.4 20.8 4.8C19.8 7.6 17.2 9 14 8.4Z', pal.crop),
+      ...tomatoAt(b, 23, 21.6, 3.3),
+      ...tomatoAt(b, 17.6, 24.4, 3),
+    ];
+  },
+
+  Herb: ({ pal, object, line, lit, ground }) => {
+    const twigs = ['M15 28C15.4 21 16 13 17.4 6', 'M15.4 20C12.8 17.8 11 15 10.4 11.4', 'M16.2 15C18.8 13.2 21 10.8 22.2 7.6'];
+    const leaves: [number, number, number, number][] = [
+      [15.1, 24.4, 11, 22.6], [15.1, 24.4, 19.2, 22.6],
+      [15.4, 20, 18.8, 17.6], [12.6, 17.6, 8.6, 17.2], [11.4, 15, 14.2, 12.4],
+      [16.2, 15, 13.4, 12.2], [19.4, 12.8, 21.6, 16], [20.8, 10.6, 24.8, 11],
+      [16.8, 10, 13.4, 8], [16.8, 10, 20, 7.6],
+    ];
+    const flower = (x: number, y: number) => object(circle(x, y, 1.9), lit(pal.aubergine), [], 1);
+    return [
+      ground(16, 7.5),
+      ...twigs.map((d) => line(d, 3.2)),
+      ...twigs.map((d) => line(d, 1.4, pal.bark)),
+      ...leaves.flatMap(([x0, y0, x1, y1]) => object(leaf(x0, y0, x1, y1, 1.6), pal.leaf, [], 1)),
+      ...flower(17.6, 4.8),
+      ...flower(10.2, 9.6),
+      ...flower(22.6, 6.2),
+    ];
+  },
+
+  FruitTree: ({ pal, object, flat, line, lit, ground }) => [
+    ground(16, 8.5),
+    line('M16 11.4C16 8.6 16.6 6.4 18 4.6', 1.9),
+    ...object(
+      'M16 10.8C13.4 8.8 7.4 9.2 7.2 16.4C7 22.8 11.2 27.4 13.8 27.4C14.9 27.4 15.3 26.8 16 26.8C16.7 26.8 17.1 27.4 18.2 27.4C20.8 27.4 25 22.8 24.8 16.4C24.6 9.2 18.6 8.8 16 10.8Z',
+      pal.apple,
+      [flat(ellipse(11.4, 15.6, 1.6, 2.8), lit(pal.apple))],
+    ),
+    ...object(leaf(17.4, 7.4, 26, 4.8, 2.6), pal.leaf, [line('M18.6 7L24.6 5.2', 0.8, pal.leafDark)]),
+  ],
+
+  SmallFruit: ({ pal, object, flat, line, lit, ground }) => {
+    const berry = (x: number, y: number) =>
+      object(circle(x, y, 2.5), pal.berry, [flat(circle(x - 0.9, y - 0.9, 0.7), lit(pal.berry))], 1.1);
+    return [
+      ground(18, 7),
+      ...object(leaf(13.4, 6.4, 4.6, 10.6, 3), pal.leaf, [line('M12.2 7L6.4 9.8', 0.8, pal.leafDark)]),
+      line('M13.4 6.2C16.6 7.6 19.4 11.6 19.8 16.4C20 19.4 19.4 22 18.8 24.4'),
+      ...berry(19.6, 23.4),
+      ...berry(15.4, 20.6),
+      ...berry(21.6, 18.4),
+      ...berry(16.6, 15.4),
+      ...berry(20.4, 13.2),
+      ...berry(16.4, 10.4),
+    ];
+  },
+};
+
+export function categoryMarks(category: SpeciesCategory, scheme: ColorScheme): Mark[] {
+  return categoryDrawings[category](brush(scheme));
 }
