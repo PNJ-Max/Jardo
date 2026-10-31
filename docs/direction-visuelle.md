@@ -212,7 +212,10 @@ trait `ink` (`#2E4A31` / `#CFE3D1`) de 1,6 et remplissages du décor :
 | Consommation de bois | Bûche et flamme |
 | Autre | Carnet |
 
-Ils servent dans les lignes de tâche, le journal et ses filtres. Ionicons reste pour la
+Ils servent dans les lignes de tâche, le journal et ses filtres.
+
+Les catégories du catalogue d'espèces ont aussi le leur (`CategoryIcon`), au même pinceau : plant
+de tomate (légume), brin de thym (aromatique), pomme (fruitier), grappe de groseilles (petit fruit). Ionicons reste pour la
 navigation et les actions génériques (retour, fermer, ajouter, chevron).
 
 ## Animations

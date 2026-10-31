@@ -28,6 +28,20 @@ fermée : ce sont des notifications programmées sur le téléphone, sans serveu
 - **Vérifications** : tests Jest ; web vérifié (Réglages sans la section, sans erreur) ; pas
   encore sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#rappels).
 
+**Catalogue d'espèces, PR 1 : le domaine et les 12 premières fiches.** Aucun écran ni aucune
+migration : le catalogue existe dans le code, prêt pour le lien plante → espèce (PR 2).
+- **Domaine** (`src/domain/species.ts`) : quinzaines (`Mar1`, `May2`), cinq climats qui décalent
+  les fenêtres des légumes de −2 à +2 quinzaines, en sens inverse pour les plages d'automne,
+  modulo 24 à travers le Nouvel An ; fruitiers et petits fruits ne bougent pas. « En ce moment »
+  (`activeWindows`) donne les fenêtres qui couvrent un jour, pour un climat.
+- **Fiches** (`src/data/species/`) : tomate, courgette, laitue, carotte, radis, haricot, pomme de
+  terre, poireau, mâche, ail, pommier, framboisier. Écrites par nous pour le climat tempéré,
+  recoupées sur au moins deux calendriers publiés ; le tableau du lot et ses sources sont dans la
+  PR, à relire par Maxime et un proche jardinier.
+- **Tests de cohérence** : identifiants figés, noms uniques sans accents ni casse, fiches
+  complètes, unités du modèle, plages valides et sans chevauchement dans chaque climat, décalages
+  aux bords de l'année, « en ce moment » à des dates choisies.
+
 **Étude du catalogue d'espèces ([`docs/etude-catalogue-especes.md`](docs/etude-catalogue-especes.md)),
 à valider par Maxime.** Le catalogue propose et n'impose rien : il préremplit les champs vides,
 montre un calendrier et des conseils, et propose des rappels qu'on ajoute d'un toucher. Premier
@@ -36,6 +50,11 @@ fenêtres par quinzaines. Fiches écrites par nous (aucun jeu ouvert n'a de cale
 et le partage à l'identique est écarté), rangées dans une constante TypeScript, `species_id`
 facultatif sur la plante. Neuf PR, dont deux migrations qui passent après celle de « Reporter ».
 Neuf points à trancher en fin d'étude.
+- [x] PR 3, pictogrammes des catégories (31/10/2026) : plant de tomate (légume), brin de thym
+  (aromatique), pomme (fruitier), grappe de groseilles (petit fruit), au pinceau des autres
+  pictogrammes, en clair et en sombre. `CategoryIcon` les affiche par catégorie pour les écrans des
+  PR 4 et 5. L'union `SpeciesCategory` vit pour l'instant dans `components/pictograms/drawings.ts` ;
+  la PR 1 pourra la remplacer par le type de son domaine.
 
 **Météo, avec Open-Meteo (30/10/2026).** Réglages → Météo : on cherche une ville par son nom
 (géocodage d'Open-Meteo, sans GPS ni permission de localisation), on choisit un résultat (nom,

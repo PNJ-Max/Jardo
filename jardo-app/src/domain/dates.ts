@@ -54,3 +54,8 @@ export function addMonths(value: DateOnly, months: number): DateOnly {
 export const addYears = (value: DateOnly, years: number) => addMonths(value, years * 12);
 
 export const yearOf = (value: DateOnly) => parse(value).year;
+
+/** Le mois, de 1 à 12. */
+export const monthOf = (value: DateOnly) => parse(value).month;
+
+export const dayOf = (value: DateOnly) => parse(value).day;

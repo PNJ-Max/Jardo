@@ -108,6 +108,9 @@ chaque lecture ; les écrans affichent ce qu'ils renvoient.
 - `due-date.ts` : `calculateDueState` (échéance, voyant, jours de retard) ; `wood-pile.ts` :
   `remainingSteres` et `drying` ; `latest-interventions.ts` : `latestInterventions(rows, kind)`,
   la dernière intervention qui vaut pour une cible, à partir de lignes déjà lues.
+- `species.ts` : le type `Species` du catalogue, les quinzaines, le décalage des fenêtres selon le
+  climat (`windowsFor`) et « en ce moment » (`activeWindows`). Les fiches sont des constantes dans
+  `src/data/species/`, un fichier par catégorie ([étude](etude-catalogue-especes.md#5-stockage-et-mises-à-jour)).
 - `types.ts` : le vocabulaire (types d'espace, d'élément, d'intervention, rythmes, statuts) ;
   `kinds.ts` : ce que chaque type d'espace accepte, et les libellés des messages d'erreur.
 - Les identifiants sont des chaînes (`Id`), les UUID de la base locale.
