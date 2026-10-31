@@ -30,6 +30,7 @@ function task(inDays: number, extra: Partial<GardenTask> = {}): GardenTask {
     intervalDays: 3,
     startDate: nextDueDate,
     createdAt: '2026-01-01T12:00:00.000Z',
+    postponedUntil: null,
     spaceId: 'potager',
     spaceName: 'Potager',
     spaceKind: 'VegetableGarden',

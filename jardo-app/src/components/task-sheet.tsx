@@ -19,6 +19,8 @@ type TaskSheetProps = {
   onClose: () => void;
   /** « Fait aujourd'hui » : la ligne joue le même « Fait » que son bouton. */
   onDone: () => void;
+  /** « Reporter à demain ». Absent pour une tâche qui n'est pas due. */
+  onPostpone?: () => void;
   /** « Ouvrir la fiche » de la cible. */
   onOpen: () => void;
 };
@@ -27,7 +29,7 @@ type TaskSheetProps = {
  * La feuille d'une tâche d'Aujourd'hui, au toucher de sa ligne : son rythme, la dernière fois
  * qu'elle a été faite, puis ce qu'on peut en faire. C'est aussi l'alternative au glissement.
  */
-export function TaskSheet({ task, visible, onClose, onDone, onOpen }: TaskSheetProps) {
+export function TaskSheet({ task, visible, onClose, onDone, onPostpone, onOpen }: TaskSheetProps) {
   const styles = useStyles();
   const reduceMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
@@ -73,7 +75,7 @@ export function TaskSheet({ task, visible, onClose, onDone, onOpen }: TaskSheetP
           </View>
           <View style={styles.actions}>
             <Button title="Fait aujourd'hui" icon="checkmark" onPress={then(onDone)} />
-            {/* « Reporter à demain » viendra ici, entre les deux façons de faire et la fiche. */}
+            {onPostpone && <SheetAction icon="arrow-redo-outline" label="Reporter à demain" onPress={then(onPostpone)} />}
             <SheetAction
               icon="calendar-outline"
               label="Fait un autre jour, avec une note"

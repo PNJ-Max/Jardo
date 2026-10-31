@@ -10,7 +10,7 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (29/10/2026)
+## Où on en est (30/10/2026)
 
 **Direction visuelle ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)), en cours de mise
 en œuvre.** « Le jardin dessiné » : vignettes et pictogrammes tirés du dessin de la carte, tons
@@ -59,17 +59,28 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   (« Il y a 9 jours, mar. 20 oct. »), la dernière quantité pour une récolte, puis « Fait
   aujourd'hui » (la ligne joue le même « Fait » que son bouton), « Fait un autre jour, avec une
   note » (l'écran « Fait » précisé) et « Ouvrir la fiche ». Elle remplace l'appui long sur « Fait »
-  d'Aujourd'hui (les fiches le gardent) ; « Reporter à demain » viendra entre « Fait aujourd'hui »
-  et les autres actions. « Tout arroser » dans l'en-tête d'un espace qui a au moins deux arrosages
-  dus, retards compris : un seul arrosage noté sur l'espace, qui vaut pour ses zones et ses
-  éléments ; les lignes célèbrent et se replient ensemble, puis « Noté au journal : arroser tout
+  d'Aujourd'hui (les fiches le gardent). « Tout arroser » dans l'en-tête d'un espace qui a au
+  moins deux arrosages dus, retards compris : un seul arrosage noté sur l'espace, qui vaut pour
+  ses zones et ses éléments ; les lignes célèbrent et se replient ensemble, puis « Noté au journal : arroser tout
   l'espace, Potager » avec « Ajouter une note » et « Annuler ». Glisser une ligne à droite
   (`react-native-gesture-handler`, `GestureHandlerRootView` à la racine) découvre « Fait » et, lâchée
   au-delà de 112 points ou d'un geste vif, la fait comme le bouton (animation, haptique,
   annulation) ; le geste ne démarre que vers la droite et cède au défilement. Le bouton et la
   feuille en sont l'alternative au toucher ; quand le téléphone réduit les animations, la feuille
   s'ouvre sans glisser et « Tout arroser » note aussitôt, comme « Fait ».
-- [ ] 6. Reporter.
+- [x] 6. Reporter (30/10/2026) : la tâche porte `postponedUntil` (colonne `postponed_until`,
+  migration 2 ; l'export la contient, un export plus ancien s'importe sans report). L'échéance
+  reste calculée : c'est la plus tardive de l'échéance calculée et du report. Toute intervention
+  notée le jour du report ou après (« Fait », une entrée du journal, « Tout arroser ») repousse
+  l'échéance calculée au moins au lendemain, si bien que le report à demain s'efface de lui-même,
+  sans rien écrire ; un report arrivé à son jour sans être fait compte le retard depuis ce jour.
+  `tasks.postpone(id, until)` refuse un jour passé ou le jour même, une tâche ponctuelle faite et
+  un report qui ne repousse rien ; `restorePostponement` remet le report d'avant pour « Annuler ».
+  « Reporter à demain » dans la feuille, entre « Fait aujourd'hui » et les autres actions, et en
+  glissant la ligne à gauche (mêmes seuils, dessous en terre `soil`, « Demain »), pour une tâche
+  due seulement : la ligne se replie (aussitôt si les animations sont réduites), un déclic
+  haptique, puis « Reporté à demain : arroser les tomates, Tomates » avec « Annuler ». Une tâche
+  en retard reportée sort d'« En retard » et apparaît le lendemain dans la semaine.
 - [x] 7. Vignettes d'espace (28/10/2026) : les cinq scènes (potager, verger, petits fruits, serre,
   bois) dessinées avec `decor.ts` sur un pan de pelouse, de jour en clair et de nuit en sombre,
   enregistrées une fois en `SkPicture` par type et par thème (`components/vignettes/`). En tête de
