@@ -59,17 +59,28 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   (« Il y a 9 jours, mar. 20 oct. »), la dernière quantité pour une récolte, puis « Fait
   aujourd'hui » (la ligne joue le même « Fait » que son bouton), « Fait un autre jour, avec une
   note » (l'écran « Fait » précisé) et « Ouvrir la fiche ». Elle remplace l'appui long sur « Fait »
-  d'Aujourd'hui (les fiches le gardent) ; « Reporter à demain » viendra entre « Fait aujourd'hui »
-  et les autres actions. « Tout arroser » dans l'en-tête d'un espace qui a au moins deux arrosages
-  dus, retards compris : un seul arrosage noté sur l'espace, qui vaut pour ses zones et ses
-  éléments ; les lignes célèbrent et se replient ensemble, puis « Noté au journal : arroser tout
+  d'Aujourd'hui (les fiches le gardent). « Tout arroser » dans l'en-tête d'un espace qui a au
+  moins deux arrosages dus, retards compris : un seul arrosage noté sur l'espace, qui vaut pour
+  ses zones et ses éléments ; les lignes célèbrent et se replient ensemble, puis « Noté au journal : arroser tout
   l'espace, Potager » avec « Ajouter une note » et « Annuler ». Glisser une ligne à droite
   (`react-native-gesture-handler`, `GestureHandlerRootView` à la racine) découvre « Fait » et, lâchée
   au-delà de 112 points ou d'un geste vif, la fait comme le bouton (animation, haptique,
   annulation) ; le geste ne démarre que vers la droite et cède au défilement. Le bouton et la
   feuille en sont l'alternative au toucher ; quand le téléphone réduit les animations, la feuille
   s'ouvre sans glisser et « Tout arroser » note aussitôt, comme « Fait ».
-- [ ] 6. Reporter.
+- [x] 6. Reporter (30/10/2026) : la tâche porte `postponedUntil` (colonne `postponed_until`,
+  migration 2 ; l'export la contient, un export plus ancien s'importe sans report). L'échéance
+  reste calculée : c'est la plus tardive de l'échéance calculée et du report. Toute intervention
+  notée le jour du report ou après (« Fait », une entrée du journal, « Tout arroser ») repousse
+  l'échéance calculée au moins au lendemain, si bien que le report à demain s'efface de lui-même,
+  sans rien écrire ; un report arrivé à son jour sans être fait compte le retard depuis ce jour.
+  `tasks.postpone(id, until)` refuse un jour passé ou le jour même, une tâche ponctuelle faite et
+  un report qui ne repousse rien ; `restorePostponement` remet le report d'avant pour « Annuler ».
+  « Reporter à demain » dans la feuille, entre « Fait aujourd'hui » et les autres actions, et en
+  glissant la ligne à gauche (mêmes seuils, dessous en terre `soil`, « Demain »), pour une tâche
+  due seulement : la ligne se replie (aussitôt si les animations sont réduites), un déclic
+  haptique, puis « Reporté à demain : arroser les tomates, Tomates » avec « Annuler ». Une tâche
+  en retard reportée sort d'« En retard » et apparaît le lendemain dans la semaine.
 - [x] 7. Vignettes d'espace (28/10/2026) : les cinq scènes (potager, verger, petits fruits, serre,
   bois) dessinées avec `decor.ts` sur un pan de pelouse, de jour en clair et de nuit en sombre,
   enregistrées une fois en `SkPicture` par type et par thème (`components/vignettes/`). En tête de
@@ -106,6 +117,18 @@ barre d'onglets à taille fixe. Règles dans la [charte](docs/charte-graphique.m
 `__tests__/components/accessibility.test.tsx`. Les écrans d'Aujourd'hui, la carte et les fichiers
 modifiés par d'autres sessions restent à reprendre : liste dans la PR.
 
+**La carte s'anime (étape 5 de l'[étude](docs/etude-carte-potager.md#tranché-à-létape-5-animations), 30/10/2026).**
+Les arbres, conifères et buissons se balancent lentement, chacun à sa phase et à sa période, sous
+des rafales qui traversent la scène ; les haies taillées restent droites. Toucher un espace ou une
+zone occupés le fait rebondir, et la fiche s'ouvre au sommet du rebond (90 ms). La nuit, les
+lucioles flottent autour de leur place et s'allument par intermittence. Quand le téléphone réduit
+les animations, la carte reste immobile et le toucher ouvre aussitôt. La scène est enregistrée une
+fois en tranches (`Painter.parts()`) : chaque image ne fait que rejouer ces tranches, avec une
+transformation pour les seules animées, à 30 images par seconde, et l'horloge s'arrête quand
+l'onglet Jardin n'est pas affiché. Vérifié dans le navigateur ; **reste à ressentir sur
+téléphone** : la fluidité sur un Android d'entrée de gamme, l'amplitude du balancement et le
+rebond, que la transition vers la fiche recouvre en partie.
+
 **Écran dédoublé en mode web, corrigé.** Après Jardin → espace → retour, Chrome laissait des restes
 d'image en double. Cause : un écran quitté passe en `display: none` sur le web et mesure 0 × 0. La
 carte recadrait alors vers une échelle nulle, puis se ré-animait au retour. Skia web 2.6 recréait
@@ -127,6 +150,18 @@ partage, choix d'un fichier). La sauvegarde automatique d'Android reste à véri
 test, avec la [procédure `adb shell bmgr`](docs/etude-architecture-donnees.md#vérifier-la-sauvegarde-automatique-sur-lapk).
 Nouvelles dépendances : `expo-sharing`, `expo-file-system`, `expo-document-picker` (incluses dans
 Expo Go).
+
+**Dépôt prêt pour l'APK de test (30/10/2026).** `jardo-app/eas.json` : `development` (client de
+développement, distribution interne), `preview` (APK, distribution interne) et `production` (AAB) ;
+`appVersionSource: remote`, recommandé par la doc d'Expo : EAS tient le `versionCode` et l'incrémente
+(`autoIncrement` sur `preview` et `production`), sans commit à chaque build. `app.json` : identifiant
+`com.pnjmax.jardo` (Android et iOS), définitif à la première publication sur le Play Store ; permissions
+de stockage et `SYSTEM_ALERT_WINDOW` retirées (`INTERNET` reste, nécessaire au profil `development`).
+Sauvegarde automatique d'Android : `allowBackup` vrai par défaut, la base `expo-sqlite` est dans
+`files/SQLite`, donc sauvegardée (25 Mo) sans réglage ; à confirmer sur un téléphone. `expo-doctor` propre
+après `expo install --fix` (cinq montées de patch du SDK 57 ; entrées `@emnapi/core` et `@emnapi/runtime`
+du lockfile conservées). Reste à Maxime : compte Expo, `eas init`, premier build ;
+[guide pas à pas](docs/guide-apk-test.md).
 
 **Migration « local d'abord » ([plan](docs/etude-architecture-donnees.md#plan-de-migration)).**
 **Terminée le 26/10/2026.** L'app tourne sur la base locale depuis l'étape 5 ; l'API, retirée à l'étape 6, n'existe plus que sous le tag `api-dotnet`.
@@ -430,7 +465,8 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 **Phase 7 : vers le Play Store**
 - Test sur téléphone (Expo Go), données sur le téléphone ([migration en sept PR](docs/etude-architecture-donnees.md#plan-de-migration)),
-  APK pour la famille par EAS, puis fiche Play Store.
+  APK pour la famille par EAS ([dépôt prêt, guide](docs/guide-apk-test.md) ; premier build à lancer par Maxime),
+  puis fiche Play Store.
 
 ## À décider
 

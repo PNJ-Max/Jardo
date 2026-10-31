@@ -319,3 +319,139 @@ describe('glisser une ligne à droite', () => {
     expect(screen.getByText("Fait aujourd'hui")).toBeOnTheScreen();
   });
 });
+
+describe('« Reporter à demain »', () => {
+  const reported = 'Reporté à demain : arroser les tomates, Tomates';
+
+  const swipe = (id: string, translationX: number, velocityX = 0) =>
+    act(() => {
+      fireGestureHandler(getByGestureTestId(`swipe:${id}`), [
+        { state: State.BEGAN, translationX: 0 },
+        { state: State.ACTIVE, translationX: translationX / 2 },
+        { state: State.ACTIVE, translationX },
+        { state: State.END, translationX, velocityX },
+      ]);
+      jest.runAllTicks();
+    });
+
+  it('se trouve dans la feuille, entre « Fait aujourd\'hui » et les deux autres actions', async () => {
+    const services = await createTestServices();
+    await addPotager(services);
+    await renderScreen(<TodayScreen />, services);
+
+    await fireEvent.press(await screen.findByText('Arroser les tomates'));
+
+    const actions = screen.getAllByText(/^(Fait aujourd'hui|Reporter à demain|Fait un autre jour, avec une note|Ouvrir la fiche)$/);
+    expect(actions.map((action) => action.props.children)).toEqual([
+      "Fait aujourd'hui",
+      'Reporter à demain',
+      'Fait un autre jour, avec une note',
+      'Ouvrir la fiche',
+    ]);
+  });
+
+  it('sort la tâche en retard jusqu\'à demain, sans rien noter, et « Annuler » la remet', async () => {
+    const services = await createTestServices();
+    const { tomatoWatering } = await addPotager(services);
+    await renderScreen(<TodayScreen />, services);
+
+    await fireEvent.press(await screen.findByText('Arroser les tomates'));
+    await fireEvent.press(screen.getByRole('button', { name: /Reporter à demain/ }));
+
+    expect(screen.queryByText("Fait aujourd'hui")).not.toBeOnTheScreen();
+    expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+    await letRowFold();
+
+    expect(await screen.findByText(reported)).toBeOnTheScreen();
+    await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
+    expect(screen.queryByText(/^En retard/)).not.toBeOnTheScreen();
+    await expect(services.tasks.getById(tomatoWatering.id)).resolves.toMatchObject({ postponedUntil: inDays(1), status: 'Ok' });
+    await expect(services.journal.getAll()).resolves.toEqual([]);
+
+    await fireEvent.press(screen.getByText('Annuler'));
+
+    expect(await screen.findByText('Arroser les tomates')).toBeOnTheScreen();
+    expect(screen.getByText(/^En retard/)).toBeOnTheScreen();
+    await expect(services.tasks.getById(tomatoWatering.id)).resolves.toMatchObject({ postponedUntil: null, status: 'Overdue' });
+  });
+
+  it("n'est pas proposé pour une tâche qui n'est pas encore due", async () => {
+    const services = await createTestServices();
+    const { potager } = await addPotager(services);
+    await services.tasks.create({ kind: 'Treatment', recurrence: 'Once', startDate: inDays(2), spaceId: potager.id });
+    await renderScreen(<TodayScreen />, services);
+
+    await fireEvent.press((await screen.findAllByRole('tab'))[2]);
+    await fireEvent.press(screen.getByText('Traiter'));
+
+    expect(screen.getByText("Fait aujourd'hui")).toBeOnTheScreen();
+    expect(screen.queryByText('Reporter à demain')).not.toBeOnTheScreen();
+  });
+
+  it('se fait en glissant la ligne à gauche, avec la même annulation', async () => {
+    const services = await createTestServices();
+    const { tomatoWatering } = await addPotager(services);
+    await renderScreen(<TodayScreen />, services);
+    await screen.findByText('Arroser les tomates');
+
+    await swipe(tomatoWatering.id, -160);
+
+    expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText(/^Fait : Arroser les tomates/)).toBeEnabled();
+    await letRowFold();
+
+    expect(await screen.findByText(reported)).toBeOnTheScreen();
+    await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
+    await fireEvent.press(screen.getByText('Annuler'));
+    expect(await screen.findByText('Arroser les tomates')).toBeOnTheScreen();
+    await expect(services.tasks.getById(tomatoWatering.id)).resolves.toMatchObject({ postponedUntil: null });
+  });
+
+  it('suffit à être vif, et ne fait rien lâché avant le seuil', async () => {
+    const services = await createTestServices();
+    const { tomatoWatering, carreWatering } = await addPotager(services);
+    await renderScreen(<TodayScreen />, services);
+    await screen.findByText('Arroser les tomates');
+
+    await swipe(carreWatering.id, -60);
+    await swipe(tomatoWatering.id, -60, -1200);
+    await letRowFold();
+
+    expect(await screen.findByText(reported)).toBeOnTheScreen();
+    await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
+    expect(screen.getByText('Arroser le carré')).toBeOnTheScreen();
+    await expect(services.tasks.getById(carreWatering.id)).resolves.toMatchObject({ postponedUntil: null });
+  });
+
+  it('reporte aussitôt quand le téléphone réduit les animations', async () => {
+    jest.mocked(useReducedMotion).mockReturnValue(true);
+    try {
+      const services = await createTestServices();
+      const { tomatoWatering } = await addPotager(services);
+      await renderScreen(<TodayScreen />, services);
+      await screen.findByText('Arroser les tomates');
+
+      await swipe(tomatoWatering.id, -160);
+
+      expect(await screen.findByText(reported)).toBeOnTheScreen();
+    } finally {
+      jest.mocked(useReducedMotion).mockReturnValue(false);
+    }
+  });
+
+  it("remet la tâche et prévient quand le report est refusé", async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    const services = await createTestServices();
+    const { tomatoWatering } = await addPotager(services);
+    jest.spyOn(services.tasks, 'postpone').mockRejectedValueOnce(businessRule('Refusé.'));
+    await renderScreen(<TodayScreen />, services);
+    await screen.findByText('Arroser les tomates');
+
+    await swipe(tomatoWatering.id, -160);
+    await letRowFold();
+
+    await waitFor(() => expect(alert).toHaveBeenCalledWith("La tâche n'a pas été reportée", 'Refusé.'));
+    expect(await screen.findByText('Arroser les tomates')).toBeOnTheScreen();
+  });
+});

@@ -422,3 +422,33 @@ export function useWaterSpace() {
     onSettled: invalidate,
   });
 }
+
+/**
+ * « Reporter » : comme avec « Fait », la tâche quitte aussitôt les listes de tâches dues ; le
+ * rechargement qui suit la replace au jour du report. Remettre le report renvoyé (`previous`) par
+ * `useRestorePostponement` annule.
+ */
+export function usePostponeTask() {
+  const { tasks } = useServices();
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidate(afterTaskWrite);
+
+  return useMutation({
+    mutationFn: ({ id, until }: { id: Id; until: DateOnly }) => tasks.postpone(id, until),
+
+    onMutate: ({ id }) => leaveDueLists(queryClient, (task) => task.id === id),
+    onError: (_error, _variables, context) => {
+      context?.previous.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
+    },
+    onSettled: invalidate,
+  });
+}
+
+export function useRestorePostponement() {
+  const { tasks } = useServices();
+  const invalidate = useInvalidate(afterTaskWrite);
+  return useMutation({
+    mutationFn: ({ id, previous }: { id: Id; previous: DateOnly | null }) => tasks.restorePostponement(id, previous),
+    onSuccess: invalidate,
+  });
+}

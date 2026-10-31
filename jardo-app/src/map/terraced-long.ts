@@ -11,7 +11,6 @@ import {
   drawFence,
   drawField,
   drawFirewood,
-  drawFireflies,
   drawGreenhouse,
   drawHedge,
   drawHouse,
@@ -41,6 +40,7 @@ const BEDS: Record<'bed-1' | 'bed-2' | 'bed-3' | 'bed-4', [number, number]> = {
 };
 const GH = { x0: 4.7, y0: 12.4 };
 const FIREWOOD = { x0: 0.3, y0: 23.35 };
+const FIREFLIES: [number, number, number][] = [[2.2, 9.5, 1.2], [5.3, 6.2, 0.9], [3.0, 13.8, 1.4], [5.9, 11.0, 1.1], [1.6, 15.0, 0.8], [5.8, 20.2, 1.0], [2.6, 5.0, 1.3], [-4.2, 16.5, 1.1], [12.2, 9.0, 0.9]];
 
 const bedSpec = ([x0, y0]: [number, number], tall = false): SlotSpec => ({
   footprint: rectFootprint(x0 - 0.12, y0 - 0.12, x0 + 2.72, y0 + 2.12),
@@ -85,6 +85,7 @@ function buildScene(kit: Kit): Scene {
     {
       focus: { x0: 0, x1: 8, y0: -2, y1: 25.5, z: 3 },
       limits: { x0: -5, x1: 13, y0: -9, y1: 30, z: 0 },
+      fireflies: kit.isNight ? FIREFLIES : [],
     },
     kit.ctx.meadow,
   );
@@ -240,21 +241,22 @@ function drawGarden(kit: Kit) {
   drawPot(kit, 7.25, 1.2);
   drawPatioSet(kit, 5.6, 1.6);
 
-  drawTree(kit, pal, 1.7, 7.0, { fruit: pal.apple });
-  [5.4, 6.6, 7.8, 9.0].forEach((y) => drawBush(kit, pal, 7.05, y, 0.44, pal.berry));
-  drawBush(kit, pal, 6.95, 10.35, 0.58, pal.berry);
+  // Chaque emplacement étiquette ses objets : ils rebondissent quand on le touche.
+  p.within('orchard', () => drawTree(kit, pal, 1.7, 7.0, { fruit: pal.apple }));
+  p.within('small-fruit', () => {
+    [5.4, 6.6, 7.8, 9.0].forEach((y) => drawBush(kit, pal, 7.05, y, 0.44, pal.berry));
+    drawBush(kit, pal, 6.95, 10.35, 0.58, pal.berry);
+  });
 
-  drawGreenhouse(kit, GH.x0, GH.y0);
-  drawBed(kit, ...BEDS['bed-1'], 'summer');
-  drawBed(kit, ...BEDS['bed-2'], 'lettuce');
-  drawBed(kit, ...BEDS['bed-3'], 'leek');
-  drawBed(kit, ...BEDS['bed-4'], 'seedlings');
-  drawFirewood(kit, FIREWOOD.x0, FIREWOOD.y0);
+  p.within('greenhouse', () => drawGreenhouse(kit, GH.x0, GH.y0));
+  p.within('vegetable', () => {
+    p.within('bed-1', () => drawBed(kit, ...BEDS['bed-1'], 'summer'));
+    p.within('bed-2', () => drawBed(kit, ...BEDS['bed-2'], 'lettuce'));
+    p.within('bed-3', () => drawBed(kit, ...BEDS['bed-3'], 'leek'));
+    p.within('bed-4', () => drawBed(kit, ...BEDS['bed-4'], 'seedlings'));
+  });
+  p.within('firewood', () => drawFirewood(kit, FIREWOOD.x0, FIREWOOD.y0));
   drawShed(kit, 5.0, 22.7);
   drawWateringCan(kit, 4.75, 16.25);
   drawWheelbarrow(kit, 4.0, 23.9);
-
-  if (isNight) {
-    drawFireflies(kit, [[2.2, 9.5, 1.2], [5.3, 6.2, 0.9], [3.0, 13.8, 1.4], [5.9, 11.0, 1.1], [1.6, 15.0, 0.8], [5.8, 20.2, 1.0], [2.6, 5.0, 1.3], [-4.2, 16.5, 1.1], [12.2, 9.0, 0.9]]);
-  }
 }

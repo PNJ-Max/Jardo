@@ -14,13 +14,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { useCompleteTask, useDeleteJournalEntry, useWaterSpace } from '@/api/queries';
+import { useCompleteTask, useDeleteJournalEntry, usePostponeTask, useRestorePostponement, useWaterSpace } from '@/api/queries';
 import type { CompleteTaskInput, GardenTask, Id } from '@/api/types';
 import { DoneIcon, KindIcon } from '@/components/pictograms';
 import { SwipeToDone } from '@/components/swipe-to-done';
 import { TaskSheet } from '@/components/task-sheet';
 import { useShowUndo } from '@/components/undo';
 import { Badge } from '@/components/ui';
+import { addDays } from '@/domain/dates';
 import { notify } from '@/lib/confirm';
 import { formatDate, today } from '@/lib/dates';
 import { targetLabel, taskPhrase, taskTitle } from '@/lib/garden';
@@ -108,6 +109,37 @@ export function useWaterAll() {
 }
 
 /**
+ * « Reporter à demain », puis quelques secondes pour l'annuler : l'annulation remet le report
+ * d'avant, et la tâche revient à son échéance d'avant.
+ */
+export function usePostponeToTomorrow() {
+  const postpone = usePostponeTask();
+  const restore = useRestorePostponement();
+  const showUndo = useShowUndo();
+
+  const postponeToTomorrow = (task: GardenTask) =>
+    postpone.mutate(
+      { id: task.id, until: addDays(today(), 1) },
+      {
+        onSuccess: ({ previous }) =>
+          showUndo({
+            message: `Reporté à demain : ${taskPhrase(task)}`,
+            onUndo: () => {
+              markReturning([task.id]);
+              restore.mutate(
+                { id: task.id, previous },
+                { onError: (e) => notify("Le report n'a pas été annulé", e.message) },
+              );
+            },
+          }),
+        onError: (e) => notify("La tâche n'a pas été reportée", e.message),
+      },
+    );
+
+  return { postponeToTomorrow };
+}
+
+/**
  * Le voyant d'échéance. Il affiche tel quel ce que le domaine a calculé : l'écran ne refait
  * jamais le calcul, sinon les deux finiraient par diverger.
  */
@@ -150,6 +182,12 @@ export function doneFeedback() {
   else if (Platform.OS === 'ios') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 }
 
+/** Plus discret que « Fait » : un simple déclic. */
+function postponeFeedback() {
+  if (Platform.OS === 'android') void Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Clock_Tick);
+  else if (Platform.OS === 'ios') void Haptics.selectionAsync();
+}
+
 type TaskRowProps = {
   task: GardenTask;
   onPress: () => void;
@@ -169,7 +207,8 @@ type TaskRowProps = {
   detail?: ReactNode;
   /**
    * Aujourd'hui : toucher la ligne ouvre la feuille de la tâche, qui remplace l'appui long et
-   * propose `onPress` sous « Ouvrir la fiche » ; glisser la ligne à droite la fait.
+   * propose `onPress` sous « Ouvrir la fiche » ; glisser la ligne à droite la fait, à gauche la
+   * reporte (`onPostpone`).
    */
   gestures?: boolean;
   /**
@@ -177,6 +216,11 @@ type TaskRowProps = {
    * l'écran note pour toutes. Repassé à faux (écriture refusée), elle se rouvre.
    */
   leaving?: boolean;
+  /**
+   * Avec `gestures`, « Reporter à demain » d'une tâche due : dans la feuille, ou en glissant la
+   * ligne à gauche. La ligne se replie, puis la tâche est reportée.
+   */
+  onPostpone?: () => void;
 };
 
 /** Une ligne d'une surface groupée (`Group`) : pictogramme, intervention, voyant et cible, « Fait ». */
@@ -189,10 +233,12 @@ export function TaskRow({
   detail,
   gestures = false,
   leaving = false,
+  onPostpone,
 }: TaskRowProps) {
   const styles = useStyles();
   const reduceMotion = useReducedMotion();
   const [done, setDone] = useState(false);
+  const [postponing, setPostponing] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const lastSwipe = useRef(0);
   const [returning] = useState(() => returningTasks.delete(task.id));
@@ -217,7 +263,7 @@ export function TaskRow({
   const canBeDone = onDone !== undefined && !task.isCompleted;
 
   const markDone = () => {
-    if (!onDone || celebrating) return;
+    if (!onDone || celebrating || postponing) return;
     setDone(true);
     doneFeedback();
     if (leavesOnDone && !reduceMotion) {
@@ -236,6 +282,25 @@ export function TaskRow({
     }
     onDone();
     if (!leavesOnDone) setTimeout(() => setDone(false), celebrateMs + foldMs);
+  };
+
+  const canPostpone = canBeDone && task.status !== 'Ok' && onPostpone !== undefined;
+
+  const postpone = () => {
+    if (!onPostpone || celebrating || postponing) return;
+    setPostponing(true);
+    postponeFeedback();
+    const write = () => {
+      onPostpone();
+      // Comme pour « Fait » : si la ligne est encore là, report refusé, elle se rouvre.
+      setTimeout(() => {
+        setPostponing(false);
+        open.set(withTiming(1, { duration: 300 }));
+      }, 500);
+    };
+    if (reduceMotion) return write();
+    open.set(withTiming(0, { duration: foldMs, easing: Easing.inOut(Easing.quad) }));
+    setTimeout(write, foldMs);
   };
 
   const row = (
@@ -294,8 +359,9 @@ export function TaskRow({
       {gestures ? (
         <SwipeToDone
           testId={`swipe:${task.id}`}
-          enabled={canBeDone && !celebrating}
+          enabled={canBeDone && !celebrating && !postponing}
           onDone={markDone}
+          onPostpone={canPostpone ? postpone : undefined}
           onSwiping={() => {
             lastSwipe.current = Date.now();
           }}>
@@ -310,6 +376,7 @@ export function TaskRow({
           visible={sheetOpen}
           onClose={() => setSheetOpen(false)}
           onDone={markDone}
+          onPostpone={canPostpone ? postpone : undefined}
           onOpen={onPress}
         />
       )}

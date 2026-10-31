@@ -3,7 +3,7 @@
 // décor autour (voisins, champs) avec `ctx`, des teintes passées qui laissent le jardin au
 // premier plan.
 
-import { depth, desaturate, mix, Painter, SHADOW_DIRECTION, solid, type Face, type Point } from './scene';
+import { depth, desaturate, mix, Painter, SHADOW_DIRECTION, solid, type Face, type Point, type Shape } from './scene';
 
 const DAY = {
   lawnA: '#B3D6A9', lawnB: '#A9CF9F', meadow: '#B5D7A8', meadowDark: '#9CC58F', terrace: '#E8E3D4', terraceLine: '#D3CBB6',
@@ -177,6 +177,9 @@ export function drawHouse({ p, isNight }: Kit, pal: Palette, house: House) {
 
 // ---------- Végétation ----------
 
+/** Écart du sommet des feuillages qui se balancent, en mètres : léger, pour rester discret. */
+const SWAY_REACH = { tree: 0.16, conifer: 0.11, bush: 0.07 };
+
 export function drawTree(
   { p }: Kit,
   pal: Palette,
@@ -208,7 +211,7 @@ export function drawTree(
         p.sphere(x + dx * r, y + dy * r, cz + dz * r, Math.max(0.07, 0.06 * r), options.fruit);
       }
     }
-  });
+  }, 0, { x, y, height: cz + r, reach: SWAY_REACH.tree });
 }
 
 /** Conifère : trois étages de feuillage. */
@@ -219,7 +222,7 @@ export function drawConifer({ p }: Kit, pal: Palette, x: number, y: number, h = 
     for (const [k, rr, col] of [[0.35, 0.95, pal.leafDark], [0.6, 0.72, pal.leafDark], [0.82, 0.48, pal.leaf]] as const) {
       p.leafBall(x, y, h * k, rr * (h / 4), col);
     }
-  });
+  }, 0, { x, y, height: h, reach: SWAY_REACH.conifer });
 }
 
 export function drawBush({ p }: Kit, pal: Palette, x: number, y: number, r: number, berry?: string) {
@@ -239,7 +242,7 @@ export function drawBush({ p }: Kit, pal: Palette, x: number, y: number, r: numb
         p.sphere(x + dx * r, y + dy * r, cz + dz * r, 0.06, berry);
       }
     }
-  });
+  }, 0, { x, y, height: r * 1.8, reach: SWAY_REACH.bush });
 }
 
 /** Haie taillée le long de x ou de y, découpée en tronçons pour l'ordre d'affichage. */
@@ -586,4 +589,11 @@ export function drawFireflies({ p }: Kit, points: Vec3[]) {
       p.sphere(x, y, z, 0.05, FIREFLY, { opacity: 0.9 });
     }
   });
+}
+
+/** Une luciole centrée sur l'origine de l'écran, que la carte anime à part du décor. */
+export function fireflyShapes(): Shape[] {
+  const kit = createKit(true);
+  drawFireflies(kit, [[0, 0, 0]]);
+  return kit.p.shapes().shapes;
 }
