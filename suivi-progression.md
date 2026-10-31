@@ -20,6 +20,11 @@ fenêtres par quinzaines. Fiches écrites par nous (aucun jeu ouvert n'a de cale
 et le partage à l'identique est écarté), rangées dans une constante TypeScript, `species_id`
 facultatif sur la plante. Neuf PR, dont deux migrations qui passent après celle de « Reporter ».
 Neuf points à trancher en fin d'étude.
+- [x] PR 3, pictogrammes des catégories (31/10/2026) : plant de tomate (légume), brin de thym
+  (aromatique), pomme (fruitier), grappe de groseilles (petit fruit), au pinceau des autres
+  pictogrammes, en clair et en sombre. `CategoryIcon` les affiche par catégorie pour les écrans des
+  PR 4 et 5. L'union `SpeciesCategory` vit pour l'instant dans `components/pictograms/drawings.ts` ;
+  la PR 1 pourra la remplacer par le type de son domaine.
 
 **Météo, avec Open-Meteo (30/10/2026).** Réglages → Météo : on cherche une ville par son nom
 (géocodage d'Open-Meteo, sans GPS ni permission de localisation), on choisit un résultat (nom,

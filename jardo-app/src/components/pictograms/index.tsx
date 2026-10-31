@@ -4,10 +4,20 @@ import type { JournalEntryKind } from '@/api/types';
 import type { WeatherKind } from '@/lib/weather';
 import { useTheme } from '@/theme';
 
-import { doneMarks, kindMarks, tabMarks, weatherMarks, type DoneGlyph, type Mark, type TabName } from './drawings';
+import {
+  categoryMarks,
+  doneMarks,
+  kindMarks,
+  tabMarks,
+  weatherMarks,
+  type DoneGlyph,
+  type Mark,
+  type SpeciesCategory,
+  type TabName,
+} from './drawings';
 import { usePictogramRenderer } from './renderer';
 
-export type { TabName } from './drawings';
+export { SPECIES_CATEGORIES, type SpeciesCategory, type TabName } from './drawings';
 
 /** Décoratif : le texte voisin nomme toujours ce que le pictogramme montre. */
 function Pictogram({ id, marks, size }: { id: string; marks: () => Mark[]; size: number }) {
@@ -40,6 +50,11 @@ export function TabIcon({ name, focused, size }: { name: TabName; focused: boole
 export function WeatherIcon({ kind, size = 32 }: { kind: WeatherKind; size?: number }) {
   const { scheme } = useTheme();
   return <Pictogram id={`weather-${kind}:${scheme}`} marks={() => weatherMarks(kind, scheme)} size={size} />;
+}
+
+export function CategoryIcon({ category, size = 32 }: { category: SpeciesCategory; size?: number }) {
+  const { scheme } = useTheme();
+  return <Pictogram id={`category-${category}:${scheme}`} marks={() => categoryMarks(category, scheme)} size={size} />;
 }
 
 export function DoneIcon({ glyph, color, size }: { glyph: DoneGlyph; color: string; size: number }) {
