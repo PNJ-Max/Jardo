@@ -64,12 +64,13 @@ jardo-app/                    (à la racine du repo)
 │   ├── */form.tsx            formulaires en modale : space, zone, plant, wood-pile,
 │   │                         entry (intervention), task ; ?id= pour modifier
 │   ├── task/done.tsx         « Fait » en précisant le jour et une note (appui long)
-│   ├── settings.tsx          réglages : nom du jardin, sauvegarde, ville de la météo, apparence, version
+│   ├── settings.tsx          réglages : nom du jardin, sauvegarde, rappels, ville de la météo, apparence, version
 │   └── map-preview.tsx       aperçu de la carte du jardin (avant l'onglet Jardin)
 ├── src/api/
 │   ├── types.ts              noms courts des contrats (Space, GardenTask…), la référence des écrans
 │   ├── queries.ts            hooks TanStack Query sur les services locaux, clés de cache, invalidations
-│   └── weather-queries.ts    hooks de la météo : ville retenue, recherche, prévision
+│   ├── weather-queries.ts    hooks de la météo : ville retenue, recherche, prévision
+│   └── reminder-queries.ts   hooks des rappels : préférences, permission, programmation
 ├── src/domain/               règles et calculs purs (échéances, bois, journal, types acceptés)
 ├── src/data/                 base locale SQLite : accès, schéma et migrations, jardin d'exemple,
 │                             un service par ressource, services.tsx (fournisseur des écrans)
@@ -80,7 +81,8 @@ jardo-app/                    (à la racine du repo)
 │                             un fichier par modèle, emplacements
 ├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation,
 │                             fichier de sauvegarde (partage, choix ; variante web),
-│                             météo (weather.ts : codes, phrases ; forecast.ts : Open-Meteo, cache)
+│                             météo (weather.ts : codes, phrases ; forecast.ts : Open-Meteo, cache),
+│                             rappels (reminders.ts : jours et phrases ; notifications.ts : Expo, variante web)
 ├── src/theme/                palettes clair / sombre, typographie, useTheme, createStyles,
 │                             apparence choisie (preference.ts)
 └── app.json                  configuration Expo
@@ -293,6 +295,49 @@ Lues le 30/10/2026 sur [open-meteo.com/en/terms](https://open-meteo.com/en/terms
   `apikey`. Ce changement tient dans `lib/forecast.ts`. En revanche, une clé embarquée dans l'app
   se lit dans l'APK : il faudra alors un petit relais côté serveur, ou accepter ce risque.
 
+## Rappels
+
+Le rappel du jour est une notification locale, programmée sur le téléphone : ni serveur ni push.
+Une par jour à l'heure choisie, seulement s'il y a quelque chose à faire ce jour-là, et dont le
+toucher ouvre Aujourd'hui.
+
+- **Où ils vivent.**
+  - `lib/reminders.ts` : logique pure. `planReminders(tâches, maintenant, réglages)` rend les rappels
+    des `reminderDays` prochains jours, chacun avec sa date et sa phrase (`reminderSentence`). Un
+    jour attend ce qui y tombe et tout ce qui est en retard à cette date, si rien n'est fait d'ici
+    là ; le report est déjà dans `nextDueDate`. Aujourd'hui n'est programmé que si l'heure n'est
+    pas passée. L'horloge est injectée.
+  - `lib/notifications.ts` : la couche Expo, fine. Elle gère la permission, le canal Android, le
+    remplacement de tous les rappels programmés et le toucher d'un rappel. Dans le navigateur,
+    `notifications.web.ts` la remplace : `remindersSupported` y vaut faux et rien n'est programmé.
+  - `api/reminder-queries.ts` : les hooks. Les préférences sont rangées dans AsyncStorage sous
+    `jardo.reminders` (`enabled`, `hour`, `minute` ; désactivé et 8 h par défaut), comme la ville
+    de la météo : pas de migration.
+  - `components/reminders.tsx` : `<Reminders />`, monté sous la racine de l'app, et la section
+    des réglages. Ni l'un ni l'autre n'existe sur le web.
+- **Une seule source de vérité : les tâches dues sur un mois** (`useDueTasks('Month')`), lues par
+  `useReminderScheduling` tant que les rappels sont activés. Toute écriture qui change les tâches
+  dues (Fait, Reporter, Tout arroser, journal, tâche créée, modifiée ou supprimée, structure du
+  jardin) invalide déjà `['tasks']`. La liste relue reprogramme donc d'elle-même. Le retour sur
+  l'app (`AppState` → `active`) relit la liste et reprogramme, car le jour a pu changer. Chaque
+  programmation remplace toutes les précédentes, et elles passent l'une après l'autre.
+- **Deux semaines d'avance** (`reminderDays = 14`). iOS ne garde que 64 notifications en attente
+  par app, et Android refuse au-delà de 500 alarmes par app. Deux semaines couvrent une absence
+  sans ouvrir l'app, et une app délaissée cesse d'elle-même de rappeler.
+- **Permission.** Elle est demandée quand on active l'interrupteur, jamais au lancement. Android 13
+  n'affiche la demande qu'une fois un canal créé : le canal « Rappels du jardin » est donc créé
+  juste avant. Si elle est refusée, ou retirée ensuite, la section le dit et propose d'ouvrir les
+  réglages du téléphone (`Linking.openSettings`). `POST_NOTIFICATIONS` vient du manifeste
+  d'`expo-notifications`, et `android.blockedPermissions` ne la retire pas.
+- **Heure approximative.** Pas de `SCHEDULE_EXACT_ALARM` : Google Play la réserve aux réveils et
+  aux agendas. Android peut décaler un rappel de quelques minutes, ce qui suffit ici.
+- **Configuration** : le plugin `expo-notifications` d'`app.json` fixe l'icône de la barre d'état
+  (`assets/images/notification-icon.png`, la pousse du logo en blanc) et sa couleur.
+- **Tests** : `test/setup.ts` simule `expo-notifications` (permission non demandée, puis donnée).
+  `lib/reminders.test.ts` couvre les jours et les phrases. `components/reminders.test.tsx` couvre
+  la reprogrammation après chaque écriture et au retour sur l'app, ainsi que le toucher. Les
+  réglages et le web ont leurs tests d'écran.
+
 ## Conventions
 
 - **Le voyant vient du domaine.** Les services calculent, à chaque lecture et avec `src/domain/`,
@@ -352,7 +397,7 @@ dans `jardo-app/test/`.
   dans expo-sqlite : c'est `prepareDatabase` qui les active. Node affiche un avertissement
   « SQLite is an experimental feature » : il est attendu.
 - `test/setup.ts` simule `expo-router` (`router.push` est un `jest.fn`), les marges de sécurité,
-  AsyncStorage et `randomUUID` d'`expo-crypto` (par celui de Node). Il remplace `fetch` par un
+  AsyncStorage, `expo-notifications` et `randomUUID` d'`expo-crypto` (par celui de Node). Il remplace `fetch` par un
   bouchon qui échoue : aucun test n'appelle le réseau (voir [Météo](#météo)).
 - On cherche par texte ou libellé d'accessibilité, comme l'utilisateur ; pas de test du rendu
   exact des styles. Un module natif absent de Jest se simule dans le test qui en a besoin

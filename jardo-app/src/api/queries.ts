@@ -341,9 +341,9 @@ export function useTasks(filter: TargetFilter = {}) {
  * Les tâches dues de tout le jardin, les plus en retard d'abord. `Week` ajoute les sept
  * prochains jours aux retards et à aujourd'hui.
  */
-export function useDueTasks(horizon: DueHorizon) {
+export function useDueTasks(horizon: DueHorizon, enabled = true) {
   const { tasks } = useServices();
-  return useQuery({ queryKey: keys.dueTaskList(horizon), queryFn: () => tasks.getDue(horizon) });
+  return useQuery({ queryKey: keys.dueTaskList(horizon), queryFn: () => tasks.getDue(horizon), enabled });
 }
 
 export function useTask(id: Id) {

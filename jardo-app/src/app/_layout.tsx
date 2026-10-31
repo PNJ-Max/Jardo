@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { Reminders } from '@/components/reminders';
 import { UndoProvider } from '@/components/undo';
 import { databaseName, initDatabase } from '@/data/database';
 import { fromExpo } from '@/data/db';
@@ -86,6 +87,7 @@ export default function RootLayout() {
                   <Stack.Screen name="task/done" options={{ presentation: 'modal', title: 'Fait', headerShown: false }} />
                   <Stack.Screen name="settings" options={{ title: 'Réglages' }} />
                 </Stack>
+                <Reminders />
               </UndoProvider>
             </ThemeProvider>
           </QueryClientProvider>
