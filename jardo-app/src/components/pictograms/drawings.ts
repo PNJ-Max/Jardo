@@ -2,6 +2,7 @@
 // décor de la carte (docs/direction-visuelle.md, « Pictogrammes »). Le rendu est dans picture.ts.
 
 import type { JournalEntryKind } from '@/api/types';
+import type { WeatherKind } from '@/lib/weather';
 import { createKit, WINDOW_LIT, type Palette } from '@/map/decor';
 import { desaturate, mix } from '@/map/scene';
 import type { ColorScheme } from '@/theme';
@@ -290,4 +291,43 @@ const doneDrawings: Record<DoneGlyph, string[]> = {
 /** La coche du bouton « Fait », qui devient une pousse une fois la tâche notée. */
 export function doneMarks(glyph: DoneGlyph, color: string): Mark[] {
   return doneDrawings[glyph].map((d): Mark => ({ d, stroke: color, width: 3.2 }));
+}
+
+/** Un nuage posé sur sa base, centré en `x` ; `s` le met à l'échelle du grand nuage de 23 de large. */
+function cloud(x: number, y: number, s: number) {
+  const p = (px: number, py: number) => `${+(x + (px - 16) * s).toFixed(2)} ${+(y + (py - 24) * s).toFixed(2)}`;
+  return (
+    `M${p(9, 24)}L${p(23.5, 24)}C${p(26.5, 24)} ${p(28.5, 22)} ${p(28.5, 19.4)}C${p(28.5, 16.9)} ${p(26.6, 15)} ${p(24.2, 14.9)}` +
+    `C${p(23.6, 11.6)} ${p(20.8, 9.3)} ${p(17.4, 9.3)}C${p(14.2, 9.3)} ${p(11.5, 11.4)} ${p(10.7, 14.4)}` +
+    `C${p(7.6, 14.6)} ${p(5.2, 16.9)} ${p(5.2, 19.4)}C${p(5.2, 22)} ${p(6.9, 24)} ${p(9, 24)}Z`
+  );
+}
+
+const raindrop = (x: number, y: number) =>
+  `M${x} ${y - 2.4}C${x + 1.8} ${y - 0.2} ${x + 1.6} ${y + 1.9} ${x} ${y + 1.9}C${x - 1.6} ${y + 1.9} ${x - 1.8} ${y - 0.2} ${x} ${y - 2.4}Z`;
+
+function sun({ pal, object, line }: Brush, cx: number, cy: number, r: number): Mark[] {
+  const rays = Array.from({ length: 8 }, (_, index) => {
+    const [dx, dy] = [Math.cos((index * Math.PI) / 4), Math.sin((index * Math.PI) / 4)];
+    const at = (k: number) => `${+(cx + dx * r * k).toFixed(2)} ${+(cy + dy * r * k).toFixed(2)}`;
+    return line(`M${at(1.45)}L${at(1.95)}`);
+  });
+  return [...rays, ...object(circle(cx, cy, r), pal.flower)];
+}
+
+/** Le nuage haut des jours de pluie, de neige ou d'orage, plus sombre que celui du temps couvert. */
+const heavyCloud = ({ pal, object }: Brush) => object(cloud(16, 20, 0.86), pal.road);
+
+const weatherDrawings: Record<WeatherKind, (b: Brush) => Mark[]> = {
+  Clear: (b) => sun(b, 16, 16, 6.5),
+  PartlyCloudy: (b) => [...sun(b, 12.5, 12, 5.2), ...b.object(cloud(18.5, 27, 0.78), b.pal.metal)],
+  Cloudy: ({ pal, object }) => [...object(cloud(20.5, 19.5, 0.62), pal.road), ...object(cloud(14.5, 27, 0.8), pal.metal)],
+  Fog: ({ pal, object, line }) => [...object(cloud(16, 19.5, 0.82), pal.metal), line('M6 23.4H26'), line('M9 27.2H23')],
+  Rain: (b) => [...heavyCloud(b), ...[[10.5, 25.4], [16, 27.6], [21.5, 25.4]].flatMap(([x, y]) => b.object(raindrop(x, y), b.pal.water, [], 1.1))],
+  Snow: (b) => [...heavyCloud(b), ...[[10.5, 24.6], [16, 27.8], [21.5, 24.6]].flatMap(([x, y]) => b.object(circle(x, y, 1.5), b.pal.frame, [], 1.1))],
+  Storm: (b) => [...heavyCloud(b), ...b.object('M17.6 19.6L12.6 26H16L14 30.4L20.6 23.4H17.2L19.4 19.6Z', b.pal.flower, [], 1.2)],
+};
+
+export function weatherMarks(kind: WeatherKind, scheme: ColorScheme): Mark[] {
+  return weatherDrawings[kind](brush(scheme));
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { useDueTasks } from '@/api/queries';
+import { useForecast } from '@/api/weather-queries';
 import type { GardenTask } from '@/api/types';
 import {
   longDay,
@@ -16,10 +17,13 @@ import {
   type Water,
 } from '@/components/today';
 import { Button, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@/components/ui';
+import { SkyWeather } from '@/components/weather';
+import { systemClock } from '@/data/clock';
 import { addDays, type DateOnly } from '@/domain/dates';
 import { today as currentDay } from '@/lib/dates';
 import { usePullToRefresh } from '@/lib/refresh';
 import { bySpace, comingThisMonth, overdueTasks, skyPhrase, tasksOn, weekDays } from '@/lib/today';
+import { isSunny, rainNote, todayWeather } from '@/lib/weather';
 import { createStyles } from '@/theme';
 
 /**
@@ -33,21 +37,28 @@ export default function TodayScreen() {
   const styles = useStyles();
   const today = currentDay();
   const [selected, setSelected] = useState(today);
+  const forecast = useForecast();
 
   if (isPending) return <Loading />;
   if (error) return <ErrorView error={error} onRetry={refetch} />;
 
   const overdue = overdueTasks(data);
   const coming = comingThisMonth(data, today);
+  const weather = forecast && todayWeather(forecast, systemClock);
 
   return (
     <ScrollView
       style={screenStyles.screen}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl {...refresh} />}>
-      <TodaySky date={today} phrase={skyPhrase(data, today)} />
+      <TodaySky
+        date={today}
+        phrase={skyPhrase(data, today)}
+        weather={weather && <SkyWeather weather={weather} />}
+        sunny={!weather || isSunny(weather.kind)}
+      />
       <View style={styles.body}>
-        <WeekStrip days={weekDays(data, today)} selected={selected} onSelect={setSelected} />
+        <WeekStrip days={weekDays(data, today)} selected={selected} onSelect={setSelected} forecast={forecast?.days} />
         {overdue.length > 0 && <OverdueSection tasks={overdue} row={row} />}
         {selected === today ? (
           <TodayTasks
@@ -56,6 +67,7 @@ export default function TodayScreen() {
             nothingLate={overdue.length === 0}
             row={row}
             water={{ due: data, onWaterAll: waterAll, busy: watering }}
+            rainNote={forecast && rainNote(forecast, systemClock)}
           />
         ) : (
           <DayTasks tasks={tasksOn(data, selected)} date={selected} today={today} row={row} />
@@ -69,7 +81,14 @@ export default function TodayScreen() {
 type DayProps = { tasks: GardenTask[]; today: DateOnly; row: RenderTask };
 
 /** Aujourd'hui, par espace ; rien à faire du tout : on le dit, puis ce qui vient demain. */
-function TodayTasks({ tasks, today, nothingLate, row, water }: DayProps & { nothingLate: boolean; water: Water }) {
+function TodayTasks({
+  tasks,
+  today,
+  nothingLate,
+  row,
+  water,
+  rainNote,
+}: DayProps & { nothingLate: boolean; water: Water; rainNote: string | null }) {
   const styles = useStyles();
   const due = tasksOn(tasks, today);
   const tomorrow = tasksOn(tasks, addDays(today, 1));
@@ -78,7 +97,7 @@ function TodayTasks({ tasks, today, nothingLate, row, water }: DayProps & { noth
     return (
       <View style={styles.section}>
         <SectionTitle count={due.length}>Aujourd&apos;hui</SectionTitle>
-        <SpaceGroups groups={bySpace(due)} row={row} water={water} />
+        <SpaceGroups groups={bySpace(due)} row={row} water={water} rainNote={rainNote} />
       </View>
     );
   }

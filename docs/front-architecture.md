@@ -64,11 +64,12 @@ jardo-app/                    (à la racine du repo)
 │   ├── */form.tsx            formulaires en modale : space, zone, plant, wood-pile,
 │   │                         entry (intervention), task ; ?id= pour modifier
 │   ├── task/done.tsx         « Fait » en précisant le jour et une note (appui long)
-│   ├── settings.tsx          réglages : nom du jardin, sauvegarde, apparence, version de l'app
+│   ├── settings.tsx          réglages : nom du jardin, sauvegarde, ville de la météo, apparence, version
 │   └── map-preview.tsx       aperçu de la carte du jardin (avant l'onglet Jardin)
 ├── src/api/
 │   ├── types.ts              noms courts des contrats (Space, GardenTask…), la référence des écrans
-│   └── queries.ts            hooks TanStack Query sur les services locaux, clés de cache, invalidations
+│   ├── queries.ts            hooks TanStack Query sur les services locaux, clés de cache, invalidations
+│   └── weather-queries.ts    hooks de la météo : ville retenue, recherche, prévision
 ├── src/domain/               règles et calculs purs (échéances, bois, journal, types acceptés)
 ├── src/data/                 base locale SQLite : accès, schéma et migrations, jardin d'exemple,
 │                             un service par ressource, services.tsx (fournisseur des écrans)
@@ -78,7 +79,8 @@ jardo-app/                    (à la racine du repo)
 ├── src/map/                  scènes de la carte dessinées par le code : projection, décor, animations,
 │                             un fichier par modèle, emplacements
 ├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation,
-│                             fichier de sauvegarde (partage, choix ; variante web)
+│                             fichier de sauvegarde (partage, choix ; variante web),
+│                             météo (weather.ts : codes, phrases ; forecast.ts : Open-Meteo, cache)
 ├── src/theme/                palettes clair / sombre, typographie, useTheme, createStyles,
 │                             apparence choisie (preference.ts)
 └── app.json                  configuration Expo
@@ -218,6 +220,79 @@ qui échoue n'est pas retentée (`retry: false`), elle échouerait encore.
   (même scénario, même nom), puis les « ajouts » que l'original ne couvrait pas. Les données de
   départ s'insèrent directement (`createGardenFixtures`, l'équivalent de `TestData`).
 
+## Météo
+
+La seule donnée qui vient du réseau. Elle ne touche pas la base : pas de service dans `src/data/`,
+pas de migration, rien dans la sauvegarde du jardin.
+
+- **Le lieu** : une ville choisie dans Réglages → Météo, recherchée par le
+  [géocodage d'Open-Meteo](https://open-meteo.com/en/docs/geocoding-api) (`language=fr`). Pas de
+  GPS, aucune permission de localisation.
+- **Où elle vit.**
+  - `lib/weather.ts` : logique pure. Codes météo OMM → famille de pictogramme et libellé français,
+    phrase du jour (« Averses · 8° à 14° · 6 mm » et sa version pour le lecteur d'écran), âge d'une
+    prévision gardée, note d'arrosage. L'horloge est injectée (`Clock`).
+  - `lib/forecast.ts` : les appels à Open-Meteo par `fetch`, sans dépendance. Il range aussi la
+    ville et la dernière prévision.
+  - `api/weather-queries.ts` : les hooks.
+  - `components/weather.tsx` : le temps du ciel, la note d'arrosage et la section des réglages.
+  - `WeatherIcon` (`components/pictograms/`) : sept pictogrammes dessinés comme les autres
+    (soleil, éclaircies, couvert, brouillard, pluie, neige, orage).
+- **Rangement : AsyncStorage**, comme l'apparence (`theme/preference.ts`), sous
+  `jardo.weatherPlace` (nom, région, pays, latitude, longitude) et `jardo.forecast` (coordonnées,
+  `fetchedAt`, jours). Ce sont des préférences de l'appareil, pas des données du jardin, d'où ce
+  choix plutôt qu'une table. Retirer la ville retire sa prévision.
+- **Prévision** : `daily=weather_code,temperature_2m_min,temperature_2m_max,precipitation_sum`,
+  `past_days=1`, `forecast_days=7`, `timezone=auto`. On obtient la veille, aujourd'hui et six
+  jours, datés dans le fuseau du lieu.
+- **Cache et réseau** : `loadForecast` rend la prévision gardée si elle a moins de trois heures et
+  date du jour. Sinon il lit le réseau et garde la réponse. Sans réseau, ou si le service répond en
+  erreur, il rend la prévision gardée, si ancienne soit-elle, ou rien. Il ne lève jamais d'erreur.
+  `useForecast` la relit au retour sur l'app (`AppState` → `active`) ; le réseau n'est donc appelé
+  qu'au plus une fois toutes les trois heures.
+- **Affichage.**
+  - Sans ville, ou sans aucune prévision gardée, rien ne s'affiche.
+  - Au-delà de six heures, le ciel dit de quand date la prévision : « Prévision de 7 h »,
+    « Prévision d'hier », « Prévision du mardi 27 octobre ».
+  - Ciel d'Aujourd'hui : pictogramme, libellé, min et max, pluie à partir de 1 mm. Le soleil
+    dessiné se cache quand le temps n'est ni clair ni à éclaircies.
+  - Semaine : un pictogramme au-dessus de chaque jour. L'onglet du jour dit le temps au lecteur
+    d'écran.
+- **Note d'arrosage** : « Il a plu 8 mm hier : l'arrosage peut attendre. » Elle apparaît à partir
+  de 5 mm tombés la veille ou prévus dans la journée. 1 mm, c'est 1 L/m² ; un arrosoir de 10 L sur
+  2 m² en donne 5 : en dessous, l'eau mouille à peine la surface. Elle se pose sur les groupes
+  d'Aujourd'hui qui ont un arrosage, sauf la serre, où la pluie n'entre pas. Elle n'apparaît que sur
+  une prévision lue le jour même : dans une plus ancienne, la pluie de la veille n'était
+  qu'annoncée. Elle informe seulement et ne change aucune échéance.
+- **Tests** : `test/setup.ts` remplace `fetch` par un bouchon qui échoue, donc aucun test n'appelle
+  le réseau. Ceux de la météo lui donnent une réponse (`test/weather.ts` : `respond`,
+  `openMeteoDaily`, `keepForecast`).
+
+### Conditions d'utilisation d'Open-Meteo
+
+Lues le 30/10/2026 sur [open-meteo.com/en/terms](https://open-meteo.com/en/terms),
+[licence](https://open-meteo.com/en/licence) et [tarifs](https://open-meteo.com/en/pricing).
+
+- **L'API gratuite est réservée à l'usage non commercial.** Une app privée ou à but non lucratif,
+  « sans abonnement ni publicité », y a droit : c'est le cas du test chez quelques proches. Les dons
+  sont admis.
+- **Plafonds de l'API gratuite** : 600 appels par minute, 5 000 par heure, 10 000 par jour et
+  300 000 par mois. Ils valent par adresse IP. Avec un appel toutes les trois heures au plus par
+  téléphone, Jardo en reste très loin.
+- **Données sous CC BY 4.0.** Il faut citer la source. Open-Meteo demande un lien à côté de chaque
+  endroit où ses données s'affichent ; les lieux viennent de GeoNames, sous CC BY aussi. Pour
+  l'instant, Réglages → Météo porte le crédit « Prévisions Open-Meteo.com (CC BY 4.0), villes
+  GeoNames », avec le lien. La CC BY admet un crédit « raisonnable selon le support » ; à revoir si
+  l'on veut suivre la demande d'Open-Meteo à la lettre, avec un lien près du ciel.
+- **Aucune garantie** sur l'exactitude des données ni sur la disponibilité du service : d'où le
+  fonctionnement hors ligne, et une note d'arrosage qui ne décide de rien.
+- **Pour une version commerciale sur le Play Store** (abonnement, achat intégré ou publicité), il
+  faut un abonnement payant. L'offre API Standard est annoncée à 29 $ par mois pour un million
+  d'appels mensuels (prix relevé ailleurs que sur le site, à confirmer). Les requêtes passent alors
+  par `customer-api.open-meteo.com` et `customer-geocoding-api.open-meteo.com`, avec un paramètre
+  `apikey`. Ce changement tient dans `lib/forecast.ts`. En revanche, une clé embarquée dans l'app
+  se lit dans l'APK : il faudra alors un petit relais côté serveur, ou accepter ce risque.
+
 ## Conventions
 
 - **Le voyant vient du domaine.** Les services calculent, à chaque lecture et avec `src/domain/`,
@@ -277,7 +352,8 @@ dans `jardo-app/test/`.
   dans expo-sqlite : c'est `prepareDatabase` qui les active. Node affiche un avertissement
   « SQLite is an experimental feature » : il est attendu.
 - `test/setup.ts` simule `expo-router` (`router.push` est un `jest.fn`), les marges de sécurité,
-  AsyncStorage et `randomUUID` d'`expo-crypto` (par celui de Node).
+  AsyncStorage et `randomUUID` d'`expo-crypto` (par celui de Node). Il remplace `fetch` par un
+  bouchon qui échoue : aucun test n'appelle le réseau (voir [Météo](#météo)).
 - On cherche par texte ou libellé d'accessibilité, comme l'utilisateur ; pas de test du rendu
   exact des styles. Un module natif absent de Jest se simule dans le test qui en a besoin
   (voir `date-field.test.tsx`).

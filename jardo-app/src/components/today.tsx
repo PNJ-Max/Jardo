@@ -7,13 +7,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { GardenTask, Id } from '@/api/types';
 import { celebrateMs, doneFeedback, foldMs, TaskRow, useMarkDone, usePostponeToTomorrow, useWaterAll } from '@/components/tasks';
+import { WeatherIcon } from '@/components/pictograms';
 import { Group, SectionTitle } from '@/components/ui';
 import { SkyScene } from '@/components/vignettes/sky-scene';
 import { SpaceVignette } from '@/components/vignettes/space-vignette';
+import { RainNote } from '@/components/weather';
 import type { DateOnly } from '@/domain/dates';
 import { formatDate, parseDateOnly } from '@/lib/dates';
 import { targetHref, targetLabel } from '@/lib/garden';
 import { dueWaterings, lateness, monthSummary, rhythm, type SpaceGroup, type WeekDay } from '@/lib/today';
+import { describeWeather, rainNoteApplies, spokenWeather, type DayForecast } from '@/lib/weather';
 import { createStyles, useTheme } from '@/theme';
 
 const capitalize = (text: string) => text.charAt(0).toLocaleUpperCase('fr') + text.slice(1);
@@ -24,8 +27,10 @@ export const longDay = (date: DateOnly) =>
 
 const horizonHeight = 84;
 
-/** En-tête d'Aujourd'hui, à la place de la barre de navigation : la date et la phrase du jour sur le ciel. */
-export function TodaySky({ date, phrase }: { date: DateOnly; phrase: string }) {
+type TodaySkyProps = { date: DateOnly; phrase: string; weather?: ReactNode; sunny?: boolean };
+
+/** En-tête d'Aujourd'hui, à la place de la barre de navigation : la date, la phrase et le temps du jour sur le ciel. */
+export function TodaySky({ date, phrase, weather, sunny }: TodaySkyProps) {
   const styles = useStyles();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -36,7 +41,7 @@ export function TodaySky({ date, phrase }: { date: DateOnly; phrase: string }) {
     <View style={{ paddingTop: insets.top + 20 }} onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
       {height > 0 && (
         <View style={styles.skyScene}>
-          <SkyScene width={width} height={height} horizonHeight={horizonHeight} />
+          <SkyScene width={width} height={height} horizonHeight={horizonHeight} sun={sunny} />
         </View>
       )}
       <View style={styles.skyText}>
@@ -44,6 +49,7 @@ export function TodaySky({ date, phrase }: { date: DateOnly; phrase: string }) {
           {longDay(date)}
         </Text>
         <Text style={styles.phrase}>{phrase}</Text>
+        {weather}
       </View>
       <View style={{ height: horizonHeight }} />
     </View>
@@ -53,15 +59,20 @@ export function TodaySky({ date, phrase }: { date: DateOnly; phrase: string }) {
 const weekdayInitial = (date: DateOnly) =>
   capitalize(parseDateOnly(date).toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', ''));
 
-/** Les sept jours ; un point sous ceux qui ont quelque chose de prévu, rouge pour le retard. */
+/**
+ * Les sept jours ; un point sous ceux qui ont quelque chose de prévu, rouge pour le retard. Avec
+ * une prévision, le temps de chaque jour au-dessus, que l'onglet dit au lecteur d'écran.
+ */
 export function WeekStrip({
   days,
   selected,
   onSelect,
+  forecast,
 }: {
   days: WeekDay[];
   selected: DateOnly;
   onSelect: (date: DateOnly) => void;
+  forecast?: readonly DayForecast[];
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -72,13 +83,18 @@ export function WeekStrip({
         const isSelected = day.date === selected;
         const ink = isSelected ? colors.primaryText : colors.text;
         const planned = day.overdue ? 'du retard' : day.planned ? 'quelque chose de prévu' : 'rien de prévu';
+        const weather = forecast?.find((forecastDay) => forecastDay.date === day.date);
         return (
           <View key={day.date} style={styles.weekDay}>
+            {forecast &&
+              (weather ? <WeatherIcon kind={describeWeather(weather.code).kind} size={24} /> : <View style={styles.noWeather} />)}
             <Pressable
               onPress={() => onSelect(day.date)}
               accessibilityRole="tab"
               accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={`${index === 0 ? "Aujourd'hui" : longDay(day.date)}, ${planned}`}
+              accessibilityLabel={[index === 0 ? "Aujourd'hui" : longDay(day.date), planned, weather && spokenWeather(weather).toLocaleLowerCase('fr')]
+                .filter(Boolean)
+                .join(', ')}
               style={({ pressed }) => [styles.dayPill, isSelected && styles.dayPillSelected, pressed && { opacity: 0.6 }]}>
               <Text style={[styles.dayName, { color: isSelected ? ink : colors.textMuted }]}>{weekdayInitial(day.date)}</Text>
               <Text style={[styles.dayNumber, { color: ink }]}>{parseDateOnly(day.date).getDate()}</Text>
@@ -176,8 +192,10 @@ function withinSpace(task: GardenTask) {
   return target ? `${target}, ${rhythm(task)}` : capitalize(rhythm(task));
 }
 
-/** Une surface par espace, coiffée de sa vignette et de son nom. */
-export function SpaceGroups({ groups, row, water }: { groups: SpaceGroup[]; row: RenderTask; water?: Water }) {
+type SpaceGroupsProps = { groups: SpaceGroup[]; row: RenderTask; water?: Water; rainNote?: string | null };
+
+/** Une surface par espace, coiffée de sa vignette et de son nom ; la pluie notée sur ceux qu'on arrose dehors. */
+export function SpaceGroups({ groups, row, water, rainNote }: SpaceGroupsProps) {
   const styles = useStyles();
 
   return groups.map((group) => {
@@ -204,6 +222,7 @@ export function SpaceGroups({ groups, row, water }: { groups: SpaceGroup[]; row:
             />
           )}
         </View>
+        {rainNote && rainNoteApplies(group) && <RainNote text={rainNote} />}
         {group.tasks.map((task) => row(task, withinSpace(task)))}
       </Group>
     );
@@ -271,6 +290,7 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
   dayName: { ...typography.caption, fontFamily: fonts.bodyMedium },
   dayNumber: { ...typography.section, fontVariant: ['tabular-nums'] },
   dot: { width: 6, height: 6, borderRadius: 3 },
+  noWeather: { width: 24, height: 24 },
   section: { gap: spacing.sm },
   late: { color: colors.danger, fontFamily: fonts.bodyMedium },
   pressed: { backgroundColor: colors.surfaceSunken },
