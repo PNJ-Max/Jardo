@@ -10,7 +10,21 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (30/10/2026)
+## Où on en est (31/10/2026)
+
+**Catalogue d'espèces, PR 1 : le domaine et les 12 premières fiches.** Aucun écran ni aucune
+migration : le catalogue existe dans le code, prêt pour le lien plante → espèce (PR 2).
+- **Domaine** (`src/domain/species.ts`) : quinzaines (`Mar1`, `May2`), cinq climats qui décalent
+  les fenêtres des légumes de −2 à +2 quinzaines, en sens inverse pour les plages d'automne,
+  modulo 24 à travers le Nouvel An ; fruitiers et petits fruits ne bougent pas. « En ce moment »
+  (`activeWindows`) donne les fenêtres qui couvrent un jour, pour un climat.
+- **Fiches** (`src/data/species/`) : tomate, courgette, laitue, carotte, radis, haricot, pomme de
+  terre, poireau, mâche, ail, pommier, framboisier. Écrites par nous pour le climat tempéré,
+  recoupées sur au moins deux calendriers publiés ; le tableau du lot et ses sources sont dans la
+  PR, à relire par Maxime et un proche jardinier.
+- **Tests de cohérence** : identifiants figés, noms uniques sans accents ni casse, fiches
+  complètes, unités du modèle, plages valides et sans chevauchement dans chaque climat, décalages
+  aux bords de l'année, « en ce moment » à des dates choisies.
 
 **Étude du catalogue d'espèces ([`docs/etude-catalogue-especes.md`](docs/etude-catalogue-especes.md)),
 à valider par Maxime.** Le catalogue propose et n'impose rien : il préremplit les champs vides,
