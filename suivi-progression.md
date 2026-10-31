@@ -107,6 +107,18 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   pinceau de la carte par `assets/source/icons.ts` : la pousse en pot, sur le `primary` pour
   l'icône, sur les fonds de l'app pour les splashs ; monochrome avec un jour sous le bord du pot.
 
+**La carte s'anime (étape 5 de l'[étude](docs/etude-carte-potager.md#tranché-à-létape-5-animations), 30/10/2026).**
+Les arbres, conifères et buissons se balancent lentement, chacun à sa phase et à sa période, sous
+des rafales qui traversent la scène ; les haies taillées restent droites. Toucher un espace ou une
+zone occupés le fait rebondir, et la fiche s'ouvre au sommet du rebond (90 ms). La nuit, les
+lucioles flottent autour de leur place et s'allument par intermittence. Quand le téléphone réduit
+les animations, la carte reste immobile et le toucher ouvre aussitôt. La scène est enregistrée une
+fois en tranches (`Painter.parts()`) : chaque image ne fait que rejouer ces tranches, avec une
+transformation pour les seules animées, à 30 images par seconde, et l'horloge s'arrête quand
+l'onglet Jardin n'est pas affiché. Vérifié dans le navigateur ; **reste à ressentir sur
+téléphone** : la fluidité sur un Android d'entrée de gamme, l'amplitude du balancement et le
+rebond, que la transition vers la fiche recouvre en partie.
+
 **Écran dédoublé en mode web, corrigé.** Après Jardin → espace → retour, Chrome laissait des restes
 d'image en double. Cause : un écran quitté passe en `display: none` sur le web et mesure 0 × 0. La
 carte recadrait alors vers une échelle nulle, puis se ré-animait au retour. Skia web 2.6 recréait

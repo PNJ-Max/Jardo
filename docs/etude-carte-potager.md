@@ -14,6 +14,9 @@ Les décisions ci-dessous intègrent ses retours.
 **Étape 4 réalisée le 23/10/2026** : la carte est l'accueil de l'onglet Jardin (voir
 [Tranché à l'étape 4](#tranché-à-létape-4-carte-v1)).
 
+**Étape 5 réalisée le 30/10/2026** : la carte s'anime (voir
+[Tranché à l'étape 5](#tranché-à-létape-5-animations)).
+
 ## Vision
 
 L'onglet Jardin, l'accueil, montre une maquette illustrée du jardin vue d'en haut, « comme un
@@ -251,13 +254,44 @@ inchangées.
   sont posés en fait partie), puis les zones sans carré d'un potager posé sur la carte, nommées
   avec leur espace. Les autres zones s'ouvrent depuis leur espace, et les espaces archivés depuis
   la liste, à la demande. La bande n'apparaît que si elle a quelque chose à montrer.
-- **Toucher.** Il ouvre directement la fiche, sans mise en évidence préalable : le rebond de
-  l'élément touché viendra avec les animations (étape 5).
+- **Toucher.** Il ouvre directement la fiche, sans mise en évidence préalable. Le rebond de
+  l'élément touché est venu avec les animations (étape 5).
 - **Bascule.** Un bouton de l'en-tête, à côté des réglages, passe de la carte à la liste. Le choix
   n'est pas mémorisé : l'app rouvre sur la carte.
 - **Rafraîchissement.** Créer, renommer, archiver ou supprimer un espace ou une zone relit la carte.
 - **Aperçu de Réglages retiré.** Le modèle est retenu ; l'onglet Jardin dessine celui que donne
   l'API, et un `PUT /api/garden/map` avec `terraced-long` (voir `Jardo.Api.http`) montre l'autre.
+
+### Tranché à l'étape 5 (animations)
+
+- **Ce qui se balance.** Les arbres, les conifères et les buissons (`drawTree`, `drawConifer`,
+  `drawBush`), y compris le verger et les petits fruits : un cisaillement horizontal autour du
+  pied, dont le sommet s'écarte au plus de 16 cm pour un arbre, 11 pour un conifère, 7 pour un
+  buisson (de 2 à 5 pixels de scène). Phase et période (3,6 à 5,8 s) propres à chaque feuillage,
+  tirées de sa position ; une seconde oscillation plus rapide et des rafales de 11 s qui traversent
+  la scène de gauche à droite évitent l'ensemble mécanique. Les haies taillées, les cultures des
+  carrés et les plantes de la serre restent immobiles.
+- **Rebond.** Toucher un emplacement occupé, sur la carte ou sur son étiquette, fait rebondir ses
+  objets autour du centre de son emprise : 6 % de plus en 90 ms, puis retour amorti en 290 ms. La
+  fiche s'ouvre au sommet, 90 ms après le toucher, sous le seuil où un délai se remarque. Toucher
+  le potager fait rebondir ses quatre carrés ; toucher un emplacement libre ou le décor ne fait
+  rien. Les étiquettes, le voile des emplacements libres et les zones de toucher ne bougent pas.
+- **Lucioles.** Une seule luciole est enregistrée (le dessin de `drawFireflies`), puis rejouée à
+  chacune de ses places : elle flotte jusqu'à 12 pixels de scène autour et s'allume par
+  intermittence, chacune à son rythme. Le jour, il n'y en a pas.
+- **Réduction des animations.** Si le téléphone réduit les animations (`useReducedMotion`), la
+  carte est dessinée au repos, l'horloge ne tourne pas et le toucher ouvre la fiche aussitôt.
+- **Rendu.** Le `Painter` range la scène en tranches (`parts()`) : le décor fixe entre deux objets
+  animés tient dans une seule `SkPicture`, enregistrée une fois. À chaque image, la carte enregistre
+  une petite image qui ne fait que rejouer ces tranches, avec une transformation pour les seules
+  animées : l'ordre d'affichage reste exact (un arbre derrière la maison reste derrière). Le temps
+  vient d'une horloge Reanimated (`useFrameCallback`) plutôt que de `useClock` de Skia, parce
+  qu'elle s'arrête quand l'onglet n'est pas affiché (`useIsFocused`) et limite le rythme à 30
+  images par seconde, assez pour des mouvements aussi lents. Le rebond suit un `withTiming`. Sur le
+  web, le canvas n'existe toujours que sur l'onglet qui a le focus.
+- **Coût.** La carte se redessine désormais en continu tant qu'elle est affichée, au lieu de
+  seulement pendant un geste : à mesurer sur un Android d'entrée de gamme (fluidité, batterie). Si
+  c'est trop, on peut baisser le rythme ou n'animer que les feuillages du jardin.
 
 ## Étapes livrables
 
@@ -279,7 +313,9 @@ design. Une PR par étape.
 Étapes 1 et 3 faites le 21/10/2026, dans la même PR : les deux modèles (campagne et mitoyenne),
 leur nuit et leur décor, l'aperçu depuis Réglages (toucher, étiquettes, zoom, déplacement), et
 la décision technique. Étape 4 faite le 23/10/2026 : la carte dans l'onglet Jardin, branchée sur
-`GET /api/garden/map`, avec la bande « Hors carte » et la bascule vers la liste.
+`GET /api/garden/map`, avec la bande « Hors carte » et la bascule vers la liste. Étape 5 faite
+le 30/10/2026 : balancement des feuillages, rebond au toucher, lucioles la nuit et réduction des
+animations (voir [Tranché à l'étape 5](#tranché-à-létape-5-animations)).
 
 Plus tard : d'autres modèles de maison, les saisons, de nouveaux types
 d'espaces (serre, poulailler…) avec leurs emplacements et leurs dessins, un éditeur libre.

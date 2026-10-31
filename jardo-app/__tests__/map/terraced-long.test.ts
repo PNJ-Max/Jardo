@@ -6,7 +6,7 @@ describe('scène terraced-long', () => {
   it.each(['light', 'dark'] as const)('dessine tous les emplacements en mode %s', (scheme) => {
     const scene = terracedLongScene(scheme);
 
-    expect(scene.shapes.length).toBeGreaterThan(500);
+    expect(scene.parts.flatMap((part) => part.shapes).length).toBeGreaterThan(500);
     expect(Object.keys(scene.slots).sort()).toEqual([...SLOT_KEYS].sort());
   });
 
