@@ -15,7 +15,7 @@ import { ensureFieldsFitKind, validate as validateEntry } from './journal';
 import { ensureQuantityFits, validate as validatePlant } from './plants';
 import { businessRule, invalidBackup, ProblemError } from './problem';
 import { validate as validateSpace } from './spaces';
-import { ensureTaskFields, validate as validateTask } from './tasks';
+import { ensureTaskFields, validate as validateTask, validatePostponement } from './tasks';
 import { optionalText, Validation } from './validation';
 import { validate as validateWoodPile } from './wood-piles';
 import { validate as validateZone } from './zones';
@@ -214,6 +214,7 @@ export function checkBackupRules(tables: BackupTables): void {
         zoneId: task.zone_id,
         itemId: task.item_id,
       });
+      validatePostponement(task.postponed_until);
       ensureTaskFields(kind, recurrence, task.interval_days, optionalText(task.title));
       checkTarget(kind, task.space_id, task.zone_id, task.item_id);
     });

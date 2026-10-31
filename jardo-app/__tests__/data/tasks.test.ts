@@ -296,6 +296,7 @@ describe('TaskService : règles que TaskServiceTests.cs ne couvrait pas', () => 
       intervalDays: null,
       startDate: '2026-03-01',
       createdAt: new Date(2026, 5, 15, 12).toISOString(),
+      postponedUntil: null,
       spaceId: potager.id,
       spaceName: 'Potager',
       spaceKind: 'VegetableGarden',
@@ -452,5 +453,101 @@ describe('TaskService : règles que TaskServiceTests.cs ne couvrait pas', () => 
     await expect(service.complete(task)).rejects.toMatchObject(refused);
 
     expect(await count('journal_entries')).toBe(0);
+  });
+});
+
+describe('TaskService : reporter', () => {
+  const tomorrow = addDays(today, 1);
+
+  it('Reporter une tâche en retard la sort des tâches dues jusqu\'au jour dit, sans rien noter', async () => {
+    const { service, addSpace, addWatering, addEntry, count } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await addWatering(potager);
+    await addEntry('Watering', addDays(today, -5), potager);
+
+    const { task: postponed, previous } = await service.postpone(task, tomorrow);
+
+    expect(previous).toBeNull();
+    expect(postponed).toMatchObject({ postponedUntil: tomorrow, nextDueDate: tomorrow, status: 'Ok', daysOverdue: 0 });
+    expect((await service.getDue('Today')).map((t) => t.id)).toEqual([]);
+    expect((await service.getDue('Week')).map((t) => t.id)).toEqual([task]);
+    expect(await count('journal_entries')).toBe(1);
+  });
+
+  // La tâche d'une plante du carré, reportée à demain, puis faite aujourd'hui de trois façons.
+  it.each([
+    ['« Fait »', 'task'],
+    ['un arrosage noté au journal sur la plante', 'item'],
+    ['« Tout arroser » : un arrosage noté sur tout l\'espace', 'space'],
+  ] as const)("Le report n'a plus d'effet après %s", async (_, done) => {
+    const { service, journal, addSpace, addZone, addPlant, addWatering, addEntry } = await setup();
+    const potager = await addSpace('Potager');
+    const carre = await addZone(potager, 'Carré 1');
+    const tomate = await addPlant(potager, carre, 'Tomate');
+    const task = await addWatering(potager, null, tomate, 3);
+    await addEntry('Watering', addDays(today, -5), potager);
+    await service.postpone(task, tomorrow);
+
+    if (done === 'task') await service.complete(task);
+    else await journal.create({ date: today, kind: 'Watering', spaceId: potager.id, itemId: done === 'item' ? tomate.id : null });
+
+    expect(await service.getById(task)).toMatchObject({ postponedUntil: tomorrow, nextDueDate: addDays(today, 3), status: 'Ok' });
+  });
+
+  it("Annuler le report remet celui d'avant, même passé", async () => {
+    const { db, service, addSpace, addWatering, addEntry } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await addWatering(potager);
+    await addEntry('Watering', addDays(today, -5), potager);
+    await db.run('UPDATE garden_tasks SET postponed_until = ? WHERE id = ?', [addDays(today, -1), task]);
+    const before = await service.getById(task);
+
+    const { previous } = await service.postpone(task, tomorrow);
+    const restored = await service.restorePostponement(task, previous);
+
+    expect(previous).toBe(addDays(today, -1));
+    expect(restored).toEqual(before);
+    expect(restored).toMatchObject({ status: 'Overdue', daysOverdue: 1 });
+  });
+
+  it.each([
+    ['à aujourd\'hui', today],
+    ['à une date passée', addDays(today, -1)],
+  ])('Reporter %s est refusé', async (_, until) => {
+    const { service, addSpace, addWatering } = await setup();
+    const task = await addWatering(await addSpace('Potager'));
+
+    await expect(service.postpone(task, until)).rejects.toMatchObject(refused);
+    expect((await service.getById(task)).postponedUntil).toBeNull();
+  });
+
+  it("Reporter une tâche à un jour où elle n'est pas encore due est refusé", async () => {
+    const { service, addSpace, addWatering, addEntry } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await addWatering(potager, null, null, 3);
+    await addEntry('Watering', addDays(today, -1), potager);
+
+    await expect(service.postpone(task, addDays(today, 2))).rejects.toMatchObject(refused);
+    await expect(service.postpone(task, addDays(today, 3))).resolves.toMatchObject({ task: { nextDueDate: addDays(today, 3) } });
+  });
+
+  it("Reporter une tâche ponctuelle déjà faite est refusé", async () => {
+    const { service, addSpace, addTask } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await addTask('Sowing', 'Once', today, potager);
+    await service.complete(task);
+
+    await expect(service.postpone(task, tomorrow)).rejects.toMatchObject(refused);
+    expect((await service.getById(task)).postponedUntil).toBeNull();
+  });
+
+  it('Un jour mal écrit est refusé, une tâche inconnue est introuvable', async () => {
+    const { service, addSpace, addWatering } = await setup();
+    const task = await addWatering(await addSpace('Potager'));
+
+    await expect(service.postpone(task, '2026-13-01')).rejects.toMatchObject({ status: 400, problem: { errors: { PostponedUntil: expect.any(Array) } } });
+    await expect(service.restorePostponement(task, 'demain')).rejects.toMatchObject({ status: 400 });
+    await expect(service.postpone('inconnue', tomorrow)).rejects.toMatchObject(missing);
+    await expect(service.restorePostponement('inconnue', null)).rejects.toMatchObject(missing);
   });
 });

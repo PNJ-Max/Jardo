@@ -76,7 +76,7 @@ jardo-app/                    (à la racine du repo)
 ├── src/components/ui/        briques de base (boutons, carte, champs, date, pastille, états)
 ├── src/components/           lignes et sections métier (tâche, intervention, espace, élément)
 ├── src/components/map/       carte : gestes, rendu Skia, étiquettes
-├── src/map/                  scènes de la carte dessinées par le code : projection, décor,
+├── src/map/                  scènes de la carte dessinées par le code : projection, décor, animations,
 │                             un fichier par modèle, emplacements
 ├── src/lib/                  vocabulaire du domaine, dates, confirmations, navigation,
 │                             fichier de sauvegarde (partage, choix ; variante web),

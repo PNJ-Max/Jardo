@@ -63,6 +63,37 @@ describe('sauvegarde', () => {
     expect((await dump(target)).journal_entries.length).toBeGreaterThan(0);
   });
 
+  it('un export suivi d’un import garde les reports des tâches', async () => {
+    const source = await createTestDb({ exampleGarden: true });
+    await source.run("UPDATE garden_tasks SET postponed_until = '2026-10-27' WHERE rowid = (SELECT min(rowid) FROM garden_tasks)");
+    const backup = await createBackupService(source, clock).export();
+    const target = await createTestDb();
+    const service = createBackupService(target, clock);
+
+    await service.replace(service.read(JSON.stringify(backup)));
+
+    expect(backup.tables.garden_tasks.map((task) => task.postponed_until)).toContain('2026-10-27');
+    expect(await dump(target)).toEqual(await dump(source));
+  });
+
+  it('un export d’avant le report s’importe, ses tâches sans report', async () => {
+    const { db: source, backup } = await exampleBackup();
+    const before = tampered(backup, (file) => {
+      file.schemaVersion = 1;
+      file.tables.garden_tasks.forEach((task: any) => delete task.postponed_until);
+    });
+    const target = await createTestDb();
+    const service = createBackupService(target, clock);
+
+    const read = service.read(before);
+    await service.replace(read);
+
+    expect(read.schemaVersion).toBe(migrations.length);
+    expect(read.tables.garden_tasks.length).toBeGreaterThan(0);
+    expect(read.tables.garden_tasks.every((task) => task.postponed_until === null)).toBe(true);
+    expect(await dump(target)).toEqual(await dump(source));
+  });
+
   it('l’import remplace le jardin actuel, y compris ce qui a été ajouté depuis l’export', async () => {
     const { db, backup } = await exampleBackup();
     const before = await dump(db);
@@ -150,6 +181,7 @@ describe('sauvegarde', () => {
         /La valeur du champ « Type » n'est pas reconnue/,
       ],
       ['deux espaces du même nom', (file: any) => (file.tables.spaces[1].name = file.tables.spaces[0].name), /existe déjà/],
+      ['une tâche reportée à un jour mal écrit', (file: any) => (file.tables.garden_tasks[0].postponed_until = '2026-13-01'), /« Reporter au » n'est pas un jour/],
       [
         'une plante dans le bois de chauffage',
         (file: any) => {

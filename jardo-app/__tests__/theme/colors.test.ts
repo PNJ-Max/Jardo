@@ -24,6 +24,7 @@ const textPairs: Pair[] = [
   ['soil', 'background'],
   ['soil', 'card'],
   ['soil', 'soilTint'],
+  ['primaryText', 'soil'],
 ];
 
 describe.each<ColorScheme>(['light', 'dark'])('palette %s', (scheme) => {

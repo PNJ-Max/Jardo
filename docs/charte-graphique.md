@@ -32,7 +32,7 @@ Contrastes calculés selon WCAG 2.1. Le seuil visé est 4,5:1 (AA, texte courant
 | `text` | `#173B1A` | Texte principal | 11,9:1 sur le fond, 12,5:1 sur blanc |
 | `textMuted` | `#4D6B50` | Texte secondaire | 5,6:1 sur le fond, 5,9:1 sur blanc |
 | `primary` | `#1B5E20` | Actions : boutons, liens, onglet actif | 7,9:1 avec blanc, 7,5:1 sur le fond |
-| `primaryText` | `#FFFFFF` | Texte et icônes sur `primary`, `water`, `danger` | |
+| `primaryText` | `#FFFFFF` | Texte et icônes sur `primary`, `water`, `danger`, `soil` (« Demain » en glissant) | 7,9:1 sur `soil` |
 | `leaf` | `#66BB6A` | Décor (illustrations, pastilles de fond) | |
 | `leafPale` | `#A5D6A7` | Décor | |
 | `success` | `#1B5E20` | Tâche à jour | 7:1 sur `successTint` |
@@ -134,7 +134,7 @@ texte posé dessus est le fond sarcelle (`primaryText`), pas du blanc.
 | `text` | `#E8F5E9` | 14,6:1 / 11:1 |
 | `textMuted` | `#8BBB92` | 7,5:1 / 5,7:1 |
 | `primary` | `#8BBB92` | 7,5:1 avec `primaryText` |
-| `primaryText` | `#092328` | 7:1 sur `water`, 6,1:1 sur `danger` |
+| `primaryText` | `#092328` | 7:1 sur `water`, 6,1:1 sur `danger`, 8,8:1 sur `soil` |
 | `leaf` · `leafPale` | `#2A835F` · `#12544F` | Décor |
 | `success` | `#8BBB92` | 5,3:1 sur `successTint` |
 | `successTint` | `#123F3E` | |

@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { slotAt, ZONE_SLOTS, type Scene, type SlotKey } from '@/map/layouts';
+import { BOUNCE_DURATION, BOUNCE_LEAD } from '@/map/motion';
 import type { Point } from '@/map/scene';
 import { createStyles } from '@/theme';
 
@@ -42,7 +50,8 @@ type MapViewportProps = {
 /**
  * Cadre de la carte : pincer pour zoomer, glisser pour se déplacer, double-toucher pour zoomer,
  * toucher pour sélectionner. La vue vit dans des valeurs partagées : Skia redessine la scène à
- * chaque image sur le thread UI, sans repasser par React.
+ * chaque image sur le thread UI, sans repasser par React. Un emplacement occupé rebondit quand on
+ * le touche, et n'est sélectionné qu'au sommet du rebond.
  */
 export function MapViewport({ scene, labels, free, selected, onSelect, recenter }: MapViewportProps) {
   const [size, setSize] = useState<Size | null>(null);
@@ -53,6 +62,24 @@ export function MapViewport({ scene, labels, free, selected, onSelect, recenter 
   const x = useSharedValue(0);
   const y = useSharedValue(0);
   const start = useSharedValue({ scale: 1, x: 0, y: 0, focalX: 0, focalY: 0 });
+  const bounceSlot = useSharedValue<SlotKey | null>(null);
+  const bounceElapsed = useSharedValue(BOUNCE_DURATION);
+  const reduceMotion = useReducedMotion();
+
+  const pick = useCallback(
+    (key: SlotKey | null) => {
+      if (key === null || free.includes(key) || reduceMotion) {
+        onSelect(key);
+        return;
+      }
+      bounceSlot.set(key);
+      bounceElapsed.set(
+        withSequence(withTiming(0, { duration: 0 }), withTiming(BOUNCE_DURATION, { duration: BOUNCE_DURATION, easing: Easing.linear })),
+      );
+      setTimeout(() => onSelect(key), BOUNCE_LEAD);
+    },
+    [free, reduceMotion, onSelect, bounceSlot, bounceElapsed],
+  );
 
   // Au premier affichage, la scène est cadrée d'emblée ; ensuite, le recentrage est animé.
   const framed = useRef(false);
@@ -66,8 +93,8 @@ export function MapViewport({ scene, labels, free, selected, onSelect, recenter 
   }, [fit, recenter, scale, x, y]);
 
   const select = useCallback(
-    (sceneX: number, sceneY: number) => onSelect(slotAt(scene, [sceneX, sceneY])),
-    [scene, onSelect],
+    (sceneX: number, sceneY: number) => pick(slotAt(scene, [sceneX, sceneY])),
+    [scene, pick],
   );
 
   const gesture = useMemo(() => {
@@ -152,6 +179,7 @@ export function MapViewport({ scene, labels, free, selected, onSelect, recenter 
               scene={scene}
               size={size}
               view={{ scale, x, y }}
+              bounce={{ slot: bounceSlot, elapsed: bounceElapsed }}
               muted={muted}
               outline={selected ? scene.slots[selected].outline : null}
             />
@@ -168,7 +196,7 @@ export function MapViewport({ scene, labels, free, selected, onSelect, recenter 
               minScale={ZONE_SLOTS.includes(key) ? fit.scale * ZONE_LABEL_ZOOM : 0}
               view={{ scale, x, y }}
               selected={selected === key}
-              onPress={() => onSelect(key)}
+              onPress={() => pick(key)}
             />
           ))}
         </View>

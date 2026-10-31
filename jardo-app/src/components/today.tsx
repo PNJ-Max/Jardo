@@ -6,7 +6,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { GardenTask, Id } from '@/api/types';
-import { celebrateMs, doneFeedback, foldMs, TaskRow, useMarkDone, useWaterAll } from '@/components/tasks';
+import { celebrateMs, doneFeedback, foldMs, TaskRow, useMarkDone, usePostponeToTomorrow, useWaterAll } from '@/components/tasks';
 import { WeatherIcon } from '@/components/pictograms';
 import { Group, SectionTitle } from '@/components/ui';
 import { SkyScene } from '@/components/vignettes/sky-scene';
@@ -131,6 +131,7 @@ export type Water = { due: readonly GardenTask[]; onWaterAll: WaterAll; busy: bo
  */
 export function useTaskRow(): { row: RenderTask; waterAll: WaterAll; watering: boolean } {
   const { markDone } = useMarkDone();
+  const { postponeToTomorrow } = usePostponeToTomorrow();
   const { waterAll } = useWaterAll();
   const reduceMotion = useReducedMotion();
   const [leaving, setLeaving] = useState<ReadonlySet<Id>>(new Set());
@@ -145,6 +146,7 @@ export function useTaskRow(): { row: RenderTask; waterAll: WaterAll; watering: b
       detail={detail}
       onPress={() => router.push(targetHref(task))}
       onDone={() => markDone(task)}
+      onPostpone={() => postponeToTomorrow(task)}
     />
   );
 

@@ -21,9 +21,10 @@ jest.mock('react-native-reanimated', () => ({ ...require('react-native-reanimate
 
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(async () => {}),
+  selectionAsync: jest.fn(async () => {}),
   performAndroidHapticsAsync: jest.fn(async () => {}),
   ImpactFeedbackStyle: { Light: 'light' },
-  AndroidHaptics: { Confirm: 'confirm' },
+  AndroidHaptics: { Confirm: 'confirm', Clock_Tick: 'clock-tick' },
 }));
 
 jest.mock('@react-native-async-storage/async-storage', () =>

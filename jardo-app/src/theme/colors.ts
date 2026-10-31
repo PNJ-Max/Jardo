@@ -9,7 +9,7 @@ export type Colors = {
   text: string;
   textMuted: string;
   primary: string;
-  /** Texte et icônes posés sur `primary`, `water` ou `danger`. */
+  /** Texte et icônes posés sur `primary`, `water`, `danger` ou `soil`. */
   primaryText: string;
   /** Décor uniquement (illustrations, pastilles de fond) : jamais pour du texte. */
   leaf: string;
