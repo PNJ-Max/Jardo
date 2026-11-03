@@ -43,6 +43,15 @@ fermée : ce sont des notifications programmées sur le téléphone, sans serveu
 - **Vérifications** : tests Jest ; web vérifié (Réglages sans la section, sans erreur) ; pas
   encore sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#rappels).
 
+**Catalogue d'espèces, PR 8 : le lot 2, les 28 légumes restants.** Le catalogue compte 40 fiches,
+dont les 38 légumes de l'étude : légumes-fruits (concombre, cornichon, courge, melon, aubergine,
+poivron, maïs doux), petit pois et fève, légumes-feuilles (chicorée, roquette, épinard, blette, cinq
+choux, céleri, fenouil), racines et bulbes (betterave, navet, panais, oignon, échalote) et légumes
+vivaces (rhubarbe, asperge, artichaut). Plages d'automne pour la fève, l'épinard et le navet.
+Fenêtres recoupées sur les calendriers de la DRAAF et de Hornbach, la RHS et des fiches françaises ;
+le tableau du lot est dans la PR, à relire par Maxime et un proche jardinier. Aucun écran, aucune
+migration.
+
 **Catalogue d'espèces, PR 1 : le domaine et les 12 premières fiches.** Aucun écran ni aucune
 migration : le catalogue existe dans le code, prêt pour le lien plante → espèce (PR 2).
 - **Domaine** (`src/domain/species.ts`) : quinzaines (`Mar1`, `May2`), cinq climats qui décalent
