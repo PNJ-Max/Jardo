@@ -10,7 +10,18 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (31/10/2026)
+## Où on en est (03/11/2026)
+
+**Assistant de la carte (étape 6 de l'[étude](docs/etude-carte-potager.md#tranché-à-létape-6-assistant-de-configuration), 03/11/2026).**
+Un APK installé ne démarre plus sur une liste vide : un jardin sans carte ni espace ouvre
+l'assistant.
+- **Trois pages** : l'accueil dessiné, le modèle (campagne ou mitoyenne, sur leur aperçu), les
+  espaces à cocher, avec les quatre carrés du potager en option. L'app crée les espaces et les
+  pose sur la carte en une transaction (`GardenMapService.setup`). « Passer » mène à la liste.
+- **Réglages → Carte du jardin** : relance l'assistant sur un jardin vide ; sinon choix du
+  modèle et de ce qui occupe chaque emplacement, avec un premier placement proposé.
+- **Vérifications** : tests Jest du service et des écrans ; web vérifié en clair et en sombre à
+  375 de large ; pas encore sur téléphone (retour d'Android à essayer).
 
 **Rappels par notification locale (31/10/2026).** L'app rappelle ce qui est à faire, même
 fermée : ce sont des notifications programmées sur le téléphone, sans serveur ni push.

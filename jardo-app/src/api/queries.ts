@@ -11,6 +11,8 @@ import type {
   DueHorizon,
   GardenBackup,
   GardenInput,
+  GardenMapInput,
+  GardenSetupInput,
   GardenTask,
   Id,
   JournalEntryInput,
@@ -136,6 +138,26 @@ export function useImportGarden() {
 export function useGardenMap() {
   const { gardenMap } = useServices();
   return useQuery({ queryKey: keys.gardenMap, queryFn: () => gardenMap.get() });
+}
+
+/** Le modèle et le placement des espaces existants : seule la carte change. */
+export function useSaveGardenMap() {
+  const { gardenMap } = useServices();
+  const invalidate = useInvalidate(['gardenMap']);
+  return useMutation({
+    mutationFn: (input: GardenMapInput) => gardenMap.replace(input),
+    onSuccess: invalidate,
+  });
+}
+
+/** L'assistant crée des espaces et des zones en posant la carte. */
+export function useSetupGardenMap() {
+  const { gardenMap } = useServices();
+  const invalidate = useInvalidate(afterStructureWrite);
+  return useMutation({
+    mutationFn: (input: GardenSetupInput) => gardenMap.setup(input),
+    onSuccess: invalidate,
+  });
 }
 
 export function useSpaces(includeArchived = false) {

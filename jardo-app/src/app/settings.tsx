@@ -1,8 +1,17 @@
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
-import { useExportGarden, useGarden, useImportGarden, useReadBackupFile, useSaveGarden } from '@/api/queries';
+import {
+  useExportGarden,
+  useGarden,
+  useGardenMap,
+  useImportGarden,
+  useReadBackupFile,
+  useSaveGarden,
+  useSpaces,
+} from '@/api/queries';
 import type { Garden, GardenBackup } from '@/api/types';
 import { RemindersSection } from '@/components/reminders';
 import { fieldError, Button, Card, ChipSelect, Field, FormError, screenStyles, SectionTitle } from '@/components/ui';
@@ -10,6 +19,8 @@ import { WeatherSection } from '@/components/weather';
 import { confirm } from '@/lib/confirm';
 import { formatLongDate, toDateOnly } from '@/lib/dates';
 import { formatQuantity } from '@/lib/garden';
+import { layoutOptions } from '@/lib/garden-map';
+import { SLOT_KEYS } from '@/map/layouts';
 import { createStyles, setThemePreference, useTheme, useThemePreference, type ThemePreference } from '@/theme';
 
 const themeOptions: { value: ThemePreference; label: string }[] = [
@@ -39,6 +50,8 @@ export default function SettingsScreen() {
           <GardenName key={imports} garden={garden.data} />
         )}
       </View>
+
+      <GardenMapSection />
 
       <GardenBackupSection onImported={() => setImports((count) => count + 1)} />
 
@@ -104,6 +117,53 @@ function GardenName({ garden }: { garden: Garden }) {
 }
 
 const count = (value: number, one: string, many: string) => formatQuantity(value, { one, many });
+
+/**
+ * Un jardin vide relance l'assistant, qui crée les espaces ; un jardin qui en a ouvre le choix du
+ * modèle et du placement.
+ */
+function GardenMapSection() {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const map = useGardenMap();
+  const spaces = useSpaces();
+
+  if (!map.data || !spaces.data) {
+    const error = map.error ?? spaces.error;
+    return (
+      <View style={styles.section}>
+        <SectionTitle>Carte du jardin</SectionTitle>
+        {error ? <Text style={styles.error}>{error.message}</Text> : <ActivityIndicator color={colors.primary} />}
+      </View>
+    );
+  }
+
+  const layout = layoutOptions.find((option) => option.value === map.data.layout);
+  const empty = map.data.layout === null && spaces.data.length === 0;
+
+  return (
+    <View style={styles.section}>
+      <SectionTitle>Carte du jardin</SectionTitle>
+      <Text style={styles.muted}>
+        {layout
+          ? `${layout.label} : ${count(map.data.slots.length, 'emplacement occupé', 'emplacements occupés')} sur ${SLOT_KEYS.length}.`
+          : empty
+            ? "Pas encore de carte. L'assistant la dessine et crée les espaces de votre jardin."
+            : 'Pas encore de carte : choisissez un modèle et placez-y vos espaces.'}
+      </Text>
+      {empty ? (
+        <Button title="Lancer l'assistant" icon="brush-outline" variant="secondary" onPress={() => router.push('/setup')} />
+      ) : (
+        <Button
+          title={layout ? 'Modifier la carte' : 'Configurer la carte'}
+          icon="map-outline"
+          variant="secondary"
+          onPress={() => router.push('/garden-map')}
+        />
+      )}
+    </View>
+  );
+}
 
 /** Ce que le fichier apporte, pour que la confirmation dise ce qui va remplacer le jardin. */
 function describeBackup({ exportedAt, tables }: GardenBackup): string {

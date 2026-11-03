@@ -293,6 +293,38 @@ inchangées.
   seulement pendant un geste : à mesurer sur un Android d'entrée de gamme (fluidité, batterie). Si
   c'est trop, on peut baisser le rythme ou n'animer que les feuillages du jardin.
 
+### Tranché à l'étape 6 (assistant de configuration)
+
+L'API n'existe plus : `POST /api/garden/map/setup` devient `GardenMapService.setup`, à côté de
+`replace`, dans la base locale.
+
+- **Service.** `setup({ layout, spaces: [{ slotKey, name, kind, zones? }] })` crée les espaces et
+  leurs zones, puis écrit la carte par le même chemin que `replace` (mêmes règles), le tout dans
+  une seule transaction : un nom pris ou un emplacement incompatible n'écrit rien. Les espaces qui
+  existaient déjà passent hors carte.
+- **Quand l'assistant s'ouvre.** Au lancement, si le jardin n'a ni modèle ni espace, archivés
+  compris. La décision se prend une fois, dans le layout des onglets, qui ne rend rien tant
+  qu'elle n'est pas prise ni pendant l'assistant : ni la liste vide ni la barre d'onglets ne
+  s'affichent avant. L'assistant arrive en fondu (`animation: 'fade'`).
+- **Passer.** Un bouton en haut de chaque page, et le retour d'Android sur l'accueil, mènent à
+  l'onglet Jardin : la liste, puisque rien n'est posé. Le choix n'est pas mémorisé : un jardin
+  resté vide revoit l'assistant au lancement suivant, ce qui reste le meilleur départ. Réglages le
+  relance tant que le jardin n'a aucun espace actif.
+- **Pile plutôt que modale.** L'assistant est une pile à part (`app/setup/`, trois pages) poussée
+  sur les onglets : le retour d'Android remonte les étapes, puis quitte l'assistant. Une modale
+  convient à une action sur un écran ; l'accueil est une page entière. Terminer ou passer revient
+  à l'onglet Jardin (`router.dismissTo('/')`), d'où qu'on l'ait ouvert.
+- **Contenu.** Accueil sur l'aperçu de la maison de campagne ; modèle choisi sur les deux
+  aperçus (dessin immobile de la scène, `MapPreview`), campagne par défaut ; espaces à cocher,
+  aucun d'office, chacun sur sa vignette et sur l'emplacement de son type, nommé comme son type ;
+  les quatre carrés (« Carré 1 » à « Carré 4 ») en option sous le potager, décochés.
+- **Réglages, « Carte du jardin ».** Un jardin qui a des espaces ouvre en modale le choix du
+  modèle et, emplacement par emplacement, l'espace de son type ou la zone d'un potager (une zone
+  n'occupe qu'un carré). Sans carte, un premier placement est proposé : le premier espace de
+  chaque type, et les premières zones de ce potager sur les carrés. L'enregistrement passe par
+  `replace`.
+- **Pas de migration** : `gardens.map_layout` et `garden_map_slots` suffisent.
+
 ## Étapes livrables
 
 Prérequis : l'étape 1 du [modèle du domaine](modele-domaine.md#stratégie-de-migration) (jardin,
@@ -315,7 +347,9 @@ leur nuit et leur décor, l'aperçu depuis Réglages (toucher, étiquettes, zoom
 la décision technique. Étape 4 faite le 23/10/2026 : la carte dans l'onglet Jardin, branchée sur
 `GET /api/garden/map`, avec la bande « Hors carte » et la bascule vers la liste. Étape 5 faite
 le 30/10/2026 : balancement des feuillages, rebond au toucher, lucioles la nuit et réduction des
-animations (voir [Tranché à l'étape 5](#tranché-à-létape-5-animations)).
+animations (voir [Tranché à l'étape 5](#tranché-à-létape-5-animations)). Étape 6 faite le
+03/11/2026, sans API : l'assistant du premier lancement et le placement depuis Réglages (voir
+[Tranché à l'étape 6](#tranché-à-létape-6-assistant-de-configuration)).
 
 Plus tard : d'autres modèles de maison, les saisons, de nouveaux types
 d'espaces (serre, poulailler…) avec leurs emplacements et leurs dessins, un éditeur libre.
