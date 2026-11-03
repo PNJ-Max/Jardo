@@ -54,15 +54,6 @@ export const rectFootprint = (x0: number, y0: number, x1: number, y1: number): P
 
 type Vec3 = [number, number, number];
 
-/** Pseudo-hasard reproductible : la scène est identique d'un lancement à l'autre. */
-export function seeded(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
 // ---------- Maisons ----------
 
 /** Fenêtre d'une façade : début et fin le long du mur, bas et haut, allumée la nuit. */

@@ -95,3 +95,17 @@ describe("écran Aujourd'hui, météo", () => {
     expect(screen.queryByText(rain)).not.toBeOnTheScreen();
   });
 });
+
+describe("écran Aujourd'hui, météo sur un réseau qui ne répond pas", () => {
+  it("montre tout de suite la prévision gardée, sans attendre le réseau", async () => {
+    (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
+    const yesterdayNight = new Date();
+    yesterdayNight.setDate(yesterdayNight.getDate() - 1);
+    yesterdayNight.setHours(0, 30, 0, 0);
+    await keepForecast({ fetchedAt: yesterdayNight.toISOString(), days: days() });
+    await renderScreen(<TodayScreen />);
+
+    expect(await screen.findByLabelText(`${spokenToday} Prévision d'hier.`)).toBeOnTheScreen();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+});

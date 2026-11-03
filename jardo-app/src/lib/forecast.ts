@@ -36,10 +36,19 @@ export async function savePlace(place: WeatherPlace | null) {
   else await AsyncStorage.multiRemove([placeKey, forecastKey]);
 }
 
+/** Au-delà, le réseau compte comme absent : sur Android, une connexion qui pend n'expire jamais d'elle-même. */
+export const requestTimeoutMs = 8000;
+
 async function getJson(url: string) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Open-Meteo a répondu ${response.status}.`);
-  return response.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), requestTimeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error(`Open-Meteo a répondu ${response.status}.`);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 type GeocodingResult = { name: string; latitude: number; longitude: number; admin1?: string; country?: string };
@@ -99,13 +108,18 @@ function isRecent(forecast: Forecast, clock: Clock) {
   return now.getTime() - fetched.getTime() < refreshAfterMs && toDateOnly(fetched) === toDateOnly(now);
 }
 
+/** La dernière prévision gardée pour ce lieu, si ancienne soit-elle, sans appeler le réseau. */
+export async function readKeptForecast(place: WeatherPlace): Promise<Forecast | null> {
+  const stored = await readJson<Forecast>(forecastKey);
+  return stored && isFor(stored, place) ? stored : null;
+}
+
 /**
  * La prévision du lieu : celle gardée si elle est récente ; sinon celle du réseau, gardée à son
  * tour ; sans réseau, la gardée, si ancienne soit-elle. Jamais d'erreur : sans prévision, rien.
  */
 export async function loadForecast(place: WeatherPlace, clock: Clock): Promise<Forecast | null> {
-  const stored = await readJson<Forecast>(forecastKey);
-  const kept = stored && isFor(stored, place) ? stored : null;
+  const kept = await readKeptForecast(place);
   if (kept && isRecent(kept, clock)) return kept;
 
   try {

@@ -16,6 +16,13 @@ export async function prepareDatabase(db: Db, { exampleGarden }: { exampleGarden
   if (exampleGarden) await seedExampleGarden(db, today(), new Date().toISOString());
 }
 
-/** Le onInit de SQLiteProvider. Une installation publiée démarre sur un jardin vide. */
+/**
+ * Le jardin d'exemple : en développement, et dans une démo web exportée avec
+ * `EXPO_PUBLIC_EXAMPLE_GARDEN=1`. Une installation publiée démarre sur un jardin vide. La variable
+ * se lit en entier, `process.env.EXPO_PUBLIC_…` : c'est sous cette forme qu'Expo l'inscrit au build.
+ */
+export const wantsExampleGarden = () => __DEV__ || process.env.EXPO_PUBLIC_EXAMPLE_GARDEN === '1';
+
+/** Le onInit de SQLiteProvider. */
 export const initDatabase = (database: SQLiteDatabase) =>
-  prepareDatabase(fromExpo(database), { exampleGarden: __DEV__ });
+  prepareDatabase(fromExpo(database), { exampleGarden: wantsExampleGarden() });

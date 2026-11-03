@@ -27,6 +27,33 @@ fermait d'elle-même quand on passait en « une seule fois » une tâche ancienn
 - **Vérifications** : tests Jest (calcul, service, migration, sauvegarde, calendrier) ; pas encore
   sur téléphone.
 
+**Finitions avant l'APK (03/11/2026).** Quatre constats mineurs de l'audit du 31/10, et un
+plantage du web :
+- **Météo sur un réseau qui pend** : la lecture d'Open-Meteo abandonne au bout de 8 s, et la
+  prévision gardée s'affiche tout de suite, le temps que le réseau réponde.
+- **Formulaires** : tant que la saisie a changé (`useChanged`), le retour d'Android, le bouton
+  fermer ou le geste demandent « Abandonner la saisie ? ». Un enregistrement ou une suppression
+  quittent sans rien demander (`leaveForm`).
+- **Démo web exportée** : `EXPO_PUBLIC_EXAMPLE_GARDEN=1 npx expo export --platform web --clear` la
+  remplit du jardin d'exemple ; sans la variable, un export démarre vide. Voir le
+  [README](README.md#lancer).
+- **Web ouvert sur une page** (`/space/…` rechargée, lien direct) : les pictogrammes et la carte
+  cherchaient CanvasKit sous le chemin de la page et l'app plantait ; il se charge depuis la racine.
+- **Code mort** : `seeded` (`src/map/decor.ts`) est retiré.
+- **Vérifications** : tests Jest (délai de la météo, prévision gardée, garde des formulaires),
+  deux exports web comparés ; pas encore sur téléphone.
+
+**Assistant de la carte (étape 6 de l'[étude](docs/etude-carte-potager.md#tranché-à-létape-6-assistant-de-configuration), 03/11/2026).**
+Un APK installé ne démarre plus sur une liste vide : un jardin sans carte ni espace ouvre
+l'assistant.
+- **Trois pages** : l'accueil dessiné, le modèle (campagne ou mitoyenne, sur leur aperçu), les
+  espaces à cocher, avec les quatre carrés du potager en option. L'app crée les espaces et les
+  pose sur la carte en une transaction (`GardenMapService.setup`). « Passer » mène à la liste.
+- **Réglages → Carte du jardin** : relance l'assistant sur un jardin vide ; sinon choix du
+  modèle et de ce qui occupe chaque emplacement, avec un premier placement proposé.
+- **Vérifications** : tests Jest du service et des écrans ; web vérifié en clair et en sombre à
+  375 de large ; pas encore sur téléphone (retour d'Android à essayer).
+
 **Fiabilité avant l'APK (03/11/2026).** Quatre constats de l'audit du 31/10 sont corrigés :
 - **Thème en cours de route** : `SQLiteProvider` est un `memo` qui ne se rend pas de nouveau avec
   la racine. Le thème se lit donc sous lui (`Navigation` dans `_layout.tsx`), et changer de thème,
@@ -57,6 +84,15 @@ fermée : ce sont des notifications programmées sur le téléphone, sans serveu
 - **Web** : pas de rappels, la section n'apparaît pas.
 - **Vérifications** : tests Jest ; web vérifié (Réglages sans la section, sans erreur) ; pas
   encore sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#rappels).
+
+**Catalogue d'espèces, PR 9 : le lot 3, aromatiques, fruitiers et petits fruits.** Le catalogue
+compte les 63 espèces de l'étude. 23 fiches : les dix aromatiques (basilic, persil, ciboulette,
+coriandre, aneth, cerfeuil, thym, romarin, sauge, menthe), dans le nouveau `herbs.ts`, sept fruitiers
+(poirier, cerisier, prunier, pêcher, abricotier, figuier, vigne) et six petits fruits (fraisier,
+groseillier, cassissier, groseillier à maquereau, myrtillier, mûrier sans épines). Thym, romarin et
+sauge ont une fenêtre de taille. Fenêtres recoupées sur la RHS, Jardiner Malin, la DRAAF et Bruxelles Environnement ; le
+tableau du lot est dans la PR, à relire par Maxime et un proche jardinier. Aucun écran, aucune
+migration.
 
 **Catalogue d'espèces, PR 8 : le lot 2, les 28 légumes restants.** Le catalogue compte 40 fiches,
 dont les 38 légumes de l'étude : légumes-fruits (concombre, cornichon, courge, melon, aubergine,

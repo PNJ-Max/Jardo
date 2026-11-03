@@ -1,10 +1,44 @@
-import { Tabs } from 'expo-router';
+import { router, Tabs, useIsFocused } from 'expo-router';
+import { useEffect, useState } from 'react';
 
+import { useGardenMap, useSpaces } from '@/api/queries';
 import { TabIcon } from '@/components/pictograms';
+import { needsMapSetup } from '@/lib/garden-map';
 import { useTheme } from '@/theme';
+
+type Stage = 'deciding' | 'setup' | 'inSetup' | 'tabs';
+
+/**
+ * Au lancement, un jardin vide ouvre l'assistant de la carte par-dessus les onglets. On décide une
+ * seule fois, et les onglets ne se montent qu'au retour de l'assistant : la liste vide ne
+ * transparaît ni avant ni pendant son fondu. Passé, l'assistant ne revient qu'au prochain lancement.
+ */
+function useFirstLaunchSetup(): boolean {
+  const map = useGardenMap();
+  const spaces = useSpaces(true);
+  const focused = useIsFocused();
+  const [stage, setStage] = useState<Stage>('deciding');
+
+  if (stage === 'deciding' && !map.isPending && !spaces.isPending) {
+    setStage(map.data && spaces.data && needsMapSetup(map.data, spaces.data) ? 'setup' : 'tabs');
+  } else if (stage === 'setup' && !focused) {
+    setStage('inSetup');
+  } else if (stage === 'inSetup' && focused) {
+    setStage('tabs');
+  }
+
+  useEffect(() => {
+    if (stage === 'setup') router.push('/setup');
+  }, [stage]);
+
+  return stage === 'tabs';
+}
 
 export default function TabLayout() {
   const { colors, fonts } = useTheme();
+  const ready = useFirstLaunchSetup();
+
+  if (!ready) return null;
 
   return (
     <Tabs

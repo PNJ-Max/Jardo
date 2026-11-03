@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useSaveSpace, useSpace } from '@/api/queries';
 import type { Id, Space, SpaceKind } from '@/api/types';
 import { SpaceKindSelect } from '@/components/space-kind-select';
-import { fieldError, Field, FormPending, FormScreen } from '@/components/ui';
-import { goBack } from '@/lib/navigation';
+import { fieldError, Field, FormPending, FormScreen, leaveForm, useChanged } from '@/components/ui';
 
 /**
  * Création ou modification d'un espace.
@@ -30,12 +29,13 @@ function SpaceForm({ space }: { space?: Space }) {
   const [name, setName] = useState(space?.name ?? '');
   const [kind, setKind] = useState<SpaceKind | undefined>(space?.kind);
   const [description, setDescription] = useState(space?.description ?? '');
+  const changed = useChanged([name, kind, description]);
 
   const submit = () => {
     if (!kind) return;
     save.mutate(
       { id: space?.id, input: { name: name.trim(), kind, description: description.trim() || null } },
-      { onSuccess: goBack },
+      { onSuccess: leaveForm },
     );
   };
 
@@ -46,7 +46,8 @@ function SpaceForm({ space }: { space?: Space }) {
       onSubmit={submit}
       loading={save.isPending}
       disabled={!name.trim() || !kind}
-      error={save.error}>
+      error={save.error}
+      dirty={changed}>
       <Field
         label="Nom"
         value={name}

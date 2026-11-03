@@ -68,6 +68,9 @@ function Navigation() {
           <Stack.Screen name="task/form" options={{ presentation: 'modal', title: 'Tâche', headerShown: false }} />
           <Stack.Screen name="task/done" options={{ presentation: 'modal', title: 'Fait', headerShown: false }} />
           <Stack.Screen name="settings" options={{ title: 'Réglages' }} />
+          <Stack.Screen name="garden-map" options={{ presentation: 'modal', title: 'Carte du jardin', headerShown: false }} />
+          {/* Au premier lancement, l'assistant apparaît en fondu sur un écran encore vide (voir (tabs)/_layout). */}
+          <Stack.Screen name="setup" options={{ headerShown: false, animation: 'fade' }} />
         </Stack>
         <Reminders />
       </UndoProvider>

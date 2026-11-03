@@ -3,13 +3,14 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import { systemClock } from '@/data/clock';
-import { loadForecast, readPlace, refreshAfterMs, savePlace, searchPlaces } from '@/lib/forecast';
+import { loadForecast, readKeptForecast, readPlace, refreshAfterMs, savePlace, searchPlaces } from '@/lib/forecast';
 import type { Forecast, WeatherPlace } from '@/lib/weather';
 
 // La météo n'a pas de service dans src/data : elle ne touche pas la base (voir lib/forecast.ts).
 export const weatherKeys = {
   place: ['weather', 'place'] as const,
   forecast: ['weather', 'forecast'] as const,
+  kept: ['weather', 'kept'] as const,
 };
 
 export function useWeatherPlace() {
@@ -22,7 +23,11 @@ export function useSaveWeatherPlace() {
     mutationFn: savePlace,
     onSuccess: async (_, place) => {
       queryClient.setQueryData(weatherKeys.place, place);
-      await queryClient.invalidateQueries({ queryKey: weatherKeys.forecast });
+      // Retirer la ville efface aussi la prévision gardée.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: weatherKeys.forecast }),
+        queryClient.invalidateQueries({ queryKey: weatherKeys.kept }),
+      ]);
     },
   });
 }
@@ -34,10 +39,17 @@ export function usePlaceSearch() {
 /**
  * La prévision de la ville retenue, ou null : pas de ville, ou aucune prévision gardée et pas de
  * réseau. Relue au retour sur l'app ; `loadForecast` n'appelle le réseau que si la gardée a vieilli.
+ * La gardée s'affiche tout de suite, le temps que le réseau réponde ou abandonne.
  */
 export function useForecast(): Forecast | null {
   const place = useWeatherPlace().data ?? null;
   const queryClient = useQueryClient();
+  const kept = useQuery({
+    queryKey: [...weatherKeys.kept, place?.latitude, place?.longitude],
+    queryFn: () => readKeptForecast(place as WeatherPlace),
+    enabled: place !== null,
+    staleTime: Infinity,
+  });
   const forecast = useQuery({
     queryKey: [...weatherKeys.forecast, place?.latitude, place?.longitude],
     queryFn: () => loadForecast(place as WeatherPlace, systemClock),
@@ -52,5 +64,5 @@ export function useForecast(): Forecast | null {
     return () => subscription.remove();
   }, [queryClient]);
 
-  return place ? (forecast.data ?? null) : null;
+  return place ? (forecast.data ?? kept.data ?? null) : null;
 }

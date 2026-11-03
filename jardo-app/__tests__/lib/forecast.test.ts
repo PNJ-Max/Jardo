@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Clock } from '@/data/clock';
-import { loadForecast, readPlace, savePlace, searchPlaces } from '@/lib/forecast';
+import { loadForecast, readPlace, requestTimeoutMs, savePlace, searchPlaces } from '@/lib/forecast';
 import { forecastAge } from '@/lib/weather';
 
 import { goOffline, namur, openMeteoDaily, respond } from '../../test/weather';
@@ -80,6 +80,25 @@ describe('prévision', () => {
     await loadForecast(namur, at('2026-10-30T09:00:00'));
 
     await expect(loadForecast({ ...namur, latitude: 45.75, longitude: 4.85 }, at('2026-10-30T09:30:00'))).resolves.toBeNull();
+  });
+
+  it("abandonne un réseau qui ne répond pas, et rend la prévision gardée", async () => {
+    fetchMock.mockImplementationOnce(respond(openMeteoDaily('2026-10-29')));
+    await loadForecast(namur, at('2026-10-30T09:00:00'));
+    // Une connexion qui pend : seule l'annulation y met fin.
+    fetchMock.mockImplementationOnce(
+      (_url: string, { signal }: { signal: AbortSignal }) =>
+        new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(new Error('Annulée.')))),
+    );
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
+    try {
+      const loading = loadForecast(namur, at('2026-10-31T08:00:00'));
+      await jest.advanceTimersByTimeAsync(requestTimeoutMs);
+
+      await expect(loading).resolves.toMatchObject({ fetchedAt: new Date('2026-10-30T09:00:00').toISOString() });
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 

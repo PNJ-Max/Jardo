@@ -5,10 +5,9 @@ import { useTask } from '@/api/queries';
 import type { GardenTask } from '@/api/types';
 import { FormTarget } from '@/components/form-target';
 import { taskTitle, useMarkDone } from '@/components/tasks';
-import { DateField, Field, FormPending, FormScreen } from '@/components/ui';
+import { DateField, Field, FormPending, FormScreen, leaveForm, useChanged } from '@/components/ui';
 import { today } from '@/lib/dates';
 import { targetLabel } from '@/lib/garden';
-import { goBack } from '@/lib/navigation';
 
 /**
  * « Fait » en précisant le jour (une saisie oubliée) ou une note. Ouvert par un appui long sur
@@ -28,10 +27,12 @@ function TaskDoneForm({ task }: { task: GardenTask }) {
   const [date, setDate] = useState(today());
   const [note, setNote] = useState('');
 
-  const submit = () => markDone(task, { date, note: note.trim() || null }, goBack);
+  const changed = useChanged([date, note]);
+
+  const submit = () => markDone(task, { date, note: note.trim() || null }, leaveForm);
 
   return (
-    <FormScreen title={taskTitle(task)} submitLabel="Noter comme fait" onSubmit={submit} loading={isPending}>
+    <FormScreen title={taskTitle(task)} submitLabel="Noter comme fait" onSubmit={submit} loading={isPending} dirty={changed}>
       <FormTarget label={targetLabel(task)} />
       <DateField
         label="Fait le"
