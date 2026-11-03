@@ -41,6 +41,34 @@ describe("catalogue d'espèces", () => {
       'leek',
       'lamb-lettuce',
       'garlic',
+      'cucumber',
+      'gherkin',
+      'squash',
+      'melon',
+      'eggplant',
+      'pepper',
+      'sweet-corn',
+      'pea',
+      'broad-bean',
+      'chicory',
+      'arugula',
+      'spinach',
+      'chard',
+      'cabbage',
+      'cauliflower',
+      'broccoli',
+      'brussels-sprouts',
+      'kale',
+      'celery',
+      'fennel',
+      'beetroot',
+      'turnip',
+      'parsnip',
+      'onion',
+      'shallot',
+      'rhubarb',
+      'asparagus',
+      'artichoke',
       'apple-tree',
       'raspberry',
     ]);
@@ -144,9 +172,9 @@ describe.each(ids)('fiche %s', (id) => {
 });
 
 describe('en ce moment, dans le catalogue', () => {
-  it("fin octobre en climat tempéré : planter ail et framboisier, récolter ce qui tient l'hiver", () => {
+  it("fin octobre en climat tempéré : semer les fèves, planter ail et framboisier, récolter ce qui tient l'hiver", () => {
     expect(inSeason('sowIndoors', '2026-10-31')).toEqual([]);
-    expect(inSeason('sowOutdoors', '2026-10-31')).toEqual([]);
+    expect(inSeason('sowOutdoors', '2026-10-31')).toEqual(['broad-bean']);
     expect(inSeason('plant', '2026-10-31')).toEqual(['garlic', 'raspberry']);
     expect(inSeason('harvest', '2026-10-31')).toEqual([
       'lettuce',
@@ -154,20 +182,81 @@ describe('en ce moment, dans le catalogue', () => {
       'radish',
       'leek',
       'lamb-lettuce',
+      'squash',
+      'chicory',
+      'arugula',
+      'spinach',
+      'chard',
+      'cabbage',
+      'cauliflower',
+      'brussels-sprouts',
+      'kale',
+      'celery',
+      'fennel',
+      'beetroot',
+      'turnip',
+      'parsnip',
       'apple-tree',
     ]);
   });
 
-  it('mi-janvier : tailler, planter les fruitiers, récolter poireaux et mâche', () => {
+  it("mi-janvier : tailler, planter les fruitiers, récolter les légumes d'hiver", () => {
     expect(inSeason('prune', '2026-01-10')).toEqual(['apple-tree', 'raspberry']);
     expect(inSeason('plant', '2026-01-10')).toEqual(['apple-tree', 'raspberry']);
-    expect(inSeason('harvest', '2026-01-10')).toEqual(['leek', 'lamb-lettuce']);
+    expect(inSeason('harvest', '2026-01-10')).toEqual([
+      'leek',
+      'lamb-lettuce',
+      'spinach',
+      'brussels-sprouts',
+      'kale',
+      'parsnip',
+    ]);
   });
 
   it('après la mi-mai : planter les tomates en climat tempéré, pas encore en montagne', () => {
-    expect(inSeason('plant', '2026-05-20')).toEqual(['tomato', 'zucchini', 'lettuce', 'leek']);
-    expect(inSeason('sowOutdoors', '2026-05-20')).toEqual(['zucchini', 'lettuce', 'carrot', 'radish', 'bean']);
-    expect(inSeason('plant', '2026-05-20', 'Mountain')).toEqual(['lettuce', 'potato']);
+    expect(inSeason('plant', '2026-05-20')).toEqual([
+      'tomato',
+      'zucchini',
+      'lettuce',
+      'leek',
+      'cucumber',
+      'gherkin',
+      'squash',
+      'melon',
+      'eggplant',
+      'pepper',
+      'sweet-corn',
+      'cabbage',
+      'cauliflower',
+      'broccoli',
+      'brussels-sprouts',
+      'kale',
+      'celery',
+      'artichoke',
+    ]);
+    expect(inSeason('sowOutdoors', '2026-05-20')).toEqual([
+      'zucchini',
+      'lettuce',
+      'carrot',
+      'radish',
+      'bean',
+      'gherkin',
+      'squash',
+      'sweet-corn',
+      'arugula',
+      'chard',
+      'beetroot',
+    ]);
+    expect(inSeason('plant', '2026-05-20', 'Mountain')).toEqual([
+      'lettuce',
+      'potato',
+      'cabbage',
+      'cauliflower',
+      'broccoli',
+      'onion',
+      'asparagus',
+      'artichoke',
+    ]);
     expect(inSeason('plant', '2026-05-01', 'Mediterranean')).toContain('tomato');
   });
 

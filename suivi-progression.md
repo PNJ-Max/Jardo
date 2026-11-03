@@ -10,7 +10,7 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (31/10/2026)
+## Où on en est (03/11/2026)
 
 **Rappels par notification locale (31/10/2026).** L'app rappelle ce qui est à faire, même
 fermée : ce sont des notifications programmées sur le téléphone, sans serveur ni push.
@@ -27,6 +27,15 @@ fermée : ce sont des notifications programmées sur le téléphone, sans serveu
 - **Web** : pas de rappels, la section n'apparaît pas.
 - **Vérifications** : tests Jest ; web vérifié (Réglages sans la section, sans erreur) ; pas
   encore sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#rappels).
+
+**Catalogue d'espèces, PR 8 : le lot 2, les 28 légumes restants.** Le catalogue compte 40 fiches,
+dont les 38 légumes de l'étude : légumes-fruits (concombre, cornichon, courge, melon, aubergine,
+poivron, maïs doux), petit pois et fève, légumes-feuilles (chicorée, roquette, épinard, blette, cinq
+choux, céleri, fenouil), racines et bulbes (betterave, navet, panais, oignon, échalote) et légumes
+vivaces (rhubarbe, asperge, artichaut). Plages d'automne pour la fève, l'épinard et le navet.
+Fenêtres recoupées sur les calendriers de la DRAAF et de Hornbach, la RHS et des fiches françaises ;
+le tableau du lot est dans la PR, à relire par Maxime et un proche jardinier. Aucun écran, aucune
+migration.
 
 **Catalogue d'espèces, PR 1 : le domaine et les 12 premières fiches.** Aucun écran ni aucune
 migration : le catalogue existe dans le code, prêt pour le lien plante → espèce (PR 2).
