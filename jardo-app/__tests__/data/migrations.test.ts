@@ -1,5 +1,5 @@
 import type { Db } from '@/data/db';
-import { migrate, migrations } from '@/data/migrations';
+import { migrate, migrations, NewerDatabaseError } from '@/data/migrations';
 
 import { createMemoryDb, createTestDb } from '../../test/db';
 
@@ -107,6 +107,6 @@ describe('migrations', () => {
     const db = await createTestDb();
     await db.exec(`PRAGMA user_version = ${migrations.length + 1}`);
 
-    await expect(migrate(db)).rejects.toThrow(/plus récente/);
+    await expect(migrate(db)).rejects.toThrow(NewerDatabaseError);
   });
 });
