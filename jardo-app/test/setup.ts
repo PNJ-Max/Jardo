@@ -11,7 +11,6 @@ jest.mock('expo-router', () => ({
   Tabs: { Screen: ({ options }: { options?: { headerRight?: () => unknown } }) => options?.headerRight?.() ?? null },
   useLocalSearchParams: jest.fn(() => ({})),
   useNavigation: jest.fn(() => ({ dispatch: jest.fn() })),
-
   useIsFocused: jest.fn(() => true),
 }));
 // La garde des formulaires : les tests lisent ses arguments et appellent eux-mêmes son rappel.
