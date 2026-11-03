@@ -10,7 +10,38 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (31/10/2026)
+## Où on en est (03/11/2026)
+
+**Fiabilité avant l'APK (03/11/2026).** Quatre constats de l'audit du 31/10 sont corrigés :
+- **Thème en cours de route** : `SQLiteProvider` est un `memo` qui ne se rend pas de nouveau avec
+  la racine. Le thème se lit donc sous lui (`Navigation` dans `_layout.tsx`), et changer de thème,
+  dans Réglages ou sur le téléphone, recolore fonds et en-têtes au lieu de les laisser illisibles.
+- **Passage de minuit** : `useToday` change de jour à minuit et au retour sur l'app. Le jour entre
+  dans la clé des tâches dues, et le jour choisi d'Aujourd'hui revient à aujourd'hui une fois
+  passé. `focusManager` suit `AppState` : le retour sur l'app relit les écrans.
+- **Web hors ligne** : `networkMode: 'always'`. Lectures et écritures locales ne se suspendent
+  plus quand le navigateur perd le réseau.
+- **Écran d'erreur racine** (`ErrorBoundary`) : un message clair pour la démo déjà ouverte dans
+  un autre onglet (Réessayer recharge la page) et pour une base plus récente que l'app
+  (`NewerDatabaseError`), qui cachait l'écran de démarrage pour toujours.
+- **Vérifications** : tests Jest (minuit, retour sur l'app, thème, hors ligne, écran d'erreur) ;
+  web vérifié à 375 de large, en clair et en sombre ; pas encore sur téléphone.
+
+**Rappels par notification locale (31/10/2026).** L'app rappelle ce qui est à faire, même
+fermée : ce sont des notifications programmées sur le téléphone, sans serveur ni push.
+- **Réglages → Rappels** : un interrupteur, désactivé par défaut, et l'heure du rappel (8 h par
+  défaut), gardés dans AsyncStorage sans migration. La permission est demandée à l'activation,
+  jamais au lancement. Refusée ou retirée ensuite, la section le dit et propose d'ouvrir les
+  réglages du téléphone.
+- **Le rappel du jour** n'arrive que s'il y a quelque chose à faire, en une phrase : « 3 choses au
+  jardin aujourd'hui, dont 1 en retard : arroser (Potager), tailler (Verger)… ». Le toucher
+  ouvre Aujourd'hui.
+- **Deux semaines programmées d'avance**, calculées depuis les tâches dues (report compris). Elles
+  sont reprogrammées après chaque écriture qui change les tâches dues et au retour sur l'app.
+  Les limites : 64 notifications en attente sur iOS, 500 alarmes sur Android.
+- **Web** : pas de rappels, la section n'apparaît pas.
+- **Vérifications** : tests Jest ; web vérifié (Réglages sans la section, sans erreur) ; pas
+  encore sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#rappels).
 
 **Catalogue d'espèces, PR 1 : le domaine et les 12 premières fiches.** Aucun écran ni aucune
 migration : le catalogue existe dans le code, prêt pour le lien plante → espèce (PR 2).

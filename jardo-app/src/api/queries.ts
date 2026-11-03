@@ -343,13 +343,14 @@ export function useTasks(filter: TargetFilter = {}) {
  * prochains jours aux retards et à aujourd'hui. Le jour entre dans la clé : à minuit, les
  * échéances sont relues, et la liste de la veille reste affichée le temps de la lecture.
  */
-export function useDueTasks(horizon: DueHorizon) {
+export function useDueTasks(horizon: DueHorizon, enabled = true) {
   const { tasks } = useServices();
   const day = useToday();
   return useQuery({
     queryKey: keys.dueTaskList(horizon, day),
     queryFn: () => tasks.getDue(horizon),
     placeholderData: (previous) => previous,
+    enabled,
   });
 }
 
