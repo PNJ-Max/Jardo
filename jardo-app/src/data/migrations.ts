@@ -136,14 +136,18 @@ ALTER TABLE garden_tasks ADD COLUMN postponed_until TEXT;
 `,
 ];
 
+/** La base vient d'une version plus récente de l'app : elle est laissée telle quelle. */
+export class NewerDatabaseError extends Error {
+  constructor(databaseVersion: number, appVersion: number) {
+    super(`La base est en version ${databaseVersion}, plus récente que cette version de l'app (${appVersion}).`);
+    this.name = 'NewerDatabaseError';
+  }
+}
+
 /** Amène la base à la dernière version, une migration par transaction. */
 export async function migrate(db: Db, scripts: readonly string[] = migrations): Promise<void> {
   const current = (await db.first<{ user_version: number }>('PRAGMA user_version'))?.user_version ?? 0;
-  if (current > scripts.length) {
-    throw new Error(
-      `La base est en version ${current}, plus récente que cette version de l'app (${scripts.length}).`,
-    );
-  }
+  if (current > scripts.length) throw new NewerDatabaseError(current, scripts.length);
 
   for (let version = current + 1; version <= scripts.length; version++) {
     await db.transaction(async () => {
