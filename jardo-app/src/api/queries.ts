@@ -5,6 +5,7 @@ import type { DateOnly } from '@/domain/dates';
 import { pickBackupFile, saveBackupFile } from '@/lib/backup-file';
 import { toDateOnly } from '@/lib/dates';
 import { isDueWatering } from '@/lib/today';
+import { useToday } from '@/lib/use-today';
 
 import type {
   CompleteTaskInput,
@@ -49,7 +50,7 @@ export const keys = {
   tasks: ['tasks'] as const,
   taskList: (filter: TargetFilter) => ['tasks', 'list', filter] as const,
   dueTasks: ['tasks', 'due'] as const,
-  dueTaskList: (horizon: DueHorizon) => ['tasks', 'due', horizon] as const,
+  dueTaskList: (horizon: DueHorizon, day: DateOnly) => ['tasks', 'due', horizon, day] as const,
   task: (id: Id) => ['tasks', id] as const,
 };
 
@@ -339,11 +340,18 @@ export function useTasks(filter: TargetFilter = {}) {
 
 /**
  * Les tâches dues de tout le jardin, les plus en retard d'abord. `Week` ajoute les sept
- * prochains jours aux retards et à aujourd'hui.
+ * prochains jours aux retards et à aujourd'hui. Le jour entre dans la clé : à minuit, les
+ * échéances sont relues, et la liste de la veille reste affichée le temps de la lecture.
  */
 export function useDueTasks(horizon: DueHorizon, enabled = true) {
   const { tasks } = useServices();
-  return useQuery({ queryKey: keys.dueTaskList(horizon), queryFn: () => tasks.getDue(horizon), enabled });
+  const day = useToday();
+  return useQuery({
+    queryKey: keys.dueTaskList(horizon, day),
+    queryFn: () => tasks.getDue(horizon),
+    placeholderData: (previous) => previous,
+    enabled,
+  });
 }
 
 export function useTask(id: Id) {

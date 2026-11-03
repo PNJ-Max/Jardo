@@ -12,7 +12,8 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (03/11/2026)
 
-**Finitions avant l'APK (03/11/2026).** Quatre constats mineurs de l'audit du 31/10 :
+**Finitions avant l'APK (03/11/2026).** Quatre constats mineurs de l'audit du 31/10, et un
+plantage du web :
 - **Météo sur un réseau qui pend** : la lecture d'Open-Meteo abandonne au bout de 8 s, et la
   prévision gardée s'affiche tout de suite, le temps que le réseau réponde.
 - **Formulaires** : tant que la saisie a changé (`useChanged`), le retour d'Android, le bouton
@@ -21,9 +22,26 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 - **Démo web exportée** : `EXPO_PUBLIC_EXAMPLE_GARDEN=1 npx expo export --platform web --clear` la
   remplit du jardin d'exemple ; sans la variable, un export démarre vide. Voir le
   [README](README.md#lancer).
+- **Web ouvert sur une page** (`/space/…` rechargée, lien direct) : les pictogrammes et la carte
+  cherchaient CanvasKit sous le chemin de la page et l'app plantait ; il se charge depuis la racine.
 - **Code mort** : `seeded` (`src/map/decor.ts`) est retiré.
 - **Vérifications** : tests Jest (délai de la météo, prévision gardée, garde des formulaires),
   deux exports web comparés ; pas encore sur téléphone.
+
+**Fiabilité avant l'APK (03/11/2026).** Quatre constats de l'audit du 31/10 sont corrigés :
+- **Thème en cours de route** : `SQLiteProvider` est un `memo` qui ne se rend pas de nouveau avec
+  la racine. Le thème se lit donc sous lui (`Navigation` dans `_layout.tsx`), et changer de thème,
+  dans Réglages ou sur le téléphone, recolore fonds et en-têtes au lieu de les laisser illisibles.
+- **Passage de minuit** : `useToday` change de jour à minuit et au retour sur l'app. Le jour entre
+  dans la clé des tâches dues, et le jour choisi d'Aujourd'hui revient à aujourd'hui une fois
+  passé. `focusManager` suit `AppState` : le retour sur l'app relit les écrans.
+- **Web hors ligne** : `networkMode: 'always'`. Lectures et écritures locales ne se suspendent
+  plus quand le navigateur perd le réseau.
+- **Écran d'erreur racine** (`ErrorBoundary`) : un message clair pour la démo déjà ouverte dans
+  un autre onglet (Réessayer recharge la page) et pour une base plus récente que l'app
+  (`NewerDatabaseError`), qui cachait l'écran de démarrage pour toujours.
+- **Vérifications** : tests Jest (minuit, retour sur l'app, thème, hors ligne, écran d'erreur) ;
+  web vérifié à 375 de large, en clair et en sombre ; pas encore sur téléphone.
 
 **Rappels par notification locale (31/10/2026).** L'app rappelle ce qui est à faire, même
 fermée : ce sont des notifications programmées sur le téléphone, sans serveur ni push.
@@ -40,6 +58,15 @@ fermée : ce sont des notifications programmées sur le téléphone, sans serveu
 - **Web** : pas de rappels, la section n'apparaît pas.
 - **Vérifications** : tests Jest ; web vérifié (Réglages sans la section, sans erreur) ; pas
   encore sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#rappels).
+
+**Catalogue d'espèces, PR 8 : le lot 2, les 28 légumes restants.** Le catalogue compte 40 fiches,
+dont les 38 légumes de l'étude : légumes-fruits (concombre, cornichon, courge, melon, aubergine,
+poivron, maïs doux), petit pois et fève, légumes-feuilles (chicorée, roquette, épinard, blette, cinq
+choux, céleri, fenouil), racines et bulbes (betterave, navet, panais, oignon, échalote) et légumes
+vivaces (rhubarbe, asperge, artichaut). Plages d'automne pour la fève, l'épinard et le navet.
+Fenêtres recoupées sur les calendriers de la DRAAF et de Hornbach, la RHS et des fiches françaises ;
+le tableau du lot est dans la PR, à relire par Maxime et un proche jardinier. Aucun écran, aucune
+migration.
 
 **Catalogue d'espèces, PR 1 : le domaine et les 12 premières fiches.** Aucun écran ni aucune
 migration : le catalogue existe dans le code, prêt pour le lien plante → espèce (PR 2).
