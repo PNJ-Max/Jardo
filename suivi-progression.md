@@ -54,6 +54,15 @@ fermée : ce sont des notifications programmées sur le téléphone, sans serveu
 - **Vérifications** : tests Jest ; web vérifié (Réglages sans la section, sans erreur) ; pas
   encore sur téléphone. Détail dans [front-architecture](docs/front-architecture.md#rappels).
 
+**Catalogue d'espèces, PR 9 : le lot 3, aromatiques, fruitiers et petits fruits.** Le catalogue
+compte les 63 espèces de l'étude. 23 fiches : les dix aromatiques (basilic, persil, ciboulette,
+coriandre, aneth, cerfeuil, thym, romarin, sauge, menthe), dans le nouveau `herbs.ts`, sept fruitiers
+(poirier, cerisier, prunier, pêcher, abricotier, figuier, vigne) et six petits fruits (fraisier,
+groseillier, cassissier, groseillier à maquereau, myrtillier, mûrier sans épines). Thym, romarin et
+sauge ont une fenêtre de taille. Fenêtres recoupées sur la RHS, Jardiner Malin, la DRAAF et Bruxelles Environnement ; le
+tableau du lot est dans la PR, à relire par Maxime et un proche jardinier. Aucun écran, aucune
+migration.
+
 **Catalogue d'espèces, PR 8 : le lot 2, les 28 légumes restants.** Le catalogue compte 40 fiches,
 dont les 38 légumes de l'étude : légumes-fruits (concombre, cornichon, courge, melon, aubergine,
 poivron, maïs doux), petit pois et fève, légumes-feuilles (chicorée, roquette, épinard, blette, cinq
