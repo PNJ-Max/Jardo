@@ -31,6 +31,15 @@ describe('DateField', () => {
     expect(open.mock.lastCall[0].maximumDate).toBeUndefined();
   });
 
+  it('interdit les jours avant notBefore au calendrier', async () => {
+    await render(<DateField label="Date" value="2026-10-20" noFuture notBefore="2026-10-18" onChange={jest.fn()} />);
+
+    await fireEvent.press(screen.getByLabelText('Date : 20 octobre 2026'));
+
+    const { minimumDate } = open.mock.lastCall[0];
+    expect([minimumDate.getFullYear(), minimumDate.getMonth(), minimumDate.getDate()]).toEqual([2026, 9, 18]);
+  });
+
   it('rend le jour choisi en YYYY-MM-DD', async () => {
     const onChange = jest.fn();
     await render(<DateField label="Date" value="2026-10-02" onChange={onChange} />);

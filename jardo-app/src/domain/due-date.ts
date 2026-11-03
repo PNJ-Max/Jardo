@@ -27,11 +27,12 @@ export type DueInput = {
   intervalDays: number | null;
   lastDoneOn: DateOnly | null;
   /**
-   * Le jour où la tâche a été créée. Une tâche ponctuelle est close par une intervention faite ce
-   * jour-là ou après, avant comme après sa date prévue : faire en avance compte, mais un arrosage de
-   * la semaine dernière ne ferme pas un « arroser » ponctuel créé aujourd'hui.
+   * Le jour où la tâche a été ouverte : créée, ou modifiée dans ce qu'elle demande (type, rythme,
+   * date, cible). Une tâche ponctuelle est close par une intervention faite ce jour-là ou après,
+   * avant comme après sa date prévue : faire en avance compte, mais un arrosage de la semaine
+   * dernière ne ferme pas un « arroser » ponctuel ouvert aujourd'hui.
    */
-  createdOn: DateOnly;
+  openedOn: DateOnly;
   /**
    * « Reporter » : l'échéance ne tombe pas avant ce jour. Une intervention notée le jour du report
    * ou après pousse l'échéance calculée au moins au lendemain : le report à demain n'a alors plus
@@ -50,11 +51,11 @@ export function calculateDueState({
   startDate,
   intervalDays,
   lastDoneOn,
-  createdOn,
+  openedOn,
   postponedUntil,
   today,
 }: DueInput): DueState {
-  const calculated = nextDue(recurrence, startDate, intervalDays, lastDoneOn, createdOn);
+  const calculated = nextDue(recurrence, startDate, intervalDays, lastDoneOn, openedOn);
 
   if (calculated === null) {
     return { lastDoneOn, nextDueDate: null, status: 'Ok', daysOverdue: 0 };
@@ -73,7 +74,7 @@ function nextDue(
   startDate: DateOnly,
   intervalDays: number | null,
   lastDoneOn: DateOnly | null,
-  createdOn: DateOnly,
+  openedOn: DateOnly,
 ): DateOnly | null {
   switch (recurrence) {
     case 'EveryNDays':
@@ -81,7 +82,7 @@ function nextDue(
     case 'Yearly':
       return nextYearly(startDate, lastDoneOn);
     case 'Once':
-      return lastDoneOn !== null && lastDoneOn >= createdOn ? null : startDate;
+      return lastDoneOn !== null && lastDoneOn >= openedOn ? null : startDate;
     default:
       throw new RangeError(`Rythme inconnu : ${String(recurrence)}.`);
   }

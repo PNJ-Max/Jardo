@@ -93,6 +93,21 @@ describe('migrations', () => {
     ]);
   });
 
+  it("ajoutent le jour d'ouverture aux tâches existantes, vide", async () => {
+    const db = createMemoryDb();
+    await migrate(db, migrations.slice(0, 2));
+    await db.run("INSERT INTO spaces (id, garden_id, name, kind, created_at) SELECT 's', id, 'Potager', 'VegetableGarden', created_at FROM gardens");
+    await db.run(
+      "INSERT INTO garden_tasks (id, kind, recurrence, start_date, space_id, created_at) VALUES ('t', 'Planting', 'Once', '2026-10-20', 's', '2026-10-01T08:00:00.000Z')",
+    );
+
+    await migrate(db);
+
+    expect(await db.all('SELECT id, start_date, opened_on FROM garden_tasks')).toEqual([
+      { id: 't', start_date: '2026-10-20', opened_on: null },
+    ]);
+  });
+
   it('annulent en entier une migration qui échoue, version comprise', async () => {
     const db = await createTestDb();
     const failing = 'CREATE TABLE photos (id TEXT PRIMARY KEY NOT NULL) STRICT; INSERT INTO missing VALUES (1);';

@@ -172,7 +172,7 @@ d'application du journal :
 |---|---|---|
 | Tous les N jours | Première échéance | Dernière fois + N jours, mais jamais avant la date de départ ; à défaut, la date de départ |
 | Chaque année | Date anniversaire, à partir de cette année-là | La date anniversaire qui suit celle que la dernière fois a faite ; à défaut, la date de départ |
-| Une seule fois | Jour prévu | Le jour prévu, jusqu'à ce qu'une entrée datée du jour de création de la tâche ou après existe : la tâche est alors close |
+| Une seule fois | Jour prévu | Le jour prévu, jusqu'à ce qu'une entrée datée du jour d'ouverture de la tâche ou après existe : la tâche est alors close |
 
 - **Tous les N jours** : un historique plus ancien que la date de départ ne fait pas naître la
   tâche en retard. C'est ce qui remplace l'ancienne règle « une plantation relance le décompte
@@ -185,13 +185,23 @@ d'application du journal :
   1er février passé. Une tâche jamais faite est due depuis sa date de départ, même lointaine.
   Une date anniversaire au 29 février tombe le 28 les années non bissextiles.
 - **Une seule fois : close par une intervention notée à partir du jour où la tâche a été
-  créée**, qu'elle tombe avant ou après le jour prévu. « Traiter les rosiers le 25 octobre »,
-  créée le 20 et faite le 23, est close le 23. Une intervention antérieure à la création ne
+  ouverte**, qu'elle tombe avant ou après le jour prévu. « Traiter les rosiers le 25 octobre »,
+  créée le 20 et faite le 23, est close le 23. Une intervention antérieure à l'ouverture ne
   compte pas : un arrosage de la semaine dernière ne ferme pas un « arroser » ponctuel créé
-  aujourd'hui. Le jour de création compte, lui : un premier traitement noté le jour même où l'on
+  aujourd'hui. Le jour d'ouverture compte, lui : un premier traitement noté le jour même où l'on
   crée « renouveler dans dix jours » clôt la tâche (la comparaison se fait au jour, pas à l'heure).
-- **Reporter : l'échéance ne tombe pas avant le jour du report** (`postponedUntil`, seule date
-  stockée sur la tâche). L'échéance est la plus tardive des deux : celle que donne le tableau, et
+- **Le jour d'ouverture** (`openedOn`, stocké sur la tâche) est celui de sa création. Il
+  repart au jour de la modification quand on change ce que la tâche demande : son type, son
+  rythme, sa date de départ ou sa cible. Passer « arroser tous les 3 jours » en « arroser une
+  seule fois, samedi » ouvre donc une nouvelle tâche, que les arrosages d'avant ne ferment pas.
+  Corriger le titre ou le nombre de jours ne la rouvre pas : une tâche ponctuelle faite le reste.
+  Une tâche d'avant ce jour d'ouverture (migration 3) prend son jour de création, dans le fuseau
+  du téléphone.
+- **« Fait » d'une tâche ponctuelle ne se date pas d'avant son ouverture** : il ne la fermerait
+  pas. Le service le refuse, et le calendrier de « Fait le » ne propose pas ces jours-là. Une
+  tâche régulière, elle, se fait à toute date passée.
+- **Reporter : l'échéance ne tombe pas avant le jour du report** (`postponedUntil`, stocké
+  sur la tâche). L'échéance est la plus tardive des deux : celle que donne le tableau, et
   le report. Le report ne s'efface donc pas en base, il cesse d'agir. Toute intervention qui vaut
   pour la cible, notée le jour du report ou après, pousse l'échéance du tableau au moins au
   lendemain : que la tâche soit faite par « Fait », par une entrée notée au journal ou par un

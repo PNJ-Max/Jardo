@@ -296,6 +296,7 @@ describe('TaskService : règles que TaskServiceTests.cs ne couvrait pas', () => 
       intervalDays: null,
       startDate: '2026-03-01',
       createdAt: new Date(2026, 5, 15, 12).toISOString(),
+      openedOn: today,
       postponedUntil: null,
       spaceId: potager.id,
       spaceName: 'Potager',
@@ -549,5 +550,84 @@ describe('TaskService : reporter', () => {
     await expect(service.restorePostponement(task, 'demain')).rejects.toMatchObject({ status: 400 });
     await expect(service.postpone('inconnue', tomorrow)).rejects.toMatchObject(missing);
     await expect(service.restorePostponement('inconnue', null)).rejects.toMatchObject(missing);
+  });
+});
+
+describe("TaskService : jour d'ouverture d'une tâche ponctuelle", () => {
+  const later = addDays(today, 10);
+
+  it("Une tâche se lit avec le jour où elle a été créée comme jour d'ouverture", async () => {
+    const { service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+
+    const task = await service.create(newTask('Planting', 'Once', potager.id, { startDate: addDays(today, 5) }));
+
+    expect(task.openedOn).toBe(today);
+  });
+
+  it("Fait daté d'avant l'ouverture d'une tâche ponctuelle est refusé, sans rien noter", async () => {
+    const { service, journal, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await service.create(newTask('Planting', 'Once', potager.id, { title: "Planter l'ail" }));
+
+    await expect(service.complete(task.id, { date: addDays(today, -1) })).rejects.toMatchObject({
+      ...refused,
+      message: "Cette tâche a été prévue le 15 juin 2026 : un « Fait » daté d'avant ne la fermerait pas.",
+    });
+    expect(await journal.getAll()).toEqual([]);
+    expect((await service.complete(task.id, { date: today })).task.isCompleted).toBe(true);
+  });
+
+  it("Une tâche régulière se fait à une date d'avant sa création", async () => {
+    const { service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await service.create(newTask('Watering', 'EveryNDays', potager.id, { intervalDays: 2 }));
+
+    const { entry } = await service.complete(task.id, { date: addDays(today, -1) });
+
+    expect(entry.date).toBe(addDays(today, -1));
+  });
+
+  it("Passer une tâche en « une seule fois » la rouvre : les interventions d'avant ne la ferment pas", async () => {
+    const { db, service, addSpace, addEntry } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await service.create(newTask('Watering', 'EveryNDays', potager.id, { intervalDays: 3 }));
+    await addEntry('Watering', addDays(today, 2), potager);
+    const tenDaysLater = createTaskService(db, fixedClock(later));
+
+    const once = await tenDaysLater.update(
+      task.id,
+      newTask('Watering', 'Once', potager.id, { startDate: addDays(later, 7) }),
+    );
+
+    expect(once.openedOn).toBe(later);
+    expect(once.isCompleted).toBe(false);
+    expect(once.nextDueDate).toBe(addDays(later, 7));
+  });
+
+  it("Corriger le titre d'une tâche ponctuelle faite ne la rouvre pas", async () => {
+    const { db, service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const input = newTask('Planting', 'Once', potager.id, { title: "Planter l'ail" });
+    const task = await service.create(input);
+    await service.complete(task.id);
+
+    const renamed = await createTaskService(db, fixedClock(later)).update(task.id, { ...input, title: "Planter l'ail rose" });
+
+    expect(renamed.openedOn).toBe(today);
+    expect(renamed.isCompleted).toBe(true);
+  });
+
+  it('Changer la date prévue rouvre une tâche ponctuelle faite', async () => {
+    const { db, service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const input = newTask('Planting', 'Once', potager.id, { title: "Planter l'ail" });
+    const task = await service.create(input);
+    await service.complete(task.id);
+
+    const moved = await createTaskService(db, fixedClock(later)).update(task.id, { ...input, startDate: addDays(later, 3) });
+
+    expect(moved.openedOn).toBe(later);
+    expect(moved.isCompleted).toBe(false);
   });
 });

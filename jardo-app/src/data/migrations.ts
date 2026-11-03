@@ -134,6 +134,13 @@ INSERT INTO gardens (id, name, created_at) VALUES (
 -- « Reporter » : l'échéance d'une tâche ne tombe pas avant ce jour.
 ALTER TABLE garden_tasks ADD COLUMN postponed_until TEXT;
 `,
+  `
+-- Le jour où la tâche a été ouverte : sa création, puis chaque changement de ce qu'elle demande.
+-- Seule une intervention notée ce jour-là ou après ferme une tâche ponctuelle. Nulle pour une
+-- tâche d'avant cette migration : son jour de création en tient lieu, dans le fuseau du téléphone,
+-- que SQLite ne connaît pas.
+ALTER TABLE garden_tasks ADD COLUMN opened_on TEXT;
+`,
 ];
 
 /** La base vient d'une version plus récente de l'app : elle est laissée telle quelle. */

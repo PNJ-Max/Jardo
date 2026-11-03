@@ -13,7 +13,7 @@ import { FieldMessage, useFieldStyles } from './form';
  * impérative, recommandée sur Android, plutôt que par le composant qui s'afficherait en ligne.
  */
 export function DateField(props: DateFieldProps) {
-  const { label, value, noFuture, optional, error, hint } = props;
+  const { label, value, noFuture, notBefore, optional, error, hint } = props;
   const { colors } = useTheme();
   const fieldStyles = useFieldStyles();
   const styles = useStyles();
@@ -23,6 +23,7 @@ export function DateField(props: DateFieldProps) {
       value: value ? parseDateOnly(value) : new Date(),
       mode: 'date',
       maximumDate: noFuture ? new Date() : undefined,
+      minimumDate: notBefore ? parseDateOnly(notBefore) : undefined,
       onValueChange: (_event, date) => props.onChange(toDateOnly(date)),
     });
 
