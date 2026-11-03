@@ -12,6 +12,22 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (03/11/2026)
 
+**Finitions avant l'APK (03/11/2026).** Quatre constats mineurs de l'audit du 31/10, et un
+plantage du web :
+- **Météo sur un réseau qui pend** : la lecture d'Open-Meteo abandonne au bout de 8 s, et la
+  prévision gardée s'affiche tout de suite, le temps que le réseau réponde.
+- **Formulaires** : tant que la saisie a changé (`useChanged`), le retour d'Android, le bouton
+  fermer ou le geste demandent « Abandonner la saisie ? ». Un enregistrement ou une suppression
+  quittent sans rien demander (`leaveForm`).
+- **Démo web exportée** : `EXPO_PUBLIC_EXAMPLE_GARDEN=1 npx expo export --platform web --clear` la
+  remplit du jardin d'exemple ; sans la variable, un export démarre vide. Voir le
+  [README](README.md#lancer).
+- **Web ouvert sur une page** (`/space/…` rechargée, lien direct) : les pictogrammes et la carte
+  cherchaient CanvasKit sous le chemin de la page et l'app plantait ; il se charge depuis la racine.
+- **Code mort** : `seeded` (`src/map/decor.ts`) est retiré.
+- **Vérifications** : tests Jest (délai de la météo, prévision gardée, garde des formulaires),
+  deux exports web comparés ; pas encore sur téléphone.
+
 **Assistant de la carte (étape 6 de l'[étude](docs/etude-carte-potager.md#tranché-à-létape-6-assistant-de-configuration), 03/11/2026).**
 Un APK installé ne démarre plus sur une liste vide : un jardin sans carte ni espace ouvre
 l'assistant.

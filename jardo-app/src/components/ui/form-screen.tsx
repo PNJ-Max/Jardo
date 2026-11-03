@@ -1,14 +1,59 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ReactNode } from 'react';
+import { useNavigation } from 'expo-router';
+import { usePreventRemove } from 'expo-router/react-navigation';
+import { useEffect, useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { confirm } from '@/lib/confirm';
 import { goBack } from '@/lib/navigation';
 import { createStyles, useTheme } from '@/theme';
 
 import { Button } from './button';
 import { FormError } from './form';
 import { ErrorView, Loading } from './states';
+
+/** Vrai dès que la saisie diffère de celle de l'ouverture du formulaire. */
+export function useChanged(values: unknown): boolean {
+  const [initial] = useState(() => JSON.stringify(values));
+  return JSON.stringify(values) !== initial;
+}
+
+// Posé par `leaveForm`, levé par la garde qui laisse passer ce départ-là. Le retour n'atteint pas
+// toujours la garde avant la fin de `goBack` (sur le web, il passe par le routeur) : le drapeau
+// tient jusque-là, et chaque formulaire qui s'ouvre repart sans.
+let leaving = false;
+
+/**
+ * Quitte le formulaire une fois la saisie enregistrée ou supprimée : le retour ne demande pas
+ * d'abandonner une saisie qui n'est plus à perdre.
+ */
+export function leaveForm() {
+  leaving = true;
+  goBack();
+}
+
+/**
+ * Le retour (bouton fermer, retour d'Android, geste) demande confirmation tant que la saisie a
+ * changé. L'action retenue est rejouée telle quelle : React Navigation ne la soumet pas deux fois
+ * au même écran.
+ */
+function useConfirmLeaving(changed: boolean) {
+  const navigation = useNavigation();
+  useEffect(() => {
+    leaving = false;
+  }, []);
+  usePreventRemove(changed, ({ data }) => {
+    if (leaving) {
+      leaving = false;
+      navigation.dispatch(data.action);
+      return;
+    }
+    void confirm('Abandonner la saisie ?', 'Ce qui a été saisi ne sera pas enregistré.', 'Abandonner').then((confirmed) => {
+      if (confirmed) navigation.dispatch(data.action);
+    });
+  });
+}
 
 type FormPageProps = { title: string; children: ReactNode };
 
@@ -52,13 +97,19 @@ type FormScreenProps = {
   disabled?: boolean;
   /** Refus du service ; l'erreur d'un champ s'affiche, elle, sous ce champ. */
   error?: Error | null;
+  /** La saisie a changé (`useChanged`) : quitter sans enregistrer demande confirmation. */
+  dirty?: boolean;
   children: ReactNode;
 };
 
-/** Les champs défilent ; le bouton principal reste ancré en bas, à portée du pouce. */
-export function FormScreen({ title, submitLabel, onSubmit, loading, disabled, error = null, children }: FormScreenProps) {
+/**
+ * Les champs défilent ; le bouton principal reste ancré en bas, à portée du pouce. Après un
+ * enregistrement, le formulaire se quitte par `leaveForm`.
+ */
+export function FormScreen({ title, submitLabel, onSubmit, loading, disabled, error = null, dirty = false, children }: FormScreenProps) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
+  useConfirmLeaving(dirty);
 
   return (
     <FormPage title={title}>

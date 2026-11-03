@@ -41,6 +41,19 @@ npm test
 
 Pour essayer l'app sur un téléphone, voir [`jardo-app/README.md`](jardo-app/README.md).
 
+En développement, la base se remplit du jardin d'exemple. Une version exportée démarre sur un
+jardin vide, sauf pour une démo web exportée avec le jardin d'exemple :
+
+```bash
+cd jardo-app
+EXPO_PUBLIC_EXAMPLE_GARDEN=1 npx expo export --platform web --clear   # dossier dist/, à servir tel quel
+```
+
+`--clear` est nécessaire : le cache de Metro ne tient pas compte de la variable, et un export
+suivant sans elle garderait sinon le jardin d'exemple. La variable est réservée à la démo web :
+ne la mettez ni dans un `.env` ni dans un build EAS, car l'APK des testeurs démarrerait sur le
+jardin d'exemple.
+
 ## Structure
 
 ```

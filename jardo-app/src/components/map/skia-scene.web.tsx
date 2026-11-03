@@ -9,7 +9,7 @@ import type { SkiaSceneProps } from './skia-scene-impl';
 
 // Au niveau du module : une fois chargée, la scène se remonte sans repasser par l'indicateur.
 const Scene = lazy(async () => {
-  await LoadSkiaWeb();
+  await LoadSkiaWeb({ locateFile: (file) => `/${file}` });
   return import('./skia-scene-impl');
 });
 

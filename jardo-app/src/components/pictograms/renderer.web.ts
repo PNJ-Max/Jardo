@@ -8,7 +8,9 @@ type Renderer = typeof pictogramUri;
 // Skia ne s'importe qu'une fois CanvasKit chargé (WebAssembly) : les pictogrammes restent vides
 // jusque-là, une seule fois pour toute l'app.
 let renderer: Renderer | undefined;
-const loading = LoadSkiaWeb()
+// Depuis la racine : une page ouverte directement (/space/…) chercherait sinon le WebAssembly
+// sous son propre chemin.
+const loading = LoadSkiaWeb({ locateFile: (file) => `/${file}` })
   .then(() => import('./picture'))
   .then((module) => (renderer = module.pictogramUri));
 
