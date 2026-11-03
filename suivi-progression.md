@@ -23,6 +23,21 @@ l'assistant.
 - **Vérifications** : tests Jest du service et des écrans ; web vérifié en clair et en sombre à
   375 de large ; pas encore sur téléphone (retour d'Android à essayer).
 
+**Fiabilité avant l'APK (03/11/2026).** Quatre constats de l'audit du 31/10 sont corrigés :
+- **Thème en cours de route** : `SQLiteProvider` est un `memo` qui ne se rend pas de nouveau avec
+  la racine. Le thème se lit donc sous lui (`Navigation` dans `_layout.tsx`), et changer de thème,
+  dans Réglages ou sur le téléphone, recolore fonds et en-têtes au lieu de les laisser illisibles.
+- **Passage de minuit** : `useToday` change de jour à minuit et au retour sur l'app. Le jour entre
+  dans la clé des tâches dues, et le jour choisi d'Aujourd'hui revient à aujourd'hui une fois
+  passé. `focusManager` suit `AppState` : le retour sur l'app relit les écrans.
+- **Web hors ligne** : `networkMode: 'always'`. Lectures et écritures locales ne se suspendent
+  plus quand le navigateur perd le réseau.
+- **Écran d'erreur racine** (`ErrorBoundary`) : un message clair pour la démo déjà ouverte dans
+  un autre onglet (Réessayer recharge la page) et pour une base plus récente que l'app
+  (`NewerDatabaseError`), qui cachait l'écran de démarrage pour toujours.
+- **Vérifications** : tests Jest (minuit, retour sur l'app, thème, hors ligne, écran d'erreur) ;
+  web vérifié à 375 de large, en clair et en sombre ; pas encore sur téléphone.
+
 **Rappels par notification locale (31/10/2026).** L'app rappelle ce qui est à faire, même
 fermée : ce sont des notifications programmées sur le téléphone, sans serveur ni push.
 - **Réglages → Rappels** : un interrupteur, désactivé par défaut, et l'heure du rappel (8 h par
