@@ -20,9 +20,9 @@ import { Button, Empty, ErrorView, Loading, screenStyles, SectionTitle } from '@
 import { SkyWeather } from '@/components/weather';
 import { systemClock } from '@/data/clock';
 import { addDays, type DateOnly } from '@/domain/dates';
-import { today as currentDay } from '@/lib/dates';
 import { usePullToRefresh } from '@/lib/refresh';
 import { bySpace, comingThisMonth, overdueTasks, skyPhrase, tasksOn, weekDays } from '@/lib/today';
+import { useToday } from '@/lib/use-today';
 import { isSunny, rainNote, todayWeather } from '@/lib/weather';
 import { createStyles } from '@/theme';
 
@@ -35,8 +35,11 @@ export default function TodayScreen() {
   const refresh = usePullToRefresh(refetch);
   const { row, waterAll, watering } = useTaskRow();
   const styles = useStyles();
-  const today = currentDay();
-  const [selected, setSelected] = useState(today);
+  const today = useToday();
+  // Null : aujourd'hui, quel que soit le jour. Un jour choisi qui n'est plus à venir le redevient.
+  const [chosen, setChosen] = useState<DateOnly | null>(null);
+  const selected = chosen !== null && chosen > today ? chosen : today;
+  const select = (date: DateOnly) => setChosen(date === today ? null : date);
   const forecast = useForecast();
 
   if (isPending) return <Loading />;
@@ -58,7 +61,7 @@ export default function TodayScreen() {
         sunny={!weather || isSunny(weather.kind)}
       />
       <View style={styles.body}>
-        <WeekStrip days={weekDays(data, today)} selected={selected} onSelect={setSelected} forecast={forecast?.days} />
+        <WeekStrip days={weekDays(data, today)} selected={selected} onSelect={select} forecast={forecast?.days} />
         {overdue.length > 0 && <OverdueSection tasks={overdue} row={row} />}
         {selected === today ? (
           <TodayTasks
