@@ -61,7 +61,7 @@ export default function TodayScreen() {
         sunny={!weather || isSunny(weather.kind)}
       />
       <View style={styles.body}>
-        <WeekStrip days={weekDays(data, today)} selected={selected} onSelect={select}forecast={forecast?.days} />
+        <WeekStrip days={weekDays(data, today)} selected={selected} onSelect={select} forecast={forecast?.days} />
         {overdue.length > 0 && <OverdueSection tasks={overdue} row={row} />}
         {selected === today ? (
           <TodayTasks
