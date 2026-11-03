@@ -3,11 +3,14 @@ import { randomUUID } from 'expo-crypto';
 import { spaceKindLabel } from '@/domain/kinds';
 import type { Id, SpaceKind } from '@/domain/types';
 
+import type { Clock } from './clock';
 import type { Db } from './db';
 import { findLayout, findSlot } from './garden-layouts';
 import { gardenId } from './garden';
 import { businessRule } from './problem';
+import { validate as validateSpace } from './spaces';
 import { optionalText, Validation } from './validation';
+import { validate as validateZone } from './zones';
 
 /** Un emplacement occupé. Les emplacements libres du modèle n'y figurent pas. */
 export type GardenMapSlot = {
@@ -36,10 +39,21 @@ export type GardenMapInput = {
   slots: GardenMapSlotInput[];
 };
 
+/** Un espace à créer et son emplacement ; ses zones vont sur des carrés. Son type doit être celui de l'emplacement. */
+export type GardenSetupSpace = {
+  slotKey: string;
+  name: string;
+  kind: SpaceKind;
+  zones?: { slotKey: string; name: string }[];
+};
+
+/** L'assistant du premier lancement : le modèle, et les espaces à créer sur ses emplacements. */
+export type GardenSetupInput = { layout: string; spaces: GardenSetupSpace[] };
+
 type Assignment = { slotKey: string; spaceId: Id; zoneId: Id | null };
 
 /** La carte du jardin : le modèle de scène choisi et les espaces posés sur ses emplacements (`GardenMapService`). */
-export function createGardenMapService(db: Db) {
+export function createGardenMapService(db: Db, clock: Clock) {
   async function get(): Promise<GardenMap> {
     const garden = (await db.first<{ map_layout: string | null }>('SELECT map_layout FROM gardens ORDER BY rowid LIMIT 1'))!;
 
@@ -136,6 +150,24 @@ export function createGardenMapService(db: Db) {
     return assignments;
   }
 
+  /** Écrit le modèle et toutes les affectations, dans la transaction de l'appelant. */
+  async function write(layoutKey: string | null, slots: GardenMapSlotInput[]) {
+    const assignments = await validateAssignments(layoutKey, slots);
+    const garden = await gardenId(db);
+
+    await db.run('UPDATE gardens SET map_layout = ? WHERE id = ?', [layoutKey, garden]);
+    await db.run('DELETE FROM garden_map_slots WHERE garden_id = ?', [garden]);
+    for (const { slotKey, spaceId, zoneId } of assignments) {
+      await db.run('INSERT INTO garden_map_slots (id, garden_id, slot_key, space_id, zone_id) VALUES (?, ?, ?, ?, ?)', [
+        randomUUID(),
+        garden,
+        slotKey,
+        spaceId,
+        zoneId,
+      ]);
+    }
+  }
+
   return {
     get,
 
@@ -151,22 +183,56 @@ export function createGardenMapService(db: Db) {
       validation.done();
 
       const layoutKey = optionalText(input.layout);
+      await db.transaction(() => write(layoutKey, input.slots));
+      return get();
+    },
+
+    /**
+     * Crée les espaces et leurs zones, puis pose la carte comme `replace`, en une seule transaction :
+     * si un espace ou un emplacement est refusé, rien n'est écrit. Les espaces qui existaient déjà
+     * passent hors carte.
+     */
+    async setup(input: GardenSetupInput): Promise<GardenMap> {
+      new Validation().required('Layout', 'Modèle', input.layout, 50).done();
+      for (const space of input.spaces) {
+        validateSpace(space);
+        space.zones?.forEach((zone) => validateZone(zone));
+      }
 
       await db.transaction(async () => {
-        const assignments = await validateAssignments(layoutKey, input.slots);
         const garden = await gardenId(db);
+        const createdAt = clock().toISOString();
+        const slots: GardenMapSlotInput[] = [];
 
-        await db.run('UPDATE gardens SET map_layout = ? WHERE id = ?', [layoutKey, garden]);
-        await db.run('DELETE FROM garden_map_slots WHERE garden_id = ?', [garden]);
-        for (const { slotKey, spaceId, zoneId } of assignments) {
-          await db.run('INSERT INTO garden_map_slots (id, garden_id, slot_key, space_id, zone_id) VALUES (?, ?, ?, ?, ?)', [
-            randomUUID(),
-            garden,
-            slotKey,
+        for (const space of input.spaces) {
+          const name = space.name.trim();
+          if (await db.first('SELECT 1 FROM spaces WHERE garden_id = ? AND name = ?', [garden, name])) {
+            throw businessRule(`Un espace nommé « ${name} » existe déjà.`);
+          }
+
+          const spaceId = randomUUID();
+          await db.run('INSERT INTO spaces (id, garden_id, name, kind, created_at) VALUES (?, ?, ?, ?, ?)', [
             spaceId,
-            zoneId,
+            garden,
+            name,
+            space.kind,
+            createdAt,
           ]);
+          slots.push({ slotKey: space.slotKey, spaceId });
+
+          for (const zone of space.zones ?? []) {
+            const zoneId = randomUUID();
+            await db.run('INSERT INTO zones (id, space_id, name, created_at) VALUES (?, ?, ?, ?)', [
+              zoneId,
+              spaceId,
+              zone.name.trim(),
+              createdAt,
+            ]);
+            slots.push({ slotKey: zone.slotKey, spaceId, zoneId });
+          }
         }
+
+        await write(input.layout.trim(), slots);
       });
 
       return get();

@@ -17,6 +17,12 @@ ni liste ni voyant ; les tâches restent dans Aujourd'hui.
 
 ## 1. Jardin (onglet d'accueil)
 
+**Premier lancement.** Un jardin sans carte ni espace ouvre l'assistant de la carte avant
+d'afficher l'onglet : un accueil dessiné, le choix du modèle (campagne ou mitoyenne, sur leur
+aperçu), puis les espaces à cocher (potager, verger, petits fruits, serre, bois de chauffage),
+avec en option les quatre carrés du potager. L'app crée les espaces et les pose sur la carte.
+« Passer », en haut de chaque page, mène à la liste ; l'assistant se relance depuis Réglages.
+
 **Carte**, quand le jardin a un modèle de carte (`MapLayout`) que l'app sait dessiner :
 
 - La scène du modèle, de jour en mode clair, de nuit en mode sombre. Pincer pour zoomer (jusqu'à
@@ -142,6 +148,11 @@ Une page à part entière, ouverte par la roue de l'en-tête de l'onglet Jardin.
 
 - **Jardin** : nom du jardin, enregistré par l'API ; « Enregistrer le nom » n'apparaît qu'une
   fois le nom changé. Les erreurs de validation s'affichent sous le champ.
+- **Carte du jardin** : le modèle et le nombre d'emplacements occupés. Un jardin vide relance
+  l'assistant ; sinon « Configurer la carte » ou « Modifier la carte » ouvre en modale le choix du
+  modèle et, pour chaque emplacement, l'espace de son type ou la zone du potager qui l'occupe
+  (« Libre » sinon). Sans carte, un premier placement est proposé. Ce qui n'est pas placé reste
+  dans « Hors carte ».
 - **Apparence** : Système (par défaut, suit le téléphone), Clair ou Sombre. Le choix est mémorisé
   sur l'appareil.
 - **À propos** : nom et version de l'app.
@@ -164,5 +175,5 @@ Valeurs, icônes et contrastes : [charte graphique](charte-graphique.md#voyant-d
 
 ## Plus tard (hors MVP)
 
-Assistant de configuration de la carte, notifications des tâches dues, récoltes chiffrées et bilans,
+Notifications des tâches dues, récoltes chiffrées et bilans,
 photos sur le journal, catalogue d'espèces, météo.

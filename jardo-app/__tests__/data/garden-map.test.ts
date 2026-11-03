@@ -13,7 +13,7 @@ async function setup() {
   const fixtures = await createGardenFixtures();
   return {
     ...fixtures,
-    service: createGardenMapService(fixtures.db),
+    service: createGardenMapService(fixtures.db, fixedClock('2026-06-15')),
     spaces: createSpaceService(fixtures.db, fixedClock('2026-06-15')),
     map: (...slots: GardenMapSlotInput[]): GardenMapInput => ({ layout, slots }),
     slot: (slotKey: string, space: { id: string }, zone?: { id: string }): GardenMapSlotInput => ({
@@ -246,5 +246,111 @@ describe('GardenMapService (ajouts au port)', () => {
       status: 400,
       problem: { errors: { 'Slots[0].SlotKey': expect.any(Array) } },
     });
+  });
+});
+
+describe("GardenMapService.setup (l'assistant du premier lancement)", () => {
+  const counts = async (db: Awaited<ReturnType<typeof setup>>['db']) => ({
+    spaces: (await db.first<{ n: number }>('SELECT count(*) AS n FROM spaces'))!.n,
+    zones: (await db.first<{ n: number }>('SELECT count(*) AS n FROM zones'))!.n,
+  });
+
+  it('crée les espaces et leurs zones, et les pose sur la carte en un appel', async () => {
+    const { service, db } = await setup();
+
+    const saved = await service.setup({
+      layout: countryHouse,
+      spaces: [
+        {
+          slotKey: 'vegetable',
+          name: 'Potager',
+          kind: 'VegetableGarden',
+          zones: [
+            { slotKey: 'bed-1', name: 'Carré 1' },
+            { slotKey: 'bed-2', name: 'Carré 2' },
+          ],
+        },
+        { slotKey: 'orchard', name: 'Verger', kind: 'Orchard' },
+      ],
+    });
+
+    expect(saved.layout).toBe(countryHouse);
+    expect(saved.slots.map(({ slotKey, spaceName, zoneName }) => [slotKey, spaceName, zoneName])).toEqual([
+      ['bed-1', 'Potager', 'Carré 1'],
+      ['bed-2', 'Potager', 'Carré 2'],
+      ['orchard', 'Verger', null],
+      ['vegetable', 'Potager', null],
+    ]);
+    await expect(counts(db)).resolves.toEqual({ spaces: 2, zones: 2 });
+    const potager = saved.slots.find((slot) => slot.slotKey === 'vegetable')!;
+    expect(saved.slots.filter((slot) => slot.zoneId !== null).every((slot) => slot.spaceId === potager.spaceId)).toBe(true);
+  });
+
+  it('sans espace coché, pose seulement le modèle', async () => {
+    const { service } = await setup();
+
+    await expect(service.setup({ layout: terracedLong, spaces: [] })).resolves.toEqual({ layout: terracedLong, slots: [] });
+  });
+
+  it("refuse un espace d'un autre type que son emplacement, et n'écrit rien", async () => {
+    const { service, db } = await setup();
+
+    await expect(
+      service.setup({
+        layout: countryHouse,
+        spaces: [
+          { slotKey: 'orchard', name: 'Verger', kind: 'Orchard' },
+          { slotKey: 'vegetable', name: 'Serre', kind: 'Greenhouse' },
+        ],
+      }),
+    ).rejects.toMatchObject(refused);
+
+    await expect(counts(db)).resolves.toEqual({ spaces: 0, zones: 0 });
+    await expect(service.get()).resolves.toEqual({ layout: null, slots: [] });
+  });
+
+  it("refuse une zone sur un emplacement d'espace, et n'écrit rien", async () => {
+    const { service, db } = await setup();
+
+    await expect(
+      service.setup({
+        layout: countryHouse,
+        spaces: [{ slotKey: 'vegetable', name: 'Potager', kind: 'VegetableGarden', zones: [{ slotKey: 'greenhouse', name: 'Carré 1' }] }],
+      }),
+    ).rejects.toMatchObject(refused);
+
+    await expect(counts(db)).resolves.toEqual({ spaces: 0, zones: 0 });
+  });
+
+  it("refuse un nom d'espace déjà pris, sans toucher à la carte en place", async () => {
+    const { service, db, addSpace, map, slot } = await setup();
+    const verger = await addSpace('Verger', 'Orchard');
+    await service.replace(map(slot('orchard', verger)));
+
+    await expect(
+      service.setup({
+        layout: countryHouse,
+        spaces: [
+          { slotKey: 'greenhouse', name: 'Serre', kind: 'Greenhouse' },
+          { slotKey: 'orchard', name: 'Verger', kind: 'Orchard' },
+        ],
+      }),
+    ).rejects.toMatchObject(refused);
+
+    await expect(counts(db)).resolves.toEqual({ spaces: 1, zones: 0 });
+    await expect(service.get()).resolves.toMatchObject({ layout, slots: [{ slotKey: 'orchard', spaceId: verger.id }] });
+  });
+
+  it('refuse un modèle inconnu, et un nom vide sur son champ', async () => {
+    const { service, db } = await setup();
+
+    await expect(service.setup({ layout: 'loft', spaces: [{ slotKey: 'orchard', name: 'Verger', kind: 'Orchard' }] })).rejects.toMatchObject(
+      refused,
+    );
+    await expect(service.setup({ layout: countryHouse, spaces: [{ slotKey: 'orchard', name: ' ', kind: 'Orchard' }] })).rejects.toMatchObject({
+      status: 400,
+      problem: { errors: { Name: expect.any(Array) } },
+    });
+    await expect(counts(db)).resolves.toEqual({ spaces: 0, zones: 0 });
   });
 });
