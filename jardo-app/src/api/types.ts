@@ -15,7 +15,7 @@ export type {
 } from '@/domain/types';
 export type { GardenBackup } from '@/data/backup';
 export type { Garden, GardenInput } from '@/data/garden';
-export type { GardenMap, GardenMapSlot } from '@/data/garden-map';
+export type { GardenMap, GardenMapInput, GardenMapSlot, GardenSetupInput } from '@/data/garden-map';
 export type { JournalEntry, JournalEntryInput } from '@/data/journal';
 export type { Plant, PlantInput } from '@/data/plants';
 export type { ProblemDetails } from '@/data/problem';

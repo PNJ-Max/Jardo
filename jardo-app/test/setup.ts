@@ -5,11 +5,12 @@ jest.mock('react-native-safe-area-context', () => require('react-native-safe-are
 // Le routeur réel exige une arborescence de navigation ; les tests ne vérifient que les
 // appels de navigation.
 jest.mock('expo-router', () => ({
-  router: { push: jest.fn(), replace: jest.fn(), navigate: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) },
+  router: { push: jest.fn(), replace: jest.fn(), navigate: jest.fn(), back: jest.fn(), dismissTo: jest.fn(), canGoBack: jest.fn(() => true) },
   Stack: { Screen: () => null },
   // Les boutons de l'en-tête de l'onglet Jardin sont déclarés par l'écran : on les y rend.
   Tabs: { Screen: ({ options }: { options?: { headerRight?: () => unknown } }) => options?.headerRight?.() ?? null },
   useLocalSearchParams: jest.fn(() => ({})),
+  useIsFocused: jest.fn(() => true),
 }));
 
 // Skia ne tourne pas sous Jest : l'image d'un pictogramme n'y porte que sa clé, « type:thème ».
@@ -37,6 +38,13 @@ jest.mock('@/components/vignettes/space-vignette', () => {
   const { View } = require('react-native');
   return {
     SpaceVignette: ({ width, height }: { width: number; height: number }) => createElement(View, { style: { width, height } }),
+  };
+});
+jest.mock('@/components/map/map-preview', () => {
+  const { createElement } = require('react');
+  const { View } = require('react-native');
+  return {
+    MapPreview: ({ width, height }: { width: number; height: number }) => createElement(View, { style: { width, height } }),
   };
 });
 jest.mock('@/components/vignettes/sky-scene', () => {

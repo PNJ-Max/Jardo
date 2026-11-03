@@ -16,7 +16,7 @@ import { createZoneService } from './zones';
 export function createServices(db: Db, clock: Clock = systemClock) {
   return {
     garden: createGardenService(db),
-    gardenMap: createGardenMapService(db),
+    gardenMap: createGardenMapService(db, clock),
     spaces: createSpaceService(db, clock),
     zones: createZoneService(db, clock),
     plants: createPlantService(db, clock),
