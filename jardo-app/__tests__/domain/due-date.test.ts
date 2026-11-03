@@ -4,19 +4,19 @@ import { calculateDueState, type DueState } from '@/domain/due-date';
 
 const today = '2026-06-15';
 
-// La date de création ne compte que pour une tâche ponctuelle.
+// Le jour d'ouverture ne compte que pour une tâche ponctuelle.
 const longAgo = '2020-01-01';
 
 const ago = (days: number) => addDays(today, -days);
 
 const everyNDays = (intervalDays: number, lastDoneOn: string | null, startDate = '2026-01-01'): DueState =>
-  calculateDueState({ recurrence: 'EveryNDays', startDate, intervalDays, lastDoneOn, createdOn: longAgo, postponedUntil: null, today });
+  calculateDueState({ recurrence: 'EveryNDays', startDate, intervalDays, lastDoneOn, openedOn: longAgo, postponedUntil: null, today });
 
 const yearly = (startDate: string, lastDoneOn: string | null): DueState =>
-  calculateDueState({ recurrence: 'Yearly', startDate, intervalDays: null, lastDoneOn, createdOn: longAgo, postponedUntil: null, today });
+  calculateDueState({ recurrence: 'Yearly', startDate, intervalDays: null, lastDoneOn, openedOn: longAgo, postponedUntil: null, today });
 
-const once = (date: string, createdOn: string, lastDoneOn: string | null): DueState =>
-  calculateDueState({ recurrence: 'Once', startDate: date, intervalDays: null, lastDoneOn, createdOn, postponedUntil: null, today });
+const once = (date: string, openedOn: string, lastDoneOn: string | null): DueState =>
+  calculateDueState({ recurrence: 'Once', startDate: date, intervalDays: null, lastDoneOn, openedOn, postponedUntil: null, today });
 
 describe('échéance des tâches', () => {
   it('une tâche faite aujourd\'hui est à jour jusqu\'à la prochaine échéance', () => {
@@ -76,7 +76,7 @@ describe('échéance des tâches', () => {
         startDate: today,
         intervalDays: null,
         lastDoneOn: null,
-        createdOn: longAgo,
+        openedOn: longAgo,
         postponedUntil: null,
         today,
       }),
@@ -121,9 +121,9 @@ describe('échéance des tâches', () => {
 
   it.each([
     [5, 3], // Faite en avance : prévue dans 5 jours, faite il y a 3 jours.
-    [-5, 10], // Faite le jour de sa création.
+    [-5, 10], // Faite le jour de son ouverture.
     [-5, 2], // Faite après sa date, en retard.
-  ])('une tâche ponctuelle est close par une intervention depuis sa création (prévue dans %i jours, faite il y a %i jours)', (plannedInDays, doneDaysAgo) => {
+  ])('une tâche ponctuelle est close par une intervention depuis son ouverture (prévue dans %i jours, faite il y a %i jours)', (plannedInDays, doneDaysAgo) => {
     const state = once(addDays(today, plannedInDays), ago(10), ago(doneDaysAgo));
 
     expect(state.nextDueDate).toBeNull();
@@ -131,7 +131,7 @@ describe('échéance des tâches', () => {
     expect(state.daysOverdue).toBe(0);
   });
 
-  it('une intervention antérieure à la création ne clôt pas une tâche ponctuelle', () => {
+  it("une intervention antérieure à l'ouverture ne clôt pas une tâche ponctuelle", () => {
     const state = once(addDays(today, 3), today, ago(1));
 
     expect(state.nextDueDate).toBe(addDays(today, 3));
@@ -152,7 +152,7 @@ describe('report des tâches', () => {
       startDate: input.startDate ?? '2026-01-01',
       intervalDays: input.intervalDays === undefined ? 3 : input.intervalDays,
       lastDoneOn: input.lastDoneOn,
-      createdOn: longAgo,
+      openedOn: longAgo,
       postponedUntil,
       today,
     });

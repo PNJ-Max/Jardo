@@ -5,6 +5,8 @@ type Common = {
   label: string;
   /** Interdit les jours après aujourd'hui (une intervention ne se note pas dans le futur). */
   noFuture?: boolean;
+  /** Le premier jour accepté, "YYYY-MM-DD" : une tâche ponctuelle ne se fait pas avant son ouverture. */
+  notBefore?: string;
   error?: string;
   hint?: string;
 };

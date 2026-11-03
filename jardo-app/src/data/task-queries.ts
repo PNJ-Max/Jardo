@@ -19,6 +19,11 @@ export type GardenTask = {
   createdAt: string;
   /** « Reporter » : l'échéance ne tombe pas avant ce jour. Null sans report. */
   postponedUntil: DateOnly | null;
+  /**
+   * Le jour d'ouverture, création ou dernier changement de ce que la tâche demande : seule une
+   * intervention notée ce jour-là ou après ferme une tâche ponctuelle.
+   */
+  openedOn: DateOnly;
   spaceId: Id;
   spaceName: string;
   spaceKind: SpaceKind;
@@ -50,6 +55,7 @@ type TaskRow = TargetNames & {
   interval_days: number | null;
   created_at: string;
   postponed_until: DateOnly | null;
+  opened_on: DateOnly | null;
   space_id: Id;
   space_kind: SpaceKind;
   zone_id: Id | null;
@@ -58,7 +64,7 @@ type TaskRow = TargetNames & {
 
 export const selectTasks = `
   SELECT t.id, t.kind, t.title, t.recurrence, t.start_date, t.interval_days, t.created_at, t.postponed_until,
-    t.space_id, s.name AS space_name, s.kind AS space_kind, t.zone_id, z.name AS zone_name,
+    t.opened_on, t.space_id, s.name AS space_name, s.kind AS space_kind, t.zone_id, z.name AS zone_name,
     t.item_id, i.name AS item_name, i.item_type
   FROM garden_tasks t
   JOIN spaces s ON s.id = t.space_id
@@ -115,12 +121,15 @@ async function withDueStates(db: Db, rows: readonly TaskRow[], today: DateOnly):
   );
 
   return rows.map((row) => {
+    // Une tâche d'avant la migration 3 n'a pas de jour d'ouverture : celui de sa création, dans le
+    // fuseau du téléphone, en tient lieu.
+    const openedOn = row.opened_on ?? toDateOnly(new Date(row.created_at));
     const state = calculateDueState({
       recurrence: row.recurrence,
       startDate: row.start_date,
       intervalDays: row.interval_days,
       lastDoneOn: latestByKind.get(row.kind)!.forTarget(row.space_id, row.zone_id, row.item_id),
-      createdOn: toDateOnly(new Date(row.created_at)),
+      openedOn,
       postponedUntil: row.postponed_until,
       today,
     });
@@ -133,6 +142,7 @@ async function withDueStates(db: Db, rows: readonly TaskRow[], today: DateOnly):
       intervalDays: row.interval_days,
       startDate: row.start_date,
       createdAt: row.created_at,
+      openedOn,
       postponedUntil: row.postponed_until,
       spaceId: row.space_id,
       spaceName: row.space_name,

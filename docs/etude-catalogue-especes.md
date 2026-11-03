@@ -516,9 +516,9 @@ flowchart LR
 ```
 
 - **Les migrations passent après « Reporter »**, en cours dans une autre session : la version 2
-  du schéma sera `postponed_until`, puis viendront `species_id` (3) et `climate` (4). Une
-  migration publiée ne se modifie plus ; si « Reporter » tarde, les PR 1, 3, 8 et 9, sans
-  migration, avancent quand même.
+  du schéma sera `postponed_until`, la 3 `opened_on` (jour d'ouverture des tâches), puis viendront
+  `species_id` (4) et `climate` (5). Une migration publiée ne se modifie plus ; si « Reporter »
+  tarde, les PR 1, 3, 8 et 9, sans migration, avancent quand même.
 - **En parallèle** : 3 dès maintenant ; 8 et 9 dès que 1 est fusionnée, chacune dans son fichier ;
   4 et 5 une fois 2 et 3 fusionnées.
 - **Le minimum utile pour les testeurs** tient en 1, 2, 3, 4, 5 et 6 : choisir une tomate, voir son

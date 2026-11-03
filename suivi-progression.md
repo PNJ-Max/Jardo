@@ -12,6 +12,21 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (03/11/2026)
 
+**Tâches « une seule fois » : le jour d'ouverture (03/11/2026).** Dernier constat de l'audit du
+31/10. Une tâche ponctuelle restait ouverte après un « Fait » daté d'avant sa création, et se
+fermait d'elle-même quand on passait en « une seule fois » une tâche ancienne.
+- **Migration 3** : `opened_on` sur les tâches, le jour de création puis celui de chaque
+  changement de ce que la tâche demande (type, rythme, date, cible). Un titre corrigé ne la
+  rouvre pas. Une tâche d'avant la migration prend son jour de création.
+- **« Fait »** : daté d'avant l'ouverture d'une tâche ponctuelle, il est refusé par le service, et
+  le calendrier de « Fait le » ne propose pas ces jours-là.
+- **Sauvegarde** : la colonne est exportée. Un export d'avant (version 2) s'importe, ses tâches
+  sans jour d'ouverture, et un jour mal écrit est refusé.
+- La règle est dans le [modèle du domaine](docs/modele-domaine.md#gardentask-tâche). L'étude du catalogue
+  numérotait ses migrations à partir de 3 : elles passent à 4 et 5.
+- **Vérifications** : tests Jest (calcul, service, migration, sauvegarde, calendrier) ; pas encore
+  sur téléphone.
+
 **Finitions avant l'APK (03/11/2026).** Quatre constats mineurs de l'audit du 31/10, et un
 plantage du web :
 - **Météo sur un réseau qui pend** : la lecture d'Open-Meteo abandonne au bout de 8 s, et la

@@ -2,7 +2,7 @@ import { randomUUID } from 'expo-crypto';
 
 import { addDays, type DateOnly } from '@/domain/dates';
 import { journalEntryKinds, taskRecurrences, type Id, type JournalEntryKind, type TaskRecurrence } from '@/domain/types';
-import { toDateOnly } from '@/lib/dates';
+import { formatLongDate, toDateOnly } from '@/lib/dates';
 
 import type { Clock } from './clock';
 import type { Db } from './db';
@@ -186,8 +186,9 @@ export function createTaskService(db: Db, clock: Clock) {
         const { title, intervalDays, target } = await prepare(input, null);
 
         await db.run(
-          `INSERT INTO garden_tasks (id, kind, recurrence, start_date, interval_days, title, space_id, zone_id, item_id, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO garden_tasks (id, kind, recurrence, start_date, interval_days, title, space_id, zone_id, item_id,
+             created_at, opened_on)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             id,
             input.kind,
@@ -199,6 +200,7 @@ export function createTaskService(db: Db, clock: Clock) {
             target.zoneId,
             target.itemId,
             clock().toISOString(),
+            today(),
           ],
         );
       });
@@ -206,19 +208,40 @@ export function createTaskService(db: Db, clock: Clock) {
       return getById(id);
     },
 
-    /** Modifie une tâche, cible et rythme compris. */
+    /**
+     * Modifie une tâche, cible et rythme compris. Changer ce qu'elle demande (type, rythme, date,
+     * cible) la rouvre aujourd'hui ; corriger son titre ou son nombre de jours, non.
+     */
     async update(id: Id, input: TaskInput): Promise<GardenTask> {
       validate(input);
 
       await db.transaction(async () => {
-        const task = await existing(id);
+        const task = await getById(id);
         const { title, intervalDays, target } = await prepare(input, task);
+        const asksTheSame =
+          input.kind === task.kind &&
+          input.recurrence === task.recurrence &&
+          input.startDate === task.startDate &&
+          target.spaceId === task.spaceId &&
+          target.zoneId === task.zoneId &&
+          target.itemId === task.itemId;
 
         await db.run(
           `UPDATE garden_tasks SET kind = ?, recurrence = ?, start_date = ?, interval_days = ?, title = ?,
-             space_id = ?, zone_id = ?, item_id = ?
+             space_id = ?, zone_id = ?, item_id = ?, opened_on = coalesce(?, opened_on)
            WHERE id = ?`,
-          [input.kind, input.recurrence, input.startDate, intervalDays, title, target.spaceId, target.zoneId, target.itemId, id],
+          [
+            input.kind,
+            input.recurrence,
+            input.startDate,
+            intervalDays,
+            title,
+            target.spaceId,
+            target.zoneId,
+            target.itemId,
+            asksTheSame ? null : today(),
+            id,
+          ],
         );
       });
 
@@ -236,16 +259,22 @@ export function createTaskService(db: Db, clock: Clock) {
     /**
      * « Fait » : note l'intervention au journal, sur la cible de la tâche, et renvoie la tâche
      * recalculée avec l'entrée notée. Une tâche ponctuelle est close dès que c'est fait, même avant
-     * sa date.
+     * sa date ; un « Fait » daté d'avant son ouverture ne la fermerait pas, il est refusé.
      */
     async complete(id: Id, input: CompleteTaskInput = {}): Promise<TaskCompletion> {
       new Validation().date('Date', 'Date', input.date).optional('Note', 'Note', input.note, 1000).done();
 
       const entryId = await db.transaction(async () => {
-        const task = await existing(id);
+        const task = await getById(id);
+        const date = input.date ?? today();
+        if (task.recurrence === 'Once' && date < task.openedOn) {
+          throw businessRule(
+            `Cette tâche a été prévue le ${formatLongDate(task.openedOn)} : un « Fait » daté d'avant ne la fermerait pas.`,
+          );
+        }
 
         return insertJournalEntry(db, clock, {
-          date: input.date ?? today(),
+          date,
           kind: task.kind,
           note: optionalText(input.note) ?? task.title,
           spaceId: task.spaceId,

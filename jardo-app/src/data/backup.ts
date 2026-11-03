@@ -78,6 +78,7 @@ export const backupColumns = {
     item_id: 'text?',
     created_at: 'instant',
     postponed_until: 'text?',
+    opened_on: 'text?',
   },
   garden_map_slots: { id: 'text', garden_id: 'text', slot_key: 'text', space_id: 'text', zone_id: 'text?' },
 } as const satisfies Record<string, Record<string, ColumnType>>;
@@ -119,6 +120,11 @@ export const backupUpgrades: readonly ((tables: LooseTables) => LooseTables)[] =
   (tables) => ({
     ...tables,
     garden_tasks: tables.garden_tasks?.map((task) => ({ ...task, postponed_until: null })),
+  }),
+  // Une tâche d'un export d'avant le jour d'ouverture garde son jour de création, comme en base.
+  (tables) => ({
+    ...tables,
+    garden_tasks: tables.garden_tasks?.map((task) => ({ ...task, opened_on: null })),
   }),
 ];
 

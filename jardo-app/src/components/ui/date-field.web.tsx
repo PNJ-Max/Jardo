@@ -12,7 +12,7 @@ import { FieldMessage, useFieldStyles } from './form';
  * s'appuie sur <input type="date">, qui affiche le calendrier du navigateur et respecte `max`.
  */
 export function DateField(props: DateFieldProps) {
-  const { label, value, noFuture, optional, error, hint } = props;
+  const { label, value, noFuture, notBefore, optional, error, hint } = props;
   const { colors, fonts, radius, scheme, spacing } = useTheme();
   const fieldStyles = useFieldStyles();
   const [focused, setFocused] = useState(false);
@@ -25,6 +25,7 @@ export function DateField(props: DateFieldProps) {
         aria-label={label}
         value={value ?? ''}
         max={noFuture ? today() : undefined}
+        min={notBefore}
         required={!optional}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}

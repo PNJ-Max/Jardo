@@ -215,6 +215,7 @@ export function checkBackupRules(tables: BackupTables): void {
         itemId: task.item_id,
       });
       validatePostponement(task.postponed_until);
+      new Validation().date('OpenedOn', 'Ouverte le', task.opened_on).done();
       ensureTaskFields(kind, recurrence, task.interval_days, optionalText(task.title));
       checkTarget(kind, task.space_id, task.zone_id, task.item_id);
     });

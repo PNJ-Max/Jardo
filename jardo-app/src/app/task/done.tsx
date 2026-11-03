@@ -34,7 +34,13 @@ function TaskDoneForm({ task }: { task: GardenTask }) {
   return (
     <FormScreen title={taskTitle(task)} submitLabel="Noter comme fait" onSubmit={submit} loading={isPending} dirty={changed}>
       <FormTarget label={targetLabel(task)} />
-      <DateField label="Fait le" noFuture value={date} onChange={setDate} />
+      <DateField
+        label="Fait le"
+        noFuture
+        notBefore={task.recurrence === 'Once' ? task.openedOn : undefined}
+        value={date}
+        onChange={setDate}
+      />
       <Field
         label="Note"
         value={note}
