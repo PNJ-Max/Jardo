@@ -3,8 +3,7 @@ import { useState } from 'react';
 
 import { useSaveZone, useZone } from '@/api/queries';
 import type { Id, Zone } from '@/api/types';
-import { fieldError, Field, FormPending, FormScreen } from '@/components/ui';
-import { goBack } from '@/lib/navigation';
+import { fieldError, Field, FormPending, FormScreen, leaveForm, useChanged } from '@/components/ui';
 
 /**
  * Création ou modification d'une zone.
@@ -28,11 +27,12 @@ function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: Id }) {
   const save = useSaveZone();
   const [name, setName] = useState(zone?.name ?? '');
   const [description, setDescription] = useState(zone?.description ?? '');
+  const changed = useChanged([name, description]);
 
   const submit = () =>
     save.mutate(
       { id: zone?.id, spaceId, input: { name: name.trim(), description: description.trim() || null } },
-      { onSuccess: goBack },
+      { onSuccess: leaveForm },
     );
 
   return (
@@ -42,7 +42,8 @@ function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: Id }) {
       onSubmit={submit}
       loading={save.isPending}
       disabled={!name.trim()}
-      error={save.error}>
+      error={save.error}
+      dirty={changed}>
       <Field
         label="Nom"
         value={name}

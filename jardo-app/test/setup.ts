@@ -10,7 +10,10 @@ jest.mock('expo-router', () => ({
   // Les boutons de l'en-tête de l'onglet Jardin sont déclarés par l'écran : on les y rend.
   Tabs: { Screen: ({ options }: { options?: { headerRight?: () => unknown } }) => options?.headerRight?.() ?? null },
   useLocalSearchParams: jest.fn(() => ({})),
+  useNavigation: jest.fn(() => ({ dispatch: jest.fn() })),
 }));
+// La garde des formulaires : les tests lisent ses arguments et appellent eux-mêmes son rappel.
+jest.mock('expo-router/react-navigation', () => ({ usePreventRemove: jest.fn() }));
 
 // Skia ne tourne pas sous Jest : l'image d'un pictogramme n'y porte que sa clé, « type:thème ».
 jest.mock('@/components/pictograms/picture', () => ({ pictogramUri: (key: string) => `pictogram:${key}` }));

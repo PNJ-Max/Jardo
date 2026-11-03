@@ -10,7 +10,20 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (31/10/2026)
+## Où on en est (03/11/2026)
+
+**Finitions avant l'APK (03/11/2026).** Quatre constats mineurs de l'audit du 31/10 :
+- **Météo sur un réseau qui pend** : la lecture d'Open-Meteo abandonne au bout de 8 s, et la
+  prévision gardée s'affiche tout de suite, le temps que le réseau réponde.
+- **Formulaires** : tant que la saisie a changé (`useChanged`), le retour d'Android, le bouton
+  fermer ou le geste demandent « Abandonner la saisie ? ». Un enregistrement ou une suppression
+  quittent sans rien demander (`leaveForm`).
+- **Démo web exportée** : `EXPO_PUBLIC_EXAMPLE_GARDEN=1 npx expo export --platform web --clear` la
+  remplit du jardin d'exemple ; sans la variable, un export démarre vide. Voir le
+  [README](README.md#lancer).
+- **Code mort** : `seeded` (`src/map/decor.ts`) est retiré.
+- **Vérifications** : tests Jest (délai de la météo, prévision gardée, garde des formulaires),
+  deux exports web comparés ; pas encore sur téléphone.
 
 **Rappels par notification locale (31/10/2026).** L'app rappelle ce qui est à faire, même
 fermée : ce sont des notifications programmées sur le téléphone, sans serveur ni push.

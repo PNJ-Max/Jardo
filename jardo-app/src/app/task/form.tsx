@@ -12,11 +12,12 @@ import {
   Field,
   FormPending,
   FormScreen,
+  leaveForm,
+  useChanged,
 } from '@/components/ui';
 import { confirm, notify } from '@/lib/confirm';
 import { today } from '@/lib/dates';
 import { entryKinds, recurrenceOptions, targetLabel, taskKindsFor } from '@/lib/garden';
-import { goBack } from '@/lib/navigation';
 
 type Target = { spaceId: Id; zoneId: Id | null; itemId: Id | null; itemKind: ItemKind | null; label: string };
 
@@ -82,6 +83,7 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
   const [recurrence, setRecurrence] = useState<TaskRecurrence>(task?.recurrence ?? 'EveryNDays');
   const [intervalText, setIntervalText] = useState(String(task?.intervalDays ?? 3));
   const [startDate, setStartDate] = useState(task?.startDate ?? today());
+  const changed = useChanged([kind, title, recurrence, intervalText, startDate]);
 
   const interval = Number(intervalText);
   const intervalError =
@@ -106,13 +108,13 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
           itemId: target.itemId,
         },
       },
-      { onSuccess: goBack },
+      { onSuccess: leaveForm },
     );
   };
 
   const deleteTask = async () => {
     if (!task || !(await confirm('Supprimer cette tâche ?', 'Le journal garde les interventions déjà notées.'))) return;
-    remove.mutate(task.id, { onSuccess: goBack, onError: (e) => notify("La tâche n'a pas été supprimée", e.message) });
+    remove.mutate(task.id, { onSuccess: leaveForm, onError: (e) => notify("La tâche n'a pas été supprimée", e.message) });
   };
 
   return (
@@ -122,7 +124,8 @@ function TaskForm({ task, target, space }: { task?: GardenTask; target: Target; 
       onSubmit={submit}
       loading={save.isPending}
       disabled={!canSubmit}
-      error={save.error}>
+      error={save.error}
+      dirty={changed}>
       {target.label ? <FormTarget label={target.label} /> : null}
       <ChipSelect
         label="À faire"

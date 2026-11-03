@@ -12,6 +12,8 @@ import {
   Field,
   FormPending,
   FormScreen,
+  leaveForm,
+  useChanged,
 } from '@/components/ui';
 import { confirm, notify } from '@/lib/confirm';
 import { today } from '@/lib/dates';
@@ -25,7 +27,6 @@ import {
   parseDecimal,
   targetLabel,
 } from '@/lib/garden';
-import { goBack } from '@/lib/navigation';
 
 type Target = { spaceId: Id; zoneId: Id | null; itemId: Id | null; label: string };
 
@@ -86,6 +87,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
   const [heightText, setHeightText] = useState(entry?.heightCm ? String(entry.heightCm) : '');
   const [problem, setProblem] = useState(entry?.problem ?? '');
   const [treatment, setTreatment] = useState(entry?.treatment ?? '');
+  const changed = useChanged([kind, date, note, quantityText, harvestUnit, heightText, problem, treatment]);
 
   const isHarvest = kind === 'Harvest';
   const isWood = kind !== undefined && isWoodKind(kind);
@@ -116,13 +118,13 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
           itemId: target.itemId,
         },
       },
-      { onSuccess: goBack },
+      { onSuccess: leaveForm },
     );
   };
 
   const deleteEntry = async () => {
     if (!entry || !(await confirm('Supprimer cette intervention ?', 'Elle disparaîtra du journal.'))) return;
-    remove.mutate(entry.id, { onSuccess: goBack, onError: (e) => notify("L'intervention n'a pas été supprimée", e.message) });
+    remove.mutate(entry.id, { onSuccess: leaveForm, onError: (e) => notify("L'intervention n'a pas été supprimée", e.message) });
   };
 
   return (
@@ -132,7 +134,8 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
       onSubmit={submit}
       loading={save.isPending}
       disabled={!canSubmit}
-      error={save.error}>
+      error={save.error}
+      dirty={changed}>
       {target.label ? <FormTarget label={target.label} /> : null}
       <ChipSelect
         label="Intervention"

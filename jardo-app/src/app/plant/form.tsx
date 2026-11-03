@@ -11,9 +11,10 @@ import {
   Field,
   FormPending,
   FormScreen,
+  leaveForm,
+  useChanged,
 } from '@/components/ui';
 import { decimalText, parseDecimal, quantityUnits } from '@/lib/garden';
-import { goBack } from '@/lib/navigation';
 
 const unitOptions = (Object.keys(quantityUnits) as QuantityUnit[]).map((unit) => ({
   value: unit,
@@ -50,6 +51,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
   const [sownDate, setSownDate] = useState(plant?.sownDate ?? null);
   const [plantedDate, setPlantedDate] = useState(plant?.plantedDate ?? null);
   const [zoneId, setZoneId] = useState(defaultZoneId);
+  const changed = useChanged([name, species, variety, quantityText, unit, sownDate, plantedDate, zoneId]);
 
   // Validation locale minimale, pour guider la saisie. La vraie reste celle du service : ses
   // messages s'affichent sous les champs en cas de refus.
@@ -73,7 +75,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
           zoneId,
         },
       },
-      { onSuccess: goBack },
+      { onSuccess: leaveForm },
     );
   };
 
@@ -84,7 +86,8 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
       onSubmit={submit}
       loading={save.isPending}
       disabled={!name.trim() || !quantity || !!quantityError}
-      error={save.error}>
+      error={save.error}
+      dirty={changed}>
       <Field
         label="Nom"
         value={name}

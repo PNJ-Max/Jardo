@@ -4,10 +4,9 @@ import { useState } from 'react';
 import { useSaveWoodPile, useWoodPile } from '@/api/queries';
 import type { Id, WoodPile } from '@/api/types';
 import { ZoneSelect } from '@/components/zone-select';
-import { fieldError, DateField, Field, FormPending, FormScreen } from '@/components/ui';
+import { fieldError, DateField, Field, FormPending, FormScreen, leaveForm, useChanged } from '@/components/ui';
 import { today } from '@/lib/dates';
 import { decimalText, parseDecimal } from '@/lib/garden';
-import { goBack } from '@/lib/navigation';
 
 /**
  * Création ou modification d'un tas de bois, dans un espace bois de chauffage.
@@ -38,6 +37,7 @@ function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; space
   const [cutDate, setCutDate] = useState(pile?.cutDate ?? today());
   const [dryingText, setDryingText] = useState(String(pile?.dryingMonths ?? 24));
   const [zoneId, setZoneId] = useState(defaultZoneId);
+  const changed = useChanged([name, species, steresText, logLengthText, cutDate, dryingText, zoneId]);
 
   const steres = parseDecimal(steresText);
   const logLength = parseDecimal(logLengthText);
@@ -60,7 +60,7 @@ function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; space
           zoneId,
         },
       },
-      { onSuccess: goBack },
+      { onSuccess: leaveForm },
     );
   };
 
@@ -71,7 +71,8 @@ function WoodPileForm({ pile, spaceId, defaultZoneId }: { pile?: WoodPile; space
       onSubmit={submit}
       loading={save.isPending}
       disabled={!canSubmit}
-      error={save.error}>
+      error={save.error}
+      dirty={changed}>
       <Field
         label="Nom"
         value={name}
