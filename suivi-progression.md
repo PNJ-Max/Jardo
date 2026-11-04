@@ -12,6 +12,22 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (04/11/2026)
 
+**Catalogue d'espèces, PR 7 : le climat du jardin (04/11/2026).** Le calendrier et les suggestions
+du catalogue suivent le climat choisi dans Réglages.
+- **Base** : migration 5, `gardens.climate`, vide tant que l'utilisateur n'a rien choisi. Les dates
+  valent alors pour le climat tempéré, et l'écran le dit.
+- **Sauvegarde** : un export d'avant la version 5 s'importe sans climat. Le fichier ne passe que
+  vide ou avec l'un des cinq climats, contrairement à `species_id`, qui accepte tout texte.
+- **Réglages** : « Climat du jardin », sous le nom, avec les dernières gelées et les régions de
+  l'étude, repères à calibrer avec les premiers testeurs. On ne revient pas à « aucun choix » :
+  « Tempéré » donne les mêmes dates.
+- **Écrans** : `SpeciesAdvice` et la feuille d'espèces reçoivent le vrai climat (`useGardenClimate`).
+  « Changer », sous le calendrier, mène à Réglages, et la fiche suit dès le retour.
+- **À brancher** : les rappels proposés (PR 6) ne sont pas encore sur `main` ; ils recevront
+  `useGardenClimate` à leur fusion.
+- **Pas vérifié sur téléphone** : la migration sur une vraie base, le toucher de « Changer », TalkBack.
+- **Captures** : branche `captures/climat-jardin`.
+
 **Catalogue d'espèces, PR 4 : choisir l'espèce (04/11/2026).** Le champ « Espèce » du formulaire de
 plante ouvre une feuille de recherche dans le catalogue, qui propose sans imposer.
 - **Feuille** : avant la frappe, « En ce moment » (semis ou plantation cette quinzaine ou la suivante,

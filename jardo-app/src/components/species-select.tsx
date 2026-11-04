@@ -2,18 +2,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Keyboard, Pressable, ScrollView, Text, View } from 'react-native';
 
-import { useSpace } from '@/api/queries';
+import { useGardenClimate, useSpace } from '@/api/queries';
 import type { Id } from '@/api/types';
 import { CategoryIcon } from '@/components/pictograms';
 import { BottomSheet, Field, FieldMessage, SectionTitle, useFieldStyles, type IconName } from '@/components/ui';
 import { findSpecies, speciesCatalog } from '@/data/species';
-import {
-  nextPlantingWindow,
-  referenceClimate,
-  searchSpecies,
-  speciesSuggestions,
-  type Species,
-} from '@/domain/species';
+import { nextPlantingWindow, searchSpecies, speciesSuggestions, type Species } from '@/domain/species';
 import { plantingHint, suggestionsTitle } from '@/lib/species';
 import { useToday } from '@/lib/use-today';
 import { createStyles, useTheme } from '@/theme';
@@ -99,14 +93,14 @@ function SpeciesSearch({ spaceId, selectedId, removable, onClose, onSelect, onFr
   const text = query.trim();
   const day = useToday();
   const kind = useSpace(spaceId).data?.kind;
+  const climate = useGardenClimate();
 
-  // En attendant le climat du jardin (étude, PR 7), celui pour lequel les fiches sont écrites.
-  const suggestions = kind && speciesSuggestions(speciesCatalog, kind, day, referenceClimate);
+  const suggestions = kind && speciesSuggestions(speciesCatalog, kind, day, climate);
   const results = searchSpecies(speciesCatalog, text);
 
   const rows = (list: readonly Species[]) =>
     list.map((species) => {
-      const window = nextPlantingWindow(species, day, referenceClimate);
+      const window = nextPlantingWindow(species, day, climate);
       return (
         <SpeciesRow
           key={species.id}

@@ -1,4 +1,5 @@
 import type { Db } from '@/data/db';
+import { createGardenService } from '@/data/garden';
 import { migrate, migrations, NewerDatabaseError } from '@/data/migrations';
 
 import { createMemoryDb, createTestDb } from '../../test/db';
@@ -38,6 +39,7 @@ describe('migrations', () => {
       name: 'Mon jardin',
       map_layout: null,
       created_at: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+      climate: null,
     });
     expect(await first.first('SELECT 1 FROM spaces')).toBeNull();
     expect((await second.first<{ id: string }>('SELECT id FROM gardens'))?.id).not.toBe(garden?.id);
@@ -121,6 +123,20 @@ describe('migrations', () => {
     expect(await db.all('SELECT id, species, species_id FROM garden_items')).toEqual([
       { id: 'p', species: 'Tomate', species_id: null },
     ]);
+  });
+
+  it("ajoutent le climat au jardin existant d'une base en version 4, sans climat choisi", async () => {
+    const db = createMemoryDb();
+    await migrate(db, migrations.slice(0, 4));
+    await db.run("UPDATE gardens SET name = 'Jardin des Tilleuls', map_layout = 'CountryHouse'");
+
+    await migrate(db);
+
+    expect(await version(db)).toBe(5);
+    expect(await db.all('SELECT name, map_layout, climate FROM gardens')).toEqual([
+      { name: 'Jardin des Tilleuls', map_layout: 'CountryHouse', climate: null },
+    ]);
+    await expect(createGardenService(db).get()).resolves.toMatchObject({ name: 'Jardin des Tilleuls', climate: null });
   });
 
   it('annulent en entier une migration qui échoue, version comprise', async () => {

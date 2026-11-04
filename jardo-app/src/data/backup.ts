@@ -20,7 +20,7 @@ type ColumnType = 'text' | 'text?' | 'number' | 'number?' | 'flag' | 'instant';
  * parent avant ses enfants.
  */
 export const backupColumns = {
-  gardens: { id: 'text', name: 'text', map_layout: 'text?', created_at: 'instant' },
+  gardens: { id: 'text', name: 'text', map_layout: 'text?', created_at: 'instant', climate: 'text?' },
   spaces: {
     id: 'text',
     garden_id: 'text',
@@ -130,6 +130,10 @@ export const backupUpgrades: readonly ((tables: LooseTables) => LooseTables)[] =
   (tables) => ({
     ...tables,
     garden_items: tables.garden_items?.map((item) => ({ ...item, species_id: null })),
+  }),
+  (tables) => ({
+    ...tables,
+    gardens: tables.gardens?.map((garden) => ({ ...garden, climate: null })),
   }),
 ];
 

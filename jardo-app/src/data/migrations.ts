@@ -147,6 +147,11 @@ ALTER TABLE garden_tasks ADD COLUMN opened_on TEXT;
 -- que celle-ci ne connaît pas encore.
 ALTER TABLE garden_items ADD COLUMN species_id TEXT;
 `,
+  `
+-- Le climat du jardin, nul tant que l'utilisateur n'a rien choisi : les dates valent alors pour le
+-- climat de référence des fiches.
+ALTER TABLE gardens ADD COLUMN climate TEXT;
+`,
 ];
 
 /** La base vient d'une version plus récente de l'app : elle est laissée telle quelle. */
