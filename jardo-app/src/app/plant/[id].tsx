@@ -5,7 +5,9 @@ import { useDeletePlant, usePlant, useSetPlantArchived } from '@/api/queries';
 import type { Plant } from '@/api/types';
 import { ArchivedBadge, plantQuantity } from '@/components/items';
 import { DetailScreen, Fact, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
+import { SpeciesAdvice } from '@/components/species-advice';
 import { ErrorView, Loading } from '@/components/ui';
+import { findSpecies } from '@/data/species';
 import { confirm, notify } from '@/lib/confirm';
 import { formatLongDate } from '@/lib/dates';
 import { targetLabel } from '@/lib/garden';
@@ -46,6 +48,7 @@ function PlantDetail({ plant }: { plant: Plant }) {
   };
 
   const keyFacts = [plant.species, plant.variety, plantQuantity(plant)].filter(Boolean).join(' · ');
+  const species = plant.speciesId ? findSpecies(plant.speciesId) : undefined;
 
   return (
     <DetailScreen
@@ -64,6 +67,7 @@ function PlantDetail({ plant }: { plant: Plant }) {
       tabs={[
         { key: 'tasks', label: 'Tâches', render: () => <TasksSection target={target} /> },
         { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
+        ...(species ? [{ key: 'advice', label: 'Conseils', render: () => <SpeciesAdvice species={species} /> }] : []),
         {
           key: 'info',
           label: 'Infos',

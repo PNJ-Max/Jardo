@@ -458,12 +458,22 @@ Journal · Conseils · Infos. De haut en bas :
 
 1. **Le calendrier de l'année** : douze colonnes de mois, une ligne par fenêtre, chacune coiffée
    du pictogramme de son intervention, déjà dessiné (sachet de graines, plant en motte, panier,
-   sécateur). Les plages sont des bandes arrondies aux tons du décor : terre (`soil`) pour les
-   semis, pelouse (`lawn`) pour la plantation, le ton chaud du panier pour la récolte. Un trait
-   `primary` marque aujourd'hui. Dessous : « Climat tempéré · Changer », qui mène à Réglages.
-2. **Bon à savoir** : exposition, espacement (« 50 cm entre plants, 80 cm entre rangs ») et
+   sécateur). Les plages sont des bandes arrondies aux tons du décor : terre pour les semis, vert
+   des cultures pour la plantation, le ton chaud du panier pour la récolte, gris du sécateur pour
+   la taille. Un contour à l'encre des pictogrammes les détache du fond : en sombre, `lawn` y
+   aurait été invisible. Un trait `primary` marque la quinzaine du jour. Dessous : « Dates pour un
+   climat tempéré » ; « Changer », qui mènera à Réglages, arrive avec la PR 7.
+2. **En ce moment** : ce que les fenêtres ouvertes permettent ce jour-là (« Récolter jusqu'à début
+   mars »).
+3. **Bon à savoir** : exposition, espacement (« 50 cm entre plants, 80 cm entre rangs ») et
    arrosage (« tous les 3 jours par temps sec, plus souvent les premières semaines »).
-3. **Conseils** : trois lignes au plus.
+4. **Conseils** : trois lignes au plus.
+
+Le calendrier est fait de vues, pas de Skia : des bandes en pourcentage de la largeur, des libellés
+qui suivent la police (au-delà de 1,3, le libellé passe au-dessus de sa ligne), et rien à attendre
+du moteur de dessin sur le web. Le lecteur d'écran lit un résumé (« Semis sous abri : de début mars
+à début avril. Plantation : … »). `SpeciesAdvice` prend un `climate`, qui vaut le climat de
+référence : la PR 7 n'aura qu'à le lui passer.
 
 ```
   Calendrier             J F M A M J J A S O N D
@@ -496,7 +506,7 @@ capture clair et sombre pour celles qui touchent un écran.
 | 2 | Lien plante → espèce, **faite** | Migration 4 `species_id` sur `garden_items`, `PlantService` et types, mise à niveau des exports, règle d'import | 1, et la migration de « Reporter » fusionnée | Jest : services, sauvegarde |
 | 3 | Pictogrammes des catégories | Les quatre dessins, en SkPicture comme les autres | | Capture |
 | 4 | Choisir l'espèce | Champ « Espèce », feuille de recherche, suggestions et « en ce moment », préremplissage | 2, 3 | Tests d'écran, capture |
-| 5 | Onglet Conseils | Calendrier dessiné, bon à savoir, conseils | 2, 3 | Tests d'écran, capture |
+| 5 | Onglet Conseils, **faite** | Calendrier dessiné, en ce moment, bon à savoir, conseils | 2, 3 | Tests d'écran, capture |
 | 6 | Rappels proposés | Calcul des propositions dans le domaine (couverture par la zone et l'espace comprise), section du formulaire, groupe « Proposé pour » de l'onglet Tâches, unité de récolte par défaut | 4 | Jest, tests d'écran, capture |
 | 7 | Climat du jardin | Migration `climate` sur `gardens`, choix dans Réglages, calendrier et propositions selon le climat, mise à niveau des exports | 2, 5 | Jest, tests d'écran, capture |
 | 8 | Lot 2 : légumes | Les 28 légumes restants | 1 | Jest, relecture du tableau du lot |
