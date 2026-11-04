@@ -17,7 +17,7 @@ import {
 } from './drawings';
 import { usePictogramRenderer } from './renderer';
 
-export { SPECIES_CATEGORIES, type SpeciesCategory, type TabName } from './drawings';
+export { calendarBrush, SPECIES_CATEGORIES, type SpeciesCategory, type TabName } from './drawings';
 
 /** Décoratif : le texte voisin nomme toujours ce que le pictogramme montre. */
 function Pictogram({ id, marks, size }: { id: string; marks: () => Mark[]; size: number }) {

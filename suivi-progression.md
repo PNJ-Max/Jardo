@@ -12,6 +12,22 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (04/11/2026)
 
+**Catalogue d'espèces, PR 5 : l'onglet Conseils (04/11/2026).** La fiche d'une plante liée au
+catalogue gagne un onglet entre Journal et Infos. Sans espèce, ou avec un identifiant absent du
+catalogue, l'onglet n'existe pas. Il ne fait que lire : ni écriture, ni migration.
+- **Calendrier dessiné** : une ligne par fenêtre, des bandes par quinzaine à l'encre des
+  pictogrammes, une plage à cheval sur le Nouvel An coupée net aux bords de l'année, un trait sur
+  la quinzaine du jour. En vues plutôt qu'en Skia ; au-delà d'une police de 1,3, le libellé passe
+  au-dessus de sa ligne. Le lecteur d'écran lit un résumé.
+- **En ce moment, Bon à savoir, Conseils** tirés de la fiche, au jour de `useToday`.
+- **Logique** : `bandsOf` et `yearCalendar` dans `src/domain/species.ts`, textes dans
+  `src/lib/species.ts`. `SpeciesAdvice` prend un `climate` qui attend le réglage du jardin (PR 7) ;
+  « Changer » arrivera avec lui.
+- **Vérifications** : tests Jest (`plant-advice`, `lib/species`, `domain/species`), captures en
+  clair et en sombre à 375 de large sur un poireau, un pommier et un basilic. Le formulaire ne pose
+  pas encore l'espèce (PR 4) : les captures ont lié les plantes du jardin d'exemple le temps de la
+  prise de vue, sans le committer.
+
 **Passe d'accessibilité, suite : Aujourd'hui et la carte (04/11/2026).** Les fichiers que la
 première passe n'avait pas pu toucher, revérifiés sur le code actuel.
 - **Ligne de tâche** : un `button` nommé par son titre et sa cible, avec son indication ; « Fait »

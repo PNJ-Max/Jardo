@@ -116,6 +116,44 @@ export function activeWindows(species: Species, on: DateOnly, climate: Climate):
   );
 }
 
+/** Une bande du calendrier : `length` quinzaines à partir de la quinzaine `start`, en rang dans l'année. */
+export type CalendarBand = {
+  start: number;
+  length: number;
+  /** La plage continue de l'autre côté du Nouvel An. */
+  wraps: boolean;
+};
+
+/** Les bandes d'une plage : deux quand elle chevauche le Nouvel An, une de chaque côté de l'année. */
+export function bandsOf(range: FortnightRange): CalendarBand[] {
+  const [from, to] = [indexOf(range.from), indexOf(range.to)];
+  if (from <= to) return [{ start: from, length: to - from + 1, wraps: false }];
+
+  return [
+    { start: 0, length: to + 1, wraps: true },
+    { start: from, length: fortnightCount - from, wraps: true },
+  ];
+}
+
+export type CalendarRow = { kind: WindowKind; ranges: FortnightRange[]; bands: CalendarBand[] };
+
+export type YearCalendar = {
+  /** Une ligne par sorte de fenêtre que l'espèce a, sans ligne vide. */
+  rows: CalendarRow[];
+  /** Le rang dans l'année de la quinzaine du jour. */
+  current: number;
+};
+
+export function yearCalendar(species: Species, on: DateOnly, climate: Climate): YearCalendar {
+  return {
+    rows: windowKinds.flatMap((kind) => {
+      const ranges = windowsFor(species, kind, climate);
+      return ranges.length > 0 ? [{ kind, ranges, bands: ranges.flatMap(bandsOf) }] : [];
+    }),
+    current: indexOf(fortnightOf(on)),
+  };
+}
+
 /** Pour comparer des noms sans tenir compte de la casse ni des accents : « Mâche » vaut « mache ». */
 export const normalizeName = (name: string) =>
   name

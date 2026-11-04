@@ -1,5 +1,6 @@
 import {
   activeWindows,
+  bandsOf,
   climates,
   fortnightOf,
   fortnights,
@@ -8,6 +9,7 @@ import {
   rangeLength,
   shiftFortnight,
   windowsFor,
+  yearCalendar,
   type Climate,
   type FortnightRange,
   type Species,
@@ -200,5 +202,56 @@ describe('noms', () => {
     expect(normalizeName('  ÉPINARD ')).toBe('epinard');
     expect(normalizeName('Haricot à rames')).toBe('haricot a rames');
     expect(normalizeName('Céleri')).toBe(normalizeName('celeri'));
+  });
+});
+
+describe("calendrier de l'année", () => {
+  it("fait une bande d'une plage, et deux quand elle chevauche le Nouvel An", () => {
+    expect(bandsOf({ from: 'Mar1', to: 'Apr1' })).toEqual([{ start: 4, length: 3, wraps: false }]);
+    expect(bandsOf({ from: 'Mar2', to: 'Mar2' })).toEqual([{ start: 5, length: 1, wraps: false }]);
+    expect(bandsOf({ from: 'Nov1', to: 'Mar1' })).toEqual([
+      { start: 0, length: 5, wraps: true },
+      { start: 20, length: 4, wraps: true },
+    ]);
+  });
+
+  it('couvre autant de quinzaines que la plage, Nouvel An compris', () => {
+    for (const range of [{ from: 'Sep1', to: 'Mar1' }, { from: 'Dec2', to: 'Jan1' }, { from: 'Jan1', to: 'Dec2' }] as const) {
+      expect(bandsOf(range).reduce((total, band) => total + band.length, 0)).toBe(rangeLength(range));
+    }
+  });
+
+  it("marque la quinzaine du jour, du premier au dernier jour de l'année", () => {
+    const plain = species({ harvest: [{ from: 'Jun1', to: 'Jul1' }] });
+
+    expect(yearCalendar(plain, '2026-01-01', 'Temperate').current).toBe(0);
+    expect(yearCalendar(plain, '2026-01-15', 'Temperate').current).toBe(0);
+    expect(yearCalendar(plain, '2026-01-16', 'Temperate').current).toBe(1);
+    expect(yearCalendar(plain, '2026-11-04', 'Temperate').current).toBe(20);
+    expect(yearCalendar(plain, '2026-12-31', 'Temperate').current).toBe(23);
+  });
+
+  it("garde l'ordre du calendrier et saute les fenêtres que l'espèce n'a pas", () => {
+    const rows = yearCalendar(
+      species({
+        harvest: [{ from: 'Jun1', to: 'Jul1' }],
+        sowOutdoors: [
+          { from: 'Mar1', to: 'Apr2' },
+          { from: 'Aug1', to: 'Aug2' },
+        ],
+      }),
+      '2026-03-05',
+      'Temperate',
+    ).rows;
+
+    expect(rows.map((row) => row.kind)).toEqual(['sowOutdoors', 'harvest']);
+    expect(rows[0].bands.map((band) => band.start)).toEqual([4, 14]);
+  });
+
+  it('décale les bandes selon le climat', () => {
+    const late = species({ plant: [{ from: 'May2', to: 'Jun2' }] });
+
+    expect(yearCalendar(late, '2026-03-05', 'Mountain').rows[0].bands).toEqual([{ start: 11, length: 3, wraps: false }]);
+    expect(yearCalendar(late, '2026-03-05', 'Mediterranean').rows[0].bands).toEqual([{ start: 7, length: 3, wraps: false }]);
   });
 });
