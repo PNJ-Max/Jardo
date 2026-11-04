@@ -34,6 +34,18 @@ première passe n'avait pas pu toucher, revérifiés sur le code actuel.
   simulée en réécrivant les feuilles de style, clair et sombre). Pas de TalkBack réel : il reste à
   passer l'app sur un téléphone.
 
+**Catalogue d'espèces, PR 2 : le lien plante → espèce (04/11/2026).** Une plante peut désigner
+une fiche du catalogue. Aucun écran : le choix de l'espèce viendra avec la PR 4.
+- **Migration 4** : `species_id` sur `garden_items`, facultatif et sans clé étrangère, nul pour
+  les plantes existantes. Le texte `species` reste celui qu'on affiche.
+- **`PlantService`** lit et écrit `speciesId`. Une espèce qu'on choisit doit être au catalogue ;
+  celle que la plante a déjà reste acceptée, même inconnue de cette version.
+- **Sauvegarde** : la colonne est exportée. Un export d'avant (version 3) s'importe sans espèce
+  du catalogue. Un export plus récent qui nomme une espèce inconnue ici s'importe tel quel, comme
+  le veut l'[étude](docs/etude-catalogue-especes.md#le-lien-depuis-la-plante). Un tas de bois
+  avec une espèce est refusé.
+- **Vérifications** : tests Jest (migration, service, sauvegarde).
+
 **Tâches « une seule fois » : le jour d'ouverture (03/11/2026).** Dernier constat de l'audit du
 31/10. Une tâche ponctuelle restait ouverte après un « Fait » daté d'avant sa création, et se
 fermait d'elle-même quand on passait en « une seule fois » une tâche ancienne.

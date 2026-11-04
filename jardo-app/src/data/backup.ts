@@ -50,6 +50,7 @@ export const backupColumns = {
     log_length_cm: 'number?',
     cut_date: 'text?',
     drying_months: 'number?',
+    species_id: 'text?',
   },
   journal_entries: {
     id: 'text',
@@ -125,6 +126,10 @@ export const backupUpgrades: readonly ((tables: LooseTables) => LooseTables)[] =
   (tables) => ({
     ...tables,
     garden_tasks: tables.garden_tasks?.map((task) => ({ ...task, opened_on: null })),
+  }),
+  (tables) => ({
+    ...tables,
+    garden_items: tables.garden_items?.map((item) => ({ ...item, species_id: null })),
   }),
 ];
 

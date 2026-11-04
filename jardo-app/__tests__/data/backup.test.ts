@@ -115,6 +115,50 @@ describe('sauvegarde', () => {
     expect((await createTaskService(target, clock).getById(task.id)).openedOn).toBe(task.openedOn);
   });
 
+  it('un export suivi d’un import garde les espèces du catalogue des plantes', async () => {
+    const source = await createTestDb({ exampleGarden: true });
+    await source.run("UPDATE garden_items SET species_id = 'tomato' WHERE rowid = (SELECT min(rowid) FROM garden_items WHERE item_type = 'Plant')");
+    const backup = await createBackupService(source, clock).export();
+    const target = await createTestDb();
+    const service = createBackupService(target, clock);
+
+    await service.replace(service.read(JSON.stringify(backup)));
+
+    expect(backup.tables.garden_items.map((item) => item.species_id)).toContain('tomato');
+    expect(await dump(target)).toEqual(await dump(source));
+  });
+
+  it("un export d'avant le lien au catalogue s'importe, ses plantes sans espèce du catalogue", async () => {
+    const { db: source, backup } = await exampleBackup();
+    const before = tampered(backup, (file) => {
+      file.schemaVersion = 3;
+      file.tables.garden_items.forEach((item: any) => delete item.species_id);
+    });
+    const target = await createTestDb();
+    const service = createBackupService(target, clock);
+
+    const read = service.read(before);
+    await service.replace(read);
+
+    expect(read.tables.garden_items.every((item) => item.species_id === null)).toBe(true);
+    expect(await dump(target)).toEqual(await dump(source));
+  });
+
+  it("un export d'une version plus récente du catalogue s'importe avec une espèce encore inconnue ici", async () => {
+    const { backup } = await exampleBackup();
+    const newer = tampered(backup, (file) => {
+      file.tables.garden_items.find((row: any) => row.item_type === 'Plant').species_id = 'future-species';
+    });
+    const target = await createTestDb();
+    const service = createBackupService(target, clock);
+
+    await service.replace(service.read(newer));
+
+    expect(await target.all('SELECT species_id FROM garden_items WHERE species_id IS NOT NULL')).toEqual([
+      { species_id: 'future-species' },
+    ]);
+  });
+
   it('l’import remplace le jardin actuel, y compris ce qui a été ajouté depuis l’export', async () => {
     const { db, backup } = await exampleBackup();
     const before = await dump(db);
@@ -187,6 +231,11 @@ describe('sauvegarde', () => {
         () => tampered(backup, (file) => (file.tables.garden_items[0].quantity = '3')),
         /« quantity » manque ou n'a pas le bon type/,
       ],
+      [
+        'avec une espèce du catalogue qui n’est pas un texte',
+        () => tampered(backup, (file) => (file.tables.garden_items[0].species_id = 7)),
+        /« species_id » manque ou n'a pas le bon type/,
+      ],
       ['avec deux jardins', () => tampered(backup, (file) => file.tables.gardens.push(file.tables.gardens[0])), /un et un seul jardin/],
     ])('%s', (_, file, detail) => {
       expect(readError(file())).toMatchObject(refusedFile(detail));
@@ -233,6 +282,11 @@ describe('sauvegarde', () => {
         'une entrée qui vise un élément absent',
         (file: any) => (file.tables.journal_entries.find((row: any) => row.item_id !== null).item_id = 'inconnu'),
         /: L'élément inconnu n'existe pas\.$/,
+      ],
+      [
+        'un tas de bois avec une espèce du catalogue',
+        (file: any) => (pile(file).species_id = 'apple-tree'),
+        /Un élément porte les champs d'un seul type : un tas de bois/,
       ],
       [
         'un stock de bois sous zéro',

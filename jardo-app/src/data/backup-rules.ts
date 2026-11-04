@@ -51,7 +51,7 @@ function ensureUnique(seen: Set<string>, key: string, message: string) {
   seen.add(key);
 }
 
-const plantColumns = ['species', 'variety', 'quantity', 'quantity_unit', 'sown_date', 'planted_date'] as const;
+const plantColumns = ['species', 'species_id', 'variety', 'quantity', 'quantity_unit', 'sown_date', 'planted_date'] as const;
 const woodPileColumns = ['wood_species', 'initial_steres', 'log_length_cm', 'cut_date', 'drying_months'] as const;
 
 const itemLabel = (item: Item) =>
@@ -131,6 +131,7 @@ export function checkBackupRules(tables: BackupTables): void {
         validatePlant({
           name: item.name,
           species: item.species,
+          speciesId: item.species_id,
           variety: item.variety,
           quantity: item.quantity,
           quantityUnit: item.quantity_unit as QuantityUnit,

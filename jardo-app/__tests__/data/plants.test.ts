@@ -315,3 +315,71 @@ describe('PlantService (ajouts au port)', () => {
     expect((await db.first<{ space_id: string }>('SELECT space_id FROM journal_entries'))!.space_id).toBe(potager.id);
   });
 });
+
+describe('PlantService (espèce du catalogue)', () => {
+  const tomato = (spaceId: string): PlantInput => ({ name: 'Tomates', species: 'Tomate', speciesId: 'tomato', spaceId });
+
+  it("Une plante créée depuis le catalogue garde l'espèce et son nom", async () => {
+    const { service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+
+    const plant = await service.create(tomato(potager.id));
+
+    expect([plant.species, plant.speciesId]).toEqual(['Tomate', 'tomato']);
+    expect((await service.getAll())[0].speciesId).toBe('tomato');
+  });
+
+  it("Une plante sans espèce du catalogue n'en a pas", async () => {
+    const { service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+
+    expect((await service.create(newPlant(potager.id))).speciesId).toBeNull();
+    expect((await service.create({ ...newPlant(potager.id), speciesId: ' ' })).speciesId).toBeNull();
+  });
+
+  it("Modifier la plante change l'espèce, ou la retire en gardant le texte", async () => {
+    const { service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const plant = await service.create(tomato(potager.id));
+
+    const changed = await service.update(plant.id, { ...tomato(potager.id), species: 'Tomate cerise', speciesId: 'tomato' });
+    const zucchini = await service.update(plant.id, { ...tomato(potager.id), species: 'Courgette', speciesId: 'zucchini' });
+    const freeText = await service.update(plant.id, { ...tomato(potager.id), species: 'Tomate ancienne', speciesId: null });
+
+    expect([changed.species, changed.speciesId]).toEqual(['Tomate cerise', 'tomato']);
+    expect(zucchini.speciesId).toBe('zucchini');
+    expect([freeText.species, freeText.speciesId]).toEqual(['Tomate ancienne', null]);
+  });
+
+  it("Une espèce absente du catalogue est refusée, à la création comme à la modification", async () => {
+    const { db, service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const plant = await service.create(tomato(potager.id));
+
+    await expect(service.create({ ...tomato(potager.id), speciesId: 'mandrake' })).rejects.toMatchObject(refused);
+    await expect(service.update(plant.id, { ...tomato(potager.id), speciesId: 'mandrake' })).rejects.toMatchObject(refused);
+
+    expect(await db.all('SELECT species_id FROM garden_items')).toEqual([{ species_id: 'tomato' }]);
+  });
+
+  it("L'espèce inconnue d'une sauvegarde plus récente reste à la plante qu'on modifie", async () => {
+    const { db, service, addSpace, addPlant } = await setup();
+    const potager = await addSpace('Potager');
+    const plant = await addPlant(potager, null, 'Tomates');
+    await db.run("UPDATE garden_items SET species_id = 'future-species' WHERE id = ?", [plant.id]);
+
+    const updated = await service.update(plant.id, { ...tomato(potager.id), speciesId: 'future-species' });
+
+    expect(updated.speciesId).toBe('future-species');
+  });
+
+  it("L'espèce est rendue par champ quand elle est trop longue", async () => {
+    const { service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+
+    await expect(service.create({ ...tomato(potager.id), speciesId: 'x'.repeat(101) })).rejects.toMatchObject({
+      status: 400,
+      problem: { errors: { SpeciesId: expect.any(Array) } },
+    });
+  });
+});
