@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, ty
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
+  useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -173,7 +174,7 @@ export function MapViewport({ scene, labels, free, selected, onSelect, recenter 
   return (
     <View style={[styles.frame, styles.clip, { backgroundColor: scene.background }]}>
       <GestureDetector gesture={gesture}>
-        <View style={styles.frame} onLayout={onLayout} collapsable={false}>
+        <View style={styles.frame} onLayout={onLayout} collapsable={false} aria-hidden>
           {size && (
             <SkiaScene
               scene={scene}
@@ -187,7 +188,7 @@ export function MapViewport({ scene, labels, free, selected, onSelect, recenter 
         </View>
       </GestureDetector>
       {fit && (
-        <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        <View style={styles.overlay}>
           {(Object.entries(labels) as [SlotKey, string][]).map(([key, text]) => (
             <MapLabel
               key={key}
@@ -221,6 +222,15 @@ type MapLabelProps = {
 /** Étiquette d'un emplacement, de taille fixe, dont la pointe suit la carte. */
 function MapLabel({ text, anchor, minScale, view, selected, onPress }: MapLabelProps) {
   const styles = useLabelStyles();
+  // Une étiquette cachée par l'échelle reste dans l'arbre : sans ça, le lecteur d'écran et le clavier l'atteignent.
+  const [visible, setVisible] = useState(minScale === 0);
+  useAnimatedReaction(
+    () => view.scale.get() >= minScale,
+    (shown, previous) => {
+      if (shown !== previous) scheduleOnRN(setVisible, shown);
+    },
+    [minScale],
+  );
   const animatedStyle = useAnimatedStyle(() => {
     const s = view.scale.get();
     const shown = s >= minScale;
@@ -235,13 +245,19 @@ function MapLabel({ text, anchor, minScale, view, selected, onPress }: MapLabelP
   });
 
   return (
-    <Animated.View style={[styles.label, animatedStyle]} pointerEvents="box-none">
+    <Animated.View
+      style={[styles.label, animatedStyle]}
+      accessibilityElementsHidden={!visible}
+      importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
+      aria-hidden={!visible}>
       <Pressable
         onPress={onPress}
+        tabIndex={visible ? 0 : -1}
         accessibilityRole="button"
         accessibilityLabel={`Ouvrir ${text}`}
+        hitSlop={{ top: 11, bottom: 11, left: 8, right: 8 }}
         style={[styles.pill, selected && styles.pillSelected]}>
-        <Text style={[styles.text, selected && styles.textSelected]} numberOfLines={1}>
+        <Text style={[styles.text, selected && styles.textSelected]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
           {text}
         </Text>
       </Pressable>
@@ -252,6 +268,7 @@ function MapLabel({ text, anchor, minScale, view, selected, onPress }: MapLabelP
 
 const styles = StyleSheet.create({
   frame: { flex: 1, overflow: 'hidden' },
+  overlay: { ...StyleSheet.absoluteFill, pointerEvents: 'box-none' },
   // Sur le web, un conteneur overflow: hidden défile quand une étiquette qui dépasse reçoit le
   // focus, et décale toute la carte ; overflow: clip rogne sans jamais défiler.
   clip: Platform.OS === 'web' ? ({ overflow: 'clip' } as unknown as ViewStyle) : {},
@@ -264,6 +281,7 @@ const useLabelStyles = createStyles(({ colors, fonts, typography, spacing }) => 
     top: 0,
     width: LABEL_WIDTH,
     height: LABEL_HEIGHT,
+    pointerEvents: 'box-none',
     alignItems: 'center',
     justifyContent: 'flex-end',
   },

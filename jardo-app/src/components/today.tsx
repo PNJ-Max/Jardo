@@ -56,6 +56,9 @@ export function TodaySky({ date, phrase, weather, sunny }: TodaySkyProps) {
   );
 }
 
+/** Sept colonnes se partagent la largeur : au-delà, les initiales des jours se touchent. */
+const maxDayScale = 1.3;
+
 const weekdayInitial = (date: DateOnly) =>
   capitalize(parseDateOnly(date).toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', ''));
 
@@ -91,13 +94,19 @@ export function WeekStrip({
             <Pressable
               onPress={() => onSelect(day.date)}
               accessibilityRole="tab"
-              accessibilityState={{ selected: isSelected }}
+              aria-selected={isSelected}
               accessibilityLabel={[index === 0 ? "Aujourd'hui" : longDay(day.date), planned, weather && spokenWeather(weather).toLocaleLowerCase('fr')]
                 .filter(Boolean)
                 .join(', ')}
               style={({ pressed }) => [styles.dayPill, isSelected && styles.dayPillSelected, pressed && { opacity: 0.6 }]}>
-              <Text style={[styles.dayName, { color: isSelected ? ink : colors.textMuted }]}>{weekdayInitial(day.date)}</Text>
-              <Text style={[styles.dayNumber, { color: ink }]}>{parseDateOnly(day.date).getDate()}</Text>
+              <Text
+                maxFontSizeMultiplier={maxDayScale}
+                style={[styles.dayName, { color: isSelected ? ink : colors.textMuted }]}>
+                {weekdayInitial(day.date)}
+              </Text>
+              <Text maxFontSizeMultiplier={maxDayScale} style={[styles.dayNumber, { color: ink }]}>
+                {parseDateOnly(day.date).getDate()}
+              </Text>
             </Pressable>
             <View
               style={[
@@ -197,20 +206,20 @@ type SpaceGroupsProps = { groups: SpaceGroup[]; row: RenderTask; water?: Water; 
 /** Une surface par espace, coiffée de sa vignette et de son nom ; la pluie notée sur ceux qu'on arrose dehors. */
 export function SpaceGroups({ groups, row, water, rainNote }: SpaceGroupsProps) {
   const styles = useStyles();
+  const stacked = useWindowDimensions().fontScale > 1.3;
 
   return groups.map((group) => {
     const waterings = water ? dueWaterings(water.due, group.spaceId) : [];
     return (
       <Group key={group.spaceId}>
-        <View style={styles.spaceHeader}>
+        <View style={[styles.spaceHeader, stacked && styles.spaceHeaderStacked]}>
           <Pressable
             onPress={() => router.push(`/space/${group.spaceId}`)}
             accessibilityRole="link"
+            accessibilityLabel={`${group.spaceName}, ${group.tasks.length} ${group.tasks.length > 1 ? 'tâches' : 'tâche'}`}
             style={({ pressed }) => [styles.spaceLink, pressed && styles.pressed]}>
             <SpaceVignette kind={group.spaceKind} width={56} height={44} padding={2} />
-            <Text style={styles.spaceName} numberOfLines={1}>
-              {group.spaceName}
-            </Text>
+            <Text style={styles.spaceName}>{group.spaceName}</Text>
             <Text style={styles.spaceCount}>{group.tasks.length}</Text>
           </Pressable>
           {water && waterings.length >= 2 && (
@@ -218,6 +227,7 @@ export function SpaceGroups({ groups, row, water, rainNote }: SpaceGroupsProps) 
               count={waterings.length}
               spaceName={group.spaceName}
               disabled={water.busy}
+              stacked={stacked}
               onPress={() => water.onWaterAll(group, waterings)}
             />
           )}
@@ -229,10 +239,10 @@ export function SpaceGroups({ groups, row, water, rainNote }: SpaceGroupsProps) 
   });
 }
 
-type WaterAllButtonProps = { count: number; spaceName: string; disabled: boolean; onPress: () => void };
+type WaterAllButtonProps = { count: number; spaceName: string; disabled: boolean; stacked: boolean; onPress: () => void };
 
-/** Pastille de l'eau dans l'en-tête de l'espace. */
-function WaterAllButton({ count, spaceName, disabled, onPress }: WaterAllButtonProps) {
+/** Pastille de l'eau dans l'en-tête de l'espace, sous son nom quand la police est agrandie. */
+function WaterAllButton({ count, spaceName, disabled, stacked, onPress }: WaterAllButtonProps) {
   const { colors } = useTheme();
   const styles = useStyles();
 
@@ -244,9 +254,11 @@ function WaterAllButton({ count, spaceName, disabled, onPress }: WaterAllButtonP
       accessibilityLabel={`Tout arroser : ${spaceName}, ${count} arrosages`}
       accessibilityHint="Note un seul arrosage sur l'espace, qui vaut pour ses zones et ses éléments"
       hitSlop={8}
-      style={({ pressed }) => [styles.waterAll, (pressed || disabled) && { opacity: 0.6 }]}>
-      <Ionicons name="water" size={16} color={colors.water} />
-      <Text style={styles.waterAllText}>Tout arroser</Text>
+      style={({ pressed }) => [styles.waterAll, stacked && styles.waterAllStacked, (pressed || disabled) && { opacity: 0.6 }]}>
+      <Ionicons aria-hidden name="water" size={16} color={colors.water} />
+      <Text maxFontSizeMultiplier={1.3} style={styles.waterAllText}>
+        Tout arroser
+      </Text>
     </Pressable>
   );
 }
@@ -264,13 +276,13 @@ export function MonthAhead({ tasks, row }: { tasks: GardenTask[]; row: RenderTas
         <Pressable
           onPress={() => setOpen(!open)}
           accessibilityRole="button"
-          accessibilityState={{ expanded: open }}
+          aria-expanded={open}
           style={({ pressed }) => [styles.monthLine, pressed && styles.pressed]}>
-          <Ionicons name="calendar-outline" size={22} color={colors.primary} />
+          <Ionicons aria-hidden name="calendar-outline" size={22} color={colors.primary} />
           <Text style={styles.monthSummary} numberOfLines={open ? undefined : 2}>
             {monthSummary(tasks)}
           </Text>
-          <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+          <Ionicons aria-hidden name={open ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
         </Pressable>
         {open && tasks.map((task) => row(task, `${targetLabel(task)}, ${formatDate(task.nextDueDate)}`))}
       </Group>
@@ -295,6 +307,7 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
   late: { color: colors.danger, fontFamily: fonts.bodyMedium },
   pressed: { backgroundColor: colors.surfaceSunken },
   spaceHeader: { flexDirection: 'row', alignItems: 'center' },
+  spaceHeaderStacked: { flexDirection: 'column', alignItems: 'stretch' },
   spaceLink: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, paddingHorizontal: 12 },
   spaceName: { ...typography.section, color: colors.text, flex: 1 },
   spaceCount: { ...typography.body, color: colors.textMuted, fontVariant: ['tabular-nums'] },
@@ -302,7 +315,7 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    height: 36,
+    minHeight: 36,
     marginRight: 12,
     paddingHorizontal: 12,
     borderRadius: 18,
@@ -310,6 +323,7 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
     borderColor: colors.water,
     backgroundColor: colors.waterTint,
   },
+  waterAllStacked: { alignSelf: 'flex-start', marginLeft: 12, marginBottom: 8 },
   waterAllText: { ...typography.caption, fontFamily: fonts.heading, fontSize: 14, lineHeight: 19, color: colors.water },
   monthLine: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 14 },
   monthSummary: { ...typography.body, color: colors.text, flex: 1 },

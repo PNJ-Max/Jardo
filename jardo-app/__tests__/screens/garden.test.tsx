@@ -145,6 +145,16 @@ describe('écran Jardin avec carte', () => {
     expect(screen.queryByText('Tunnel')).not.toBeOnTheScreen();
   });
 
+  it("nomme les commandes de la carte et les puces hors carte, avec une cible de 48 dp", async () => {
+    const { services } = await withMap();
+    await renderScreen(<GardenScreen />, services);
+
+    expect(await screen.findByRole('header', { name: 'Hors carte' })).toBeOnTheScreen();
+    const recenter = screen.getByRole('button', { name: 'Recentrer la carte' });
+    expect(recenter).toHaveProp('hitSlop', 4);
+    expect(screen.getByRole('button', { name: 'Ouvrir Serre' })).toHaveProp('hitSlop', { top: 4, bottom: 4 });
+  });
+
   it('bascule vers la liste des espaces, puis revient à la carte', async () => {
     const { services } = await withMap();
     await renderScreen(<GardenScreen />, services);

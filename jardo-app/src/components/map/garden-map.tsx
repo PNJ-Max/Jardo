@@ -53,8 +53,9 @@ export function GardenMapView({ map, layout }: { map: GardenMap; layout: DrawnLa
           onPress={() => setRecenter((n) => n + 1)}
           accessibilityRole="button"
           accessibilityLabel="Recentrer la carte"
+          hitSlop={4}
           style={({ pressed }) => [styles.round, pressed && { opacity: 0.7 }]}>
-          <Ionicons name="scan-outline" size={20} color={theme.colors.primary} />
+          <Ionicons aria-hidden name="scan-outline" size={20} color={theme.colors.primary} />
         </Pressable>
       </View>
       <OffMapBand map={map} />
@@ -73,7 +74,9 @@ function OffMapBand({ map }: { map: GardenMap }) {
 
   return (
     <View style={styles.band}>
-      <Text style={styles.bandTitle}>Hors carte</Text>
+      <Text style={styles.bandTitle} accessibilityRole="header">
+        Hors carte
+      </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         {targets.map((target) => (
           <Pressable
@@ -81,9 +84,10 @@ function OffMapBand({ map }: { map: GardenMap }) {
             onPress={() => router.push(target.href)}
             accessibilityRole="button"
             accessibilityLabel={`Ouvrir ${target.spaceName ? `${target.name}, ${target.spaceName}` : target.name}`}
+            hitSlop={{ top: 4, bottom: 4 }}
             style={({ pressed }) => [styles.chip, pressed && { opacity: 0.7 }]}>
-            <Ionicons name={spaceKinds[target.kind].icon} size={16} color={colors.primary} />
-            <Text style={styles.chipText} numberOfLines={1}>
+            <Ionicons aria-hidden name={spaceKinds[target.kind].icon} size={16} color={colors.primary} />
+            <Text style={styles.chipText}>
               {target.name}
               {target.spaceName && <Text style={styles.chipContext}> · {target.spaceName}</Text>}
             </Text>
