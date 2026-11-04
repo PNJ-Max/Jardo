@@ -57,8 +57,8 @@ export default function SetupSpacesScreen() {
             />
             {option.value === 'VegetableGarden' && hasVegetableGarden && (
               <CheckRow
-                label="Ajouter quatre carrés"
-                hint="Des zones « Carré 1 » à « Carré 4 », dessinées dans le potager."
+                label="Ajouter quatre parcelles"
+                hint="Des zones « Parcelle 1 » à « Parcelle 4 », dessinées dans le potager."
                 checked={beds}
                 onPress={() => setBeds(!beds)}
                 nested

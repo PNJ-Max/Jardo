@@ -16,7 +16,7 @@ sont retenus. Son second retour, après avoir parcouru l'app, a fait repenser l'
 Maxime aime, dans l'app actuelle, et la refonte n'y touche que par les jetons :
 
 - les onglets en haut des fiches (« beaucoup plus clair ») ;
-- l'onglet Contenu, avec ses carrés et ses rangs ;
+- l'onglet Contenu, avec ses parcelles et ses rangs ;
 - le journal et ses filtres ;
 - la carte, « mignonne », un peu simple mais très bien pour une V1.
 
@@ -106,7 +106,7 @@ Dans l'ordre où ils seront refaits.
    Bold 16, puis voyant et cible côte à côte. Le bouton « Fait » à droite.
 3. **Bouton « Fait »** : pastille de 40 de haut, contour `primary` et texte « Fait ». Au toucher,
    elle se remplit, la coche devient une pousse, une lueur `glow` s'étend, retour haptique, puis
-   la ligne se replie et le message « Noté au journal : arroser, Carré 2 » monte, avec
+   la ligne se replie et le message « Noté au journal : arroser, Parcelle 2 » monte, avec
    « Annuler » et « Ajouter une note ».
 4. **Ciel du jour** : en-tête d'Aujourd'hui, environ 150 de haut. Ciel `skyTop` fondu vers le
    fond, ligne d'horizon du jardin (maison, arbre, serre, haie), soleil le jour, fenêtres allumées
@@ -116,8 +116,8 @@ Dans l'ordre où ils seront refaits.
 5. **Vignette d'espace** : la scène isométrique du type d'espace. En tête de fiche (environ 230 de
    haut, bouton retour rond posé dessus, sans barre de navigation), en petit dans la liste des
    espaces et dans le choix du type.
-6. **Tuile de zone** : un carré de terre vu de dessus, bordé de bois, garni selon son contenu ;
-   « Ajouter une zone » est un carré vide en pointillés.
+6. **Tuile de zone** : une parcelle vue de dessus, bordée de bois, garnie selon son contenu ;
+   « Ajouter une zone » est une parcelle vide en pointillés.
 7. **Champs** : remplis (`surfaceSunken`), sans bordure, rayon 14, anneau `primary` de 2 au focus,
    erreur en anneau `danger`. Le bouton principal du formulaire est ancré en bas et dit ce qu'il
    fait (« Créer l'espace », « Enregistrer les modifications »). Le titre du formulaire est en
@@ -144,11 +144,11 @@ leur historique, et le savoir de son jardin par espace. C'est avec cela qu'on tr
    jour-là, à faire en avance si l'on veut ; aujourd'hui est choisi à l'ouverture. Remplace la
    section « Cette semaine ».
 3. **En retard** : à part, en tête, dans une surface bordée de `danger`. Les plus en retard
-   d'abord. La ligne dit de combien (« Carré 2, en retard de 2 jours »).
+   d'abord. La ligne dit de combien (« Parcelle 2, en retard de 2 jours »).
 4. **Aujourd'hui, par espace** : une surface par espace, coiffée de la vignette de l'espace et de
    son nom, l'espace le plus chargé d'abord. Dans un espace, l'arrosage d'abord, puis les autres
    interventions. La ligne ne répète pas l'échéance, puisque la section la donne : elle dit la
-   cible et le rythme (« Carré 1, tous les 3 jours »).
+   cible et le rythme (« Parcelle 1, tous les 3 jours »).
 5. **Dans le mois** : une ligne repliée qui nomme les tâches annuelles ou ponctuelles des trente
    prochains jours (« Tailler les pommiers, traitement d'hiver du verger ») ; elle s'ouvre sur
    leur liste. C'est le calendrier de saison du MVP, fait des tâches de l'utilisateur.
@@ -179,14 +179,14 @@ Toutes dessinées par le code avec `decor.ts`, comme la carte :
 
 | Illustration | Contenu | Où |
 |---|---|---|
-| Potager | Carrés surélevés, tomates, salades, rangs | Fiche, liste, choix du type |
+| Potager | Parcelles surélevées, tomates, salades, rangs | Fiche, liste, choix du type |
 | Verger | Deux pommiers | Idem |
 | Petits fruits | Rangs d'arbustes à baies | Idem |
 | Serre | Serre vitrée, semis | Idem |
 | Bois de chauffage | Tas de bûches | Idem |
 | Horizon | Maison, arbre, serre, haie, conifères | Ciel d'Aujourd'hui |
 | Jardin au repos | Banc, arbre, lampe | États vides |
-| Tuiles de zone | Carré vu de dessus, garni de 0 à n plantes | Contenu d'un espace |
+| Tuiles de zone | Parcelle vue de dessus, garnie de 0 à n plantes | Contenu d'un espace |
 
 Chaque scène est enregistrée une fois en `SkPicture` (`createPicture`, comme
 [`skia-scene-impl.tsx`](../jardo-app/src/components/map/skia-scene-impl.tsx)), mise en cache par

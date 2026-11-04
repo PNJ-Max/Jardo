@@ -37,14 +37,14 @@ describe('GardenMapService (port de GardenMapServiceTests.cs)', () => {
   it('Remplacer la carte renvoie les emplacements avec leurs noms', async () => {
     const { service, addSpace, addZone, map, slot } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
     const verger = await addSpace('Verger', 'Orchard');
 
-    const saved = await service.replace(map(slot('vegetable', potager), slot('bed-1', potager, carre), slot('orchard', verger)));
+    const saved = await service.replace(map(slot('vegetable', potager), slot('bed-1', potager, parcelle), slot('orchard', verger)));
 
     expect(saved.layout).toBe(layout);
     expect(saved.slots).toEqual([
-      { slotKey: 'bed-1', spaceId: potager.id, spaceName: 'Potager', spaceKind: 'VegetableGarden', zoneId: carre.id, zoneName: 'Carré 1' },
+      { slotKey: 'bed-1', spaceId: potager.id, spaceName: 'Potager', spaceKind: 'VegetableGarden', zoneId: parcelle.id, zoneName: 'Parcelle 1' },
       { slotKey: 'orchard', spaceId: verger.id, spaceName: 'Verger', spaceKind: 'Orchard', zoneId: null, zoneName: null },
       { slotKey: 'vegetable', spaceId: potager.id, spaceName: 'Potager', spaceKind: 'VegetableGarden', zoneId: null, zoneName: null },
     ]);
@@ -99,7 +99,7 @@ describe('GardenMapService (port de GardenMapServiceTests.cs)', () => {
     await expect(service.replace(map(slot('orchard', serre)))).rejects.toMatchObject(refused);
   });
 
-  it('Un carré demande une zone', async () => {
+  it('Une parcelle demande une zone', async () => {
     const { service, addSpace, map, slot } = await setup();
     const potager = await addSpace('Potager');
 
@@ -109,16 +109,16 @@ describe('GardenMapService (port de GardenMapServiceTests.cs)', () => {
   it("Un emplacement d'espace refuse une zone", async () => {
     const { service, addSpace, addZone, map, slot } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
 
-    await expect(service.replace(map(slot('vegetable', potager, carre)))).rejects.toMatchObject(refused);
+    await expect(service.replace(map(slot('vegetable', potager, parcelle)))).rejects.toMatchObject(refused);
   });
 
   it("Une zone d'un autre espace est refusée", async () => {
     const { service, addSpace, addZone, map, slot } = await setup();
     const potager = await addSpace('Potager');
     const autrePotager = await addSpace('Potager du fond');
-    const carreDuFond = await addZone(autrePotager, 'Carré 1');
+    const carreDuFond = await addZone(autrePotager, 'Parcelle 1');
 
     await expect(service.replace(map(slot('bed-1', potager, carreDuFond)))).rejects.toMatchObject(refused);
   });
@@ -134,9 +134,9 @@ describe('GardenMapService (port de GardenMapServiceTests.cs)', () => {
   it('Un espace ne prend pas deux emplacements', async () => {
     const { service, addSpace, addZone, map, slot } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
 
-    await expect(service.replace(map(slot('bed-1', potager, carre), slot('bed-2', potager, carre)))).rejects.toMatchObject(refused);
+    await expect(service.replace(map(slot('bed-1', potager, parcelle), slot('bed-2', potager, parcelle)))).rejects.toMatchObject(refused);
   });
 
   it('Un espace archivé ne se pose pas sur la carte', async () => {
@@ -173,13 +173,13 @@ describe('GardenMapService (port de GardenMapServiceTests.cs)', () => {
     expect((await service.get()).slots).toEqual([]);
   });
 
-  it('Supprimer une zone libère son carré sans toucher au potager', async () => {
+  it('Supprimer une zone libère sa parcelle sans toucher au potager', async () => {
     const { db, service, addSpace, addZone, map, slot } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
-    await service.replace(map(slot('vegetable', potager), slot('bed-1', potager, carre)));
+    const parcelle = await addZone(potager, 'Parcelle 1');
+    await service.replace(map(slot('vegetable', potager), slot('bed-1', potager, parcelle)));
 
-    await db.run('DELETE FROM zones WHERE id = ?', [carre.id]);
+    await db.run('DELETE FROM zones WHERE id = ?', [parcelle.id]);
 
     expect((await service.get()).slots.map((s) => s.slotKey)).toEqual(['vegetable']);
   });
@@ -210,10 +210,10 @@ describe('GardenMapService (ajouts au port)', () => {
   it('Le modèle maison de campagne accepte les mêmes emplacements', async () => {
     const { service, addSpace, addZone, slot } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
     const bois = await addSpace('Bûcher', 'Firewood');
 
-    const saved = await service.replace({ layout: countryHouse, slots: [slot('bed-1', potager, carre), slot('firewood', bois)] });
+    const saved = await service.replace({ layout: countryHouse, slots: [slot('bed-1', potager, parcelle), slot('firewood', bois)] });
 
     expect(saved.layout).toBe('country-house');
     expect(saved.slots.map((s) => s.slotKey)).toEqual(['bed-1', 'firewood']);
@@ -266,8 +266,8 @@ describe("GardenMapService.setup (l'assistant du premier lancement)", () => {
           name: 'Potager',
           kind: 'VegetableGarden',
           zones: [
-            { slotKey: 'bed-1', name: 'Carré 1' },
-            { slotKey: 'bed-2', name: 'Carré 2' },
+            { slotKey: 'bed-1', name: 'Parcelle 1' },
+            { slotKey: 'bed-2', name: 'Parcelle 2' },
           ],
         },
         { slotKey: 'orchard', name: 'Verger', kind: 'Orchard' },
@@ -276,8 +276,8 @@ describe("GardenMapService.setup (l'assistant du premier lancement)", () => {
 
     expect(saved.layout).toBe(countryHouse);
     expect(saved.slots.map(({ slotKey, spaceName, zoneName }) => [slotKey, spaceName, zoneName])).toEqual([
-      ['bed-1', 'Potager', 'Carré 1'],
-      ['bed-2', 'Potager', 'Carré 2'],
+      ['bed-1', 'Potager', 'Parcelle 1'],
+      ['bed-2', 'Potager', 'Parcelle 2'],
       ['orchard', 'Verger', null],
       ['vegetable', 'Potager', null],
     ]);
@@ -315,7 +315,7 @@ describe("GardenMapService.setup (l'assistant du premier lancement)", () => {
     await expect(
       service.setup({
         layout: countryHouse,
-        spaces: [{ slotKey: 'vegetable', name: 'Potager', kind: 'VegetableGarden', zones: [{ slotKey: 'greenhouse', name: 'Carré 1' }] }],
+        spaces: [{ slotKey: 'vegetable', name: 'Potager', kind: 'VegetableGarden', zones: [{ slotKey: 'greenhouse', name: 'Parcelle 1' }] }],
       }),
     ).rejects.toMatchObject(refused);
 

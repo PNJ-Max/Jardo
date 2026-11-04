@@ -192,7 +192,7 @@ function drawGarden(kit: Kit) {
       p.rect(xa, 3.2, Math.min(7.75, xa + 0.75), 16.6, 0, i % 2 ? pal.lawnB : pal.lawnA);
     }
     p.line([0.25, 3.2, 0], [7.75, 3.2, 0], pal.terraceLine, 1.2);
-    // Fond du jardin : gravier et parcelle du potager
+    // Fond du jardin : gravier et terrain du potager
     p.rect(0.25, 16.6, 7.75, 25, 0, pal.gravel);
     p.rect(0.25, 16.6, 7.75, 22.6, 0, pal.plot);
     p.line([0.25, 16.6, 0], [7.75, 16.6, 0], pal.edging, 1.4);

@@ -58,7 +58,7 @@ describe('SpaceService (port de SpaceServiceTests.cs)', () => {
   it('Le compteur d\'éléments ignore les éléments archivés', async () => {
     const { service, addSpace, addZone, addPlant } = await setup();
     const potager = await addSpace('Potager');
-    await addZone(potager, 'Carré 1');
+    await addZone(potager, 'Parcelle 1');
     await addPlant(potager, null, 'Tomate');
     await addPlant(potager, null, 'Radis', true);
 
@@ -91,7 +91,7 @@ describe('SpaceService (port de SpaceServiceTests.cs)', () => {
   it('Supprimer un espace vide emporte ses zones', async () => {
     const { service, addSpace, addZone, count } = await setup();
     const potager = await addSpace('Potager');
-    await addZone(potager, 'Carré 1');
+    await addZone(potager, 'Parcelle 1');
 
     await service.delete(potager.id);
 

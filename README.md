@@ -17,7 +17,7 @@ ce qui est à faire.
 Une tâche vise un espace, une zone ou un élément, avec un type d'intervention et un rythme :
 tous les N jours (arroser), chaque année à une date (tailler), ou une seule fois. L'app calcule
 son échéance à partir de la dernière intervention de même type notée au journal, sur la cible
-ou sur ce qui la contient : arroser le carré compte pour chacune de ses plantes. Faire une
+ou sur ce qui la contient : arroser la parcelle compte pour chacune de ses plantes. Faire une
 tâche, c'est noter l'intervention au journal.
 
 | État | Signification |

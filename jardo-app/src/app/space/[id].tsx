@@ -160,7 +160,7 @@ function EmptySpace({ space }: { space: Space }) {
       hint={
         firewood
           ? "Ajoutez un tas de bois, ou découpez d'abord l'espace en zones (abri, bûcher…)."
-          : "Ajoutez une plante, ou découpez d'abord l'espace en zones (carrés, rangs, planches…)."
+          : "Ajoutez une plante, ou découpez d'abord l'espace en zones (parcelles, rangs, planches…)."
       }>
       <Button
         title={firewood ? 'Ajouter un tas de bois' : 'Ajouter une plante'}
@@ -182,7 +182,7 @@ function ZonesSection({ spaceId, zones }: { spaceId: Id; zones: ReturnType<typeo
   if (zones.error) return <Text style={styles.error}>{zones.error.message}</Text>;
 
   const tiles: (Zone | 'add')[] = [...zones.data, 'add'];
-  // Deux carrés de front ne laissent plus de place au texte d'une grande police : un par ligne.
+  // Deux parcelles de front ne laissent plus de place au texte d'une grande police : une par ligne.
   const perRow = fontScale > 1.3 ? 1 : 2;
   const rows = Array.from({ length: Math.ceil(tiles.length / perRow) }, (_, i) => tiles.slice(i * perRow, (i + 1) * perRow));
 

@@ -89,7 +89,7 @@ function nextDue(
 }
 
 // La date de départ prime sur un historique plus ancien : une tâche créée pour une plante
-// arrivée dans un carré arrosé il y a dix jours ne naît pas en retard.
+// arrivée dans une parcelle arrosée il y a dix jours ne naît pas en retard.
 function nextEveryNDays(startDate: DateOnly, intervalDays: number | null, lastDoneOn: DateOnly | null): DateOnly {
   if (intervalDays === null || !Number.isInteger(intervalDays) || intervalDays < 1) {
     throw new RangeError("Une tâche tous les N jours a un intervalle d'au moins 1 jour.");

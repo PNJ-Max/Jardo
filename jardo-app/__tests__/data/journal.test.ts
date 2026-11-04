@@ -45,34 +45,34 @@ describe('JournalService (port de JournalServiceTests.cs)', () => {
   it('Un élément hors de la zone donnée est refusé', async () => {
     const { service, addSpace, addZone, addPlant } = await setup();
     const potager = await addSpace('Potager');
-    const carre1 = await addZone(potager, 'Carré 1');
-    const carre2 = await addZone(potager, 'Carré 2');
-    const tomate = await addPlant(potager, carre1, 'Tomate');
+    const parcelle1 = await addZone(potager, 'Parcelle 1');
+    const parcelle2 = await addZone(potager, 'Parcelle 2');
+    const tomate = await addPlant(potager, parcelle1, 'Tomate');
 
-    await expect(service.create(newEntry('Watering', potager.id, carre2.id, tomate.id))).rejects.toMatchObject(refused);
+    await expect(service.create(newEntry('Watering', potager.id, parcelle2.id, tomate.id))).rejects.toMatchObject(refused);
   });
 
   it('Une entrée sur un élément prend sa zone', async () => {
     const { service, addSpace, addZone, addPlant } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 2');
-    const carottes = await addPlant(potager, carre, 'Carottes');
+    const parcelle = await addZone(potager, 'Parcelle 2');
+    const carottes = await addPlant(potager, parcelle, 'Carottes');
 
     const entry = await service.create(newEntry('Sowing', potager.id, null, carottes.id));
 
-    expect(entry.zoneId).toBe(carre.id);
+    expect(entry.zoneId).toBe(parcelle.id);
     expect(entry.itemName).toBe('Carottes');
   });
 
   it('Chaque entrée porte le type de son élément', async () => {
     const { service, addSpace, addZone, addPlant, addWoodPile, addEntry } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
-    const tomate = await addPlant(potager, carre, 'Tomate');
+    const parcelle = await addZone(potager, 'Parcelle 1');
+    const tomate = await addPlant(potager, parcelle, 'Tomate');
     const bucher = await addSpace('Bûcher', 'Firewood');
     const chene = await addWoodPile(bucher, 'Chêne');
     await addEntry('Watering', addDays(today, -2), potager, null, tomate);
-    await addEntry('Watering', addDays(today, -1), potager, carre);
+    await addEntry('Watering', addDays(today, -1), potager, parcelle);
     await addEntry('Observation', today, bucher, null, chene);
 
     const journal = await service.getAll();
@@ -196,16 +196,16 @@ describe('JournalService (port de JournalServiceTests.cs)', () => {
   it("Le journal d'un élément comprend ce qui est noté sur sa zone et son espace", async () => {
     const { service, addSpace, addZone, addPlant, addEntry } = await setup();
     const potager = await addSpace('Potager');
-    const carre1 = await addZone(potager, 'Carré 1');
-    const carre2 = await addZone(potager, 'Carré 2');
-    const tomate = await addPlant(potager, carre1, 'Tomate');
-    const basilic = await addPlant(potager, carre1, 'Basilic');
+    const parcelle1 = await addZone(potager, 'Parcelle 1');
+    const parcelle2 = await addZone(potager, 'Parcelle 2');
+    const tomate = await addPlant(potager, parcelle1, 'Tomate');
+    const basilic = await addPlant(potager, parcelle1, 'Basilic');
     const verger = await addSpace('Verger', 'Orchard');
 
     const own = await addEntry('Pruning', today, potager, null, tomate);
-    const zone = await addEntry('Watering', today, potager, carre1);
+    const zone = await addEntry('Watering', today, potager, parcelle1);
     const space = await addEntry('Other', today, potager);
-    await addEntry('Watering', today, potager, carre2);
+    await addEntry('Watering', today, potager, parcelle2);
     await addEntry('Harvest', today, potager, null, basilic);
     await addEntry('Watering', today, verger);
 
@@ -217,18 +217,18 @@ describe('JournalService (port de JournalServiceTests.cs)', () => {
   it("Le journal d'une zone comprend ses éléments et ce qui est noté sur son espace", async () => {
     const { service, addSpace, addZone, addPlant, addEntry } = await setup();
     const potager = await addSpace('Potager');
-    const carre1 = await addZone(potager, 'Carré 1');
-    const carre2 = await addZone(potager, 'Carré 2');
-    const tomate = await addPlant(potager, carre1, 'Tomate');
+    const parcelle1 = await addZone(potager, 'Parcelle 1');
+    const parcelle2 = await addZone(potager, 'Parcelle 2');
+    const tomate = await addPlant(potager, parcelle1, 'Tomate');
     const rhubarbe = await addPlant(potager, null, 'Rhubarbe');
 
     const item = await addEntry('Harvest', today, potager, null, tomate);
-    const zone = await addEntry('Watering', today, potager, carre1);
+    const zone = await addEntry('Watering', today, potager, parcelle1);
     const space = await addEntry('Watering', today, potager);
-    await addEntry('Watering', today, potager, carre2);
+    await addEntry('Watering', today, potager, parcelle2);
     await addEntry('Watering', today, potager, null, rhubarbe);
 
-    const journal = await service.getAll({ zoneId: carre1.id });
+    const journal = await service.getAll({ zoneId: parcelle1.id });
 
     expect(journal.map((entry) => entry.id).sort()).toEqual([item, zone, space].sort());
   });
@@ -236,9 +236,9 @@ describe('JournalService (port de JournalServiceTests.cs)', () => {
   it('Le journal se lit pour une seule cible', async () => {
     const { service, addSpace, addZone } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
 
-    await expect(service.getAll({ spaceId: potager.id, zoneId: carre.id })).rejects.toMatchObject(refused);
+    await expect(service.getAll({ spaceId: potager.id, zoneId: parcelle.id })).rejects.toMatchObject(refused);
   });
 
   it('Le journal d\'une cible inexistante lève NotFound', async () => {
@@ -339,12 +339,12 @@ describe('JournalService : règles que JournalServiceTests.cs ne couvrait pas', 
   it('Une entrée se lit, se corrige vers une autre cible et se supprime', async () => {
     const { service, addSpace, addZone, count } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
     const entry = await service.create(newEntry('Watering', potager.id));
 
-    const moved = await service.update(entry.id, newEntry('Watering', potager.id, carre.id));
+    const moved = await service.update(entry.id, newEntry('Watering', potager.id, parcelle.id));
     expect(await service.getById(entry.id)).toEqual(moved);
-    expect(moved).toMatchObject({ zoneId: carre.id, zoneName: 'Carré 1', createdAt: entry.createdAt });
+    expect(moved).toMatchObject({ zoneId: parcelle.id, zoneName: 'Parcelle 1', createdAt: entry.createdAt });
 
     await service.delete(entry.id);
     expect(await count('journal_entries')).toBe(0);

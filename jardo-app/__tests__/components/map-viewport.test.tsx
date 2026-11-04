@@ -65,12 +65,12 @@ describe('MapViewport', () => {
       expect(frame).toHaveProp('aria-hidden', true);
     });
 
-    it("laisse hors d'atteinte l'étiquette d'un carré tant que la carte n'est pas assez zoomée", async () => {
-      await renderLabelled({ orchard: 'Verger', 'bed-1': 'Carré 1' });
+    it("laisse hors d'atteinte l'étiquette d'une parcelle tant que la carte n'est pas assez zoomée", async () => {
+      await renderLabelled({ orchard: 'Verger', 'bed-1': 'Parcelle 1' });
 
       expect(screen.getByRole('button', { name: 'Ouvrir Verger' })).toBeOnTheScreen();
-      expect(screen.queryByRole('button', { name: 'Ouvrir Carré 1' })).not.toBeOnTheScreen();
-      expect(screen.getByRole('button', { name: 'Ouvrir Carré 1', includeHiddenElements: true })).toHaveProp('tabIndex', -1);
+      expect(screen.queryByRole('button', { name: 'Ouvrir Parcelle 1' })).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Ouvrir Parcelle 1', includeHiddenElements: true })).toHaveProp('tabIndex', -1);
     });
   });
 

@@ -46,7 +46,7 @@ entités décrites ici.
 
 ### Zone
 
-Subdivision facultative d'un espace : carré, planche, rang. Nom, description, unique dans son
+Subdivision facultative d'un espace : parcelle, planche, rang. Nom, description, unique dans son
 espace. La zone d'aujourd'hui garde son nom mais descend d'un niveau : elle n'est plus la
 racine du jardin.
 
@@ -64,7 +64,7 @@ pointer vers une seule table, et SQLite s'en accommode sans jointure. Deux types
   d'espace : « 3 pommiers Golden » est une `Plant` de quantité 3 pieds, « 1 ligne de carottes »
   une `Plant` de quantité 1 rang, et le pommier qu'on veut suivre seul une `Plant` de quantité
   1. La quantité est strictement positive ; en pieds, elle est entière. Une culture de potager
-  est archivée en fin de saison : l'historique par carré reste consultable. Le comportement
+  est archivée en fin de saison : l'historique par parcelle reste consultable. Le comportement
   propre au verger vient du type d'espace, pas d'une entité à part.
   Une `Plant` peut aussi désigner une espèce du [catalogue](etude-catalogue-especes.md)
   (`SpeciesId`, facultatif). Le texte d'espèce reste celui qu'on affiche. Une espèce qu'on choisit
@@ -119,8 +119,8 @@ chauffage, les soins aux plantes (arrosage à récolte) que dans un espace qui a
 plantes ; observation et « autre » se notent partout. Un espace ne change pas de type si son
 journal contient des entrées que le nouveau type refuse.
 
-**Cible** : un espace obligatoire, plus une zone ou un élément facultatifs. « Désherber le
-carré 2 » vise une zone, « tailler le pommier » un élément, « tondre » tout l'espace. Le
+**Cible** : un espace obligatoire, plus une zone ou un élément facultatifs. « Désherber la
+parcelle 2 » vise une zone, « tailler le pommier » un élément, « tondre » tout l'espace. Le
 journal d'un espace se lit donc sans jointure. La cohérence est garantie à l'écriture : la zone
 et l'élément appartiennent à l'espace, et l'élément est dans la zone si les deux sont donnés.
 Une entrée sur un élément situé dans une zone prend cette zone d'office, pour que le journal
@@ -134,15 +134,15 @@ et on en crée un nouveau. Une cible archivée (élément ou espace) ne reçoit 
 entrée ; ses entrées existantes restent corrigeables.
 
 **Règle d'application : une intervention notée sur une zone ou sur un espace vaut pour les
-éléments qu'ils contiennent.** « Arroser le carré 2 » compte comme arrosage de chaque plante du
-carré, « arroser le verger » de chaque arbre du verger, zones comprises. L'élément est pris là
+éléments qu'ils contiennent.** « Arroser la parcelle 2 » compte comme arrosage de chaque plante de la
+parcelle, « arroser le verger » de chaque arbre du verger, zones comprises. L'élément est pris là
 où il se trouve au moment de la lecture ; on ne garde pas l'historique de ses déplacements. La
 règle sert :
 
 - à l'échéance des tâches, pour tout type d'intervention (`LatestInterventions`) : la dernière
   intervention qui vaut pour un élément est la plus récente de celles notées sur lui, sur sa
   zone et sur tout son espace ; pour une zone, sur elle et sur tout son espace ; pour un
-  espace, sur lui seul. Arroser une plante n'arrose pas son carré ;
+  espace, sur lui seul. Arroser une plante n'arrose pas sa parcelle ;
 - à la lecture du journal : celui d'un élément montre ses entrées et celles de sa zone et de
   son espace ; celui d'une zone, ses entrées, celles de ses éléments et celles de tout
   l'espace ; celui d'un espace, tout ce qui s'y est fait.
@@ -180,7 +180,7 @@ d'application du journal :
 
 - **Tous les N jours** : un historique plus ancien que la date de départ ne fait pas naître la
   tâche en retard. C'est ce qui remplace l'ancienne règle « une plantation relance le décompte
-  d'arrosage » : une plante arrivée dans un carré arrosé il y a dix jours reçoit une tâche qui
+  d'arrosage » : une plante arrivée dans une parcelle arrosée il y a dix jours reçoit une tâche qui
   part d'aujourd'hui.
 - **Chaque année : une intervention compte pour la date anniversaire si elle est faite au plus
   30 jours avant**, ou n'importe quand après (en retard). Tailler le 25 janvier fait la taille
@@ -263,7 +263,7 @@ n'écrit donc **aucun script de reprise de données**.
 
 - On ajoute de nouvelles migrations EF Core, sans réécrire l'historique.
 - À chaque étape, la base de dev est recréée (supprimer `Jardo.Api/jardo.db`) et `DbSeeder`
-  est réécrit pour un jardin d'exemple complet : un potager en carrés, un verger, des petits
+  est réécrit pour un jardin d'exemple complet : un potager en parcelles, un verger, des petits
   fruits, un tas de bois.
 - Les tests suivent chaque étape dans la même PR.
 
