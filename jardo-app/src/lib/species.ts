@@ -1,5 +1,21 @@
-import { fortnights, type Fortnight, type FortnightRange, type PlantingKind, type PlantingWindow } from '@/domain/species';
+import type { JournalEntryKind } from '@/api/types';
+import {
+  fortnights,
+  type ActiveWindow,
+  type CalendarRow,
+  type Climate,
+  type Exposure,
+  type Fortnight,
+  type FortnightRange,
+  type PlantingKind,
+  type PlantingWindow,
+  type Species,
+  type SpeciesCategory,
+  type WindowKind,
+} from '@/domain/species';
 import type { SpaceKind } from '@/domain/types';
+
+// Le vocabulaire du catalogue d'espèces affiché à l'écran.
 
 const monthNames = [
   'janvier',
@@ -16,16 +32,40 @@ const monthNames = [
   'décembre',
 ];
 
+/** `label` nomme la fenêtre au calendrier, `verb` dit quoi faire, `icon` est son pictogramme. */
+export const windowKindLabels: Record<WindowKind, { label: string; verb: string; icon: JournalEntryKind }> = {
+  sowIndoors: { label: 'Semis sous abri', verb: 'Semer sous abri', icon: 'Sowing' },
+  sowOutdoors: { label: 'Semis en place', verb: 'Semer en place', icon: 'Sowing' },
+  plant: { label: 'Plantation', verb: 'Planter', icon: 'Planting' },
+  harvest: { label: 'Récolte', verb: 'Récolter', icon: 'Harvest' },
+  prune: { label: 'Taille', verb: 'Tailler', icon: 'Pruning' },
+};
+
+export const categoryLabels: Record<SpeciesCategory, string> = {
+  Vegetable: 'Légume',
+  Herb: 'Aromatique',
+  FruitTree: 'Fruitier',
+  SmallFruit: 'Petit fruit',
+};
+
+export const exposureLabels: Record<Exposure, string> = {
+  Sun: 'Plein soleil',
+  PartShade: 'Mi-ombre',
+  Shade: 'Ombre',
+};
+
+export const climateNames: Record<Climate, string> = {
+  Mediterranean: 'climat méditerranéen',
+  Mild: 'climat doux',
+  Temperate: 'climat tempéré',
+  Cool: 'climat frais',
+  Mountain: 'climat de montagne',
+};
+
 const toDo: Record<PlantingKind, string> = {
   sowIndoors: 'À semer sous abri',
   sowOutdoors: 'À semer',
   plant: 'À planter',
-};
-
-const period: Record<PlantingKind, string> = {
-  sowIndoors: 'Semis sous abri',
-  sowOutdoors: 'Semis en place',
-  plant: 'Plantation',
 };
 
 const suggestionTitles: Record<SpaceKind, string> = {
@@ -44,30 +84,75 @@ function parts(fortnight: Fortnight) {
   return { month: monthNames[Math.floor(index / 2)], firstHalf: index % 2 === 0 };
 }
 
+/** Une quinzaine seule : `Mar1` → « début mars », `Mar2` → « fin mars ». */
+export function formatFortnight(fortnight: Fortnight): string {
+  const { month, firstHalf } = parts(fortnight);
+  return `${firstHalf ? 'début' : 'fin'} ${month}`;
+}
+
+/** Le début d'une plage : `Mar1` → « début mars », `Mar2` → « mi-mars », qui commence le 16. */
+function rangeStart(fortnight: Fortnight) {
+  const { month, firstHalf } = parts(fortnight);
+  return firstHalf ? `début ${month}` : `mi-${month}`;
+}
+
+/** La fin d'une plage : `Mar1` → « mi-mars », qui finit le 15, `Mar2` → « fin mars ». */
+function rangeEnd(fortnight: Fortnight) {
+  const { month, firstHalf } = parts(fortnight);
+  return firstHalf ? `mi-${month}` : `fin ${month}`;
+}
+
+/** « de début mars à mi-avril », ou la quinzaine seule. */
+export function formatRange({ from, to }: FortnightRange): string {
+  return from === to ? formatFortnight(from) : `de ${rangeStart(from)} à ${rangeEnd(to)}`;
+}
+
+/** Ce que le calendrier dessiné montre, pour le lecteur d'écran. */
+export function calendarSummary(rows: CalendarRow[]): string {
+  return rows.map(({ kind, ranges }) => `${windowKindLabels[kind].label} : ${ranges.map(formatRange).join(', puis ')}.`).join(' ');
+}
+
+/** « Récolter jusqu'à mi-novembre » */
+export function formatActiveWindow({ kind, range }: ActiveWindow): string {
+  return `${windowKindLabels[kind].verb} jusqu'à ${rangeEnd(range.to)}`;
+}
+
 /** « de février », « d'avril », « de mi-juillet » */
 const fromText = (label: string) => (/^[ao]/.test(label) ? `d'${label}` : `de ${label}`);
 
-const startLabel = (fortnight: Fortnight) => {
+// Dans une ligne de la feuille d'espèce, le mois seul suffit pour une plage qui le couvre à son bord.
+function shortStart(fortnight: Fortnight) {
   const { month, firstHalf } = parts(fortnight);
   return firstHalf ? month : `mi-${month}`;
-};
+}
 
-const endLabel = (fortnight: Fortnight) => {
+function shortEnd(fortnight: Fortnight) {
   const { month, firstHalf } = parts(fortnight);
-  return firstHalf ? `mi-${month}` : `fin ${month}`;
-};
+  return firstHalf ? `mi-${month}` : month;
+}
 
 /** « de février à mars », « de mi-avril à mi-mai », « en mars », « fin mars » */
-function rangeText({ from, to }: FortnightRange) {
-  const [start, end] = [parts(from), parts(to)];
-  if (from === to) return start.firstHalf ? `début ${start.month}` : `fin ${start.month}`;
-  if (start.month === end.month) return `en ${start.month}`;
-  return `${fromText(startLabel(from))} à ${end.firstHalf ? `mi-${end.month}` : end.month}`;
+function shortRange({ from, to }: FortnightRange) {
+  if (from === to) return formatFortnight(from);
+  if (parts(from).month === parts(to).month) return `en ${parts(from).month}`;
+  return `${fromText(shortStart(from))} à ${shortEnd(to)}`;
 }
 
 /** Ce qui vient pour une espèce : plus utile, dans une liste de choix, qu'un nom latin. */
 export function plantingHint({ kind, range, opensIn }: PlantingWindow): string {
-  if (opensIn === 0) return `${toDo[kind]} jusqu'à ${endLabel(range.to)}`;
-  if (opensIn === 1) return `${toDo[kind]} à partir ${fromText(startLabel(range.from))}`;
-  return `${period[kind]} ${rangeText(range)}`;
+  if (opensIn === 0) return `${toDo[kind]} jusqu'à ${rangeEnd(range.to)}`;
+  if (opensIn === 1) return `${toDo[kind]} à partir ${fromText(shortStart(range.from))}`;
+  return `${windowKindLabels[kind].label} ${shortRange(range)}`;
 }
+
+const formatLength = (cm: number) => (cm < 100 ? `${cm} cm` : `${String(cm / 100).replace('.', ',')} m`);
+
+/** « 50 cm entre plants, 80 cm entre rangs » */
+export function formatSpacing({ spacingCm: { plants, rows }, category }: Species): string {
+  const between = category === 'FruitTree' ? 'arbres' : 'plants';
+  return [`${formatLength(plants)} entre ${between}`, rows && `${formatLength(rows)} entre rangs`].filter(Boolean).join(', ');
+}
+
+/** Le rythme de la plante installée : les premières semaines demandent plus d'eau. */
+export const formatWatering = (everyDays: number) =>
+  `Tous les ${everyDays} jours par temps sec, plus souvent les premières semaines`;

@@ -2,6 +2,7 @@
 // décor de la carte (docs/direction-visuelle.md, « Pictogrammes »). Le rendu est dans picture.ts.
 
 import type { JournalEntryKind } from '@/api/types';
+import type { WindowKind } from '@/domain/species';
 import type { WeatherKind } from '@/lib/weather';
 import { createKit, WINDOW_LIT, type Palette } from '@/map/decor';
 import { desaturate, mix } from '@/map/scene';
@@ -250,6 +251,12 @@ const kindDrawings: Record<JournalEntryKind, (b: Brush) => Mark[]> = {
 
 export function kindMarks(kind: JournalEntryKind, scheme: ColorScheme): Mark[] {
   return kindDrawings[kind](brush(scheme));
+}
+
+/** Le pinceau des bandes du calendrier d'une espèce : l'encre et le ton de chaque sorte de fenêtre. */
+export function calendarBrush(scheme: ColorScheme): { ink: string; tones: Record<WindowKind, string> } {
+  const { soilBed, crop, wood, metal } = palettes[scheme];
+  return { ink: INK[scheme], tones: { sowIndoors: soilBed, sowOutdoors: soilBed, plant: crop, harvest: wood, prune: metal } };
 }
 
 export type TabName = 'garden' | 'today' | 'journal';

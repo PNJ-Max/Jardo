@@ -22,8 +22,11 @@ plante ouvre une feuille de recherche dans le catalogue, qui propose sans impose
 - **Préremplissage** : le nom s'il est vide et l'unité si l'utilisateur ne l'a pas choisie. Changer
   d'espèce remplace ce que le catalogue avait rempli, jamais une saisie. La modification d'une
   plante envoie désormais `speciesId`, qu'elle remettait à zéro depuis la PR 2.
-- **Fiche de la plante** : rien à changer. Elle affiche le texte `species`, comme le veut l'étude ; le
-  reste arrive avec l'onglet Conseils (PR 5).
+- **Fiche de la plante** : elle affiche le texte `species`, comme le veut l'étude. L'onglet Conseils
+  (PR 5) apparaît dès qu'une espèce du catalogue est choisie, et disparaît avec « Sans espèce ».
+- **Quinzaines** : une seule convention pour les deux écrans. En début de plage, `Mar1` se lit « début
+  mars » et `Mar2` « mi-mars » ; en fin de plage, `Mar1` se lit « mi-mars » et `Mar2` « fin mars ».
+  L'onglet Conseils disait « jusqu'à début décembre » pour une plage qui va jusqu'au 15.
 - **Partagé** : `BottomSheet` sort de la feuille de tâche, qui l'utilise aussi, avec l'évitement du
   clavier. `Field` gagne `hideLabel`. Chicorée et roquette ont un synonyme « Salade … » : l'étude
   veut que « salade » les trouve, et les fiches ne le permettaient pas.
@@ -32,6 +35,22 @@ plante ouvre une feuille de recherche dans le catalogue, qui propose sans impose
 - **Vérifications** : tests Jest (domaine, libellés, écran), parcours complet dans Chrome à 375 de
   large, clair et sombre. Pas d'essai sur un téléphone : l'évitement du clavier dans la feuille et
   TalkBack restent à passer sur l'APK.
+
+**Catalogue d'espèces, PR 5 : l'onglet Conseils (04/11/2026).** La fiche d'une plante liée au
+catalogue gagne un onglet entre Journal et Infos. Sans espèce, ou avec un identifiant absent du
+catalogue, l'onglet n'existe pas. Il ne fait que lire : ni écriture, ni migration.
+- **Calendrier dessiné** : une ligne par fenêtre, des bandes par quinzaine à l'encre des
+  pictogrammes, une plage à cheval sur le Nouvel An coupée net aux bords de l'année, un trait sur
+  la quinzaine du jour. En vues plutôt qu'en Skia ; au-delà d'une police de 1,3, le libellé passe
+  au-dessus de sa ligne. Le lecteur d'écran lit un résumé.
+- **En ce moment, Bon à savoir, Conseils** tirés de la fiche, au jour de `useToday`.
+- **Logique** : `bandsOf` et `yearCalendar` dans `src/domain/species.ts`, textes dans
+  `src/lib/species.ts`. `SpeciesAdvice` prend un `climate` qui attend le réglage du jardin (PR 7) ;
+  « Changer » arrivera avec lui.
+- **Vérifications** : tests Jest (`plant-advice`, `lib/species`, `domain/species`), captures en
+  clair et en sombre à 375 de large sur un poireau, un pommier et un basilic. Le formulaire ne pose
+  pas encore l'espèce (PR 4) : les captures ont lié les plantes du jardin d'exemple le temps de la
+  prise de vue, sans le committer.
 
 **Passe d'accessibilité, suite : Aujourd'hui et la carte (04/11/2026).** Les fichiers que la
 première passe n'avait pas pu toucher, revérifiés sur le code actuel.
