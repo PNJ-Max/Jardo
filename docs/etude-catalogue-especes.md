@@ -356,9 +356,11 @@ un type littéral que TypeScript vérifie.
 - **Les identifiants sont des noms en anglais, définitifs** (`tomato`, `lamb-lettuce`) : jamais
   renommés, jamais retirés. Une espèce à faire disparaître resterait dans le code, masquée de la
   recherche.
-- **Le service accepte tout identifiant**, sans vérifier qu'il existe dans le catalogue. Un export
-  fait par une version plus récente, au même schéma, peut nommer une espèce inconnue ici : la
-  plante garde son texte et n'a simplement pas de fiche jusqu'à la mise à jour.
+- **Un identifiant inconnu ici reste accepté.** Un export fait par une version plus récente, au
+  même schéma, peut nommer une espèce inconnue ici : l'import le garde, la plante garde son texte
+  et n'a simplement pas de fiche jusqu'à la mise à jour. Le service ne refuse qu'une espèce qu'on
+  *choisit* hors du catalogue, à la création ou en changeant d'espèce : celle que la plante a déjà
+  reste acceptée quand on la modifie (fait à la PR 2).
 
 ### Comment une mise à jour arrive
 
@@ -491,7 +493,7 @@ capture clair et sombre pour celles qui touchent un écran.
 | # | PR | Contenu | Dépend de | Vérifié par |
 |---|---|---|---|---|
 | 1 | Domaine du catalogue et premier lot | Types (`Species`, quinzaines, climats), `domain/species.ts` (décalage selon le climat, « en ce moment »), 12 fiches : tomate, courgette, laitue, carotte, radis, haricot, pomme de terre, poireau, mâche, ail, pommier, framboisier (plages d'automne, plages multiples, fruitier et petit fruit compris). Tests de cohérence | | Jest |
-| 2 | Lien plante → espèce | Migration `species_id` sur `garden_items`, `PlantService` et types, mise à niveau des exports, règle d'import | 1, et la migration de « Reporter » fusionnée | Jest : services, sauvegarde |
+| 2 | Lien plante → espèce, **faite** | Migration 4 `species_id` sur `garden_items`, `PlantService` et types, mise à niveau des exports, règle d'import | 1, et la migration de « Reporter » fusionnée | Jest : services, sauvegarde |
 | 3 | Pictogrammes des catégories | Les quatre dessins, en SkPicture comme les autres | | Capture |
 | 4 | Choisir l'espèce | Champ « Espèce », feuille de recherche, suggestions et « en ce moment », préremplissage | 2, 3 | Tests d'écran, capture |
 | 5 | Onglet Conseils | Calendrier dessiné, bon à savoir, conseils | 2, 3 | Tests d'écran, capture |

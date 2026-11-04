@@ -108,6 +108,21 @@ describe('migrations', () => {
     ]);
   });
 
+  it("ajoutent l'espèce du catalogue aux éléments existants, vide", async () => {
+    const db = createMemoryDb();
+    await migrate(db, migrations.slice(0, 3));
+    await db.run("INSERT INTO spaces (id, garden_id, name, kind, created_at) SELECT 's', id, 'Potager', 'VegetableGarden', created_at FROM gardens");
+    await db.run(
+      "INSERT INTO garden_items (id, item_type, space_id, name, species, quantity, quantity_unit, created_at) VALUES ('p', 'Plant', 's', 'Tomates', 'Tomate', 6, 'Plants', '2026-10-01T08:00:00.000Z')",
+    );
+
+    await migrate(db);
+
+    expect(await db.all('SELECT id, species, species_id FROM garden_items')).toEqual([
+      { id: 'p', species: 'Tomate', species_id: null },
+    ]);
+  });
+
   it('annulent en entier une migration qui échoue, version comprise', async () => {
     const db = await createTestDb();
     const failing = 'CREATE TABLE photos (id TEXT PRIMARY KEY NOT NULL) STRICT; INSERT INTO missing VALUES (1);';
