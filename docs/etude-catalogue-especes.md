@@ -415,14 +415,18 @@ celle de la tâche :
 
 - **Sans recherche** : « En ce moment » réunit les espèces suggérées pour ce type d'espace dont une
   fenêtre de semis ou de plantation couvre cette quinzaine ou la suivante, selon le climat du
-  jardin. Suivent les suggestions de l'espace, de A à Z.
+  jardin (le climat de référence, en attendant la PR 7). Suivent les autres suggestions de l'espace,
+  de A à Z : une espèce n'apparaît qu'une fois.
 - **En tapant** : correspondance sur le nom et les synonymes, sans tenir compte des accents ni de la
   casse (« salade » trouve laitue, chicorée, mâche et roquette). La dernière ligne garde le texte
-  libre : « Utiliser « … » sans fiche ». « Sans espèce » vide le champ.
+  libre : « Utiliser « … » sans fiche ». « Sans espèce », en tête de la feuille quand une espèce est
+  choisie, vide le champ. Le nombre de résultats est annoncé.
 - **La ligne** : pictogramme sur une tuile `tile` de 44, nom en Bold 16, puis ce qui vient
   (« À semer jusqu'à fin novembre »), plus utile qu'un nom latin.
 - **Au choix**, le formulaire remplit le nom s'il est vide (« Tomate ») et l'unité de quantité si
-  l'utilisateur ne l'a pas changée. La variété reste libre.
+  l'utilisateur ne l'a pas changée. En changeant d'espèce, il remplace ce qu'il avait lui-même rempli,
+  jamais un nom retouché. À la modification d'une plante, l'unité enregistrée compte comme un choix.
+  La variété reste libre.
 
 ### Proposer les rappels
 
@@ -495,7 +499,7 @@ capture clair et sombre pour celles qui touchent un écran.
 | 1 | Domaine du catalogue et premier lot | Types (`Species`, quinzaines, climats), `domain/species.ts` (décalage selon le climat, « en ce moment »), 12 fiches : tomate, courgette, laitue, carotte, radis, haricot, pomme de terre, poireau, mâche, ail, pommier, framboisier (plages d'automne, plages multiples, fruitier et petit fruit compris). Tests de cohérence | | Jest |
 | 2 | Lien plante → espèce, **faite** | Migration 4 `species_id` sur `garden_items`, `PlantService` et types, mise à niveau des exports, règle d'import | 1, et la migration de « Reporter » fusionnée | Jest : services, sauvegarde |
 | 3 | Pictogrammes des catégories | Les quatre dessins, en SkPicture comme les autres | | Capture |
-| 4 | Choisir l'espèce | Champ « Espèce », feuille de recherche, suggestions et « en ce moment », préremplissage | 2, 3 | Tests d'écran, capture |
+| 4 | Choisir l'espèce, **faite** | Champ « Espèce », feuille de recherche, suggestions et « en ce moment », préremplissage | 2, 3 | Tests d'écran, capture |
 | 5 | Onglet Conseils | Calendrier dessiné, bon à savoir, conseils | 2, 3 | Tests d'écran, capture |
 | 6 | Rappels proposés | Calcul des propositions dans le domaine (couverture par la zone et l'espace comprise), section du formulaire, groupe « Proposé pour » de l'onglet Tâches, unité de récolte par défaut | 4 | Jest, tests d'écran, capture |
 | 7 | Climat du jardin | Migration `climate` sur `gardens`, choix dans Réglages, calendrier et propositions selon le climat, mise à niveau des exports | 2, 5 | Jest, tests d'écran, capture |

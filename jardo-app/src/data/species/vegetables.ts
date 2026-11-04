@@ -394,7 +394,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'chicory',
     name: 'Chicorée',
-    aliases: ['Frisée', 'Scarole'],
+    aliases: ['Frisée', 'Scarole', 'Salade frisée'],
     scientificName: 'Cichorium endivia',
     category: 'Vegetable',
     sowIndoors: [{ from: 'May1', to: 'Jul2' }],
@@ -414,7 +414,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'arugula',
     name: 'Roquette',
-    aliases: [],
+    aliases: ['Salade roquette'],
     scientificName: 'Eruca vesicaria',
     category: 'Vegetable',
     sowOutdoors: [{ from: 'Mar1', to: 'Sep1' }],

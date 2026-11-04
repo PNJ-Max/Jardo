@@ -1,13 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
-import Animated, { SlideInDown, useReducedMotion } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { useJournal, type TargetFilter } from '@/api/queries';
 import type { GardenTask } from '@/api/types';
 import { KindIcon } from '@/components/pictograms';
-import { Button, type IconName } from '@/components/ui';
+import { BottomSheet, Button, type IconName } from '@/components/ui';
 import { formatDate, today } from '@/lib/dates';
 import { formatQuantity, measureUnits, targetLabel, taskTitle } from '@/lib/garden';
 import { lastHarvest, rhythm, sinceDone } from '@/lib/today';
@@ -31,8 +29,6 @@ type TaskSheetProps = {
  */
 export function TaskSheet({ task, visible, onClose, onDone, onPostpone, onOpen }: TaskSheetProps) {
   const styles = useStyles();
-  const reduceMotion = useReducedMotion();
-  const insets = useSafeAreaInsets();
 
   const then = (action: () => void) => () => {
     onClose();
@@ -40,54 +36,40 @@ export function TaskSheet({ task, visible, onClose, onDone, onPostpone, onOpen }
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      statusBarTranslucent
-      navigationBarTranslucent
-      animationType={reduceMotion ? 'none' : 'fade'}
-      onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <Pressable style={styles.dismiss} onPress={onClose} accessibilityRole="button" accessibilityLabel="Fermer" />
-        <Animated.View
-          entering={reduceMotion ? undefined : SlideInDown.duration(260)}
-          style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-          <View style={styles.handle} />
-          <ScrollView contentContainerStyle={styles.content}>
-            <View style={styles.header}>
-              <View style={styles.icon}>
-                <KindIcon kind={task.kind} />
-              </View>
-              <View style={styles.headerText}>
-                <Text style={styles.title} accessibilityRole="header">
-                  {taskTitle(task)}
-                </Text>
-                <Text style={styles.target}>{targetLabel(task)}</Text>
-              </View>
-            </View>
-            <View style={styles.facts}>
-              <Fact label="Rythme" value={capitalize(rhythm(task))} />
-              <Fact
-                label="Dernière fois"
-                value={sinceDone(task.lastDoneOn, today())}
-                detail={task.lastDoneOn ? formatDate(task.lastDoneOn) : undefined}
-              />
-              {task.kind === 'Harvest' && <LastHarvest task={task} />}
-            </View>
-            <View style={styles.actions}>
-              <Button title="Fait aujourd'hui" icon="checkmark" onPress={then(onDone)} />
-              {onPostpone && <SheetAction icon="arrow-redo-outline" label="Reporter à demain" onPress={then(onPostpone)} />}
-              <SheetAction
-                icon="calendar-outline"
-                label="Fait un autre jour, avec une note"
-                onPress={then(() => router.push({ pathname: '/task/done', params: { id: String(task.id) } }))}
-              />
-              <SheetAction icon="open-outline" label="Ouvrir la fiche" onPress={then(onOpen)} />
-            </View>
-          </ScrollView>
-        </Animated.View>
-      </View>
-    </Modal>
+    <BottomSheet visible={visible} onClose={onClose}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <View style={styles.icon}>
+            <KindIcon kind={task.kind} />
+          </View>
+          <View style={styles.headerText}>
+            <Text style={styles.title} accessibilityRole="header">
+              {taskTitle(task)}
+            </Text>
+            <Text style={styles.target}>{targetLabel(task)}</Text>
+          </View>
+        </View>
+        <View style={styles.facts}>
+          <Fact label="Rythme" value={capitalize(rhythm(task))} />
+          <Fact
+            label="Dernière fois"
+            value={sinceDone(task.lastDoneOn, today())}
+            detail={task.lastDoneOn ? formatDate(task.lastDoneOn) : undefined}
+          />
+          {task.kind === 'Harvest' && <LastHarvest task={task} />}
+        </View>
+        <View style={styles.actions}>
+          <Button title="Fait aujourd'hui" icon="checkmark" onPress={then(onDone)} />
+          {onPostpone && <SheetAction icon="arrow-redo-outline" label="Reporter à demain" onPress={then(onPostpone)} />}
+          <SheetAction
+            icon="calendar-outline"
+            label="Fait un autre jour, avec une note"
+            onPress={then(() => router.push({ pathname: '/task/done', params: { id: String(task.id) } }))}
+          />
+          <SheetAction icon="open-outline" label="Ouvrir la fiche" onPress={then(onOpen)} />
+        </View>
+      </ScrollView>
+    </BottomSheet>
   );
 }
 
@@ -141,21 +123,7 @@ function SheetAction({ icon, label, onPress }: { icon: IconName; label: string; 
 }
 
 const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) => ({
-  // Le voile assombrit l'écran dans les deux thèmes, comme les ombres.
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
-  dismiss: { flex: 1 },
-  sheet: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    gap: spacing.md,
-    // Aux grandes polices, la feuille défile plutôt que de sortir de l'écran.
-    maxHeight: '92%',
-  },
   content: { gap: spacing.md },
-  handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: {
     width: 52,

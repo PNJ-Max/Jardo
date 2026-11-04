@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { usePlant, useSavePlant } from '@/api/queries';
 import type { Id, Plant, QuantityUnit } from '@/api/types';
+import { SpeciesSelect } from '@/components/species-select';
 import { ZoneSelect } from '@/components/zone-select';
 import {
   fieldError,
@@ -14,6 +15,7 @@ import {
   leaveForm,
   useChanged,
 } from '@/components/ui';
+import type { Species } from '@/domain/species';
 import { decimalText, parseDecimal, quantityUnits } from '@/lib/garden';
 
 const unitOptions = (Object.keys(quantityUnits) as QuantityUnit[]).map((unit) => ({
@@ -45,18 +47,37 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
   const save = useSavePlant();
   const [name, setName] = useState(plant?.name ?? '');
   const [species, setSpecies] = useState(plant?.species ?? '');
+  const [speciesId, setSpeciesId] = useState(plant?.speciesId ?? null);
   const [variety, setVariety] = useState(plant?.variety ?? '');
   const [quantityText, setQuantityText] = useState(plant ? decimalText(plant.quantity) : '1');
   const [unit, setUnit] = useState<QuantityUnit>(plant?.quantityUnit ?? 'Plants');
+  const [unitChosen, setUnitChosen] = useState(!!plant);
+  const [prefilledName, setPrefilledName] = useState<string | null>(null);
   const [sownDate, setSownDate] = useState(plant?.sownDate ?? null);
   const [plantedDate, setPlantedDate] = useState(plant?.plantedDate ?? null);
   const [zoneId, setZoneId] = useState(defaultZoneId);
-  const changed = useChanged([name, species, variety, quantityText, unit, sownDate, plantedDate, zoneId]);
+  const changed = useChanged([name, species, speciesId, variety, quantityText, unit, sownDate, plantedDate, zoneId]);
 
   // Validation locale minimale, pour guider la saisie. La vraie reste celle du service : ses
   // messages s'affichent sous les champs en cas de refus.
   const quantity = parseDecimal(quantityText);
   const quantityError = quantityText && !(quantity && quantity > 0) ? 'Un nombre positif' : undefined;
+
+  // Le catalogue propose : il ne remplace jamais une saisie, seulement ce qu'il a lui-même rempli.
+  const selectSpecies = (chosen: Species) => {
+    setSpecies(chosen.name);
+    setSpeciesId(chosen.id);
+    if (!name.trim() || name === prefilledName) {
+      setName(chosen.name);
+      setPrefilledName(chosen.name);
+    }
+    if (!unitChosen) setUnit(chosen.quantityUnit);
+  };
+
+  const setFreeSpecies = (text: string) => {
+    setSpecies(text);
+    setSpeciesId(null);
+  };
 
   const submit = () => {
     if (!quantity) return;
@@ -66,6 +87,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
         input: {
           name: name.trim(),
           species: species.trim() || null,
+          speciesId,
           variety: variety.trim() || null,
           quantity,
           quantityUnit: unit,
@@ -97,13 +119,13 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
         autoFocus={!plant}
         error={fieldError(save.error, 'name')}
       />
-      <Field
-        label="Espèce"
-        value={species}
-        onChangeText={setSpecies}
-        placeholder="Optionnel"
-        maxLength={100}
-        error={fieldError(save.error, 'species')}
+      <SpeciesSelect
+        spaceId={spaceId}
+        species={species}
+        speciesId={speciesId}
+        onSelect={selectSpecies}
+        onFreeText={setFreeSpecies}
+        error={fieldError(save.error, 'species') ?? fieldError(save.error, 'speciesId')}
       />
       <Field
         label="Variété"
@@ -124,7 +146,10 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
         label="Unité"
         options={unitOptions}
         value={unit}
-        onChange={setUnit}
+        onChange={(chosen) => {
+          setUnit(chosen);
+          setUnitChosen(true);
+        }}
         error={fieldError(save.error, 'quantityUnit')}
       />
       <DateField

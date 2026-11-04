@@ -3,15 +3,19 @@ import {
   climates,
   fortnightOf,
   fortnights,
+  nextPlantingWindow,
   normalizeName,
   rangeContains,
   rangeLength,
+  searchSpecies,
   shiftFortnight,
+  speciesSuggestions,
   windowsFor,
   type Climate,
   type FortnightRange,
   type Species,
 } from '@/domain/species';
+import type { SpaceKind } from '@/domain/types';
 
 const species = (overrides: Partial<Species>): Species => ({
   id: 'test',
@@ -200,5 +204,109 @@ describe('noms', () => {
     expect(normalizeName('  ÉPINARD ')).toBe('epinard');
     expect(normalizeName('Haricot à rames')).toBe('haricot a rames');
     expect(normalizeName('Céleri')).toBe(normalizeName('celeri'));
+  });
+});
+
+describe('la prochaine fenêtre de semis ou de plantation', () => {
+  const tomato = species({
+    sowIndoors: [{ from: 'Mar1', to: 'Apr2' }],
+    plant: [{ from: 'May2', to: 'Jun1' }],
+    harvest: [{ from: 'Jul2', to: 'Oct1' }],
+  });
+
+  it('donne celle qui couvre ce jour', () => {
+    expect(nextPlantingWindow(tomato, '2026-04-10', 'Temperate')).toEqual({
+      kind: 'sowIndoors',
+      range: { from: 'Mar1', to: 'Apr2' },
+      opensIn: 0,
+    });
+  });
+
+  it("à défaut, celle qui s'ouvre le plus tôt, en passant le Nouvel An", () => {
+    expect(nextPlantingWindow(tomato, '2026-05-05', 'Temperate')).toMatchObject({ kind: 'plant', opensIn: 1 });
+    expect(nextPlantingWindow(tomato, '2026-12-20', 'Temperate')).toMatchObject({ kind: 'sowIndoors', opensIn: 5 });
+  });
+
+  it('ignore la récolte et la taille', () => {
+    expect(nextPlantingWindow(species({ harvest: [{ from: 'Jul1', to: 'Aug2' }] }), '2026-07-10', 'Temperate')).toBeUndefined();
+  });
+
+  it('tient compte du climat', () => {
+    expect(nextPlantingWindow(tomato, '2026-05-20', 'Temperate')).toMatchObject({ kind: 'plant', opensIn: 0 });
+    expect(nextPlantingWindow(tomato, '2026-05-20', 'Mountain')).toMatchObject({ kind: 'sowIndoors', opensIn: 0 });
+  });
+});
+
+describe('les suggestions', () => {
+  const garlic = species({ id: 'garlic', name: 'Ail', plant: [{ from: 'Oct2', to: 'Nov2', autumn: true }] });
+  const eggplant = species({ id: 'eggplant', name: 'Aubergine', sowIndoors: [{ from: 'Feb1', to: 'Mar2' }] });
+  const shallot = species({ id: 'shallot', name: 'Échalote', plant: [{ from: 'Nov2', to: 'Dec1' }] });
+  const zucchini = species({ id: 'zucchini', name: 'Courgette', sowOutdoors: [{ from: 'May1', to: 'Jun2' }] });
+  const thyme = species({ id: 'thyme', name: 'Thym', category: 'Herb', plant: [{ from: 'Mar2', to: 'May1' }] });
+  const apple = species({ id: 'apple', name: 'Pommier', category: 'FruitTree', plant: [{ from: 'Nov1', to: 'Mar1' }] });
+  const raspberry = species({ id: 'raspberry', name: 'Framboisier', category: 'SmallFruit', plant: [{ from: 'Oct2', to: 'Mar1' }] });
+  const catalog = [zucchini, thyme, shallot, eggplant, garlic, apple, raspberry];
+
+  const ids = (list: readonly Species[]) => list.map(({ id }) => id);
+
+  it('met à part ce qui se sème ou se plante cette quinzaine ou la suivante, puis le reste, de A à Z', () => {
+    const { now, others } = speciesSuggestions(catalog, 'VegetableGarden', '2026-11-04', 'Temperate');
+
+    expect(ids(now)).toEqual(['garlic', 'shallot']);
+    expect(ids(others)).toEqual(['eggplant', 'zucchini', 'thyme']);
+  });
+
+  it('classe les accents à leur place', () => {
+    const { others } = speciesSuggestions(catalog, 'Greenhouse', '2026-07-01', 'Temperate');
+
+    expect(ids(others)).toEqual(['garlic', 'eggplant', 'zucchini', 'shallot', 'thyme']);
+  });
+
+  it("suit le type d'espace", () => {
+    const suggested = (kind: SpaceKind) => {
+      const { now, others } = speciesSuggestions(catalog, kind, '2026-07-01', 'Temperate');
+      return ids([...now, ...others]);
+    };
+
+    expect(suggested('Orchard')).toEqual(['apple']);
+    expect(suggested('SmallFruit')).toEqual(['raspberry']);
+    expect(suggested('Firewood')).toEqual([]);
+  });
+
+  it('ne compte pas une récolte comme un moment de planter', () => {
+    const leek = species({ id: 'leek', harvest: [{ from: 'Nov1', to: 'Mar1' }] });
+
+    expect(speciesSuggestions([leek], 'VegetableGarden', '2026-11-04', 'Temperate').now).toEqual([]);
+  });
+
+  it('tient compte du climat', () => {
+    const inApril = (climate: Climate) => ids(speciesSuggestions([zucchini], 'VegetableGarden', '2026-04-10', climate).now);
+
+    expect(inApril('Temperate')).toEqual([]);
+    expect(inApril('Mediterranean')).toEqual(['zucchini']);
+  });
+});
+
+describe('la recherche', () => {
+  const lettuce = species({ id: 'lettuce', name: 'Laitue', aliases: ['Salade', 'Batavia'] });
+  const lamb = species({ id: 'lamb-lettuce', name: 'Mâche', aliases: ['Doucette', 'Salade de blé'] });
+  const salsify = species({ id: 'salsify', name: 'Salsifis' });
+  const catalog = [salsify, lamb, lettuce];
+
+  const found = (query: string) => searchSpecies(catalog, query).map(({ id }) => id);
+
+  it('ignore les accents, la casse et les espaces autour', () => {
+    expect(found('mache')).toEqual(['lamb-lettuce']);
+    expect(found('  MÂCHE ')).toEqual(['lamb-lettuce']);
+    expect(found('salade de ble')).toEqual(['lamb-lettuce']);
+  });
+
+  it('cherche dans les synonymes, et fait passer devant un nom qui commence par la saisie', () => {
+    expect(found('sal')).toEqual(['salsify', 'lettuce', 'lamb-lettuce']);
+  });
+
+  it('ne trouve rien sans saisie, ni dans le nom scientifique', () => {
+    expect(found('   ')).toEqual([]);
+    expect(found('probationis')).toEqual([]);
   });
 });
