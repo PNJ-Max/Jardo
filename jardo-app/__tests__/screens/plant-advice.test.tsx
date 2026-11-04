@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 import { useLocalSearchParams } from 'expo-router';
 
 import PlantScreen from '@/app/plant/[id]';
@@ -65,6 +65,24 @@ describe('onglet Conseils de la fiche plante', () => {
     expect(screen.queryByRole('tab', { name: 'Conseils' })).not.toBeOnTheScreen();
   });
 
+  it("retombe sur le premier onglet quand l'espèce est retirée alors que Conseils est ouvert", async () => {
+    const services = createServices(await createTestDb());
+    const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+    const input = { name: 'Mes plants', spaceId: potager.id };
+    const plant = await services.plants.create({ ...input, species: 'Tomate', speciesId: 'tomato' });
+    jest.mocked(useLocalSearchParams).mockReturnValue({ id: plant.id });
+    const { queryClient } = await renderScreen(<PlantScreen />, services);
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Conseils' }));
+    expect(await screen.findByText('Bon à savoir')).toBeOnTheScreen();
+
+    await services.plants.update(plant.id, { ...input, species: null, speciesId: null });
+    await act(() => queryClient.invalidateQueries());
+
+    expect(await screen.findByRole('tab', { name: 'Tâches', selected: true })).toBeOnTheScreen();
+    expect(screen.queryByRole('tab', { name: 'Conseils' })).not.toBeOnTheScreen();
+    expect(screen.queryByText('Bon à savoir')).not.toBeOnTheScreen();
+  });
+
   it("montre l'espèce, le résumé du calendrier, le bon à savoir et les conseils d'un légume", async () => {
     await openAdvice('tomato');
 
@@ -72,7 +90,7 @@ describe('onglet Conseils de la fiche plante', () => {
     expect(screen.getByText('Légume · Solanum lycopersicum')).toBeOnTheScreen();
     expect(
       screen.getByLabelText(
-        'Semis sous abri : de début mars à début avril. Plantation : de fin mai à fin juin. Récolte : de fin juillet à début octobre.',
+        'Semis sous abri : de début mars à mi-avril. Plantation : de mi-mai à fin juin. Récolte : de mi-juillet à mi-octobre.',
       ),
     ).toBeOnTheScreen();
     expect(screen.getByText(/Dates pour un climat tempéré/)).toBeOnTheScreen();
@@ -101,8 +119,8 @@ describe('onglet Conseils de la fiche plante', () => {
     on(2027, 1, 10);
     await openAdvice('apple-tree');
 
-    expect(screen.getByText("Planter jusqu'à début mars")).toBeOnTheScreen();
-    expect(screen.getByText("Tailler jusqu'à début mars")).toBeOnTheScreen();
+    expect(screen.getByText("Planter jusqu'à mi-mars")).toBeOnTheScreen();
+    expect(screen.getByText("Tailler jusqu'à mi-mars")).toBeOnTheScreen();
     expect(screen.getByText('Espacement : 4 m entre arbres')).toBeOnTheScreen();
     expect(screen.queryByText(/^Arrosage/)).not.toBeOnTheScreen();
   });
@@ -117,7 +135,7 @@ describe('onglet Conseils de la fiche plante', () => {
   it('suit le climat donné, en attendant le réglage du jardin', async () => {
     await renderScreen(<SpeciesAdvice species={known('tomato')} climate="Mountain" />);
 
-    expect(screen.getByLabelText(/Plantation : de fin juin à fin juillet/)).toBeOnTheScreen();
+    expect(screen.getByLabelText(/Plantation : de mi-juin à fin juillet/)).toBeOnTheScreen();
     expect(screen.getByText(/Dates pour un climat de montagne/)).toBeOnTheScreen();
     expect(screen.getByText('Rien au calendrier de cette espèce en ce moment.')).toBeOnTheScreen();
   });

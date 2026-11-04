@@ -1,5 +1,5 @@
 import { dayOf, monthOf, type DateOnly } from './dates';
-import type { MeasureUnit, QuantityUnit } from './types';
+import type { MeasureUnit, QuantityUnit, SpaceKind } from './types';
 
 // Le catalogue d'espèces : ce qu'une fiche contient et les calculs qu'on en tire. Les fiches
 // elles-mêmes vivent dans `src/data/species/`. Voir docs/etude-catalogue-especes.md.
@@ -116,6 +116,51 @@ export function activeWindows(species: Species, on: DateOnly, climate: Climate):
   );
 }
 
+const plantingKinds = ['sowIndoors', 'sowOutdoors', 'plant'] as const;
+export type PlantingKind = (typeof plantingKinds)[number];
+
+export type PlantingWindow = {
+  kind: PlantingKind;
+  range: FortnightRange;
+  /** Dans combien de quinzaines elle s'ouvre : 0 quand elle couvre déjà ce jour. */
+  opensIn: number;
+};
+
+/** La fenêtre de semis ou de plantation qui couvre ce jour, à défaut celle qui s'ouvre le plus tôt. */
+export function nextPlantingWindow(species: Species, on: DateOnly, climate: Climate): PlantingWindow | undefined {
+  const fortnight = fortnightOf(on);
+  const windows = plantingKinds.flatMap((kind) =>
+    windowsFor(species, kind, climate).map((range) => ({
+      kind,
+      range,
+      opensIn: rangeContains(range, fortnight) ? 0 : modulo(indexOf(range.from) - indexOf(fortnight)),
+    })),
+  );
+
+  return windows.sort((a, b) => a.opensIn - b.opensIn)[0];
+}
+
+const suggestedCategories: Record<SpaceKind, readonly SpeciesCategory[]> = {
+  VegetableGarden: ['Vegetable', 'Herb'],
+  Greenhouse: ['Vegetable', 'Herb'],
+  Orchard: ['FruitTree'],
+  SmallFruit: ['SmallFruit'],
+  Firewood: [],
+};
+
+const byName = (a: Species, b: Species) => a.name.localeCompare(b.name, 'fr');
+
+/**
+ * Ce qu'on propose avant toute recherche : les espèces du type d'espace, de A à Z, avec à part
+ * celles qu'on peut semer ou planter cette quinzaine ou la suivante.
+ */
+export function speciesSuggestions(catalog: readonly Species[], spaceKind: SpaceKind, on: DateOnly, climate: Climate) {
+  const suggested = catalog.filter((species) => suggestedCategories[spaceKind].includes(species.category)).sort(byName);
+  const isNow = (species: Species) => (nextPlantingWindow(species, on, climate)?.opensIn ?? Infinity) <= 1;
+
+  return { now: suggested.filter(isNow), others: suggested.filter((species) => !isNow(species)) };
+}
+
 /** Une bande du calendrier : `length` quinzaines à partir de la quinzaine `start`, en rang dans l'année. */
 export type CalendarBand = {
   start: number;
@@ -161,3 +206,14 @@ export const normalizeName = (name: string) =>
     .replace(/[̀-ͯ]/g, '')
     .toLocaleLowerCase('fr')
     .trim();
+
+/** La recherche couvre tout le catalogue, noms et synonymes. Un nom qui commence par la saisie passe devant. */
+export function searchSpecies(catalog: readonly Species[], query: string): Species[] {
+  const wanted = normalizeName(query);
+  if (!wanted) return [];
+  const rank = (species: Species) => (normalizeName(species.name).startsWith(wanted) ? 0 : 1);
+
+  return catalog
+    .filter((species) => [species.name, ...species.aliases].some((name) => normalizeName(name).includes(wanted)))
+    .sort((a, b) => rank(a) - rank(b) || byName(a, b));
+}

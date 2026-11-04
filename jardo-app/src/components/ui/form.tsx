@@ -7,16 +7,22 @@ import { createStyles, useTheme } from '@/theme';
 // Le navigateur dessine sinon son propre anneau de focus par-dessus celui du thème.
 const noBrowserRing = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null;
 
-type FieldProps = TextInputProps & { label: string; error?: string; hint?: string };
+type FieldProps = TextInputProps & {
+  label: string;
+  /** Le libellé ne s'affiche pas (le contexte le dit), mais nomme toujours le champ. */
+  hideLabel?: boolean;
+  error?: string;
+  hint?: string;
+};
 
-export function Field({ label, error, hint, style, onFocus, onBlur, ...input }: FieldProps) {
+export function Field({ label, hideLabel, error, hint, style, onFocus, onBlur, ...input }: FieldProps) {
   const { colors } = useTheme();
   const styles = useFieldStyles();
   const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      {!hideLabel && <Text style={styles.label}>{label}</Text>}
       <TextInput
         // Le libellé est un Text voisin : sans ceci, le lecteur d'écran annonce un champ sans nom.
         accessibilityLabel={label}

@@ -12,6 +12,30 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (04/11/2026)
 
+**Catalogue d'espèces, PR 4 : choisir l'espèce (04/11/2026).** Le champ « Espèce » du formulaire de
+plante ouvre une feuille de recherche dans le catalogue, qui propose sans imposer.
+- **Feuille** : avant la frappe, « En ce moment » (semis ou plantation cette quinzaine ou la suivante,
+  au climat de référence en attendant la PR 7), puis les autres suggestions du type d'espace, de A à
+  Z. La recherche couvre tout le catalogue, noms et synonymes, sans tenir compte des accents ni de
+  la casse. Chaque ligne porte son pictogramme et ce qui vient. « Utiliser « … » sans fiche » garde
+  la saisie libre, « Sans espèce » retire le choix.
+- **Préremplissage** : le nom s'il est vide et l'unité si l'utilisateur ne l'a pas choisie. Changer
+  d'espèce remplace ce que le catalogue avait rempli, jamais une saisie. La modification d'une
+  plante envoie désormais `speciesId`, qu'elle remettait à zéro depuis la PR 2.
+- **Fiche de la plante** : elle affiche le texte `species`, comme le veut l'étude. L'onglet Conseils
+  (PR 5) apparaît dès qu'une espèce du catalogue est choisie, et disparaît avec « Sans espèce ».
+- **Quinzaines** : une seule convention pour les deux écrans. En début de plage, `Mar1` se lit « début
+  mars » et `Mar2` « mi-mars » ; en fin de plage, `Mar1` se lit « mi-mars » et `Mar2` « fin mars ».
+  L'onglet Conseils disait « jusqu'à début décembre » pour une plage qui va jusqu'au 15.
+- **Partagé** : `BottomSheet` sort de la feuille de tâche, qui l'utilise aussi, avec l'évitement du
+  clavier. `Field` gagne `hideLabel`. Chicorée et roquette ont un synonyme « Salade … » : l'étude
+  veut que « salade » les trouve, et les fiches ne le permettaient pas.
+- **Accessibilité** : rôles et noms, cibles de 48 dp au moins, nombre de résultats en zone vive,
+  retour d'Android qui ferme la feuille sans quitter le formulaire.
+- **Vérifications** : tests Jest (domaine, libellés, écran), parcours complet dans Chrome à 375 de
+  large, clair et sombre. Pas d'essai sur un téléphone : l'évitement du clavier dans la feuille et
+  TalkBack restent à passer sur l'APK.
+
 **Catalogue d'espèces, PR 5 : l'onglet Conseils (04/11/2026).** La fiche d'une plante liée au
 catalogue gagne un onglet entre Journal et Infos. Sans espèce, ou avec un identifiant absent du
 catalogue, l'onglet n'existe pas. Il ne fait que lire : ni écriture, ni migration.

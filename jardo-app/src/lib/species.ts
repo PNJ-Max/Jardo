@@ -7,10 +7,13 @@ import {
   type Exposure,
   type Fortnight,
   type FortnightRange,
+  type PlantingKind,
+  type PlantingWindow,
   type Species,
   type SpeciesCategory,
   type WindowKind,
 } from '@/domain/species';
+import type { SpaceKind } from '@/domain/types';
 
 // Le vocabulaire du catalogue d'espèces affiché à l'écran.
 
@@ -59,15 +62,49 @@ export const climateNames: Record<Climate, string> = {
   Mountain: 'climat de montagne',
 };
 
-/** `Mar1` → « début mars », `Mar2` → « fin mars ». */
-export function formatFortnight(fortnight: Fortnight): string {
+const toDo: Record<PlantingKind, string> = {
+  sowIndoors: 'À semer sous abri',
+  sowOutdoors: 'À semer',
+  plant: 'À planter',
+};
+
+const suggestionTitles: Record<SpaceKind, string> = {
+  VegetableGarden: 'Pour le potager',
+  Greenhouse: 'Pour la serre',
+  Orchard: 'Pour le verger',
+  SmallFruit: 'Pour les petits fruits',
+  Firewood: 'Pour le bois de chauffage',
+};
+
+/** Le titre des suggestions d'un type d'espace, dans le choix de l'espèce. */
+export const suggestionsTitle = (kind: SpaceKind) => suggestionTitles[kind];
+
+function parts(fortnight: Fortnight) {
   const index = fortnights.indexOf(fortnight);
-  return `${index % 2 === 0 ? 'début' : 'fin'} ${monthNames[Math.floor(index / 2)]}`;
+  return { month: monthNames[Math.floor(index / 2)], firstHalf: index % 2 === 0 };
 }
 
-/** « de début mars à début avril », ou la quinzaine seule. */
+/** Une quinzaine seule : `Mar1` → « début mars », `Mar2` → « fin mars ». */
+export function formatFortnight(fortnight: Fortnight): string {
+  const { month, firstHalf } = parts(fortnight);
+  return `${firstHalf ? 'début' : 'fin'} ${month}`;
+}
+
+/** Le début d'une plage : `Mar1` → « début mars », `Mar2` → « mi-mars », qui commence le 16. */
+function rangeStart(fortnight: Fortnight) {
+  const { month, firstHalf } = parts(fortnight);
+  return firstHalf ? `début ${month}` : `mi-${month}`;
+}
+
+/** La fin d'une plage : `Mar1` → « mi-mars », qui finit le 15, `Mar2` → « fin mars ». */
+function rangeEnd(fortnight: Fortnight) {
+  const { month, firstHalf } = parts(fortnight);
+  return firstHalf ? `mi-${month}` : `fin ${month}`;
+}
+
+/** « de début mars à mi-avril », ou la quinzaine seule. */
 export function formatRange({ from, to }: FortnightRange): string {
-  return from === to ? formatFortnight(from) : `de ${formatFortnight(from)} à ${formatFortnight(to)}`;
+  return from === to ? formatFortnight(from) : `de ${rangeStart(from)} à ${rangeEnd(to)}`;
 }
 
 /** Ce que le calendrier dessiné montre, pour le lecteur d'écran. */
@@ -75,9 +112,37 @@ export function calendarSummary(rows: CalendarRow[]): string {
   return rows.map(({ kind, ranges }) => `${windowKindLabels[kind].label} : ${ranges.map(formatRange).join(', puis ')}.`).join(' ');
 }
 
-/** « Récolter jusqu'à début novembre » */
+/** « Récolter jusqu'à mi-novembre » */
 export function formatActiveWindow({ kind, range }: ActiveWindow): string {
-  return `${windowKindLabels[kind].verb} jusqu'à ${formatFortnight(range.to)}`;
+  return `${windowKindLabels[kind].verb} jusqu'à ${rangeEnd(range.to)}`;
+}
+
+/** « de février », « d'avril », « de mi-juillet » */
+const fromText = (label: string) => (/^[ao]/.test(label) ? `d'${label}` : `de ${label}`);
+
+// Dans une ligne de la feuille d'espèce, le mois seul suffit pour une plage qui le couvre à son bord.
+function shortStart(fortnight: Fortnight) {
+  const { month, firstHalf } = parts(fortnight);
+  return firstHalf ? month : `mi-${month}`;
+}
+
+function shortEnd(fortnight: Fortnight) {
+  const { month, firstHalf } = parts(fortnight);
+  return firstHalf ? `mi-${month}` : month;
+}
+
+/** « de février à mars », « de mi-avril à mi-mai », « en mars », « fin mars » */
+function shortRange({ from, to }: FortnightRange) {
+  if (from === to) return formatFortnight(from);
+  if (parts(from).month === parts(to).month) return `en ${parts(from).month}`;
+  return `${fromText(shortStart(from))} à ${shortEnd(to)}`;
+}
+
+/** Ce qui vient pour une espèce : plus utile, dans une liste de choix, qu'un nom latin. */
+export function plantingHint({ kind, range, opensIn }: PlantingWindow): string {
+  if (opensIn === 0) return `${toDo[kind]} jusqu'à ${rangeEnd(range.to)}`;
+  if (opensIn === 1) return `${toDo[kind]} à partir ${fromText(shortStart(range.from))}`;
+  return `${windowKindLabels[kind].label} ${shortRange(range)}`;
 }
 
 const formatLength = (cm: number) => (cm < 100 ? `${cm} cm` : `${String(cm / 100).replace('.', ',')} m`);
