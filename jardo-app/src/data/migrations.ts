@@ -141,6 +141,12 @@ ALTER TABLE garden_tasks ADD COLUMN postponed_until TEXT;
 -- que SQLite ne connaît pas.
 ALTER TABLE garden_tasks ADD COLUMN opened_on TEXT;
 `,
+  `
+-- L'espèce du catalogue d'une plante, toujours nulle pour un tas de bois. Sans clé étrangère : le
+-- catalogue vit dans le code, et une sauvegarde d'une version plus récente peut nommer une espèce
+-- que celle-ci ne connaît pas encore.
+ALTER TABLE garden_items ADD COLUMN species_id TEXT;
+`,
 ];
 
 /** La base vient d'une version plus récente de l'app : elle est laissée telle quelle. */

@@ -66,6 +66,10 @@ pointer vers une seule table, et SQLite s'en accommode sans jointure. Deux types
   1. La quantité est strictement positive ; en pieds, elle est entière. Une culture de potager
   est archivée en fin de saison : l'historique par carré reste consultable. Le comportement
   propre au verger vient du type d'espace, pas d'une entité à part.
+  Une `Plant` peut aussi désigner une espèce du [catalogue](etude-catalogue-especes.md)
+  (`SpeciesId`, facultatif). Le texte d'espèce reste celui qu'on affiche. Une espèce qu'on choisit
+  doit être au catalogue ; celle que la plante a déjà reste acceptée, même inconnue de cette
+  version, puisqu'une sauvegarde plus récente peut la nommer. Un `WoodPile` n'en a jamais.
 - **WoodPile** (tas de bois) : essence (`WoodSpecies`), volume initial en stères, longueur des
   bûches (facultative), date de coupe, durée de séchage en mois (0 pour du bois acheté sec). Il
   n'est accepté que dans un espace bois de chauffage, comme une `Plant` n'y est pas acceptée.

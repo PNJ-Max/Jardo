@@ -8,6 +8,7 @@ import type { Clock } from './clock';
 import type { Db, SqlValue } from './db';
 import { ensureValidPlacement, moveHistory, type Noun } from './item-placement';
 import { businessRule, notFound } from './problem';
+import { findSpecies } from './species';
 import { optionalText, Validation } from './validation';
 
 /**
@@ -17,7 +18,10 @@ import { optionalText, Validation } from './validation';
 export type Plant = {
   id: Id;
   name: string;
+  /** Le nom qu'on affiche, choisi au catalogue ou tapé librement. */
   species: string | null;
+  /** L'espèce du catalogue, quand l'utilisateur en a choisi une. */
+  speciesId: string | null;
   variety: string | null;
   quantity: number;
   quantityUnit: QuantityUnit;
@@ -35,6 +39,7 @@ export type Plant = {
 export type PlantInput = {
   name: string;
   species?: string | null;
+  speciesId?: string | null;
   variety?: string | null;
   /** 1 par défaut. */
   quantity?: number;
@@ -50,6 +55,7 @@ type PlantRow = {
   id: Id;
   name: string;
   species: string | null;
+  species_id: string | null;
   variety: string | null;
   quantity: number;
   quantity_unit: QuantityUnit;
@@ -66,7 +72,7 @@ type PlantRow = {
 const plantNoun: Noun = { plural: 'de plantes', singular: 'une plante' };
 
 const selectPlants = `
-  SELECT p.id, p.name, p.species, p.variety, p.quantity, p.quantity_unit, p.sown_date, p.planted_date,
+  SELECT p.id, p.name, p.species, p.species_id, p.variety, p.quantity, p.quantity_unit, p.sown_date, p.planted_date,
     p.is_archived, p.created_at, p.space_id, s.name AS space_name, p.zone_id, z.name AS zone_name
   FROM garden_items p
   JOIN spaces s ON s.id = p.space_id
@@ -77,6 +83,7 @@ const toPlant = (row: PlantRow): Plant => ({
   id: row.id,
   name: row.name,
   species: row.species,
+  speciesId: row.species_id,
   variety: row.variety,
   quantity: row.quantity,
   quantityUnit: row.quantity_unit,
@@ -104,6 +111,7 @@ export function validate(input: PlantInput) {
   new Validation()
     .required('Name', 'Nom', input.name, 100)
     .optional('Species', 'Espèce', input.species, 100)
+    .optional('SpeciesId', 'Espèce du catalogue', input.speciesId, 100)
     .optional('Variety', 'Variété', input.variety, 100)
     .range('Quantity', 'Quantité', input.quantity ?? 1, 0.01, 100000)
     .oneOf('QuantityUnit', 'Unité', input.quantityUnit ?? 'Plants', quantityUnits)
@@ -114,16 +122,29 @@ export function validate(input: PlantInput) {
     .done();
 }
 
+/**
+ * Une espèce qu'on choisit doit être au catalogue. Celle que la plante a déjà reste acceptée : une
+ * sauvegarde d'une version plus récente peut nommer une espèce que celle-ci ne connaît pas encore.
+ */
+function ensureKnownSpecies(speciesId: string | null, currentSpeciesId: string | null) {
+  if (speciesId !== null && speciesId !== currentSpeciesId && !findSpecies(speciesId)) {
+    throw businessRule(`L'espèce « ${speciesId} » n'est pas au catalogue.`);
+  }
+}
+
 /** Les valeurs de `PlantInput`, dans l'ordre des colonnes du nom à la date de plantation. */
-function plantParams(input: PlantInput): SqlValue[] {
+function plantParams(input: PlantInput, currentSpeciesId: string | null = null): SqlValue[] {
   const quantity = input.quantity ?? 1;
   const quantityUnit = input.quantityUnit ?? 'Plants';
+  const speciesId = optionalText(input.speciesId);
 
   ensureQuantityFits(quantityUnit, quantity);
+  ensureKnownSpecies(speciesId, currentSpeciesId);
 
   return [
     input.name.trim(),
     optionalText(input.species),
+    speciesId,
     optionalText(input.variety),
     quantity,
     quantityUnit,
@@ -141,8 +162,8 @@ export function createPlantService(db: Db, clock: Clock) {
   }
 
   async function existing(id: Id) {
-    const plant = await db.first<{ space_id: Id; zone_id: Id | null }>(
-      "SELECT space_id, zone_id FROM garden_items WHERE id = ? AND item_type = 'Plant'",
+    const plant = await db.first<{ space_id: Id; zone_id: Id | null; species_id: string | null }>(
+      "SELECT space_id, zone_id, species_id FROM garden_items WHERE id = ? AND item_type = 'Plant'",
       [id],
     );
     if (!plant) throw notFound('Plant', id);
@@ -184,8 +205,8 @@ export function createPlantService(db: Db, clock: Clock) {
         await ensureValidPlacement(db, input.spaceId, zoneId, true, acceptsPlants, plantNoun);
         await db.run(
           `INSERT INTO garden_items (id, item_type, space_id, zone_id, created_at,
-             name, species, variety, quantity, quantity_unit, sown_date, planted_date)
-           VALUES (?, 'Plant', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             name, species, species_id, variety, quantity, quantity_unit, sown_date, planted_date)
+           VALUES (?, 'Plant', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [id, input.spaceId, zoneId, clock().toISOString(), ...plantParams(input)],
         );
       });
@@ -201,14 +222,14 @@ export function createPlantService(db: Db, clock: Clock) {
         const plant = await existing(id);
         await ensureValidPlacement(db, input.spaceId, zoneId, input.spaceId !== plant.space_id, acceptsPlants, plantNoun);
 
-        const params = plantParams(input);
+        const params = plantParams(input, plant.species_id);
         if (plant.space_id !== input.spaceId || plant.zone_id !== zoneId) {
           await moveHistory(db, id, input.spaceId, zoneId);
         }
 
         await db.run(
           `UPDATE garden_items SET space_id = ?, zone_id = ?,
-             name = ?, species = ?, variety = ?, quantity = ?, quantity_unit = ?, sown_date = ?, planted_date = ?
+             name = ?, species = ?, species_id = ?, variety = ?, quantity = ?, quantity_unit = ?, sown_date = ?, planted_date = ?
            WHERE id = ?`,
           [input.spaceId, zoneId, ...params, id],
         );
