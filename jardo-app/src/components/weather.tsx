@@ -30,7 +30,7 @@ export function RainNote({ text }: { text: string }) {
 
   return (
     <View style={styles.rainNote}>
-      <Ionicons name="rainy-outline" size={18} color={colors.water} />
+      <Ionicons aria-hidden name="rainy-outline" size={18} color={colors.water} />
       <Text style={styles.rainNoteText}>{text}</Text>
     </View>
   );

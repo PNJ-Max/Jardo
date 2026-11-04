@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { SlideInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -53,36 +53,38 @@ export function TaskSheet({ task, visible, onClose, onDone, onPostpone, onOpen }
           entering={reduceMotion ? undefined : SlideInDown.duration(260)}
           style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.handle} />
-          <View style={styles.header}>
-            <View style={styles.icon}>
-              <KindIcon kind={task.kind} />
+          <ScrollView contentContainerStyle={styles.content}>
+            <View style={styles.header}>
+              <View style={styles.icon}>
+                <KindIcon kind={task.kind} />
+              </View>
+              <View style={styles.headerText}>
+                <Text style={styles.title} accessibilityRole="header">
+                  {taskTitle(task)}
+                </Text>
+                <Text style={styles.target}>{targetLabel(task)}</Text>
+              </View>
             </View>
-            <View style={styles.headerText}>
-              <Text style={styles.title} accessibilityRole="header">
-                {taskTitle(task)}
-              </Text>
-              <Text style={styles.target}>{targetLabel(task)}</Text>
+            <View style={styles.facts}>
+              <Fact label="Rythme" value={capitalize(rhythm(task))} />
+              <Fact
+                label="Dernière fois"
+                value={sinceDone(task.lastDoneOn, today())}
+                detail={task.lastDoneOn ? formatDate(task.lastDoneOn) : undefined}
+              />
+              {task.kind === 'Harvest' && <LastHarvest task={task} />}
             </View>
-          </View>
-          <View style={styles.facts}>
-            <Fact label="Rythme" value={capitalize(rhythm(task))} />
-            <Fact
-              label="Dernière fois"
-              value={sinceDone(task.lastDoneOn, today())}
-              detail={task.lastDoneOn ? formatDate(task.lastDoneOn) : undefined}
-            />
-            {task.kind === 'Harvest' && <LastHarvest task={task} />}
-          </View>
-          <View style={styles.actions}>
-            <Button title="Fait aujourd'hui" icon="checkmark" onPress={then(onDone)} />
-            {onPostpone && <SheetAction icon="arrow-redo-outline" label="Reporter à demain" onPress={then(onPostpone)} />}
-            <SheetAction
-              icon="calendar-outline"
-              label="Fait un autre jour, avec une note"
-              onPress={then(() => router.push({ pathname: '/task/done', params: { id: String(task.id) } }))}
-            />
-            <SheetAction icon="open-outline" label="Ouvrir la fiche" onPress={then(onOpen)} />
-          </View>
+            <View style={styles.actions}>
+              <Button title="Fait aujourd'hui" icon="checkmark" onPress={then(onDone)} />
+              {onPostpone && <SheetAction icon="arrow-redo-outline" label="Reporter à demain" onPress={then(onPostpone)} />}
+              <SheetAction
+                icon="calendar-outline"
+                label="Fait un autre jour, avec une note"
+                onPress={then(() => router.push({ pathname: '/task/done', params: { id: String(task.id) } }))}
+              />
+              <SheetAction icon="open-outline" label="Ouvrir la fiche" onPress={then(onOpen)} />
+            </View>
+          </ScrollView>
         </Animated.View>
       </View>
     </Modal>
@@ -132,7 +134,7 @@ function SheetAction({ icon, label, onPress }: { icon: IconName; label: string; 
       onPress={onPress}
       accessibilityRole="button"
       style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}>
-      <Ionicons name={icon} size={20} color={colors.primary} />
+      <Ionicons aria-hidden name={icon} size={20} color={colors.primary} />
       <Text style={styles.actionText}>{label}</Text>
     </Pressable>
   );
@@ -149,7 +151,10 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     gap: spacing.md,
+    // Aux grandes polices, la feuille défile plutôt que de sortir de l'écran.
+    maxHeight: '92%',
   },
+  content: { gap: spacing.md },
   handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: {

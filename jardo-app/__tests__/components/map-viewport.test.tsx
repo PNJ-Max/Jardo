@@ -3,6 +3,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 
 import { MapViewport } from '@/components/map/map-viewport';
 import { countryHouseScene } from '@/map/country-house';
+import type { SlotKey } from '@/map/layouts';
 import { BOUNCE_LEAD } from '@/map/motion';
 
 const sizes: unknown[] = [];
@@ -38,6 +39,39 @@ describe('MapViewport', () => {
     await fireEvent(frame, 'layout', layout(0, 0));
 
     expect(sizes.at(-1)).toEqual({ width: 420, height: 747 });
+  });
+
+  describe("lecteur d'écran", () => {
+    const renderLabelled = async (labels: Partial<Record<SlotKey, string>>) => {
+      await render(
+        <MapViewport scene={countryHouseScene('light')} labels={labels} free={[]} selected={null} onSelect={jest.fn()} recenter={0} />,
+      );
+      const [frame] = screen.container.queryAll((node) => node.props.collapsable === false && !!node.props.onLayout);
+      await fireEvent(frame, 'layout', layout(420, 747));
+      return frame;
+    };
+
+    it("nomme l'étiquette d'un espace, avec une cible de 48 dp au moins", async () => {
+      await renderLabelled({ orchard: 'Verger' });
+
+      const label = screen.getByRole('button', { name: 'Ouvrir Verger' });
+      const { top, bottom } = label.props.hitSlop;
+      expect(top + bottom + 26).toBeGreaterThanOrEqual(48);
+    });
+
+    it('cache le dessin de la carte, dont le nom des emplacements est dit par les étiquettes', async () => {
+      const frame = await renderLabelled({ orchard: 'Verger' });
+
+      expect(frame).toHaveProp('aria-hidden', true);
+    });
+
+    it("laisse hors d'atteinte l'étiquette d'un carré tant que la carte n'est pas assez zoomée", async () => {
+      await renderLabelled({ orchard: 'Verger', 'bed-1': 'Carré 1' });
+
+      expect(screen.getByRole('button', { name: 'Ouvrir Verger' })).toBeOnTheScreen();
+      expect(screen.queryByRole('button', { name: 'Ouvrir Carré 1' })).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Ouvrir Carré 1', includeHiddenElements: true })).toHaveProp('tabIndex', -1);
+    });
   });
 
   describe('toucher un emplacement', () => {

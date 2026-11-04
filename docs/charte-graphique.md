@@ -182,9 +182,14 @@ composants partagés.
 - **Grandes polices (échelle de 1,3 à 2).** Rien d'important n'est coupé ni ne se chevauche : pas de
   hauteur fixe sur un texte (`minHeight`, jamais `height`), pas de `numberOfLines` sur ce qui nomme ou
   date quelque chose, une disposition qui passe d'une colonne à une autre quand la place manque (les
-  tuiles de zone passent à une par ligne au-delà de 1,3). Ce qui a une hauteur imposée (libellés de
+  tuiles de zone passent à une par ligne au-delà de 1,3, « Fait » passe sous le texte d'une tâche,
+  « Tout arroser » sous le nom de l'espace). Ce qui a une hauteur imposée (libellés de
   la barre d'onglets) ne grandit pas : `tabBarAllowFontScaling: false`, `maxFontSizeMultiplier` de 1,3
   sur les onglets d'une fiche.
+- **Un geste a toujours son équivalent annoncé.** Glisser une ligne d'Aujourd'hui pour la faire ou
+  la reporter a pour pendant des `accessibilityActions` (« Fait », « Reporter à demain ») sur la
+  ligne, en plus du bouton « Fait » et de la feuille. Le dessous du glissement est caché aux lecteurs.
+  Une étiquette que le zoom cache (carte) sort aussi de l'arbre d'accessibilité et du clavier.
 - **Tester.** Rôle et nom par `getByRole(role, { name })`, état par `{ selected: true }`, jamais par
   le texte seul. Sur le web, vérifier qu'aucun `<button>` n'en contient un autre : un `Button` ne se
   pose pas dans un élément touchable qui a le rôle `button` (`Card` avec `onPress`, ligne de liste).

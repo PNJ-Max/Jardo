@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -240,6 +240,8 @@ export function TaskRow({
   const [done, setDone] = useState(false);
   const [postponing, setPostponing] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const stacked = useWindowDimensions().fontScale > 1.3;
   const lastSwipe = useRef(0);
   const [returning] = useState(() => returningTasks.delete(task.id));
   const open = useSharedValue(1);
@@ -303,50 +305,60 @@ export function TaskRow({
     setTimeout(write, foldMs);
   };
 
+  const accessibilityActions =
+    gestures && canBeDone
+      ? [{ name: 'done', label: 'Fait' }, ...(canPostpone ? [{ name: 'postpone', label: 'Reporter à demain' }] : [])]
+      : undefined;
+
+  // « Fait » est le frère de la zone touchable, non son enfant : un bouton dans un bouton n'existe pas sur le web.
   const row = (
-    <Pressable
-      onPress={
-        gestures
-          ? () => {
-              if (Date.now() - lastSwipe.current > 300) setSheetOpen(true);
-            }
-          : onPress
-      }
-      accessibilityHint={gestures ? 'Ouvre la feuille de la tâche : rythme, dernière fois, et les façons de la noter' : undefined}
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
-      <View style={styles.icon}>
-        <KindIcon kind={task.kind} />
-      </View>
-      <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={2}>
-          {title}
-        </Text>
-        {detail !== undefined ? (
-          <Text style={styles.detail} numberOfLines={2}>
-            {detail}
-          </Text>
-        ) : (
-          <View style={styles.meta}>
-            <DueBadge task={task} />
-            {showTarget && (
-              <Text style={styles.target} numberOfLines={1}>
-                {targetLabel(task)}
-              </Text>
-            )}
-          </View>
-        )}
-      </View>
+    <View style={[styles.row, stacked && styles.rowStacked, pressed && styles.rowPressed]}>
+      <Pressable
+        onPress={
+          gestures
+            ? () => {
+                if (Date.now() - lastSwipe.current > 300) setSheetOpen(true);
+              }
+            : onPress
+        }
+        onPressIn={() => setPressed(true)}
+        onPressOut={() => setPressed(false)}
+        accessibilityRole="button"
+        accessibilityHint={gestures ? 'Ouvre la feuille de la tâche : rythme, dernière fois, et les façons de la noter' : undefined}
+        accessibilityActions={accessibilityActions}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === 'done') markDone();
+          else if (event.nativeEvent.actionName === 'postpone') postpone();
+        }}
+        style={[styles.touch, stacked && styles.touchStacked]}>
+        <View style={styles.icon}>
+          <KindIcon kind={task.kind} />
+        </View>
+        <View style={styles.body}>
+          <Text style={styles.title}>{title}</Text>
+          {detail !== undefined ? (
+            <Text style={styles.detail}>{detail}</Text>
+          ) : (
+            <View style={styles.meta}>
+              <DueBadge task={task} />
+              {showTarget && <Text style={styles.target}>{targetLabel(task)}</Text>}
+            </View>
+          )}
+        </View>
+      </Pressable>
       {canBeDone && (
-        <DoneButton
-          done={celebrating}
-          onPress={markDone}
-          onLongPress={
-            gestures ? undefined : () => router.push({ pathname: '/task/done', params: { id: String(task.id) } })
-          }
-          accessibilityLabel={`Fait : ${title}, ${targetLabel(task)}`}
-        />
+        <View style={stacked && styles.doneStacked}>
+          <DoneButton
+            done={celebrating}
+            onPress={markDone}
+            onLongPress={
+              gestures ? undefined : () => router.push({ pathname: '/task/done', params: { id: String(task.id) } })
+            }
+            accessibilityLabel={`Fait : ${title}, ${targetLabel(task)}`}
+          />
+        </View>
       )}
-    </Pressable>
+    </View>
   );
 
   return (
@@ -457,14 +469,30 @@ function DoneButton({ done, onPress, onLongPress, accessibilityLabel }: DoneButt
             <DoneIcon glyph="sprout" color={tint} size={18} />
           </Animated.View>
         </View>
-        <Text style={[styles.doneText, { color: tint }]}>{done ? 'Noté' : 'Fait'}</Text>
+        <Text maxFontSizeMultiplier={1.3} style={[styles.doneText, { color: tint }]}>
+          {done ? 'Noté' : 'Fait'}
+        </Text>
       </Pressable>
     </Animated.View>
   );
 }
 
 const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) => ({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingRight: 12 },
+  touch: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    paddingLeft: 12,
+  },
+  // Au-delà de 1,3, le titre n'a plus de place à côté de « Fait » : la pastille passe sous le texte.
+  rowStacked: { flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingRight: 0 },
+  touchStacked: { flexGrow: 0, flexBasis: 'auto', paddingRight: 12, paddingBottom: 6 },
+  doneStacked: { alignSelf: 'flex-start', marginLeft: 68, marginBottom: 10 },
   rowPressed: { backgroundColor: colors.surfaceSunken },
   icon: {
     width: 44,
@@ -483,8 +511,8 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    // 40 de haut, 56 au doigt avec le hitSlop : la ligne reste basse, la cible reste large.
-    height: 40,
+    // 40 de haut au moins, 56 au doigt avec le hitSlop : la ligne reste basse, la cible reste large.
+    minHeight: 40,
     paddingLeft: 10,
     paddingRight: 14,
     borderRadius: 20,

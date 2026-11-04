@@ -12,6 +12,28 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (04/11/2026)
 
+**Passe d'accessibilité, suite : Aujourd'hui et la carte (04/11/2026).** Les fichiers que la
+première passe n'avait pas pu toucher, revérifiés sur le code actuel.
+- **Ligne de tâche** : un `button` nommé par son titre et sa cible, avec son indication ; « Fait »
+  en est le frère, plus l'enfant (zéro bouton imbriqué sur le web, vérifié dans le DOM). Les actions
+  d'accessibilité « Fait » et « Reporter à demain » (« Fait » seul pour une tâche pas encore due)
+  tiennent lieu du glissement pour TalkBack ; le dessous du glissement reste caché.
+- **États** : le jour de la bande et « Dans le mois » passent en `aria-selected` / `aria-expanded`.
+  Le lien de l'espace dit son nombre de tâches. Icônes décoratives cachées.
+- **Carte** : le canvas est caché ; les étiquettes de carrés masquées par le zoom sortent de l'arbre
+  d'accessibilité et du clavier tant qu'elles sont invisibles ; chaque étiquette a 48 dp avec son
+  `hitSlop`, comme « Recentrer la carte » et les puces « Hors carte » ; « Hors carte » est un titre.
+- **Grandes polices** : plus de `numberOfLines` sur ce qui nomme ou date (titre, détail, espace,
+  puces) ; au-delà de 1,3, « Fait » passe sous le texte de la ligne et « Tout arroser » sous le nom
+  de l'espace ; la bande de la semaine et les pastilles plafonnent à 1,3 ; la feuille de la tâche
+  défile au lieu de sortir de l'écran. `minHeight` à la place de `height` sur les pastilles.
+- **Avertissement web `props.pointerEvents is deprecated`** : deux props `pointerEvents` de
+  `map-viewport.tsx`, passées en `style`. Plus rien dans la console, carte et Aujourd'hui.
+- **Vérifications** : tests Jest (`today-accessibility`, `map-viewport`, `garden`), DOM web dans le
+  navigateur intégré, captures en grande police dans [`docs/captures/`](docs/captures/) (échelle 2
+  simulée en réécrivant les feuilles de style, clair et sombre). Pas de TalkBack réel : il reste à
+  passer l'app sur un téléphone.
+
 **Catalogue d'espèces, PR 2 : le lien plante → espèce (04/11/2026).** Une plante peut désigner
 une fiche du catalogue. Aucun écran : le choix de l'espèce viendra avec la PR 4.
 - **Migration 4** : `species_id` sur `garden_items`, facultatif et sans clé étrangère, nul pour
