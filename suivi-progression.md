@@ -87,6 +87,11 @@ plante ouvre une feuille de recherche dans le catalogue, qui propose sans impose
   large, clair et sombre. Pas d'essai sur un téléphone : l'évitement du clavier dans la feuille et
   TalkBack restent à passer sur l'APK.
 
+**Audit de sécurité : ce que Git ignore (05/11/2026).** Le dépôt est public, et `.gitignore` laissait
+passer `credentials.json` (mots de passe de signature en clair, à ignorer selon la doc d'Expo), `*.keystore`,
+`.env.production`, `google-services.json`, une clé de service Google et les APK. Tous sont ignorés, et un
+test le vérifie avec `git check-ignore`. Aucun de ces fichiers n'a jamais été commité.
+
 **Catalogue d'espèces, PR 5 : l'onglet Conseils (04/11/2026).** La fiche d'une plante liée au
 catalogue gagne un onglet entre Journal et Infos. Sans espèce, ou avec un identifiant absent du
 catalogue, l'onglet n'existe pas. Il ne fait que lire : ni écriture, ni migration.
