@@ -155,12 +155,17 @@ l'identique.
 
 ## 7. À faire, dans l'ordre
 
+**Décision de Maxime (05/11/2026) :** les premiers testeurs sont des proches, l'APK passe par un lien et
+personne ne paie. Ce chantier attend donc le Play Store, sans compte Play ni déclaration d'ici là. Il
+suffit de dire aux testeurs que leurs données restent sur le téléphone, sauf la ville choisie pour la
+météo, envoyée à Open-Meteo.
+
 | # | Action | Qui | Quand |
 |---|---|---|---|
 | 1 | Faire trancher le statut professionnel ou non et ce qu'il implique en Belgique, par un comptable ou un guichet d'entreprises | Maxime | Avant le compte Play |
-| 2 | Compléter les champs entre crochets de la politique : nom, pays, contact | Maxime | Avant les testeurs |
-| 3 | Publier la politique sur une page publique (GitHub Pages ou Google Sites, gratuits) | Claude, puis Maxime | Avant les testeurs |
-| 4 | Dans l'app : lien « Confidentialité » et phrase sous la météo, écran « À propos » avec les licences des bibliothèques | Une session | Avant les testeurs |
+| 2 | Compléter les champs entre crochets de la politique : nom, pays, contact | Maxime | Avant le Play Store |
+| 3 | Publier la politique sur une page publique (GitHub Pages ou Google Sites, gratuits) | Claude, puis Maxime | Avant le Play Store |
+| 4 | Dans l'app : lien « Confidentialité » et phrase sous la météo, écran « À propos » avec les licences des bibliothèques | Une session | Avant le Play Store |
 | 5 | Sur le premier APK : lister les permissions, chercher `AD_ID`, observer le réseau | Maxime et Claude | Au premier APK |
 | 6 | Sauvegarder la clé de signature, activer la double authentification | Maxime | Au premier APK |
 | 7 | Remplir le formulaire de Google | Maxime | À la création de la fiche |

@@ -704,15 +704,20 @@ et le catalogue d'espèces complet (63 fiches, Conseils, climat, rappels propos�
 
 1. **Premier APK sur un vrai téléphone**, le plus gros risque : rien n'a encore tourné sur un appareil.
    Maxime crée son compte Expo ([guide](docs/guide-apk-test.md)), puis on corrige ce qu'on découvre.
-2. **Le légal** ([étude](docs/etude-legale.md#7-à-faire-dans-lordre)) : politique publiée, lien dans l'app,
-   vérification des permissions sur l'APK.
-3. **Le thème de nuit**, demandé par Maxime : plus sombre, qui évoque la nuit.
-4. **La relecture du catalogue** par un jardinier, et les décisions de
+2. **Le thème de nuit**, demandé par Maxime : plus sombre, qui évoque la nuit. Trois directions attendent
+   son choix.
+3. **La relecture du catalogue** par un jardinier, et les décisions de
    [l'étude du catalogue](docs/etude-catalogue-especes.md), fusionné sans cette relecture.
-5. **Écarter une proposition de rappel** : aujourd'hui, une proposition reste sur la fiche tant qu'elle
+4. **Écarter une proposition de rappel** : aujourd'hui, une proposition reste sur la fiche tant qu'elle
    n'est pas ajoutée.
-6. **Le compte Google Play** et le test interne, une fois l'APK validé et le statut tranché. Les premiers
-   testeurs peuvent recevoir l'APK par lien, sans compte Play.
+
+Les testeurs sont des proches : ils reçoivent l'APK par lien, sans compte Play et sans rien payer.
+
+**Avant le Play Store :**
+
+- **Le légal** ([étude](docs/etude-legale.md#7-à-faire-dans-lordre)) : statut professionnel ou non,
+  politique publiée, lien dans l'app, vérification des permissions sur l'APK.
+- **Le compte Google Play** et le test interne.
 
 **Ensuite :**
 
