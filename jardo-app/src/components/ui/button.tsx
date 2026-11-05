@@ -15,10 +15,12 @@ type ButtonProps = {
   disabled?: boolean;
   /** Pour un bouton qui replie ou déplie une zone : l'état est alors annoncé. */
   expanded?: boolean;
+  /** Le nom pour le lecteur d'écran, quand le titre seul ne dit pas sur quoi le bouton agit. */
+  accessibleName?: string;
   style?: ViewStyle;
 };
 
-export function Button({ title, onPress, variant = 'primary', icon, loading, disabled, expanded, style }: ButtonProps) {
+export function Button({ title, onPress, variant = 'primary', icon, loading, disabled, expanded, accessibleName, style }: ButtonProps) {
   const { colors } = useTheme();
   const styles = useStyles();
   const isPrimary = variant === 'primary';
@@ -30,7 +32,7 @@ export function Button({ title, onPress, variant = 'primary', icon, loading, dis
       disabled={disabled || loading}
       accessibilityRole="button"
       // Le texte cède la place à l'indicateur pendant le chargement : le nom ne doit pas disparaître.
-      accessibilityLabel={title}
+      accessibilityLabel={accessibleName ?? title}
       aria-busy={loading}
       aria-expanded={expanded}
       style={({ pressed }) => [

@@ -2,8 +2,10 @@ import { useMutation, useQueries, useQuery, useQueryClient, type QueryClient } f
 
 import { useServices } from '@/data/services';
 import type { DateOnly } from '@/domain/dates';
+import type { ReminderProposal } from '@/domain/reminder-proposals';
 import { pickBackupFile, saveBackupFile } from '@/lib/backup-file';
 import { toDateOnly } from '@/lib/dates';
+import { proposalTask } from '@/lib/species';
 import { isDueWatering } from '@/lib/today';
 import { useToday } from '@/lib/use-today';
 
@@ -253,12 +255,33 @@ export function usePlant(id: Id) {
   return useQuery({ queryKey: keys.plant(id), queryFn: () => plants.getById(id) });
 }
 
+/** Enregistre la plante, puis crée les rappels acceptés dans son formulaire. */
 export function useSavePlant() {
-  const { plants } = useServices();
+  const { plants, tasks } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: ({ id, input }: { id?: Id; input: PlantInput }) => (id ? plants.update(id, input) : plants.create(input)),
+    mutationFn: async ({ id, input, reminders = [] }: { id?: Id; input: PlantInput; reminders?: ReminderProposal[] }) => {
+      const plant = await (id ? plants.update(id, input) : plants.create(input));
+      for (const reminder of reminders) {
+        await tasks.create(proposalTask(reminder, { spaceId: plant.spaceId, zoneId: plant.zoneId, itemId: plant.id }));
+      }
+      return plant;
+    },
     onSuccess: invalidate,
+  });
+}
+
+/**
+ * L'unité que prend une nouvelle récolte sur cet élément ; sans élément, rien à lire. Elle
+ * initialise un formulaire : gcTime à 0, pour ne pas lire la valeur d'une ouverture précédente.
+ */
+export function useDefaultHarvestUnit(itemId: Id | null) {
+  const { plants } = useServices();
+  return useQuery({
+    queryKey: ['journal', 'harvestUnit', itemId],
+    queryFn: () => plants.defaultHarvestUnit(itemId!),
+    enabled: itemId !== null,
+    gcTime: 0,
   });
 }
 

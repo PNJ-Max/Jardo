@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
-import { usePlant, useSavePlant } from '@/api/queries';
-import type { Id, Plant, QuantityUnit } from '@/api/types';
+import { usePlant, useSavePlant, useTasks } from '@/api/queries';
+import type { Id, JournalEntryKind, Plant, QuantityUnit } from '@/api/types';
+import { FormProposals } from '@/components/species-proposals';
 import { SpeciesSelect } from '@/components/species-select';
 import { ZoneSelect } from '@/components/zone-select';
 import {
@@ -15,8 +16,11 @@ import {
   leaveForm,
   useChanged,
 } from '@/components/ui';
-import type { Species } from '@/domain/species';
+import { findSpecies } from '@/data/species';
+import { proposeReminders } from '@/domain/reminder-proposals';
+import { referenceClimate, type Species } from '@/domain/species';
 import { decimalText, parseDecimal, quantityUnits } from '@/lib/garden';
+import { useToday } from '@/lib/use-today';
 
 const unitOptions = (Object.keys(quantityUnits) as QuantityUnit[]).map((unit) => ({
   value: unit,
@@ -56,7 +60,23 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
   const [sownDate, setSownDate] = useState(plant?.sownDate ?? null);
   const [plantedDate, setPlantedDate] = useState(plant?.plantedDate ?? null);
   const [zoneId, setZoneId] = useState(defaultZoneId);
-  const changed = useChanged([name, species, speciesId, variety, quantityText, unit, sownDate, plantedDate, zoneId]);
+  const [accepted, setAccepted] = useState<JournalEntryKind[]>([]);
+  const changed = useChanged([name, species, speciesId, variety, quantityText, unit, sownDate, plantedDate, zoneId, accepted]);
+  const day = useToday();
+  const tasks = useTasks({ spaceId });
+
+  const known = speciesId ? findSpecies(speciesId) : undefined;
+  // En attendant le climat du jardin (étude, PR 7), celui pour lequel les fiches sont écrites.
+  const proposals =
+    known && tasks.data && !plant?.isArchived
+      ? proposeReminders({
+          species: known,
+          plant: { id: plant?.id ?? null, zoneId, sownDate, plantedDate },
+          tasks: tasks.data,
+          on: day,
+          climate: referenceClimate,
+        })
+      : [];
 
   // Validation locale minimale, pour guider la saisie. La vraie reste celle du service : ses
   // messages s'affichent sous les champs en cas de refus.
@@ -67,6 +87,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
   const selectSpecies = (chosen: Species) => {
     setSpecies(chosen.name);
     setSpeciesId(chosen.id);
+    setAccepted([]);
     if (!name.trim() || name === prefilledName) {
       setName(chosen.name);
       setPrefilledName(chosen.name);
@@ -77,6 +98,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
   const setFreeSpecies = (text: string) => {
     setSpecies(text);
     setSpeciesId(null);
+    setAccepted([]);
   };
 
   const submit = () => {
@@ -96,6 +118,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
           spaceId,
           zoneId,
         },
+        reminders: proposals.filter((proposal) => accepted.includes(proposal.kind)),
       },
       { onSuccess: leaveForm },
     );
@@ -127,6 +150,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
         onFreeText={setFreeSpecies}
         error={fieldError(save.error, 'species') ?? fieldError(save.error, 'speciesId')}
       />
+      <FormProposals proposals={proposals} on={day} accepted={accepted} onChange={setAccepted} />
       <Field
         label="Variété"
         value={variety}

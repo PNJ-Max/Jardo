@@ -4,6 +4,7 @@ export const fruitTrees: readonly Species[] = [
   {
     id: 'apple-tree',
     name: 'Pommier',
+    article: 'le',
     aliases: ['Pomme'],
     scientificName: 'Malus domestica',
     category: 'FruitTree',
@@ -23,6 +24,7 @@ export const fruitTrees: readonly Species[] = [
   {
     id: 'pear-tree',
     name: 'Poirier',
+    article: 'le',
     aliases: ['Poire'],
     scientificName: 'Pyrus communis',
     category: 'FruitTree',
@@ -42,6 +44,7 @@ export const fruitTrees: readonly Species[] = [
   {
     id: 'cherry-tree',
     name: 'Cerisier',
+    article: 'le',
     aliases: ['Cerise'],
     scientificName: 'Prunus avium',
     category: 'FruitTree',
@@ -61,6 +64,7 @@ export const fruitTrees: readonly Species[] = [
   {
     id: 'plum-tree',
     name: 'Prunier',
+    article: 'le',
     aliases: ['Prune', 'Mirabelle', 'Reine-claude', 'Quetsche'],
     scientificName: 'Prunus domestica',
     category: 'FruitTree',
@@ -80,6 +84,7 @@ export const fruitTrees: readonly Species[] = [
   {
     id: 'peach-tree',
     name: 'Pêcher',
+    article: 'le',
     aliases: ['Pêche', 'Nectarine'],
     scientificName: 'Prunus persica',
     category: 'FruitTree',
@@ -99,6 +104,7 @@ export const fruitTrees: readonly Species[] = [
   {
     id: 'apricot-tree',
     name: 'Abricotier',
+    article: "l'",
     aliases: ['Abricot'],
     scientificName: 'Prunus armeniaca',
     category: 'FruitTree',
@@ -118,6 +124,7 @@ export const fruitTrees: readonly Species[] = [
   {
     id: 'fig-tree',
     name: 'Figuier',
+    article: 'le',
     aliases: ['Figue'],
     scientificName: 'Ficus carica',
     category: 'FruitTree',
@@ -137,6 +144,7 @@ export const fruitTrees: readonly Species[] = [
   {
     id: 'grapevine',
     name: 'Vigne',
+    article: 'la',
     aliases: ['Raisin'],
     scientificName: 'Vitis vinifera',
     category: 'FruitTree',

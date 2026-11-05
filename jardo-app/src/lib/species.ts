@@ -1,5 +1,8 @@
-import type { JournalEntryKind } from '@/api/types';
+import type { Id, JournalEntryKind, TaskInput } from '@/api/types';
+import { yearOf, type DateOnly } from '@/domain/dates';
+import type { ReminderProposal } from '@/domain/reminder-proposals';
 import {
+  fortnightOf,
   fortnights,
   type ActiveWindow,
   type CalendarRow,
@@ -14,6 +17,7 @@ import {
   type WindowKind,
 } from '@/domain/species';
 import type { SpaceKind } from '@/domain/types';
+import { lowerFirst } from '@/lib/garden';
 
 // Le vocabulaire du catalogue d'espèces affiché à l'écran.
 
@@ -143,6 +147,33 @@ export function plantingHint({ kind, range, opensIn }: PlantingWindow): string {
   if (opensIn === 0) return `${toDo[kind]} jusqu'à ${rangeEnd(range.to)}`;
   if (opensIn === 1) return `${toDo[kind]} à partir ${fromText(shortStart(range.from))}`;
   return `${windowKindLabels[kind].label} ${shortRange(range)}`;
+}
+
+/** « la tomate », « l'ail » */
+export const speciesWithArticle = ({ article, name }: Species) =>
+  `${article}${article.endsWith("'") ? '' : ' '}${lowerFirst(name)}`;
+
+/** « Arroser tous les 3 jours », « Récolter chaque année » : ce que la tâche demandera. */
+export function proposalTitle({ kind, window, recurrence, intervalDays }: ReminderProposal): string {
+  if (kind === 'Watering') return `Arroser tous les ${intervalDays} jours`;
+  const verb = windowKindLabels[window!].verb;
+  return recurrence === 'Yearly' ? `${verb} chaque année` : verb;
+}
+
+/** « à partir d'aujourd'hui », « à partir de mi-juillet 2027 » : l'année n'apparaît que si ce n'est pas celle du jour. */
+export function proposalStart({ startDate }: ReminderProposal, on: DateOnly): string {
+  if (startDate === on) return "à partir d'aujourd'hui";
+  const year = yearOf(startDate) === yearOf(on) ? '' : ` ${yearOf(startDate)}`;
+  return `à partir ${fromText(rangeStart(fortnightOf(startDate)))}${year}`;
+}
+
+/** La tâche d'une proposition acceptée. Un semis garde « sous abri » ou « en place » dans son titre. */
+export function proposalTask(
+  { kind, window, recurrence, intervalDays, startDate }: ReminderProposal,
+  target: { spaceId: Id; zoneId: Id | null; itemId: Id },
+): TaskInput {
+  const title = kind === 'Sowing' ? windowKindLabels[window!].verb : null;
+  return { kind, title, recurrence, intervalDays, startDate, ...target };
 }
 
 const formatLength = (cm: number) => (cm < 100 ? `${cm} cm` : `${String(cm / 100).replace('.', ',')} m`);

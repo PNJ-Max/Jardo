@@ -4,11 +4,16 @@ import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { useJournal, useTasks } from '@/api/queries';
-import type { GardenTask, Id, ItemKind } from '@/api/types';
+import type { GardenTask, Id, ItemKind, Plant } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
+import { PlantProposals } from '@/components/species-proposals';
 import { TaskRow, useMarkDone } from '@/components/tasks';
 import { Button, Group, SectionTitle, Tabs } from '@/components/ui';
+import { findSpecies } from '@/data/species';
+import { proposeReminders } from '@/domain/reminder-proposals';
+import { referenceClimate } from '@/domain/species';
 import { formatDate } from '@/lib/dates';
+import { useToday } from '@/lib/use-today';
 import { createStyles, useTheme } from '@/theme';
 
 /** La cible des tâches et interventions d'un écran de détail. */
@@ -91,16 +96,24 @@ function splitTasks(target: Target, tasks: GardenTask[]) {
   };
 }
 
-export function TasksSection({ target }: { target: Target }) {
+/** `plant` : la fiche d'une plante, à qui le catalogue peut proposer des rappels. */
+export function TasksSection({ target, plant }: { target: Target; plant?: Plant }) {
   const styles = useStyles();
   const tasks = useTasks(filterFor(target));
   const { markDone } = useMarkDone();
+  const day = useToday();
   const noun = targetNoun(target);
 
   if (tasks.isPending) return <SectionLoading />;
   if (tasks.error) return <Text style={styles.error}>{tasks.error.message}</Text>;
 
   const { own, contained, inherited } = splitTasks(target, tasks.data);
+  const species = plant?.speciesId ? findSpecies(plant.speciesId) : undefined;
+  // En attendant le climat du jardin (étude, PR 7), celui pour lequel les fiches sont écrites.
+  const proposals =
+    plant && species && !plant.isArchived
+      ? proposeReminders({ species, plant, tasks: tasks.data, on: day, climate: referenceClimate })
+      : [];
   const renderTask = (task: GardenTask, showTarget: boolean) => (
     <TaskRow
       key={task.id}
@@ -113,11 +126,9 @@ export function TasksSection({ target }: { target: Target }) {
 
   return (
     <View style={styles.section}>
-      {own.length === 0 ? (
-        <Text style={styles.empty}>Aucune tâche pour {noun}.</Text>
-      ) : (
-        <Group>{own.map((task) => renderTask(task, false))}</Group>
-      )}
+      {own.length > 0 && <Group>{own.map((task) => renderTask(task, false))}</Group>}
+      {own.length === 0 && proposals.length === 0 && <Text style={styles.empty}>Aucune tâche pour {noun}.</Text>}
+      {plant && species && <PlantProposals plant={plant} species={species} proposals={proposals} on={day} />}
       <Button
         title={`Ajouter une tâche à ${noun}`}
         icon="add"

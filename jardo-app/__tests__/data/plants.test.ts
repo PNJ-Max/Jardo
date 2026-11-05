@@ -319,6 +319,53 @@ describe('PlantService (ajouts au port)', () => {
 describe('PlantService (espèce du catalogue)', () => {
   const tomato = (spaceId: string): PlantInput => ({ name: 'Tomates', species: 'Tomate', speciesId: 'tomato', spaceId });
 
+  const noteHarvest = (
+    db: Awaited<ReturnType<typeof setup>>['db'],
+    spaceId: string,
+    itemId: string | null,
+    date: string,
+    unit: string | null,
+  ) =>
+    db.run(
+      `INSERT INTO journal_entries (id, kind, date, space_id, item_id, quantity, quantity_unit, created_at)
+       VALUES (?, 'Harvest', ?, ?, ?, ?, ?, ?)`,
+      [`${date}-${itemId}`, date, spaceId, itemId, unit ? 1 : null, unit, `${date}T12:00:00.000Z`],
+    );
+
+  it("L'unité de récolte par défaut est celle de l'espèce, sinon le kilo", async () => {
+    const { service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const zucchini = await service.create({ ...tomato(potager.id), speciesId: 'zucchini' });
+    const free = await service.create(newPlant(potager.id));
+
+    await expect(service.defaultHarvestUnit(zucchini.id)).resolves.toBe('Pieces');
+    await expect(service.defaultHarvestUnit(free.id)).resolves.toBe('Kilograms');
+  });
+
+  it("La dernière récolte chiffrée de la plante passe avant l'espèce", async () => {
+    const { db, service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const zucchini = await service.create({ ...tomato(potager.id), speciesId: 'zucchini' });
+
+    await noteHarvest(db, potager.id, zucchini.id, '2026-06-01', 'Kilograms');
+    await noteHarvest(db, potager.id, zucchini.id, '2026-06-10', 'Grams');
+    await noteHarvest(db, potager.id, zucchini.id, '2026-06-12', null);
+
+    await expect(service.defaultHarvestUnit(zucchini.id)).resolves.toBe('Grams');
+  });
+
+  it("Une récolte notée ailleurs ne change pas l'unité de la plante", async () => {
+    const { db, service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const zucchini = await service.create({ ...tomato(potager.id), speciesId: 'zucchini' });
+    const other = await service.create(tomato(potager.id));
+
+    await noteHarvest(db, potager.id, null, '2026-06-01', 'Kilograms');
+    await noteHarvest(db, potager.id, other.id, '2026-06-02', 'Grams');
+
+    await expect(service.defaultHarvestUnit(zucchini.id)).resolves.toBe('Pieces');
+  });
+
   it("Une plante créée depuis le catalogue garde l'espèce et son nom", async () => {
     const { service, addSpace } = await setup();
     const potager = await addSpace('Potager');

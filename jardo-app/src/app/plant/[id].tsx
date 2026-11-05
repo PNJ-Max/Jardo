@@ -65,7 +65,7 @@ function PlantDetail({ plant }: { plant: Plant }) {
         </>
       }
       tabs={[
-        { key: 'tasks', label: 'Tâches', render: () => <TasksSection target={target} /> },
+        { key: 'tasks', label: 'Tâches', render: () => <TasksSection target={target} plant={plant} /> },
         { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
         ...(species ? [{ key: 'advice', label: 'Conseils', render: () => <SpeciesAdvice species={species} /> }] : []),
         {

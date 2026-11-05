@@ -1,4 +1,4 @@
-import { dayOf, monthOf, type DateOnly } from './dates';
+import { dayOf, monthOf, yearOf, type DateOnly } from './dates';
 import type { MeasureUnit, QuantityUnit, SpaceKind } from './types';
 
 // Le catalogue d'espèces : ce qu'une fiche contient et les calculs qu'on en tire. Les fiches
@@ -51,9 +51,13 @@ export type Species = {
   /** Identifiant définitif, en anglais : jamais renommé, jamais retiré. */
   id: string;
   name: string;
+  /** Pour écrire « la tomate », « l'ail », « le pommier ». */
+  article: 'le' | 'la' | "l'";
   aliases: readonly string[];
   scientificName: string;
   category: SpeciesCategory;
+  /** Vivace : la récolte revient chaque année. Les fruitiers et les petits fruits le sont tous. */
+  perennial?: true;
   /** Semis à repiquer : sous abri, ou en pépinière pour le poireau. */
   sowIndoors?: readonly FortnightRange[];
   /** Semis en place. */
@@ -79,6 +83,16 @@ export function fortnightOf(date: DateOnly): Fortnight {
 }
 
 export const shiftFortnight = (fortnight: Fortnight, offset: number) => fortnights[modulo(indexOf(fortnight) + offset)];
+
+/** Le premier jour de cette quinzaine, ce jour compris ou à venir : le 1er ou le 16 du mois. */
+export function nextFortnightStart(fortnight: Fortnight, on: DateOnly): DateOnly {
+  const index = indexOf(fortnight);
+  const startIn = (year: number) =>
+    `${year}-${String(Math.floor(index / 2) + 1).padStart(2, '0')}-${index % 2 === 0 ? '01' : '16'}`;
+  const thisYear = startIn(yearOf(on));
+
+  return thisYear >= on ? thisYear : startIn(yearOf(on) + 1);
+}
 
 export function rangeContains(range: FortnightRange, fortnight: Fortnight): boolean {
   const [from, to, at] = [indexOf(range.from), indexOf(range.to), indexOf(fortnight)];
@@ -127,9 +141,14 @@ export type PlantingWindow = {
 };
 
 /** La fenêtre de semis ou de plantation qui couvre ce jour, à défaut celle qui s'ouvre le plus tôt. */
-export function nextPlantingWindow(species: Species, on: DateOnly, climate: Climate): PlantingWindow | undefined {
+export function nextPlantingWindow(
+  species: Species,
+  on: DateOnly,
+  climate: Climate,
+  kinds: readonly PlantingKind[] = plantingKinds,
+): PlantingWindow | undefined {
   const fortnight = fortnightOf(on);
-  const windows = plantingKinds.flatMap((kind) =>
+  const windows = kinds.flatMap((kind) =>
     windowsFor(species, kind, climate).map((range) => ({
       kind,
       range,

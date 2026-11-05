@@ -2,7 +2,7 @@ import { randomUUID } from 'expo-crypto';
 
 import type { DateOnly } from '@/domain/dates';
 import { acceptsPlants } from '@/domain/kinds';
-import { quantityUnits, type Id, type QuantityUnit } from '@/domain/types';
+import { quantityUnits, type Id, type MeasureUnit, type QuantityUnit } from '@/domain/types';
 
 import type { Clock } from './clock';
 import type { Db, SqlValue } from './db';
@@ -195,6 +195,20 @@ export function createPlantService(db: Db, clock: Clock) {
     },
 
     getById,
+
+    /** L'unité d'une nouvelle récolte : celle de la dernière notée sur la plante, sinon celle de l'espèce. */
+    async defaultHarvestUnit(id: Id): Promise<MeasureUnit> {
+      const last = await db.first<{ quantity_unit: MeasureUnit }>(
+        `SELECT quantity_unit FROM journal_entries
+         WHERE item_id = ? AND kind = 'Harvest' AND quantity_unit IS NOT NULL
+         ORDER BY date DESC, created_at DESC LIMIT 1`,
+        [id],
+      );
+      if (last) return last.quantity_unit;
+
+      const plant = await db.first<{ species_id: string | null }>('SELECT species_id FROM garden_items WHERE id = ?', [id]);
+      return (plant?.species_id && findSpecies(plant.species_id)?.harvestUnit) || 'Kilograms';
+    },
 
     async create(input: PlantInput): Promise<Plant> {
       validate(input);

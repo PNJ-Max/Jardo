@@ -22,6 +22,7 @@ import type { SpaceKind } from '@/domain/types';
 const species = (overrides: Partial<Species>): Species => ({
   id: 'test',
   name: 'Essai',
+  article: "l'",
   aliases: [],
   scientificName: 'Planta probationis',
   category: 'Vegetable',

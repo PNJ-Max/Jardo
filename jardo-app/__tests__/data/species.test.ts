@@ -135,6 +135,13 @@ describe.each(ids)('fiche %s', (id) => {
     }
   });
 
+  it('a un article, élidé devant une voyelle', () => {
+    // Le h de « haricot » est aspiré ; aucune autre fiche ne commence par un h.
+    const elided = /^[aeiouéèêâàîïôûy]/i.test(species.name);
+
+    expect(species.article === "l'").toBe(elided);
+  });
+
   it('a des unités prises dans celles du modèle', () => {
     expect(quantityUnits).toContain(species.quantityUnit);
     expect(measureUnits).toContain(species.harvestUnit);

@@ -6,6 +6,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'tomato',
     name: 'Tomate',
+    article: 'la',
     aliases: ['Tomate cerise'],
     scientificName: 'Solanum lycopersicum',
     category: 'Vegetable',
@@ -26,6 +27,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'zucchini',
     name: 'Courgette',
+    article: 'la',
     aliases: [],
     scientificName: 'Cucurbita pepo',
     category: 'Vegetable',
@@ -47,6 +49,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'lettuce',
     name: 'Laitue',
+    article: 'la',
     aliases: ['Salade', 'Batavia'],
     scientificName: 'Lactuca sativa',
     category: 'Vegetable',
@@ -68,6 +71,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'carrot',
     name: 'Carotte',
+    article: 'la',
     aliases: [],
     scientificName: 'Daucus carota subsp. sativus',
     category: 'Vegetable',
@@ -87,6 +91,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'radish',
     name: 'Radis',
+    article: 'le',
     aliases: ['Radis rose'],
     scientificName: 'Raphanus sativus',
     category: 'Vegetable',
@@ -112,6 +117,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'bean',
     name: 'Haricot',
+    article: 'le',
     aliases: ['Haricot vert', 'Haricot nain', 'Haricot à rames'],
     scientificName: 'Phaseolus vulgaris',
     category: 'Vegetable',
@@ -131,6 +137,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'potato',
     name: 'Pomme de terre',
+    article: 'la',
     aliases: ['Patate'],
     scientificName: 'Solanum tuberosum',
     category: 'Vegetable',
@@ -150,6 +157,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'leek',
     name: 'Poireau',
+    article: 'le',
     aliases: [],
     scientificName: 'Allium porrum',
     category: 'Vegetable',
@@ -170,6 +178,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'lamb-lettuce',
     name: 'Mâche',
+    article: 'la',
     aliases: ['Doucette', 'Salade de blé'],
     scientificName: 'Valerianella locusta',
     category: 'Vegetable',
@@ -189,6 +198,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'garlic',
     name: 'Ail',
+    article: "l'",
     aliases: [],
     scientificName: 'Allium sativum',
     category: 'Vegetable',
@@ -210,6 +220,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'cucumber',
     name: 'Concombre',
+    article: 'le',
     aliases: [],
     scientificName: 'Cucumis sativus',
     category: 'Vegetable',
@@ -230,6 +241,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'gherkin',
     name: 'Cornichon',
+    article: 'le',
     aliases: [],
     scientificName: 'Cucumis sativus',
     category: 'Vegetable',
@@ -251,6 +263,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'squash',
     name: 'Courge',
+    article: 'la',
     aliases: ['Potiron', 'Potimarron', 'Butternut', 'Citrouille'],
     scientificName: 'Cucurbita maxima, Cucurbita moschata',
     category: 'Vegetable',
@@ -272,6 +285,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'melon',
     name: 'Melon',
+    article: 'le',
     aliases: [],
     scientificName: 'Cucumis melo',
     category: 'Vegetable',
@@ -292,6 +306,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'eggplant',
     name: 'Aubergine',
+    article: "l'",
     aliases: [],
     scientificName: 'Solanum melongena',
     category: 'Vegetable',
@@ -312,6 +327,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'pepper',
     name: 'Poivron',
+    article: 'le',
     aliases: ['Piment'],
     scientificName: 'Capsicum annuum',
     category: 'Vegetable',
@@ -332,6 +348,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'sweet-corn',
     name: 'Maïs doux',
+    article: 'le',
     aliases: ['Maïs'],
     scientificName: 'Zea mays',
     category: 'Vegetable',
@@ -353,6 +370,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'pea',
     name: 'Petit pois',
+    article: 'le',
     aliases: ['Pois'],
     scientificName: 'Pisum sativum',
     category: 'Vegetable',
@@ -372,6 +390,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'broad-bean',
     name: 'Fève',
+    article: 'la',
     aliases: [],
     scientificName: 'Vicia faba',
     category: 'Vegetable',
@@ -394,6 +413,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'chicory',
     name: 'Chicorée',
+    article: 'la',
     aliases: ['Frisée', 'Scarole', 'Salade frisée'],
     scientificName: 'Cichorium endivia',
     category: 'Vegetable',
@@ -414,6 +434,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'arugula',
     name: 'Roquette',
+    article: 'la',
     aliases: ['Salade roquette'],
     scientificName: 'Eruca vesicaria',
     category: 'Vegetable',
@@ -433,6 +454,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'spinach',
     name: 'Épinard',
+    article: "l'",
     aliases: [],
     scientificName: 'Spinacia oleracea',
     category: 'Vegetable',
@@ -458,6 +480,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'chard',
     name: 'Blette',
+    article: 'la',
     aliases: ['Bette', 'Poirée'],
     scientificName: 'Beta vulgaris var. cicla',
     category: 'Vegetable',
@@ -477,6 +500,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'cabbage',
     name: 'Chou pommé',
+    article: 'le',
     aliases: ['Chou cabus', 'Chou blanc', 'Chou rouge', 'Chou de Milan'],
     scientificName: 'Brassica oleracea var. capitata',
     category: 'Vegetable',
@@ -497,6 +521,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'cauliflower',
     name: 'Chou-fleur',
+    article: 'le',
     aliases: [],
     scientificName: 'Brassica oleracea var. botrytis',
     category: 'Vegetable',
@@ -517,6 +542,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'broccoli',
     name: 'Brocoli',
+    article: 'le',
     aliases: [],
     scientificName: 'Brassica oleracea var. italica',
     category: 'Vegetable',
@@ -537,6 +563,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'brussels-sprouts',
     name: 'Chou de Bruxelles',
+    article: 'le',
     aliases: [],
     scientificName: 'Brassica oleracea var. gemmifera',
     category: 'Vegetable',
@@ -557,6 +584,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'kale',
     name: 'Chou kale',
+    article: 'le',
     aliases: ['Kale'],
     scientificName: 'Brassica oleracea var. sabellica',
     category: 'Vegetable',
@@ -577,6 +605,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'celery',
     name: 'Céleri',
+    article: 'le',
     aliases: ['Céleri-rave', 'Céleri branche'],
     scientificName: 'Apium graveolens',
     category: 'Vegetable',
@@ -597,6 +626,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'fennel',
     name: 'Fenouil',
+    article: 'le',
     aliases: ['Fenouil bulbeux'],
     scientificName: 'Foeniculum vulgare var. azoricum',
     category: 'Vegetable',
@@ -616,6 +646,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'beetroot',
     name: 'Betterave',
+    article: 'la',
     aliases: ['Betterave rouge'],
     scientificName: 'Beta vulgaris var. conditiva',
     category: 'Vegetable',
@@ -635,6 +666,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'turnip',
     name: 'Navet',
+    article: 'le',
     aliases: [],
     scientificName: 'Brassica rapa subsp. rapa',
     category: 'Vegetable',
@@ -660,6 +692,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'parsnip',
     name: 'Panais',
+    article: 'le',
     aliases: [],
     scientificName: 'Pastinaca sativa',
     category: 'Vegetable',
@@ -679,6 +712,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'onion',
     name: 'Oignon',
+    article: "l'",
     aliases: [],
     scientificName: 'Allium cepa',
     category: 'Vegetable',
@@ -698,6 +732,7 @@ export const vegetables: readonly Species[] = [
   {
     id: 'shallot',
     name: 'Échalote',
+    article: "l'",
     aliases: [],
     scientificName: 'Allium cepa var. aggregatum',
     category: 'Vegetable',
@@ -716,9 +751,11 @@ export const vegetables: readonly Species[] = [
   {
     id: 'rhubarb',
     name: 'Rhubarbe',
+    article: 'la',
     aliases: [],
     scientificName: 'Rheum rhabarbarum',
     category: 'Vegetable',
+    perennial: true,
     plant: [{ from: 'Feb1', to: 'Mar2' }],
     harvest: [{ from: 'Apr2', to: 'Jun2' }],
     spacingCm: { plants: 90, rows: 100 },
@@ -734,9 +771,11 @@ export const vegetables: readonly Species[] = [
   {
     id: 'asparagus',
     name: 'Asperge',
+    article: "l'",
     aliases: [],
     scientificName: 'Asparagus officinalis',
     category: 'Vegetable',
+    perennial: true,
     plant: [{ from: 'Mar1', to: 'Apr2' }],
     harvest: [{ from: 'Apr2', to: 'Jun1' }],
     spacingCm: { plants: 40, rows: 60 },
@@ -752,9 +791,11 @@ export const vegetables: readonly Species[] = [
   {
     id: 'artichoke',
     name: 'Artichaut',
+    article: "l'",
     aliases: [],
     scientificName: 'Cynara cardunculus var. scolymus',
     category: 'Vegetable',
+    perennial: true,
     plant: [{ from: 'Apr2', to: 'Jun1' }],
     harvest: [{ from: 'Jun2', to: 'Sep1' }],
     spacingCm: { plants: 90, rows: 100 },

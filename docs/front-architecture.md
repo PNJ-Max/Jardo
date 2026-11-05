@@ -111,6 +111,8 @@ chaque lecture ; les écrans affichent ce qu'ils renvoient.
 - `species.ts` : le type `Species` du catalogue, les quinzaines, le décalage des fenêtres selon le
   climat (`windowsFor`) et « en ce moment » (`activeWindows`). Les fiches sont des constantes dans
   `src/data/species/`, un fichier par catégorie ([étude](etude-catalogue-especes.md#5-stockage-et-mises-à-jour)).
+- `reminder-proposals.ts` : `proposeReminders`, les rappels que le catalogue propose pour une plante,
+  selon sa fiche, ses dates et les tâches qui la couvrent déjà.
 - `types.ts` : le vocabulaire (types d'espace, d'élément, d'intervention, rythmes, statuts) ;
   `kinds.ts` : ce que chaque type d'espace accepte, et les libellés des messages d'erreur.
 - Les identifiants sont des chaînes (`Id`), les UUID de la base locale.
