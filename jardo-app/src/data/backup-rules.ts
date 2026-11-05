@@ -6,6 +6,7 @@ import {
   isWoodKind,
   spaceKindLabel,
 } from '@/domain/kinds';
+import { climates } from '@/domain/species';
 import type { Id, JournalEntryKind, MeasureUnit, QuantityUnit, SpaceKind, TaskRecurrence } from '@/domain/types';
 import { remainingSteres } from '@/domain/wood-pile';
 
@@ -63,7 +64,10 @@ export function checkBackupRules(tables: BackupTables): void {
   if (!garden || otherGardens.length > 0) throw invalidBackup('Le fichier doit contenir un et un seul jardin.');
 
   apply('Jardin', () => {
-    new Validation().required('Name', 'Nom', garden.name, 100).done();
+    new Validation()
+      .required('Name', 'Nom', garden.name, 100)
+      .optionalOneOf('Climate', 'Climat', garden.climate, climates)
+      .done();
     if (garden.map_layout !== null && !findLayout(garden.map_layout)) {
       throw businessRule(`Le modèle de carte « ${garden.map_layout} » n'existe pas.`);
     }

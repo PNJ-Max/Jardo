@@ -1,7 +1,8 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import PlantScreen from '@/app/plant/[id]';
+import SettingsScreen from '@/app/settings';
 import { SpeciesAdvice } from '@/components/species-advice';
 import { createServices } from '@/data/services';
 import { findSpecies } from '@/data/species';
@@ -132,11 +133,56 @@ describe('onglet Conseils de la fiche plante', () => {
     expect(screen.getByText('Rien au calendrier de cette espèce en ce moment.')).toBeOnTheScreen();
   });
 
-  it('suit le climat donné, en attendant le réglage du jardin', async () => {
+  it('suit le climat donné', async () => {
     await renderScreen(<SpeciesAdvice species={known('tomato')} climate="Mountain" />);
 
     expect(screen.getByLabelText(/Plantation : de mi-juin à fin juillet/)).toBeOnTheScreen();
     expect(screen.getByText(/Dates pour un climat de montagne/)).toBeOnTheScreen();
     expect(screen.getByText('Rien au calendrier de cette espèce en ce moment.')).toBeOnTheScreen();
+  });
+
+  it('décale le calendrier de la fiche dès que le climat du jardin change dans Réglages', async () => {
+    const services = createServices(await createTestDb());
+    const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+    const plant = await services.plants.create({ name: 'Mes plants', species: 'Tomate', speciesId: 'tomato', spaceId: potager.id });
+    jest.mocked(useLocalSearchParams).mockReturnValue({ id: plant.id });
+    await renderScreen(
+      <>
+        <PlantScreen />
+        <SettingsScreen />
+      </>,
+      services,
+    );
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Conseils' }));
+    expect(screen.getByLabelText(/Plantation : de mi-mai à fin juin/)).toBeOnTheScreen();
+    expect(screen.getByText("Planter jusqu'à fin juin")).toBeOnTheScreen();
+
+    await fireEvent.press(await screen.findByRole('radio', { name: /^Montagne\./ }));
+
+    expect(await screen.findByLabelText(/Plantation : de mi-juin à fin juillet/)).toBeOnTheScreen();
+    expect(screen.getByText(/Dates pour un climat de montagne/)).toBeOnTheScreen();
+    expect(screen.getByText('Rien au calendrier de cette espèce en ce moment.')).toBeOnTheScreen();
+  });
+
+  it('suit le climat enregistré du jardin en ouvrant la fiche', async () => {
+    const services = createServices(await createTestDb());
+    await services.garden.setClimate('Mediterranean');
+    const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+    const plant = await services.plants.create({ name: 'Mes plants', species: 'Tomate', speciesId: 'tomato', spaceId: potager.id });
+    jest.mocked(useLocalSearchParams).mockReturnValue({ id: plant.id });
+    await renderScreen(<PlantScreen />, services);
+
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Conseils' }));
+
+    expect(await screen.findByText(/Dates pour un climat méditerranéen/)).toBeOnTheScreen();
+    expect(screen.getByLabelText(/Plantation : de mi-avril à fin mai/)).toBeOnTheScreen();
+  });
+
+  it('« Changer » mène à Réglages', async () => {
+    await openAdvice('tomato');
+
+    await fireEvent.press(screen.getByRole('link', { name: 'Changer le climat du jardin' }));
+
+    expect(router.push).toHaveBeenCalledWith('/settings');
   });
 });

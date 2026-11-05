@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Text, useWindowDimensions, View, type ViewStyle } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View, type ViewStyle } from 'react-native';
 
 import { calendarBrush, CategoryIcon, KindIcon } from '@/components/pictograms';
 import { Fact } from '@/components/sections';
@@ -8,7 +9,6 @@ import type { DateOnly } from '@/domain/dates';
 import {
   activeWindows,
   fortnights,
-  referenceClimate,
   yearCalendar,
   type CalendarBand,
   type Climate,
@@ -32,8 +32,8 @@ const maxCalendarScale = 1.3;
 
 const percentOfYear = (fortnightCount: number) => `${(fortnightCount / fortnights.length) * 100}%` as const;
 
-/** L'onglet Conseils d'une plante liée au catalogue. `climate` attend le réglage du jardin. */
-export function SpeciesAdvice({ species, climate = referenceClimate }: { species: Species; climate?: Climate }) {
+/** L'onglet Conseils d'une plante liée au catalogue. */
+export function SpeciesAdvice({ species, climate }: { species: Species; climate: Climate }) {
   const styles = useStyles();
   const today = useToday();
   const active = activeWindows(species, today, climate);
@@ -140,7 +140,16 @@ function YearCalendarView({ species, on, climate }: { species: Species; on: Date
         </View>
         <View style={styles.legend}>
           <View style={styles.legendMark} />
-          <Text style={styles.muted}>Aujourd&apos;hui · Dates pour un {climateNames[climate]}</Text>
+          <Text style={[styles.muted, styles.legendText]}>Aujourd&apos;hui · Dates pour un {climateNames[climate]}</Text>
+          <Pressable
+            onPress={() => router.push('/settings')}
+            accessibilityRole="link"
+            accessibilityLabel="Changer le climat du jardin"
+            // Le lien reste discret sur une ligne de légende, 48 au doigt comme les pastilles.
+            hitSlop={{ top: 15, bottom: 15, left: 8, right: 8 }}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}>
+            <Text style={styles.legendLink}>Changer</Text>
+          </Pressable>
         </View>
       </View>
     </Group>
@@ -229,6 +238,8 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
   currentMark: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, backgroundColor: colors.primary },
   legend: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   legendMark: { width: 2, height: 14, backgroundColor: colors.primary },
+  legendText: { flex: 1 },
+  legendLink: { ...typography.caption, fontFamily: fonts.bodyMedium, color: colors.primary, textDecorationLine: 'underline' },
   row: { paddingHorizontal: spacing.sm + 4, paddingVertical: spacing.sm },
   activeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   rowText: { ...typography.body, color: colors.text, flexShrink: 1 },

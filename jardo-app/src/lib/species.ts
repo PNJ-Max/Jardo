@@ -62,6 +62,35 @@ export const climateNames: Record<Climate, string> = {
   Mountain: 'climat de montagne',
 };
 
+/** Le choix se fait sur ce que le jardinier connaît, ses dernières gelées ; les régions sont des repères. */
+export const climateChoices: Record<Climate, { label: string; frost: string; regions: string }> = {
+  Mediterranean: {
+    label: 'Méditerranéen',
+    frost: 'Dernières gelées rares, en février',
+    regions: "Provence, Languedoc, Côte d'Azur, Corse",
+  },
+  Mild: {
+    label: 'Doux',
+    frost: 'Dernières gelées en mars',
+    regions: 'Littoral atlantique et de la Manche, Bretagne, Sud-Ouest, Tessin',
+  },
+  Temperate: {
+    label: 'Tempéré',
+    frost: 'Dernières gelées en avril',
+    regions: 'Bassin parisien, Centre, Nord, Belgique hors Ardennes, bassin lémanique',
+  },
+  Cool: {
+    label: 'Frais',
+    frost: 'Dernières gelées fin avril, début mai',
+    regions: 'Lorraine, Alsace, Bourgogne, Ardennes, Jura, Massif central, Plateau suisse',
+  },
+  Mountain: {
+    label: 'Montagne',
+    frost: 'Dernières gelées en mai, voire en juin',
+    regions: 'Au-dessus de 800 m environ',
+  },
+};
+
 const toDo: Record<PlantingKind, string> = {
   sowIndoors: 'À semer sous abri',
   sowOutdoors: 'À semer',

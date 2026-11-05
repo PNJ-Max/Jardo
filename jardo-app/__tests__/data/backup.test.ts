@@ -159,6 +159,36 @@ describe('sauvegarde', () => {
     ]);
   });
 
+  it('un export suivi d’un import garde le climat du jardin', async () => {
+    const source = await createTestDb({ exampleGarden: true });
+    await source.run("UPDATE gardens SET climate = 'Mountain'");
+    const backup = await createBackupService(source, clock).export();
+    const target = await createTestDb();
+    const service = createBackupService(target, clock);
+
+    await service.replace(service.read(JSON.stringify(backup)));
+
+    expect(backup.tables.gardens[0].climate).toBe('Mountain');
+    expect(await target.first('SELECT climate FROM gardens')).toEqual({ climate: 'Mountain' });
+  });
+
+  it("un export d'avant le climat s'importe, son jardin sans climat choisi", async () => {
+    const { db: source, backup } = await exampleBackup();
+    const before = tampered(backup, (file) => {
+      file.schemaVersion = 4;
+      file.tables.gardens.forEach((garden: any) => delete garden.climate);
+    });
+    const target = await createTestDb();
+    await target.run("UPDATE gardens SET climate = 'Mediterranean'");
+    const service = createBackupService(target, clock);
+
+    const read = service.read(before);
+    await service.replace(read);
+
+    expect(read.tables.gardens[0].climate).toBeNull();
+    expect(await dump(target)).toEqual(await dump(source));
+  });
+
   it('l’import remplace le jardin actuel, y compris ce qui a été ajouté depuis l’export', async () => {
     const { db, backup } = await exampleBackup();
     const before = await dump(db);
@@ -235,6 +265,16 @@ describe('sauvegarde', () => {
         'avec une espèce du catalogue qui n’est pas un texte',
         () => tampered(backup, (file) => (file.tables.garden_items[0].species_id = 7)),
         /« species_id » manque ou n'a pas le bon type/,
+      ],
+      [
+        'avec un climat qui n’est pas un texte',
+        () => tampered(backup, (file) => (file.tables.gardens[0].climate = 2)),
+        /« climate » manque ou n'a pas le bon type/,
+      ],
+      [
+        'avec un climat inconnu',
+        () => tampered(backup, (file) => (file.tables.gardens[0].climate = 'Tropical')),
+        /Jardin : La valeur du champ « Climat » n'est pas reconnue/,
       ],
       ['avec deux jardins', () => tampered(backup, (file) => file.tables.gardens.push(file.tables.gardens[0])), /un et un seul jardin/],
     ])('%s', (_, file, detail) => {

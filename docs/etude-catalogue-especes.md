@@ -415,7 +415,7 @@ celle de la tâche :
 
 - **Sans recherche** : « En ce moment » réunit les espèces suggérées pour ce type d'espace dont une
   fenêtre de semis ou de plantation couvre cette quinzaine ou la suivante, selon le climat du
-  jardin (le climat de référence, en attendant la PR 7). Suivent les autres suggestions de l'espace,
+  jardin. Suivent les autres suggestions de l'espace,
   de A à Z : une espèce n'apparaît qu'une fois.
 - **En tapant** : correspondance sur le nom et les synonymes, sans tenir compte des accents ni de la
   casse (« salade » trouve laitue, chicorée, mâche et roquette). La dernière ligne garde le texte
@@ -466,7 +466,7 @@ Journal · Conseils · Infos. De haut en bas :
    des cultures pour la plantation, le ton chaud du panier pour la récolte, gris du sécateur pour
    la taille. Un contour à l'encre des pictogrammes les détache du fond : en sombre, `lawn` y
    aurait été invisible. Un trait `primary` marque la quinzaine du jour. Dessous : « Dates pour un
-   climat tempéré » ; « Changer », qui mènera à Réglages, arrive avec la PR 7.
+   climat tempéré », et « Changer », qui mène à Réglages.
 2. **En ce moment** : ce que les fenêtres ouvertes permettent ce jour-là (« Récolter jusqu'à
    mi-mars »).
 3. **Bon à savoir** : exposition, espacement (« 50 cm entre plants, 80 cm entre rangs ») et
@@ -476,8 +476,8 @@ Journal · Conseils · Infos. De haut en bas :
 Le calendrier est fait de vues, pas de Skia : des bandes en pourcentage de la largeur, des libellés
 qui suivent la police (au-delà de 1,3, le libellé passe au-dessus de sa ligne), et rien à attendre
 du moteur de dessin sur le web. Le lecteur d'écran lit un résumé (« Semis sous abri : de début mars
-à mi-avril. Plantation : … »). `SpeciesAdvice` prend un `climate`, qui vaut le climat de
-référence : la PR 7 n'aura qu'à le lui passer.
+à mi-avril. Plantation : … »). `SpeciesAdvice` reçoit le climat du jardin, ou le climat
+de référence tant que rien n'est choisi.
 
 ```
   Calendrier             J F M A M J J A S O N D
@@ -512,7 +512,7 @@ capture clair et sombre pour celles qui touchent un écran.
 | 4 | Choisir l'espèce, **faite** | Champ « Espèce », feuille de recherche, suggestions et « en ce moment », préremplissage | 2, 3 | Tests d'écran, capture |
 | 5 | Onglet Conseils, **faite** | Calendrier dessiné, en ce moment, bon à savoir, conseils | 2, 3 | Tests d'écran, capture |
 | 6 | Rappels proposés | Calcul des propositions dans le domaine (couverture par la zone et l'espace comprise), section du formulaire, groupe « Proposé pour » de l'onglet Tâches, unité de récolte par défaut | 4 | Jest, tests d'écran, capture |
-| 7 | Climat du jardin | Migration `climate` sur `gardens`, choix dans Réglages, calendrier et propositions selon le climat, mise à niveau des exports | 2, 5 | Jest, tests d'écran, capture |
+| 7 | Climat du jardin, **faite** | Migration 5 `climate` sur `gardens`, choix dans Réglages, calendrier et suggestions selon le climat, mise à niveau des exports. Les propositions de la PR 6 reçoivent le climat à la fusion de celle-ci | 2, 5 | Jest, tests d'écran, capture |
 | 8 | Lot 2 : légumes | Les 28 légumes restants | 1 | Jest, relecture du tableau du lot |
 | 9 | Lot 3 : aromatiques, fruitiers, petits fruits | Les 23 espèces restantes | 1 | Jest, relecture du tableau du lot |
 

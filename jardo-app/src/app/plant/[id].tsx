@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { useDeletePlant, usePlant, useSetPlantArchived } from '@/api/queries';
+import { useDeletePlant, useGardenClimate, usePlant, useSetPlantArchived } from '@/api/queries';
 import type { Plant } from '@/api/types';
 import { ArchivedBadge, plantQuantity } from '@/components/items';
 import { DetailScreen, Fact, JournalSection, ManageSection, TasksSection, useDetailStyles } from '@/components/sections';
@@ -26,6 +26,7 @@ function PlantDetail({ plant }: { plant: Plant }) {
   const styles = useDetailStyles();
   const archive = useSetPlantArchived();
   const remove = useDeletePlant();
+  const climate = useGardenClimate();
   const target = {
     spaceId: plant.spaceId,
     zoneId: plant.zoneId,
@@ -67,7 +68,7 @@ function PlantDetail({ plant }: { plant: Plant }) {
       tabs={[
         { key: 'tasks', label: 'Tâches', render: () => <TasksSection target={target} /> },
         { key: 'journal', label: 'Journal', render: () => <JournalSection target={target} /> },
-        ...(species ? [{ key: 'advice', label: 'Conseils', render: () => <SpeciesAdvice species={species} /> }] : []),
+        ...(species ? [{ key: 'advice', label: 'Conseils', render: () => <SpeciesAdvice species={species} climate={climate} /> }] : []),
         {
           key: 'info',
           label: 'Infos',
