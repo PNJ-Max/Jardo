@@ -13,6 +13,14 @@ export const backupFormat = 'jardo';
 export const backupFormatVersion = 1;
 export const backupSchemaVersion = migrations.length;
 
+/** Un export lu d'un bloc en mémoire : 20 Mo font des dizaines de milliers d'entrées du journal. */
+export const maxBackupBytes = 20 * 1024 * 1024;
+
+/** Refuse un fichier trop gros avant de le lire : sa taille suffit. */
+export function ensureBackupSize(bytes: number | null) {
+  if (bytes !== null && bytes > maxBackupBytes) throw invalidBackup('Ce fichier est trop gros pour être un export de Jardo (plus de 20 Mo).');
+}
+
 type ColumnType = 'text' | 'text?' | 'number' | 'number?' | 'flag' | 'instant';
 
 /**
