@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
-import { useJournal, useTasks } from '@/api/queries';
+import { useGardenClimate, useJournal, useTasks } from '@/api/queries';
 import type { GardenTask, Id, ItemKind, Plant } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
 import { PlantProposals } from '@/components/species-proposals';
@@ -11,7 +11,6 @@ import { TaskRow, useMarkDone } from '@/components/tasks';
 import { Button, Group, SectionTitle, Tabs } from '@/components/ui';
 import { findSpecies } from '@/data/species';
 import { proposeReminders } from '@/domain/reminder-proposals';
-import { referenceClimate } from '@/domain/species';
 import { formatDate } from '@/lib/dates';
 import { useToday } from '@/lib/use-today';
 import { createStyles, useTheme } from '@/theme';
@@ -102,6 +101,7 @@ export function TasksSection({ target, plant }: { target: Target; plant?: Plant 
   const tasks = useTasks(filterFor(target));
   const { markDone } = useMarkDone();
   const day = useToday();
+  const climate = useGardenClimate();
   const noun = targetNoun(target);
 
   if (tasks.isPending) return <SectionLoading />;
@@ -109,10 +109,9 @@ export function TasksSection({ target, plant }: { target: Target; plant?: Plant 
 
   const { own, contained, inherited } = splitTasks(target, tasks.data);
   const species = plant?.speciesId ? findSpecies(plant.speciesId) : undefined;
-  // En attendant le climat du jardin (étude, PR 7), celui pour lequel les fiches sont écrites.
   const proposals =
     plant && species && !plant.isArchived
-      ? proposeReminders({ species, plant, tasks: tasks.data, on: day, climate: referenceClimate })
+      ? proposeReminders({ species, plant, tasks: tasks.data, on: day, climate })
       : [];
   const renderTask = (task: GardenTask, showTarget: boolean) => (
     <TaskRow

@@ -15,7 +15,7 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 **Catalogue d'espèces, PR 6 : les rappels proposés (05/11/2026).** Une plante liée au catalogue se
 voit proposer ses rappels, sans qu'aucun soit créé sans un geste de l'utilisateur.
 - **Calcul** : `proposeReminders` dans `src/domain/reminder-proposals.ts`, pur, avec le jour et le
-  climat en paramètres (le climat de référence jusqu'à la PR 7). Arroser, semer ou planter, récolter,
+  climat en paramètres (celui du jardin, `useGardenClimate`, sur les écrans). Arroser, semer ou planter, récolter,
   récolter chaque année, tailler, selon le tableau de l'étude. Les tâches créées reprennent les
   trois récurrences du modèle.
 - **Couverture** : une tâche prévue sur la plante, sa zone ou son espace retire la proposition du
@@ -44,8 +44,6 @@ du catalogue suivent le climat choisi dans Réglages.
   « Tempéré » donne les mêmes dates.
 - **Écrans** : `SpeciesAdvice` et la feuille d'espèces reçoivent le vrai climat (`useGardenClimate`).
   « Changer », sous le calendrier, mène à Réglages, et la fiche suit dès le retour.
-- **À brancher** : les rappels proposés (PR 6) ne sont pas encore sur `main` ; ils recevront
-  `useGardenClimate` à leur fusion.
 - **Pas vérifié sur téléphone** : la migration sur une vraie base, le toucher de « Changer », TalkBack.
 - **Captures** : branche `captures/climat-jardin`.
 

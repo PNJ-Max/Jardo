@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
-import { usePlant, useSavePlant, useTasks } from '@/api/queries';
+import { useGardenClimate, usePlant, useSavePlant, useTasks } from '@/api/queries';
 import type { Id, JournalEntryKind, Plant, QuantityUnit } from '@/api/types';
 import { FormProposals } from '@/components/species-proposals';
 import { SpeciesSelect } from '@/components/species-select';
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui';
 import { findSpecies } from '@/data/species';
 import { proposeReminders } from '@/domain/reminder-proposals';
-import { referenceClimate, type Species } from '@/domain/species';
+import type { Species } from '@/domain/species';
 import { decimalText, parseDecimal, quantityUnits } from '@/lib/garden';
 import { useToday } from '@/lib/use-today';
 
@@ -63,10 +63,10 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
   const [accepted, setAccepted] = useState<JournalEntryKind[]>([]);
   const changed = useChanged([name, species, speciesId, variety, quantityText, unit, sownDate, plantedDate, zoneId, accepted]);
   const day = useToday();
+  const climate = useGardenClimate();
   const tasks = useTasks({ spaceId });
 
   const known = speciesId ? findSpecies(speciesId) : undefined;
-  // En attendant le climat du jardin (étude, PR 7), celui pour lequel les fiches sont écrites.
   const proposals =
     known && tasks.data && !plant?.isArchived
       ? proposeReminders({
@@ -74,7 +74,7 @@ function PlantForm({ plant, spaceId, defaultZoneId }: { plant?: Plant; spaceId: 
           plant: { id: plant?.id ?? null, zoneId, sownDate, plantedDate },
           tasks: tasks.data,
           on: day,
-          climate: referenceClimate,
+          climate,
         })
       : [];
 

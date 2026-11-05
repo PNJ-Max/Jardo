@@ -175,6 +175,15 @@ describe('rappels proposés', () => {
       expect(screen.queryByText('Semer sous abri')).not.toBeOnTheScreen();
     });
 
+    it('suit le climat du jardin : en montagne, le semis de la tomate attend deux quinzaines de plus', async () => {
+      const { services, potager } = await garden();
+      await services.garden.setClimate('Mountain');
+      await openNewPlant(services, potager.id);
+      await pickSpecies('tomate', 'Tomate');
+
+      expect(await proposalSwitch('Semer sous abri, à partir de début avril 2027')).toBeOnTheScreen();
+    });
+
     it('rien pour une saisie libre', async () => {
       const { services, potager } = await garden();
       const plant = await services.plants.create({ name: 'Mystère', species: 'Inconnue', spaceId: potager.id });
@@ -267,6 +276,20 @@ describe('rappels proposés', () => {
       expect(screen.getByText('Tailler chaque année')).toBeOnTheScreen();
       expect(screen.queryByText(/^Arroser/)).not.toBeOnTheScreen();
       expect(screen.queryByText('Planter')).not.toBeOnTheScreen();
+    });
+
+    it('suit le climat du jardin : en montagne, la plantation de la tomate attend deux quinzaines de plus', async () => {
+      const { services, potager } = await garden();
+      const plant = await services.plants.create({ name: 'Mes plants', speciesId: 'tomato', sownDate: '2026-03-10', spaceId: potager.id });
+
+      const temperate = await openPlant(services, plant.id);
+      expect(await add('Planter, à partir de mi-mai 2027')).toBeOnTheScreen();
+      await temperate.unmount();
+
+      await services.garden.setClimate('Mountain');
+      await openPlant(services, plant.id);
+      expect(await add('Planter, à partir de mi-juin 2027')).toBeOnTheScreen();
+      expect(screen.queryByRole('button', { name: 'Ajouter : Planter, à partir de mi-mai 2027' })).not.toBeOnTheScreen();
     });
 
     it('rien pour une plante sans espèce du catalogue, ni pour une plante archivée', async () => {
