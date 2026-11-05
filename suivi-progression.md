@@ -18,6 +18,16 @@ sans relecture d'un juriste. Depuis la météo, « aucune donnée collectée » 
 ses coordonnées et l'adresse IP partent vers Open-Meteo quand l'utilisateur choisit une ville. La
 feuille de route ci-dessous est réécrite autour de la V1 pour les testeurs.
 
+**Benchmark des concurrents mis à jour (05/11/2026).** [`docs/benchmark-concurrents.md`](docs/benchmark-concurrents.md)
+situe Jardo tel qu'il est, avant la V1 des testeurs. Doc seule, aucun changement de code.
+- **Relevés** : six fiches Google Play du jour (Jardingue, Mon Potager, Grainly, Planter, Gardroid,
+  Fryd). Mon Potager, local, sans compte, avec plan et journal, est le plus proche de Jardo.
+- **Constat** : Jardo est devant sur le périmètre (verger, bois), la carte et les rappels proposés ;
+  derrière sur les photos, l'alerte de gel, les récoltes chiffrées et l'audience.
+- **V1 pour des testeurs** : APK sur de vrais téléphones, premier lancement jusqu'au premier rappel,
+  recueil des retours, mentions légales. Un positionnement pour la fiche Play Store est proposé.
+- **Limite** : les fiches sont des déclarations de développeurs, aucune app n'a été installée.
+
 **Catalogue d'espèces, PR 6 : les rappels proposés (05/11/2026).** Une plante liée au catalogue se
 voit proposer ses rappels, sans qu'aucun soit créé sans un geste de l'utilisateur.
 - **Calcul** : `proposeReminders` dans `src/domain/reminder-proposals.ts`, pur, avec le jour et le
