@@ -117,8 +117,9 @@ existe ([benchmark](benchmark-concurrents.md)), et l'app doit pouvoir grandir sa
    unique au compte développeur Google). L'iPhone attend, parce que TestFlight et l'App Store
    demandent un abonnement Apple annuel. Le code, lui, est déjà prêt pour iOS.
 2. **Produit, si la demande se confirme.** De petits investissements deviennent acceptables :
-   synchronisation et foyer partagé, sauvegarde en ligne, version iOS, éventuellement une offre
-   payante.
+   synchronisation et foyer partagé, sauvegarde en ligne, version iOS, une offre payante. Si l'app marche,
+   le but est d'en tirer un revenu : modèle à choisir après les testeurs
+   ([étude légale](etude-legale.md#une-offre-payante)).
 
 Règle qui en découle : **chaque choix technique doit laisser la porte ouverte au produit.** On
 évite ce qui enferme : un service gratuit qui impose son schéma, des identifiants qui empêchent
