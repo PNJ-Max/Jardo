@@ -79,7 +79,7 @@ describe("écran Aujourd'hui", () => {
     const services = await createTestServices();
     await addDueToday(services);
     const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
-    const carre = await services.zones.create(potager.id, { name: 'Carré 1' });
+    const parcelle = await services.zones.create(potager.id, { name: 'Parcelle 1' });
     await services.tasks.create({ kind: 'Pruning', recurrence: 'Once', startDate: today(), spaceId: potager.id });
     await services.tasks.create({
       kind: 'Watering',
@@ -87,7 +87,7 @@ describe("écran Aujourd'hui", () => {
       intervalDays: 3,
       startDate: today(),
       spaceId: potager.id,
-      zoneId: carre.id,
+      zoneId: parcelle.id,
     });
     await renderScreen(<TodayScreen />, services);
 
@@ -98,7 +98,7 @@ describe("écran Aujourd'hui", () => {
       'Pruning:light',
       'Pruning:light',
     ]);
-    expect(screen.getByText('Carré 1, tous les 3 jours')).toBeOnTheScreen();
+    expect(screen.getByText('Parcelle 1, tous les 3 jours')).toBeOnTheScreen();
     expect(screen.getAllByText('Une seule fois')).toHaveLength(2);
     // La section donne l'échéance : la ligne ne la répète pas.
     expect(screen.queryByText("À faire aujourd'hui")).not.toBeOnTheScreen();

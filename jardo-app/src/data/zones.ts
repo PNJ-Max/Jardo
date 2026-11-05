@@ -7,7 +7,7 @@ import type { Db } from './db';
 import { businessRule, notFound } from './problem';
 import { optionalText, Validation } from './validation';
 
-/** Une zone, subdivision facultative d'un espace : un carré, une planche, un rang. */
+/** Une zone, subdivision facultative d'un espace : une parcelle, une planche, un rang. */
 export type Zone = {
   id: Id;
   spaceId: Id;

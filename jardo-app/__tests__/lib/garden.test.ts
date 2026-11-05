@@ -42,8 +42,8 @@ describe('vocabulaire du jardin', () => {
   });
 
   it('nomme une cible du plus précis au plus large', () => {
-    expect(targetLabel({ itemName: 'Tomates', zoneName: 'Carré 1', spaceName: 'Potager' })).toBe(
-      'Tomates · Carré 1 · Potager',
+    expect(targetLabel({ itemName: 'Tomates', zoneName: 'Parcelle 1', spaceName: 'Potager' })).toBe(
+      'Tomates · Parcelle 1 · Potager',
     );
     expect(targetLabel({ itemName: null, zoneName: null, spaceName: 'Potager' })).toBe('Potager');
   });

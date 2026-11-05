@@ -40,14 +40,14 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
   it("Une tâche d'un élément compte les interventions sur sa zone et son espace", async () => {
     const { addSpace, addZone, addPlant, addWatering, addEntry, nextDueDate } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
-    const tomate = await addPlant(potager, carre, 'Tomate');
+    const parcelle = await addZone(potager, 'Parcelle 1');
+    const tomate = await addPlant(potager, parcelle, 'Tomate');
     const task = await addWatering(potager, null, tomate);
 
     await addEntry('Watering', addDays(today, -6), potager, null, tomate);
     expect(await nextDueDate(task)).toBe(addDays(today, -4));
 
-    await addEntry('Watering', addDays(today, -3), potager, carre);
+    await addEntry('Watering', addDays(today, -3), potager, parcelle);
     expect(await nextDueDate(task)).toBe(addDays(today, -1));
 
     await addEntry('Watering', addDays(today, -1), potager);
@@ -58,14 +58,14 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
   it("Une tâche de zone compte l'espace mais pas les éléments ni les autres zones", async () => {
     const { addSpace, addZone, addPlant, addWatering, addEntry, nextDueDate } = await setup();
     const potager = await addSpace('Potager');
-    const carre1 = await addZone(potager, 'Carré 1');
-    const carre2 = await addZone(potager, 'Carré 2');
-    const tomate = await addPlant(potager, carre1, 'Tomate');
-    const task = await addWatering(potager, carre1);
+    const parcelle1 = await addZone(potager, 'Parcelle 1');
+    const parcelle2 = await addZone(potager, 'Parcelle 2');
+    const tomate = await addPlant(potager, parcelle1, 'Tomate');
+    const task = await addWatering(potager, parcelle1);
 
     await addEntry('Watering', addDays(today, -5), potager);
     await addEntry('Watering', today, potager, null, tomate);
-    await addEntry('Watering', today, potager, carre2);
+    await addEntry('Watering', today, potager, parcelle2);
 
     expect(await nextDueDate(task)).toBe(addDays(today, -3));
   });
@@ -151,8 +151,8 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
   it('Fait note l\'intervention aujourd\'hui sur la cible et renvoie la tâche recalculée', async () => {
     const { db, service, addSpace, addZone, addPlant, addTask } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
-    const tomate = await addPlant(potager, carre, 'Tomate');
+    const parcelle = await addZone(potager, 'Parcelle 1');
+    const tomate = await addPlant(potager, parcelle, 'Tomate');
     const task = await addTask('Watering', 'EveryNDays', seasonStart, potager, {
       item: tomate,
       intervalDays: 2,
@@ -176,7 +176,7 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
       date: today,
       kind: 'Watering',
       space_id: potager.id,
-      zone_id: carre.id,
+      zone_id: parcelle.id,
       item_id: tomate.id,
       note: 'Arroser au pied',
     });
@@ -276,12 +276,12 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
   it("Une tâche sur un élément prend sa zone d'office", async () => {
     const { service, addSpace, addZone, addPlant } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
-    const tomate = await addPlant(potager, carre, 'Tomate');
+    const parcelle = await addZone(potager, 'Parcelle 1');
+    const tomate = await addPlant(potager, parcelle, 'Tomate');
 
     const task = await service.create(newTask('Watering', 'EveryNDays', potager.id, { intervalDays: 2, itemId: tomate.id }));
 
-    expect(task.zoneId).toBe(carre.id);
+    expect(task.zoneId).toBe(parcelle.id);
     expect(task.status).toBe('DueSoon');
   });
 
@@ -302,10 +302,10 @@ describe('TaskService : règles que TaskServiceTests.cs ne couvrait pas', () => 
   it('Une tâche créée se lit avec le nom de sa cible et son échéance', async () => {
     const { service, addSpace, addZone } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
 
     const task = await service.create(
-      newTask('Other', 'Yearly', potager.id, { title: ' Tailler la haie ', startDate: '2026-03-01', zoneId: carre.id }),
+      newTask('Other', 'Yearly', potager.id, { title: ' Tailler la haie ', startDate: '2026-03-01', zoneId: parcelle.id }),
     );
 
     expect(task).toEqual({
@@ -321,8 +321,8 @@ describe('TaskService : règles que TaskServiceTests.cs ne couvrait pas', () => 
       spaceId: potager.id,
       spaceName: 'Potager',
       spaceKind: 'VegetableGarden',
-      zoneId: carre.id,
-      zoneName: 'Carré 1',
+      zoneId: parcelle.id,
+      zoneName: 'Parcelle 1',
       itemId: null,
       itemName: null,
       itemKind: null,
@@ -354,32 +354,32 @@ describe('TaskService : règles que TaskServiceTests.cs ne couvrait pas', () => 
   it("Les tâches d'une cible comprennent celles de ce qui la contient", async () => {
     const { service, addSpace, addZone, addPlant, addWatering } = await setup();
     const potager = await addSpace('Potager');
-    const carre1 = await addZone(potager, 'Carré 1');
-    const carre2 = await addZone(potager, 'Carré 2');
-    const tomate = await addPlant(potager, carre1, 'Tomate');
-    const basilic = await addPlant(potager, carre1, 'Basilic');
+    const parcelle1 = await addZone(potager, 'Parcelle 1');
+    const parcelle2 = await addZone(potager, 'Parcelle 2');
+    const tomate = await addPlant(potager, parcelle1, 'Tomate');
+    const basilic = await addPlant(potager, parcelle1, 'Basilic');
     const verger = await addSpace('Verger', 'Orchard');
 
     const own = await addWatering(potager, null, tomate);
-    const zone = await addWatering(potager, carre1);
+    const zone = await addWatering(potager, parcelle1);
     const space = await addWatering(potager);
-    await addWatering(potager, carre2);
+    await addWatering(potager, parcelle2);
     const basil = await addWatering(potager, null, basilic);
     await addWatering(verger);
 
     const ids = async (filter: Parameters<typeof service.getAll>[0]) => (await service.getAll(filter)).map((task) => task.id).sort();
 
     expect(await ids({ itemId: tomate.id })).toEqual([own, zone, space].sort());
-    expect(await ids({ zoneId: carre1.id })).toEqual([own, zone, space, basil].sort());
+    expect(await ids({ zoneId: parcelle1.id })).toEqual([own, zone, space, basil].sort());
     expect(await ids({ spaceId: potager.id })).toHaveLength(5);
   });
 
   it('Les tâches se lisent pour une seule cible, qui doit exister', async () => {
     const { service, addSpace, addZone } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
 
-    await expect(service.getAll({ spaceId: potager.id, zoneId: carre.id })).rejects.toMatchObject(refused);
+    await expect(service.getAll({ spaceId: potager.id, zoneId: parcelle.id })).rejects.toMatchObject(refused);
     await expect(service.getAll({ spaceId: 'inconnu' })).rejects.toMatchObject(missing);
     await expect(service.getAll({ zoneId: 'inconnue' })).rejects.toMatchObject(missing);
     await expect(service.getAll({ itemId: 'inconnu' })).rejects.toMatchObject(missing);
@@ -388,13 +388,13 @@ describe('TaskService : règles que TaskServiceTests.cs ne couvrait pas', () => 
   it('Une tâche se modifie, cible et rythme compris, et se supprime sans toucher au journal', async () => {
     const { service, addSpace, addZone, addWatering, addEntry, count } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
     const task = await addWatering(potager);
     await addEntry('Watering', today, potager);
 
-    const updated = await service.update(task, newTask('Pruning', 'Yearly', potager.id, { startDate: '2026-02-01', zoneId: carre.id }));
+    const updated = await service.update(task, newTask('Pruning', 'Yearly', potager.id, { startDate: '2026-02-01', zoneId: parcelle.id }));
 
-    expect(updated).toMatchObject({ id: task, kind: 'Pruning', recurrence: 'Yearly', intervalDays: null, zoneId: carre.id });
+    expect(updated).toMatchObject({ id: task, kind: 'Pruning', recurrence: 'Yearly', intervalDays: null, zoneId: parcelle.id });
 
     await service.delete(task);
 
@@ -495,7 +495,7 @@ describe('TaskService : reporter', () => {
     expect(await count('journal_entries')).toBe(1);
   });
 
-  // La tâche d'une plante du carré, reportée à demain, puis faite aujourd'hui de trois façons.
+  // La tâche d'une plante de la parcelle, reportée à demain, puis faite aujourd'hui de trois façons.
   it.each([
     ['« Fait »', 'task'],
     ['un arrosage noté au journal sur la plante', 'item'],
@@ -503,8 +503,8 @@ describe('TaskService : reporter', () => {
   ] as const)("Le report n'a plus d'effet après %s", async (_, done) => {
     const { service, journal, addSpace, addZone, addPlant, addWatering, addEntry } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
-    const tomate = await addPlant(potager, carre, 'Tomate');
+    const parcelle = await addZone(potager, 'Parcelle 1');
+    const tomate = await addPlant(potager, parcelle, 'Tomate');
     const task = await addWatering(potager, null, tomate, 3);
     await addEntry('Watering', addDays(today, -5), potager);
     await service.postpone(task, tomorrow);

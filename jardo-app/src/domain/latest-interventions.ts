@@ -13,8 +13,8 @@ export type InterventionRow = {
 /**
  * La dernière date d'un type d'intervention pour une cible, selon la règle du journal : une entrée
  * sur une zone vaut pour la zone et chacun de ses éléments, une entrée sur un espace pour tout ce
- * qu'il contient. « Arroser le carré 2 » compte comme arrosage de chaque plante du carré ; arroser
- * une plante, en revanche, n'arrose pas son carré. L'élément est pris là où il se trouve au moment
+ * qu'il contient. « Arroser la parcelle 2 » compte comme arrosage de chaque plante de la parcelle ; arroser
+ * une plante, en revanche, n'arrose pas sa parcelle. L'élément est pris là où il se trouve au moment
  * de la lecture.
  */
 export type LatestInterventions = {

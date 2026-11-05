@@ -53,7 +53,7 @@ describe("jardin d'exemple", () => {
         WHERE slot_key IN ('bed-1', 'firewood')
         ORDER BY slot_key`),
     ).toEqual([
-      { slot_key: 'bed-1', space: 'Potager', zone: 'Carré 1' },
+      { slot_key: 'bed-1', space: 'Potager', zone: 'Parcelle 1' },
       { slot_key: 'firewood', space: 'Bois de chauffage', zone: null },
     ]);
   });
@@ -83,7 +83,7 @@ describe("jardin d'exemple", () => {
         JOIN garden_items ON garden_items.id = journal_entries.item_id
         JOIN zones ON zones.id = journal_entries.zone_id
         WHERE garden_items.name = 'Basilic'`),
-    ).toEqual({ zone: 'Carré 1' });
+    ).toEqual({ zone: 'Parcelle 1' });
   });
 
   it('laisse au chêne 4,5 stères', async () => {

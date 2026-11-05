@@ -371,7 +371,7 @@ export function drawGreenhouse({ p, pal, isNight }: Kit, x0: number, y0: number)
 
 export type BedPlanting = 'summer' | 'lettuce' | 'leek' | 'seedlings';
 
-/** Carré en bois de 2,6 × 2 m, posé en (x0, y0). */
+/** Parcelle en bois de 2,6 × 2 m, posée en (x0, y0). */
 export function drawBed({ p, pal }: Kit, x0: number, y0: number, planting: BedPlanting) {
   const x1 = x0 + 2.6;
   const y1 = y0 + 2;

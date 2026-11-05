@@ -195,7 +195,7 @@ export function OverdueSection({ tasks, row }: { tasks: GardenTask[]; row: Rende
   );
 }
 
-/** « Tomates · Carré 1, tous les 3 jours » : la cible dans l'espace, et le rythme. */
+/** « Tomates · Parcelle 1, tous les 3 jours » : la cible dans l'espace, et le rythme. */
 function withinSpace(task: GardenTask) {
   const target = [task.itemName, task.zoneName].filter(Boolean).join(' · ');
   return target ? `${target}, ${rhythm(task)}` : capitalize(rhythm(task));
