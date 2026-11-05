@@ -10,7 +10,28 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (04/11/2026)
+## Où on en est (05/11/2026)
+
+**Catalogue d'espèces, PR 6 : les rappels proposés (05/11/2026).** Une plante liée au catalogue se
+voit proposer ses rappels, sans qu'aucun soit créé sans un geste de l'utilisateur.
+- **Calcul** : `proposeReminders` dans `src/domain/reminder-proposals.ts`, pur, avec le jour et le
+  climat en paramètres (celui du jardin, `useGardenClimate`, sur les écrans). Arroser, semer ou planter, récolter,
+  récolter chaque année, tailler, selon le tableau de l'étude. Les tâches créées reprennent les
+  trois récurrences du modèle.
+- **Couverture** : une tâche prévue sur la plante, sa zone ou son espace retire la proposition du
+  même type. Une tâche ponctuelle faite sur la plante clôt semis, plantation et récolte d'une
+  culture de l'année, sans les reproposer.
+- **Formulaire** : section « Rappels proposés » sous l'espèce, interrupteurs non cochés, créés avec
+  la plante. Changer d'espèce décoche tout. À la modification, elle propose ce qui manque.
+- **Fiche** : groupe « Proposé pour la tomate » dans l'onglet Tâches, à la place de l'état vide
+  quand il n'y a rien d'autre, avec « Ajouter » puis « Rappel ajouté » (« Modifier », « Annuler »).
+- **Unité de récolte** : celle de la dernière récolte de la plante, sinon celle de l'espèce, dans le
+  formulaire d'intervention et dans le « Fait » précisé, qui gagne pour cela la quantité récoltée.
+- **Fiches** : deux champs, `article` (« la tomate », « l'ail ») et `perennial` (rhubarbe, asperge,
+  artichaut, ciboulette, thym, romarin, sauge, menthe). Ni migration ni dépendance.
+- **Vérifications** : tests Jest (domaine, libellés, services, écrans), parcours dans Chrome à 375
+  de large, clair et sombre. Pas d'essai sur un téléphone : interrupteurs natifs, TalkBack et appui
+  long sur « Fait » restent à passer sur l'APK.
 
 **Catalogue d'espèces, PR 7 : le climat du jardin (04/11/2026).** Le calendrier et les suggestions
 du catalogue suivent le climat choisi dans Réglages.
@@ -23,8 +44,6 @@ du catalogue suivent le climat choisi dans Réglages.
   « Tempéré » donne les mêmes dates.
 - **Écrans** : `SpeciesAdvice` et la feuille d'espèces reçoivent le vrai climat (`useGardenClimate`).
   « Changer », sous le calendrier, mène à Réglages, et la fiche suit dès le retour.
-- **À brancher** : les rappels proposés (PR 6) ne sont pas encore sur `main` ; ils recevront
-  `useGardenClimate` à leur fusion.
 - **Pas vérifié sur téléphone** : la migration sur une vraie base, le toucher de « Changer », TalkBack.
 - **Captures** : branche `captures/climat-jardin`.
 

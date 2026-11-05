@@ -1,4 +1,5 @@
 import { findSpecies, speciesCatalog } from '@/data/species';
+import type { ReminderProposal } from '@/domain/reminder-proposals';
 import {
   activeWindows,
   fortnights,
@@ -17,8 +18,69 @@ import {
   formatSpacing,
   formatWatering,
   plantingHint,
+  proposalStart,
+  proposalTask,
+  proposalTitle,
+  speciesWithArticle,
   suggestionsTitle,
 } from '@/lib/species';
+
+const proposal = (overrides: Partial<ReminderProposal>): ReminderProposal => ({
+  kind: 'Harvest',
+  window: 'harvest',
+  recurrence: 'Once',
+  intervalDays: null,
+  startDate: '2026-11-04',
+  ...overrides,
+});
+
+describe('rappels proposés', () => {
+  it('écrit l’espèce avec son article', () => {
+    const named = (id: string) => speciesWithArticle(findSpecies(id) as Species);
+
+    expect(named('tomato')).toBe('la tomate');
+    expect(named('garlic')).toBe("l'ail");
+    expect(named('apple-tree')).toBe('le pommier');
+    expect(named('brussels-sprouts')).toBe('le chou de Bruxelles');
+  });
+
+  it.each([
+    ['Arroser tous les 3 jours', { kind: 'Watering', window: null, recurrence: 'EveryNDays', intervalDays: 3 }],
+    ['Semer sous abri', { kind: 'Sowing', window: 'sowIndoors' }],
+    ['Semer en place', { kind: 'Sowing', window: 'sowOutdoors' }],
+    ['Planter', { kind: 'Planting', window: 'plant' }],
+    ['Récolter', {}],
+    ['Récolter chaque année', { recurrence: 'Yearly' }],
+    ['Tailler chaque année', { kind: 'Pruning', window: 'prune', recurrence: 'Yearly' }],
+  ] as const)('dit « %s »', (title, overrides) => {
+    expect(proposalTitle(proposal(overrides))).toBe(title);
+  });
+
+  it.each([
+    ['2026-11-04', "à partir d'aujourd'hui"],
+    ['2026-12-01', 'à partir de début décembre'],
+    ['2026-11-16', 'à partir de mi-novembre'],
+    ['2027-03-01', 'à partir de début mars 2027'],
+    ['2027-07-16', 'à partir de mi-juillet 2027'],
+    ['2027-04-01', "à partir de début avril 2027"],
+  ])('date %s : « %s »', (startDate, text) => {
+    expect(proposalStart(proposal({ startDate }), '2026-11-04')).toBe(text);
+  });
+
+  it('crée la tâche sur la plante, et un semis dit lequel dans son titre', () => {
+    const target = { spaceId: 's', zoneId: 'z', itemId: 'p' };
+
+    expect(proposalTask(proposal({ recurrence: 'Yearly', startDate: '2027-08-16' }), target)).toEqual({
+      kind: 'Harvest',
+      title: null,
+      recurrence: 'Yearly',
+      intervalDays: null,
+      startDate: '2027-08-16',
+      ...target,
+    });
+    expect(proposalTask(proposal({ kind: 'Sowing', window: 'sowOutdoors' }), target).title).toBe('Semer en place');
+  });
+});
 
 const hint = (window: Partial<PlantingWindow>) =>
   plantingHint({ kind: 'plant', range: { from: 'Oct2', to: 'Nov2' }, opensIn: 0, ...window });

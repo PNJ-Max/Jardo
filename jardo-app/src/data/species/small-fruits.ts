@@ -4,6 +4,7 @@ export const smallFruits: readonly Species[] = [
   {
     id: 'raspberry',
     name: 'Framboisier',
+    article: 'le',
     aliases: ['Framboise'],
     scientificName: 'Rubus idaeus',
     category: 'SmallFruit',
@@ -31,6 +32,7 @@ export const smallFruits: readonly Species[] = [
   {
     id: 'strawberry',
     name: 'Fraisier',
+    article: 'le',
     aliases: ['Fraise'],
     scientificName: 'Fragaria × ananassa',
     category: 'SmallFruit',
@@ -54,6 +56,7 @@ export const smallFruits: readonly Species[] = [
   {
     id: 'redcurrant',
     name: 'Groseillier',
+    article: 'le',
     aliases: ['Groseille'],
     scientificName: 'Ribes rubrum',
     category: 'SmallFruit',
@@ -73,6 +76,7 @@ export const smallFruits: readonly Species[] = [
   {
     id: 'blackcurrant',
     name: 'Cassissier',
+    article: 'le',
     aliases: ['Cassis'],
     scientificName: 'Ribes nigrum',
     category: 'SmallFruit',
@@ -92,6 +96,7 @@ export const smallFruits: readonly Species[] = [
   {
     id: 'gooseberry',
     name: 'Groseillier à maquereau',
+    article: 'le',
     aliases: ['Groseille à maquereau'],
     scientificName: 'Ribes uva-crispa',
     category: 'SmallFruit',
@@ -111,6 +116,7 @@ export const smallFruits: readonly Species[] = [
   {
     id: 'blueberry',
     name: 'Myrtillier',
+    article: 'le',
     aliases: ['Myrtille'],
     scientificName: 'Vaccinium corymbosum',
     category: 'SmallFruit',
@@ -131,6 +137,7 @@ export const smallFruits: readonly Species[] = [
   {
     id: 'blackberry',
     name: 'Mûrier sans épines',
+    article: 'le',
     aliases: ['Mûre', 'Ronce sans épines'],
     scientificName: 'Rubus fruticosus',
     category: 'SmallFruit',

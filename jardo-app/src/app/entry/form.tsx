@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
-import { useDeleteJournalEntry, useJournalEntry, useSaveJournalEntry, useSpace } from '@/api/queries';
+import { useDefaultHarvestUnit, useDeleteJournalEntry, useJournalEntry, useSaveJournalEntry, useSpace } from '@/api/queries';
 import type { Id, JournalEntry, JournalEntryKind, MeasureUnit, Space } from '@/api/types';
 import { FormTarget } from '@/components/form-target';
 import {
@@ -62,7 +62,8 @@ function EditEntry({ id }: { id: Id }) {
 /** Les types d'intervention proposés dépendent du type d'espace. */
 function EntryFormInSpace({ entry, target }: { entry?: JournalEntry; target: Target }) {
   const space = useSpace(target.spaceId);
-  if (space.isPending || space.error) {
+  const unit = useDefaultHarvestUnit(entry?.quantityUnit ? null : target.itemId);
+  if (space.isPending || space.error || unit.isLoading) {
     return (
       <FormPending
         title={entry ? "Corriger l'intervention" : 'Noter une intervention'}
@@ -71,10 +72,20 @@ function EntryFormInSpace({ entry, target }: { entry?: JournalEntry; target: Tar
       />
     );
   }
-  return <EntryForm entry={entry} target={target} space={space.data} />;
+  return <EntryForm entry={entry} target={target} space={space.data} defaultUnit={unit.data ?? 'Kilograms'} />;
 }
 
-function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Target; space: Space }) {
+function EntryForm({
+  entry,
+  target,
+  space,
+  defaultUnit,
+}: {
+  entry?: JournalEntry;
+  target: Target;
+  space: Space;
+  defaultUnit: MeasureUnit;
+}) {
   const save = useSaveJournalEntry();
   const remove = useDeleteJournalEntry();
   const [kind, setKind] = useState<JournalEntryKind | undefined>(entry?.kind);
@@ -82,7 +93,7 @@ function EntryForm({ entry, target, space }: { entry?: JournalEntry; target: Tar
   const [note, setNote] = useState(entry?.note ?? '');
   const [quantityText, setQuantityText] = useState(entry?.quantity ? decimalText(entry.quantity) : '');
   const [harvestUnit, setHarvestUnit] = useState<MeasureUnit>(
-    entry?.quantityUnit && entry.quantityUnit !== 'Steres' ? entry.quantityUnit : 'Kilograms',
+    entry?.quantityUnit && entry.quantityUnit !== 'Steres' ? entry.quantityUnit : defaultUnit,
   );
   const [heightText, setHeightText] = useState(entry?.heightCm ? String(entry.heightCm) : '');
   const [problem, setProblem] = useState(entry?.problem ?? '');

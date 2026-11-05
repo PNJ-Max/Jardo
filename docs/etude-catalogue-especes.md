@@ -511,8 +511,8 @@ capture clair et sombre pour celles qui touchent un écran.
 | 3 | Pictogrammes des catégories | Les quatre dessins, en SkPicture comme les autres | | Capture |
 | 4 | Choisir l'espèce, **faite** | Champ « Espèce », feuille de recherche, suggestions et « en ce moment », préremplissage | 2, 3 | Tests d'écran, capture |
 | 5 | Onglet Conseils, **faite** | Calendrier dessiné, en ce moment, bon à savoir, conseils | 2, 3 | Tests d'écran, capture |
-| 6 | Rappels proposés | Calcul des propositions dans le domaine (couverture par la zone et l'espace comprise), section du formulaire, groupe « Proposé pour » de l'onglet Tâches, unité de récolte par défaut | 4 | Jest, tests d'écran, capture |
-| 7 | Climat du jardin, **faite** | Migration 5 `climate` sur `gardens`, choix dans Réglages, calendrier et suggestions selon le climat, mise à niveau des exports. Les propositions de la PR 6 reçoivent le climat à la fusion de celle-ci | 2, 5 | Jest, tests d'écran, capture |
+| 6 | Rappels proposés, **faite** | Calcul des propositions dans le domaine (couverture par la zone et l'espace comprise), section du formulaire, groupe « Proposé pour » de l'onglet Tâches, unité de récolte par défaut | 4 | Jest, tests d'écran, capture |
+| 7 | Climat du jardin, **faite** | Migration 5 `climate` sur `gardens`, choix dans Réglages, calendrier, suggestions et propositions selon le climat, mise à niveau des exports. | 2, 5 | Jest, tests d'écran, capture |
 | 8 | Lot 2 : légumes | Les 28 légumes restants | 1 | Jest, relecture du tableau du lot |
 | 9 | Lot 3 : aromatiques, fruitiers, petits fruits | Les 23 espèces restantes | 1 | Jest, relecture du tableau du lot |
 

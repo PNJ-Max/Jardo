@@ -1,7 +1,14 @@
 import { randomUUID } from 'expo-crypto';
 
 import { addDays, type DateOnly } from '@/domain/dates';
-import { journalEntryKinds, taskRecurrences, type Id, type JournalEntryKind, type TaskRecurrence } from '@/domain/types';
+import {
+  journalEntryKinds,
+  taskRecurrences,
+  type Id,
+  type JournalEntryKind,
+  type MeasureUnit,
+  type TaskRecurrence,
+} from '@/domain/types';
 import { formatLongDate, toDateOnly } from '@/lib/dates';
 
 import type { Clock } from './clock';
@@ -40,6 +47,9 @@ export type CompleteTaskInput = {
   date?: DateOnly | null;
   /** La note de l'entrée du journal. Si absente, le titre de la tâche. */
   note?: string | null;
+  /** Ce qui a été récolté : le journal refuse une quantité sans unité, ou sur une autre intervention. */
+  quantity?: number | null;
+  quantityUnit?: MeasureUnit | null;
 };
 
 export type TaskCompletion = {
@@ -277,6 +287,8 @@ export function createTaskService(db: Db, clock: Clock) {
           date,
           kind: task.kind,
           note: optionalText(input.note) ?? task.title,
+          quantity: input.quantity,
+          quantityUnit: input.quantityUnit,
           spaceId: task.spaceId,
           zoneId: task.zoneId,
           itemId: task.itemId,

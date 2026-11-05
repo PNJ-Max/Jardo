@@ -6,6 +6,7 @@ export const herbs: readonly Species[] = [
   {
     id: 'basil',
     name: 'Basilic',
+    article: 'le',
     aliases: [],
     scientificName: 'Ocimum basilicum',
     category: 'Herb',
@@ -26,6 +27,7 @@ export const herbs: readonly Species[] = [
   {
     id: 'parsley',
     name: 'Persil',
+    article: 'le',
     aliases: [],
     scientificName: 'Petroselinum crispum',
     category: 'Herb',
@@ -45,9 +47,11 @@ export const herbs: readonly Species[] = [
   {
     id: 'chives',
     name: 'Ciboulette',
+    article: 'la',
     aliases: [],
     scientificName: 'Allium schoenoprasum',
     category: 'Herb',
+    perennial: true,
     sowOutdoors: [{ from: 'Mar2', to: 'May2' }],
     plant: [{ from: 'Mar1', to: 'May1' }],
     harvest: [{ from: 'Apr1', to: 'Oct2' }],
@@ -65,6 +69,7 @@ export const herbs: readonly Species[] = [
   {
     id: 'coriander',
     name: 'Coriandre',
+    article: 'la',
     aliases: [],
     scientificName: 'Coriandrum sativum',
     category: 'Herb',
@@ -84,6 +89,7 @@ export const herbs: readonly Species[] = [
   {
     id: 'dill',
     name: 'Aneth',
+    article: "l'",
     aliases: [],
     scientificName: 'Anethum graveolens',
     category: 'Herb',
@@ -103,6 +109,7 @@ export const herbs: readonly Species[] = [
   {
     id: 'chervil',
     name: 'Cerfeuil',
+    article: 'le',
     aliases: [],
     scientificName: 'Anthriscus cerefolium',
     category: 'Herb',
@@ -122,9 +129,11 @@ export const herbs: readonly Species[] = [
   {
     id: 'thyme',
     name: 'Thym',
+    article: 'le',
     aliases: [],
     scientificName: 'Thymus vulgaris',
     category: 'Herb',
+    perennial: true,
     plant: [{ from: 'Apr1', to: 'Jun1' }],
     harvest: [{ from: 'Apr2', to: 'Oct2' }],
     prune: [{ from: 'Jul1', to: 'Aug1' }],
@@ -141,9 +150,11 @@ export const herbs: readonly Species[] = [
   {
     id: 'rosemary',
     name: 'Romarin',
+    article: 'le',
     aliases: [],
     scientificName: 'Salvia rosmarinus',
     category: 'Herb',
+    perennial: true,
     plant: [{ from: 'Apr1', to: 'May2' }],
     harvest: [{ from: 'Apr1', to: 'Oct2' }],
     prune: [{ from: 'May2', to: 'Jun2' }],
@@ -160,9 +171,11 @@ export const herbs: readonly Species[] = [
   {
     id: 'sage',
     name: 'Sauge',
+    article: 'la',
     aliases: [],
     scientificName: 'Salvia officinalis',
     category: 'Herb',
+    perennial: true,
     plant: [{ from: 'Apr1', to: 'May2' }],
     harvest: [{ from: 'Apr1', to: 'Oct2' }],
     prune: [{ from: 'Apr2', to: 'May2' }],
@@ -179,9 +192,11 @@ export const herbs: readonly Species[] = [
   {
     id: 'mint',
     name: 'Menthe',
+    article: 'la',
     aliases: ['Menthe verte'],
     scientificName: 'Mentha spicata',
     category: 'Herb',
+    perennial: true,
     plant: [{ from: 'Mar2', to: 'May2' }],
     harvest: [{ from: 'May1', to: 'Oct2' }],
     spacingCm: { plants: 40, rows: 40 },

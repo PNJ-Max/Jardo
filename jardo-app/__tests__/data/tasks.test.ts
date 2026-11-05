@@ -227,6 +227,26 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
     expect((await db.all<{ note: string }>('SELECT note FROM journal_entries')).map((row) => row.note)).toEqual(['Oublié de le noter']);
   });
 
+  it('Fait note la quantité récoltée avec son unité', async () => {
+    const { db, service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await service.create({ kind: 'Harvest', recurrence: 'Once', startDate: today, spaceId: potager.id });
+
+    const { entry } = await service.complete(task.id, { quantity: 4, quantityUnit: 'Pieces' });
+
+    expect(entry).toMatchObject({ kind: 'Harvest', quantity: 4, quantityUnit: 'Pieces' });
+    expect(await db.all('SELECT quantity, quantity_unit FROM journal_entries')).toEqual([{ quantity: 4, quantity_unit: 'Pieces' }]);
+  });
+
+  it('Fait refuse une quantité sur une autre intervention, sans rien noter', async () => {
+    const { service, addSpace, addWatering, count } = await setup();
+    const potager = await addSpace('Potager');
+    const task = await addWatering(potager, null, null, 3);
+
+    await expect(service.complete(task, { quantity: 4, quantityUnit: 'Pieces' })).rejects.toMatchObject(refused);
+    expect(await count('journal_entries')).toBe(0);
+  });
+
   it('Fait dans le futur est refusé sans rien noter', async () => {
     const { service, addSpace, addWatering, count } = await setup();
     const potager = await addSpace('Potager');
