@@ -9,8 +9,8 @@ const ago = (days: number) => addDays(today, -days);
 
 const potager = 'space-potager';
 const verger = 'space-verger';
-const carre = 'zone-carre-1';
-const carre2 = 'zone-carre-2';
+const parcelle = 'zone-parcelle-1';
+const parcelle2 = 'zone-parcelle-2';
 const rang = 'zone-rang-1';
 const tomate = 'item-tomate';
 const pommier = 'item-pommier';
@@ -26,11 +26,11 @@ describe('dernière intervention qui vaut pour une cible', () => {
   // TaskServiceTests.Une_tache_dun_element_compte_les_interventions_sur_sa_zone_et_son_espace
   it('une tâche d\'un élément compte les interventions sur sa zone et son espace', () => {
     const rows = [entry('Watering', ago(6), potager, { itemId: tomate })];
-    const dateFor = () => latestInterventions(rows, 'Watering').forTarget(potager, carre, tomate);
+    const dateFor = () => latestInterventions(rows, 'Watering').forTarget(potager, parcelle, tomate);
 
     expect(dateFor()).toBe(ago(6));
 
-    rows.push(entry('Watering', ago(3), potager, { zoneId: carre }));
+    rows.push(entry('Watering', ago(3), potager, { zoneId: parcelle }));
     expect(dateFor()).toBe(ago(3));
 
     rows.push(entry('Watering', ago(1), potager), entry('Observation', today, potager, { itemId: tomate }));
@@ -42,10 +42,10 @@ describe('dernière intervention qui vaut pour une cible', () => {
     const rows = [
       entry('Watering', ago(5), potager),
       entry('Watering', today, potager, { itemId: tomate }),
-      entry('Watering', today, potager, { zoneId: carre2 }),
+      entry('Watering', today, potager, { zoneId: parcelle2 }),
     ];
 
-    expect(latestInterventions(rows, 'Watering').forTarget(potager, carre, null)).toBe(ago(5));
+    expect(latestInterventions(rows, 'Watering').forTarget(potager, parcelle, null)).toBe(ago(5));
   });
 
   // TaskServiceTests.Une_tache_despace_ne_compte_que_les_interventions_sur_tout_lespace
@@ -71,21 +71,21 @@ describe('dernière intervention qui vaut pour une cible', () => {
 
   it('garde la plus récente des interventions d\'une même cible, quel que soit l\'ordre des lignes', () => {
     const rows = [
-      entry('Watering', ago(2), potager, { zoneId: carre }),
-      entry('Watering', ago(9), potager, { zoneId: carre }),
-      entry('Watering', ago(4), potager, { zoneId: carre }),
+      entry('Watering', ago(2), potager, { zoneId: parcelle }),
+      entry('Watering', ago(9), potager, { zoneId: parcelle }),
+      entry('Watering', ago(4), potager, { zoneId: parcelle }),
     ];
 
-    expect(latestInterventions(rows, 'Watering').forTarget(potager, carre, null)).toBe(ago(2));
+    expect(latestInterventions(rows, 'Watering').forTarget(potager, parcelle, null)).toBe(ago(2));
   });
 
   it('une intervention sur un élément ne vaut pas pour un autre élément de la même zone', () => {
-    const rows = [entry('Watering', today, potager, { zoneId: carre, itemId: 'item-courgette' })];
+    const rows = [entry('Watering', today, potager, { zoneId: parcelle, itemId: 'item-courgette' })];
 
-    expect(latestInterventions(rows, 'Watering').forTarget(potager, carre, tomate)).toBeNull();
+    expect(latestInterventions(rows, 'Watering').forTarget(potager, parcelle, tomate)).toBeNull();
   });
 
   it('sans journal, aucune cible n\'a de date', () => {
-    expect(latestInterventions([], 'Watering').forTarget(potager, carre, tomate)).toBeNull();
+    expect(latestInterventions([], 'Watering').forTarget(potager, parcelle, tomate)).toBeNull();
   });
 });

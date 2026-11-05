@@ -55,7 +55,7 @@ développeur indépendant, aussi en version web (planter.garden).
 
 | Quand | Idée |
 |---|---|
-| Phase carte | Le zoom de la vue d'ensemble vers une **grille de plantation** par carré ou par bac, comme deuxième niveau de la carte |
+| Phase carte | Le zoom de la vue d'ensemble vers une **grille de plantation** par parcelle ou par bac, comme deuxième niveau de la carte |
 | Après le MVP | Un **catalogue d'espèces** : intervalles par défaut, périodes de semis selon le climat, associations |
 | Après le MVP | La **météo** : la pluie décale l'arrosage, alertes de gel |
 | Avant l'hébergement | Une étude **« local d'abord »** : données sur le téléphone, marche hors connexion, synchronisation facultative (partage en famille) |

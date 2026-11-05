@@ -17,21 +17,21 @@ import { createTestServices, renderScreen } from '../../test/render';
 const inDays = (days: number) => addDays(today(), days);
 
 /**
- * Le potager : un arrosage du Carré 1 dû aujourd'hui, un arrosage des tomates en retard de deux
+ * Le potager : un arrosage du Parcelle 1 dû aujourd'hui, un arrosage des tomates en retard de deux
  * jours, et une taille du jour qui n'est pas un arrosage.
  */
 async function addPotager(services: Services) {
   const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
-  const carre = await services.zones.create(potager.id, { name: 'Carré 1' });
+  const parcelle = await services.zones.create(potager.id, { name: 'Parcelle 1' });
   const tomates = await services.plants.create({ name: 'Tomates', quantity: 3, quantityUnit: 'Plants', spaceId: potager.id });
   const carreWatering = await services.tasks.create({
     kind: 'Watering',
-    title: 'Arroser le carré',
+    title: 'Arroser la parcelle',
     recurrence: 'EveryNDays',
     intervalDays: 3,
     startDate: today(),
     spaceId: potager.id,
-    zoneId: carre.id,
+    zoneId: parcelle.id,
   });
   const tomatoWatering = await services.tasks.create({
     kind: 'Watering',
@@ -43,7 +43,7 @@ async function addPotager(services: Services) {
     itemId: tomates.id,
   });
   await services.tasks.create({ kind: 'Pruning', recurrence: 'Once', startDate: today(), spaceId: potager.id });
-  return { potager, carre, tomates, carreWatering, tomatoWatering };
+  return { potager, parcelle, tomates, carreWatering, tomatoWatering };
 }
 
 // Les lignes célèbrent puis se replient avant que l'écriture parte : le test fait passer ce temps.
@@ -79,7 +79,7 @@ describe("la feuille d'une tâche d'Aujourd'hui", () => {
     await addPotager(services);
     await renderScreen(<TodayScreen />, services);
 
-    await fireEvent.press(await screen.findByText('Arroser le carré'));
+    await fireEvent.press(await screen.findByText('Arroser la parcelle'));
 
     expect(screen.getByText('Pas encore faite')).toBeOnTheScreen();
   });
@@ -178,7 +178,7 @@ describe('« Tout arroser »', () => {
 
     expect(await screen.findByText(noted)).toBeOnTheScreen();
     await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
-    expect(screen.queryByText('Arroser le carré')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Arroser la parcelle')).not.toBeOnTheScreen();
     expect(screen.queryByText(/^En retard/)).not.toBeOnTheScreen();
     expect(screen.getByText('Tailler')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: /^Tout arroser/ })).not.toBeOnTheScreen();
@@ -201,7 +201,7 @@ describe('« Tout arroser »', () => {
     await fireEvent.press(await screen.findByText('Annuler'));
 
     expect(await screen.findByText('Arroser les tomates')).toBeOnTheScreen();
-    expect(await screen.findByText('Arroser le carré')).toBeOnTheScreen();
+    expect(await screen.findByText('Arroser la parcelle')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: button })).toBeEnabled();
     await expect(services.journal.getAll()).resolves.toEqual([]);
   });
@@ -243,7 +243,7 @@ describe('« Tout arroser »', () => {
     await services.tasks.delete(tomatoWatering.id);
     await renderScreen(<TodayScreen />, services);
 
-    expect(await screen.findByText('Arroser le carré')).toBeOnTheScreen();
+    expect(await screen.findByText('Arroser la parcelle')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: /^Tout arroser/ })).not.toBeOnTheScreen();
   });
 });
@@ -420,7 +420,7 @@ describe('« Reporter à demain »', () => {
 
     expect(await screen.findByText(reported)).toBeOnTheScreen();
     await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
-    expect(screen.getByText('Arroser le carré')).toBeOnTheScreen();
+    expect(screen.getByText('Arroser la parcelle')).toBeOnTheScreen();
     await expect(services.tasks.getById(carreWatering.id)).resolves.toMatchObject({ postponedUntil: null });
   });
 

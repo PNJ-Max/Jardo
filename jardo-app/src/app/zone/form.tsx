@@ -48,7 +48,7 @@ function ZoneForm({ zone, spaceId }: { zone?: Zone; spaceId: Id }) {
         label="Nom"
         value={name}
         onChangeText={setName}
-        placeholder="Carré 1"
+        placeholder="Parcelle 1"
         maxLength={100}
         autoFocus={!zone}
         error={fieldError(save.error, 'name')}

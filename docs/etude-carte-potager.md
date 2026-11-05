@@ -22,9 +22,9 @@ Les décisions ci-dessous intègrent ses retours.
 L'onglet Jardin, l'accueil, montre une maquette illustrée du jardin vue d'en haut, « comme un
 village de Clash of Clans », mais sobre et conforme à la [charte](charte-graphique.md). Chaque
 espace typé du jardin y est dessiné à sa place : la maison, le verger, les petits fruits, le
-potager et ses carrés, la serre, le bois de chauffage.
+potager et ses parcelles, la serre, le bois de chauffage.
 
-- Toucher un élément ouvre l'écran de l'espace, ou de la zone pour un carré du potager.
+- Toucher un élément ouvre l'écran de l'espace, ou de la zone pour une parcelle du potager.
 - La carte ne porte ni liste ni voyant : les tâches dues, arrosage compris, vivent dans
   l'onglet Aujourd'hui.
 - La carte se zoome et se déplace à deux doigts, passe à la nuit en mode sombre et s'anime
@@ -38,8 +38,8 @@ l'étape 4, elle remplace cette liste dans le même onglet dès que le jardin a 
 | Sujet | Décision |
 |---|---|
 | Construction du jardin | **Scène modèle.** Quelques modèles de maison et de jardin, choisis à la configuration de l'app. Deux sont dessinés : « maison de campagne » (`country-house`), retenue pour le MVP par Maxime le 21/10, et « maison mitoyenne, jardin en longueur » (`terraced-long`). Pas d'éditeur libre. |
-| Variantes | Certains emplacements se règlent à la configuration : potager de 1 à 4 carrés, serre ou non. |
-| Élément touché | Ouvre un **espace** (verger, petits fruits, potager, serre, bois). Un carré du potager ouvre une **zone**. Maison, terrasse, cabanon et clôture sont du décor. |
+| Variantes | Certains emplacements se règlent à la configuration : potager de 1 à 4 parcelles, serre ou non. |
+| Élément touché | Ouvre un **espace** (verger, petits fruits, potager, serre, bois). Une parcelle du potager ouvre une **zone**. Maison, terrasse, cabanon et clôture sont du décor. |
 | Ce qui est dessiné | Les espaces, pas chaque sujet : « 3 pommiers » est un seul élément de quantité 3, et le Verger garde le même dessin. |
 | Espace ou zone sans emplacement | Listé dans une bande « Hors carte » sous la carte, et toujours accessible depuis l'onglet Jardin. |
 | Style | 2D axonométrique illustrée, dans la palette de la charte. |
@@ -47,7 +47,7 @@ l'étape 4, elle remplace cette liste dans le même onglet dès que le jardin a 
 | Angle | **Dans l'axe du jardin** : rotation de 20°, plongée de 50°. Le jardin monte dans l'écran et remplit un téléphone tenu en portrait. |
 | Visuels | Dessinés par le code dans la projection, rendus par Skia (voir [Source des visuels](#source-des-visuels) et [la décision](#essai-du-2110--décision)). |
 | Tâches | **Ni liste ni voyant** sur la carte (arbitrage du 18/10, validé par Maxime). Les tâches dues vivent dans l'onglet Aujourd'hui. |
-| Étiquettes | Le nom des espaces est toujours affiché, celui des carrés à partir d'un zoom de ×1,45. Les étiquettes sont aussi des cibles de toucher et de clavier. |
+| Étiquettes | Le nom des espaces est toujours affiché, celui des parcelles à partir d'un zoom de ×1,45. Les étiquettes sont aussi des cibles de toucher et de clavier. |
 | Zoom et déplacement | Pincer pour zoomer (jusqu'à ×5), glisser pour se déplacer, double-tap pour zoomer, bouton pour recentrer. Au départ, le jardin occupe toute la largeur de l'écran. Le déplacement et le dézoom s'arrêtent aux limites de chaque modèle, que le décor couvre toujours. |
 | Mode sombre | La scène passe à la nuit : fenêtres et lampes allumées, lucioles. |
 | Animations | Balancement léger des feuillages, rebond de l'élément touché, lucioles la nuit. Coupées si le téléphone demande de réduire les animations. |
@@ -134,7 +134,7 @@ ajouté à l'APK.
   - `scene.ts` : le gabarit commun. Projection de l'étude (20°, 50°), échelle de 1 m = 30 px,
     éclairage des faces, ombres et primitives (volumes, sphères, ellipses, halos).
   - `decor.ts` : les éléments, placés en mètres. Maison à pignons ou à quatre pans, arbres,
-    arbustes, haies, clôtures, serre, carrés et leurs cultures, abri à bois, cabanon, champs,
+    arbustes, haies, clôtures, serre, parcelles et leurs cultures, abri à bois, cabanon, champs,
     lampadaire, pots, arrosoir, brouette.
   - Un fichier par modèle (`country-house.ts`, `terraced-long.ts`) : la disposition, les
     emplacements, le décor et les limites du déplacement.
@@ -166,8 +166,8 @@ la même clé. Modèle `terraced-long` (maison mitoyenne, jardin en longueur) :
 |---|---|---|
 | `orchard` | Bande paillée et arbres le long du mur gauche | Un espace `Orchard` |
 | `small-fruit` | Rang le long du mur droit | Un espace `SmallFruit` |
-| `vegetable` | Parcelle du fond | Un espace `VegetableGarden` |
-| `bed-1` à `bed-4` | Carrés en bois de la parcelle | Une zone d'un espace `VegetableGarden` |
+| `vegetable` | Terrain du fond | Un espace `VegetableGarden` |
+| `bed-1` à `bed-4` | Parcelles en bois du terrain | Une zone d'un espace `VegetableGarden` |
 | `greenhouse` | Serre | Un espace `Greenhouse` |
 | `firewood` | Abri à bois | Un espace `Firewood` |
 
@@ -182,7 +182,7 @@ clés d'emplacement et mêmes règles :
 |---|---|
 | `orchard` | Trois fruitiers dans la pelouse, à gauche |
 | `small-fruit` | Rang le long de la clôture droite |
-| `vegetable` | Parcelle du fond, avec les carrés `bed-1` à `bed-4` |
+| `vegetable` | Terrain du fond, avec les parcelles `bed-1` à `bed-4` |
 | `greenhouse` | Serre à droite du potager |
 | `firewood` | Abri à bois au bout de l'allée gravillonnée |
 
@@ -226,11 +226,11 @@ inchangées.
 
 - **Contrat.** `GET` et `PUT /api/garden/map` renvoient le même corps. Les emplacements libres ne
   figurent pas dans `slots`, triés par clé : le front connaît ceux du modèle. Le `PUT` prend
-  `{ layout, slots: [{ slotKey, spaceId, zoneId? }] }` ; un carré porte l'espace potager **et** sa
+  `{ layout, slots: [{ slotKey, spaceId, zoneId? }] }` ; une parcelle porte l'espace potager **et** sa
   zone. `layout: null` avec aucun emplacement retire la carte.
 - **« Emplacement déjà pris ».** Le `PUT` remplaçant tout, la règle devient : une clé n'apparaît
   qu'une fois dans la requête. S'y ajoute : un espace ou une zone n'a qu'un emplacement (le
-  potager peut occuper `vegetable`, et chacun de ses carrés un `bed-n`, mais pas deux `bed-n`).
+  potager peut occuper `vegetable`, et chacune de ses parcelles un `bed-n`, mais pas deux `bed-n`).
 - **Espaces archivés.** Un espace archivé ne se pose pas sur la carte, et l'archiver le libère
   (il passe en « Hors carte »). Le réactiver ne le remet pas en place.
 - **Changement de type.** Changer le type d'un espace le libère aussi, puisque son emplacement ne
@@ -238,7 +238,7 @@ inchangées.
 - **Erreurs.** Toutes en 400 (`BusinessRuleException`), y compris un espace ou une zone du corps
   qui n'existe pas, comme pour les plantes.
 - **Seeder.** Le jardin d'exemple prend le modèle `terraced-long` : Potager (`vegetable`) et ses
-  quatre carrés (`bed-1` à `bed-4`), Verger, Petits fruits, Serre et Bois de chauffage. La serre
+  quatre parcelles (`bed-1` à `bed-4`), Verger, Petits fruits, Serre et Bois de chauffage. La serre
   tunnel archivée reste hors carte.
 
 ### Tranché à l'étape 4 (carte v1)
@@ -250,8 +250,8 @@ inchangées.
 - **Quand la carte s'affiche.** Si `MapLayout` est non nul **et** que le front sait dessiner ce
   modèle ; sinon la liste, sans message (l'assistant de configuration est l'étape 6).
 - **Emplacement libre.** Le dessin reste, voilé par la couleur du sol, sans étiquette ni toucher.
-- **« Hors carte ».** Les espaces actifs sans emplacement propre (un potager dont seuls les carrés
-  sont posés en fait partie), puis les zones sans carré d'un potager posé sur la carte, nommées
+- **« Hors carte ».** Les espaces actifs sans emplacement propre (un potager dont seules les parcelles
+  sont posées en fait partie), puis les zones sans parcelle d'un potager posé sur la carte, nommées
   avec leur espace. Les autres zones s'ouvrent depuis leur espace, et les espaces archivés depuis
   la liste, à la demande. La bande n'apparaît que si elle a quelque chose à montrer.
 - **Toucher.** Il ouvre directement la fiche, sans mise en évidence préalable. Le rebond de
@@ -270,11 +270,11 @@ inchangées.
   buisson (de 2 à 5 pixels de scène). Phase et période (3,6 à 5,8 s) propres à chaque feuillage,
   tirées de sa position ; une seconde oscillation plus rapide et des rafales de 11 s qui traversent
   la scène de gauche à droite évitent l'ensemble mécanique. Les haies taillées, les cultures des
-  carrés et les plantes de la serre restent immobiles.
+  parcelles et les plantes de la serre restent immobiles.
 - **Rebond.** Toucher un emplacement occupé, sur la carte ou sur son étiquette, fait rebondir ses
   objets autour du centre de son emprise : 6 % de plus en 90 ms, puis retour amorti en 290 ms. La
   fiche s'ouvre au sommet, 90 ms après le toucher, sous le seuil où un délai se remarque. Toucher
-  le potager fait rebondir ses quatre carrés ; toucher un emplacement libre ou le décor ne fait
+  le potager fait rebondir ses quatre parcelles ; toucher un emplacement libre ou le décor ne fait
   rien. Les étiquettes, le voile des emplacements libres et les zones de toucher ne bougent pas.
 - **Lucioles.** Une seule luciole est enregistrée (le dessin de `drawFireflies`), puis rejouée à
   chacune de ses places : elle flotte jusqu'à 12 pixels de scène autour et s'allume par
@@ -317,11 +317,11 @@ L'API n'existe plus : `POST /api/garden/map/setup` devient `GardenMapService.set
 - **Contenu.** Accueil sur l'aperçu de la maison de campagne ; modèle choisi sur les deux
   aperçus (dessin immobile de la scène, `MapPreview`), campagne par défaut ; espaces à cocher,
   aucun d'office, chacun sur sa vignette et sur l'emplacement de son type, nommé comme son type ;
-  les quatre carrés (« Carré 1 » à « Carré 4 ») en option sous le potager, décochés.
+  les quatre parcelles (« Parcelle 1 » à « Parcelle 4 ») en option sous le potager, décochées.
 - **Réglages, « Carte du jardin ».** Un jardin qui a des espaces ouvre en modale le choix du
   modèle et, emplacement par emplacement, l'espace de son type ou la zone d'un potager (une zone
-  n'occupe qu'un carré). Sans carte, un premier placement est proposé : le premier espace de
-  chaque type, et les premières zones de ce potager sur les carrés. L'enregistrement passe par
+  n'occupe qu'une parcelle). Sans carte, un premier placement est proposé : le premier espace de
+  chaque type, et les premières zones de ce potager sur les parcelles. L'enregistrement passe par
   `replace`.
 - **Pas de migration** : `gardens.map_layout` et `garden_map_slots` suffisent.
 
@@ -359,10 +359,10 @@ d'espaces (serre, poulailler…) avec leurs emplacements et leurs dessins, un é
 [Carte du jardin Jardo](https://claude.ai/artifact/1UtTDmxnhgMPHBJpNL4gNS), page HTML autonome.
 
 - Le jardin d'exemple actuel de l'API, réparti dans les espaces du modèle du domaine : Potager
-  (Carré 1), Serre (concombre, aubergine), Verger (pommier), Petits fruits (framboisiers,
-  groseillier). Le tas de bois et les carrés 2 à 4 sont des exemples.
+  (Parcelle 1), Serre (concombre, aubergine), Verger (pommier), Petits fruits (framboisiers,
+  groseillier). Le tas de bois et les parcelles 2 à 4 sont des exemples.
 - Toucher un élément affiche ce qu'il ouvrirait. Depuis le Potager, on descend dans ses zones.
-- Réglages : thème (jour et nuit), angle de vue, fond (sobre ou socle vert), nombre de carrés,
+- Réglages : thème (jour et nuit), angle de vue, fond (sobre ou socle vert), nombre de parcelles,
   serre, étiquettes, animations.
 - La scène y est générée par programme à partir de volumes simples, pour changer l'angle et les
   variantes en direct. Ce n'est pas le code de l'app.

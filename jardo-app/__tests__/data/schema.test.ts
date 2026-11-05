@@ -71,10 +71,10 @@ describe('schéma', () => {
     const { space, zone } = await gardenDb();
     const potager = await space('Potager');
     const serre = await space('Serre', 'Greenhouse');
-    await zone(potager, 'Carré 1');
+    await zone(potager, 'Parcelle 1');
 
-    await expect(zone(potager, 'Carré 1')).rejects.toThrow(/UNIQUE/);
-    await expect(zone(serre, 'Carré 1')).resolves.toBeDefined();
+    await expect(zone(potager, 'Parcelle 1')).rejects.toThrow(/UNIQUE/);
+    await expect(zone(serre, 'Parcelle 1')).resolves.toBeDefined();
   });
 
   it('refuse deux espaces sur le même emplacement de la carte', async () => {
@@ -87,7 +87,7 @@ describe('schéma', () => {
   it('refuse une référence vers une ligne qui n\'existe pas', async () => {
     const { db, zone } = await gardenDb();
 
-    await expect(zone('missing', 'Carré 1')).rejects.toThrow(/FOREIGN KEY/);
+    await expect(zone('missing', 'Parcelle 1')).rejects.toThrow(/FOREIGN KEY/);
     await expect(
       insert(db, 'spaces', { garden_id: 'missing', name: 'Potager', kind: 'Orchard', created_at: now }),
     ).rejects.toThrow(/FOREIGN KEY/);
@@ -96,10 +96,10 @@ describe('schéma', () => {
   it("refuse de supprimer un espace ou une zone qui contient un élément", async () => {
     const { db, space, zone, plant, count } = await gardenDb();
     const potager = await space('Potager');
-    const carre = await zone(potager, 'Carré 1');
-    await plant(potager, carre);
+    const parcelle = await zone(potager, 'Parcelle 1');
+    await plant(potager, parcelle);
 
-    await expect(db.run('DELETE FROM zones WHERE id = ?', [carre])).rejects.toThrow(/FOREIGN KEY/);
+    await expect(db.run('DELETE FROM zones WHERE id = ?', [parcelle])).rejects.toThrow(/FOREIGN KEY/);
     await expect(db.run('DELETE FROM spaces WHERE id = ?', [potager])).rejects.toThrow(/FOREIGN KEY/);
     expect(await count('garden_items')).toBe(1);
   });
@@ -107,11 +107,11 @@ describe('schéma', () => {
   it('emporte avec un espace vide ses zones, son journal, ses tâches et ses emplacements', async () => {
     const { db, space, zone, entry, task, slot, count } = await gardenDb();
     const potager = await space('Potager');
-    const carre = await zone(potager, 'Carré 1');
-    await entry(potager, carre, null);
+    const parcelle = await zone(potager, 'Parcelle 1');
+    await entry(potager, parcelle, null);
     await task(potager, null, null);
     await slot('vegetable', potager);
-    await slot('bed-1', potager, carre);
+    await slot('bed-1', potager, parcelle);
     await space('Verger', 'Orchard');
 
     await db.run('DELETE FROM spaces WHERE id = ?', [potager]);
@@ -126,11 +126,11 @@ describe('schéma', () => {
   it('libère l\'emplacement d\'une zone supprimée, sans toucher à son espace', async () => {
     const { db, space, zone, slot, count } = await gardenDb();
     const potager = await space('Potager');
-    const carre = await zone(potager, 'Carré 1');
+    const parcelle = await zone(potager, 'Parcelle 1');
     await slot('vegetable', potager);
-    await slot('bed-1', potager, carre);
+    await slot('bed-1', potager, parcelle);
 
-    await db.run('DELETE FROM zones WHERE id = ?', [carre]);
+    await db.run('DELETE FROM zones WHERE id = ?', [parcelle]);
 
     expect(await db.all('SELECT slot_key FROM garden_map_slots')).toEqual([{ slot_key: 'vegetable' }]);
     expect(await count('spaces')).toBe(1);
@@ -153,7 +153,7 @@ describe('schéma', () => {
   it('emporte tout le contenu avec le jardin', async () => {
     const { db, gardenId, space, zone, slot, count } = await gardenDb();
     const potager = await space('Potager');
-    await slot('bed-1', potager, await zone(potager, 'Carré 1'));
+    await slot('bed-1', potager, await zone(potager, 'Parcelle 1'));
 
     await db.run('DELETE FROM gardens WHERE id = ?', [gardenId]);
 

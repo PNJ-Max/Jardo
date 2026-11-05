@@ -71,7 +71,7 @@ function GardenMapForm({ map, spaces, zones }: { map: GardenMap; spaces: Space[]
       <View style={styles.section}>
         <SectionTitle>Emplacements</SectionTitle>
         <Text style={styles.muted}>
-          Chaque emplacement accueille un espace de son type, et les carrés des zones du potager. Ce qui n&apos;est pas
+          Chaque emplacement accueille un espace de son type, et les parcelles des zones du potager. Ce qui n&apos;est pas
           placé reste dans la bande « Hors carte ».
         </Text>
         {choices
@@ -88,7 +88,7 @@ function GardenMapForm({ map, spaces, zones }: { map: GardenMap; spaces: Space[]
           ))}
         {!hasZones && (
           <Text style={styles.muted}>
-            Les quatre carrés du potager accueillent ses zones : ajoutez-en à votre potager pour les placer ici.
+            Les quatre parcelles du potager accueillent ses zones : ajoutez-en à votre potager pour les placer ici.
           </Text>
         )}
       </View>

@@ -17,7 +17,7 @@ export type OffMapTarget = {
 };
 
 /**
- * Les potagers posés sur la carte : seules leurs zones ont des emplacements (les carrés), donc
+ * Les potagers posés sur la carte : seules leurs zones ont des emplacements (les parcelles), donc
  * seules elles peuvent manquer à la carte. Les zones d'un autre espace s'ouvrent depuis lui.
  */
 export function mappedVegetableGardens(map: GardenMap): Id[] {
@@ -27,7 +27,7 @@ export function mappedVegetableGardens(map: GardenMap): Id[] {
 }
 
 /**
- * Ce que la carte ne montre pas : les espaces actifs sans emplacement, puis les zones sans carré
+ * Ce que la carte ne montre pas : les espaces actifs sans emplacement, puis les zones sans parcelle
  * d'un potager posé sur la carte. `zones` sont celles de `mappedVegetableGardens`.
  */
 export function offMapTargets(map: GardenMap, spaces: Space[], zones: Zone[]): OffMapTarget[] {
@@ -67,10 +67,10 @@ export const slotLabels: Record<SlotKey, string> = {
   orchard: 'Verger',
   'small-fruit': 'Petits fruits',
   vegetable: 'Potager',
-  'bed-1': 'Carré 1 du potager',
-  'bed-2': 'Carré 2 du potager',
-  'bed-3': 'Carré 3 du potager',
-  'bed-4': 'Carré 4 du potager',
+  'bed-1': 'Parcelle 1 du potager',
+  'bed-2': 'Parcelle 2 du potager',
+  'bed-3': 'Parcelle 3 du potager',
+  'bed-4': 'Parcelle 4 du potager',
   greenhouse: 'Serre',
   firewood: 'Bois de chauffage',
 };
@@ -80,7 +80,7 @@ const slotDefinitions = gardenLayouts[0].slots as readonly (MapSlotDefinition & 
 const spaceSlots = slotDefinitions.filter((slot) => !slot.acceptsZone);
 const zoneSlots = slotDefinitions.filter((slot) => slot.acceptsZone);
 
-/** Les espaces cochés dans l'assistant, chacun sur l'emplacement de son type, avec les quatre carrés du potager si on les veut. */
+/** Les espaces cochés dans l'assistant, chacun sur l'emplacement de son type, avec les quatre parcelles du potager si on les veut. */
 export function setupInput(layout: DrawnLayout, kinds: SpaceKind[], beds: boolean): GardenSetupInput {
   return {
     layout,
@@ -92,13 +92,13 @@ export function setupInput(layout: DrawnLayout, kinds: SpaceKind[], beds: boolea
         kind: slot.kind,
         zones:
           slot.kind === 'VegetableGarden' && beds
-            ? zoneSlots.map((zone, index) => ({ slotKey: zone.key, name: `Carré ${index + 1}` }))
+            ? zoneSlots.map((zone, index) => ({ slotKey: zone.key, name: `Parcelle ${index + 1}` }))
             : undefined,
       })),
   };
 }
 
-/** Ce qui occupe chaque emplacement : l'identifiant de l'espace, ou de la zone pour un carré. */
+/** Ce qui occupe chaque emplacement : l'identifiant de l'espace, ou de la zone pour une parcelle. */
 export type Placement = Partial<Record<SlotKey, Id | null>>;
 
 export type SlotChoice = { slot: SlotKey; acceptsZone: boolean; options: { value: Id; label: string }[] };
@@ -128,7 +128,7 @@ export const placementOf = (map: GardenMap): Placement =>
 
 /**
  * Un premier placement pour un jardin qui n'a pas encore de carte : le premier espace actif de
- * chaque type sur son emplacement, et les premières zones de ce potager sur les carrés.
+ * chaque type sur son emplacement, et les premières zones de ce potager sur les parcelles.
  */
 export function suggestPlacement(spaces: Space[], zones: Zone[]): Placement {
   const placement: Placement = {};
@@ -143,7 +143,7 @@ export function suggestPlacement(spaces: Space[], zones: Zone[]): Placement {
   return placement;
 }
 
-/** Pose `target` sur `slot`. Une zone n'a qu'un carré : posée sur un autre, elle quitte le précédent. */
+/** Pose `target` sur `slot`. Une zone n'a qu'une parcelle : posée sur une autre, elle quitte la précédente. */
 export function assignSlot(placement: Placement, slot: SlotKey, target: Id | null): Placement {
   const next: Placement = { ...placement, [slot]: target };
   if (target !== null) {

@@ -24,12 +24,12 @@ describe('PlantService (port de PlantServiceTests.cs)', () => {
   it('Une plante se crée dans une zone de son espace', async () => {
     const { service, addSpace, addZone } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 2');
+    const parcelle = await addZone(potager, 'Parcelle 2');
 
-    const plant = await service.create(newPlant(potager.id, carre.id));
+    const plant = await service.create(newPlant(potager.id, parcelle.id));
 
     expect(plant.spaceName).toBe('Potager');
-    expect(plant.zoneName).toBe('Carré 2');
+    expect(plant.zoneName).toBe('Parcelle 2');
   });
 
   it('Une plante peut se passer de zone', async () => {
@@ -54,11 +54,11 @@ describe('PlantService (port de PlantServiceTests.cs)', () => {
   it("Changer d'espace sans changer de zone est refusé", async () => {
     const { service, addSpace, addZone, addPlant } = await setup();
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
     const verger = await addSpace('Verger', 'Orchard');
-    const plant = await addPlant(potager, carre, 'Rhubarbe');
+    const plant = await addPlant(potager, parcelle, 'Rhubarbe');
 
-    await expect(service.update(plant.id, newPlant(verger.id, carre.id))).rejects.toMatchObject(refused);
+    await expect(service.update(plant.id, newPlant(verger.id, parcelle.id))).rejects.toMatchObject(refused);
   });
 
   it('Déplacer une plante déplace son journal et ses tâches', async () => {
@@ -66,25 +66,25 @@ describe('PlantService (port de PlantServiceTests.cs)', () => {
     const serre = await addSpace('Serre', 'Greenhouse');
     const tablette = await addZone(serre, 'Tablette');
     const potager = await addSpace('Potager');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
     const plant = await addPlant(serre, tablette, 'Tomates de semis');
     await addEntry('Sowing', '2026-03-15', serre, null, plant);
     const zoneEntry = await addEntry('Watering', '2026-06-14', serre, tablette);
     await addTask('Watering', 'EveryNDays', '2026-06-01', serre, { item: plant, intervalDays: 1 });
 
-    await service.update(plant.id, newPlant(potager.id, carre.id));
+    await service.update(plant.id, newPlant(potager.id, parcelle.id));
 
     const entries = await db.all<{ id: string; item_id: string | null; space_id: string; zone_id: string | null }>(
       'SELECT id, item_id, space_id, zone_id FROM journal_entries',
     );
     const sowing = entries.filter((entry) => entry.item_id === plant.id);
     expect(sowing).toHaveLength(1);
-    expect([sowing[0].space_id, sowing[0].zone_id]).toEqual([potager.id, carre.id]);
+    expect([sowing[0].space_id, sowing[0].zone_id]).toEqual([potager.id, parcelle.id]);
     expect(entries.find((entry) => entry.id === zoneEntry)!.zone_id).toBe(tablette.id);
 
     const tasks = await db.all<{ space_id: string; zone_id: string | null }>('SELECT space_id, zone_id FROM garden_tasks');
     expect(tasks).toHaveLength(1);
-    expect([tasks[0].space_id, tasks[0].zone_id]).toEqual([potager.id, carre.id]);
+    expect([tasks[0].space_id, tasks[0].zone_id]).toEqual([potager.id, parcelle.id]);
   });
 
   it('Une plante est refusée dans un espace bois de chauffage', async () => {
@@ -213,15 +213,15 @@ describe('PlantService (ajouts au port)', () => {
     const { service, addSpace, addZone, addPlant } = await setup();
     const potager = await addSpace('Potager');
     const verger = await addSpace('Verger', 'Orchard');
-    const carre = await addZone(potager, 'Carré 1');
+    const parcelle = await addZone(potager, 'Parcelle 1');
     await addPlant(verger, null, 'Poirier');
-    await addPlant(potager, carre, 'Radis');
+    await addPlant(potager, parcelle, 'Radis');
     await addPlant(potager, null, 'Tomate');
     await addPlant(potager, null, 'Basilic');
 
     expect((await service.getAll()).map((plant) => plant.name)).toEqual(['Basilic', 'Tomate', 'Radis', 'Poirier']);
     expect((await service.getAll({ spaceId: verger.id })).map((plant) => plant.name)).toEqual(['Poirier']);
-    expect((await service.getAll({ zoneId: carre.id })).map((plant) => plant.name)).toEqual(['Radis']);
+    expect((await service.getAll({ zoneId: parcelle.id })).map((plant) => plant.name)).toEqual(['Radis']);
   });
 
   it("Archiver une plante la sort de la liste par défaut, la réactiver l'y remet", async () => {

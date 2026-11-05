@@ -12,15 +12,15 @@ import { createTestServices, renderScreen } from '../../test/render';
 const slot = (name: string) =>
   within(screen.getAllByLabelText(name).find((element) => element.props.accessibilityRole === 'radiogroup')!);
 
-/** Un jardin sans carte : un potager et ses deux carrés, un verger, une serre. */
+/** Un jardin sans carte : un potager et ses deux parcelles, un verger, une serre. */
 async function gardenWithoutMap() {
   const services = await createTestServices();
   const potager = await services.spaces.create({ name: 'Potager du bas', kind: 'VegetableGarden' });
-  const carres = [];
-  for (const name of ['Carré A', 'Carré B']) carres.push(await services.zones.create(potager.id, { name }));
+  const parcelles = [];
+  for (const name of ['Parcelle A', 'Parcelle B']) parcelles.push(await services.zones.create(potager.id, { name }));
   const verger = await services.spaces.create({ name: 'Verger', kind: 'Orchard' });
   const serre = await services.spaces.create({ name: 'Serre tunnel', kind: 'Greenhouse' });
-  return { services, potager, carres, verger, serre };
+  return { services, potager, parcelles, verger, serre };
 }
 
 const slotsOf = async (services: Services) =>
@@ -52,19 +52,19 @@ describe('réglages, carte du jardin', () => {
     const { services } = await gardenWithoutMap();
     await renderScreen(<GardenMapScreen />, services);
 
-    // Chaque espace est proposé sur l'emplacement de son type, les carrés sur ceux du potager.
+    // Chaque espace est proposé sur l'emplacement de son type, les parcelles sur ceux du potager.
     await screen.findByText('Emplacements');
     expect(slot('Verger').getByRole('radio', { name: 'Verger' })).toBeChecked();
     expect(slot('Potager').getByRole('radio', { name: 'Potager du bas' })).toBeChecked();
-    expect(await slot('Carré 1 du potager').findByRole('radio', { name: 'Carré A' })).toBeChecked();
-    expect(slot('Carré 2 du potager').getByRole('radio', { name: 'Carré B' })).toBeChecked();
+    expect(await slot('Parcelle 1 du potager').findByRole('radio', { name: 'Parcelle A' })).toBeChecked();
+    expect(slot('Parcelle 2 du potager').getByRole('radio', { name: 'Parcelle B' })).toBeChecked();
     expect(slot('Petits fruits').getByRole('radio', { name: 'Libre' })).toBeChecked();
     // Ni petits fruits ni bois de chauffage dans ce jardin.
     expect(screen.getAllByText('Aucun espace de ce type dans le jardin.')).toHaveLength(2);
 
-    // Une zone n'a qu'un carré : posée sur le quatrième, elle quitte le premier.
-    await fireEvent.press(slot('Carré 4 du potager').getByRole('radio', { name: 'Carré A' }));
-    expect(slot('Carré 1 du potager').getByRole('radio', { name: 'Libre' })).toBeChecked();
+    // Une zone n'a qu'une parcelle : posée sur la quatrième, elle quitte la première.
+    await fireEvent.press(slot('Parcelle 4 du potager').getByRole('radio', { name: 'Parcelle A' }));
+    expect(slot('Parcelle 1 du potager').getByRole('radio', { name: 'Libre' })).toBeChecked();
 
     await fireEvent.press(slot('Serre').getByRole('radio', { name: 'Libre' }));
     await fireEvent.press(screen.getByRole('radio', { name: /^Maison mitoyenne/ }));
@@ -73,8 +73,8 @@ describe('réglages, carte du jardin', () => {
     expect(router.back).toHaveBeenCalled();
     expect((await services.gardenMap.get()).layout).toBe('terraced-long');
     await expect(slotsOf(services)).resolves.toEqual([
-      ['bed-2', 'Carré B'],
-      ['bed-4', 'Carré A'],
+      ['bed-2', 'Parcelle B'],
+      ['bed-4', 'Parcelle A'],
       ['orchard', 'Verger'],
       ['vegetable', 'Potager du bas'],
     ]);
@@ -97,10 +97,10 @@ describe('réglages, carte du jardin', () => {
 
     await renderScreen(<GardenMapScreen />, services);
 
-    // Le placement en place, sans suggestion : la serre et les carrés restent libres.
+    // Le placement en place, sans suggestion : la serre et les parcelles restent libres.
     expect(await screen.findByRole('radio', { name: /^Maison mitoyenne/ })).toBeChecked();
     expect(slot('Serre').getByRole('radio', { name: 'Libre' })).toBeChecked();
-    expect(slot('Carré 1 du potager').getByRole('radio', { name: 'Libre' })).toBeChecked();
+    expect(slot('Parcelle 1 du potager').getByRole('radio', { name: 'Libre' })).toBeChecked();
 
     await fireEvent.press(screen.getByRole('radio', { name: /^Maison de campagne/ }));
     await fireEvent.press(slot('Verger').getByRole('radio', { name: 'Libre' }));

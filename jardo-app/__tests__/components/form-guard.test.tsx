@@ -40,7 +40,7 @@ describe('quitter un formulaire', () => {
 
   it('demande confirmation après une saisie, et ne quitte que si on abandonne', async () => {
     await openNewZone();
-    await fireEvent.changeText(screen.getByLabelText(/^Nom/), 'Carré 1');
+    await fireEvent.changeText(screen.getByLabelText(/^Nom/), 'Parcelle 1');
     expect(guard().prevent).toBe(true);
 
     await act(() => guard().leave(goingBack));
@@ -56,13 +56,13 @@ describe('quitter un formulaire', () => {
     const services = await openNewZone();
     // Le retour du routeur atteint la garde après coup, comme sur le web.
     jest.mocked(router.back).mockImplementationOnce(() => void Promise.resolve().then(() => guard().leave(goingBack)));
-    await fireEvent.changeText(screen.getByLabelText(/^Nom/), 'Carré 1');
+    await fireEvent.changeText(screen.getByLabelText(/^Nom/), 'Parcelle 1');
 
     await fireEvent.press(screen.getByRole('button', { name: /^Créer/ }));
 
     await waitFor(() => expect(dispatch).toHaveBeenCalledWith(goingBack));
     expect(Alert.alert).not.toHaveBeenCalled();
     const [potager] = await services.spaces.getAll();
-    await expect(services.zones.getBySpace(potager.id)).resolves.toMatchObject([{ name: 'Carré 1' }]);
+    await expect(services.zones.getBySpace(potager.id)).resolves.toMatchObject([{ name: 'Parcelle 1' }]);
   });
 });
