@@ -22,6 +22,15 @@ situe Jardo tel qu'il est, avant la V1 des testeurs. Doc seule, aucun changement
   recueil des retours, mentions légales. Un positionnement pour la fiche Play Store est proposé.
 - **Limite** : les fiches sont des déclarations de développeurs, aucune app n'a été installée.
 
+**Audit de sécurité : import plus strict (05/11/2026).** Un fichier piégé pouvait passer la lecture
+d'une sauvegarde et rendre le jardin illisible. `readBackup` refuse désormais :
+- **les dates hors de portée** : une entrée en 9999 et une tâche partie en 0001 faisaient échouer
+  chaque lecture des tâches et des espaces, jusqu'au prochain import. `Validation.date` n'accepte plus
+  que les années 1000 à 8999, pour les formulaires comme pour l'import ;
+- **les identifiants qui ne sont pas des UUID** : `../settings` ouvrait Réglages au toucher d'un espace ;
+- **les noms hérités** : `__proto__` ou `constructor`, en table ou en colonne, n'étaient pas refusés.
+  Sans effet réel, aucune pollution de prototype, mais le contrôle mentait.
+
 **Catalogue d'espèces, PR 6 : les rappels proposés (05/11/2026).** Une plante liée au catalogue se
 voit proposer ses rappels, sans qu'aucun soit créé sans un geste de l'utilisateur.
 - **Calcul** : `proposeReminders` dans `src/domain/reminder-proposals.ts`, pur, avec le jour et le

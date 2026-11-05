@@ -281,6 +281,34 @@ describe('sauvegarde', () => {
       expect(readError(file())).toMatchObject(refusedFile(detail));
     });
 
+    // Écrits à la main : JSON.parse en fait des clés ordinaires, sans toucher au prototype.
+    const inheritedNames = ['__proto__', 'constructor', 'toString', 'hasOwnProperty'];
+
+    it.each(inheritedNames)('avec une table nommée %s', (name) => {
+      const file = JSON.stringify(backup).replace('"tables":{', `"tables":{"${name}":[],`);
+
+      expect(readError(file)).toMatchObject(refusedFile(`La table « ${name} » est inconnue.`));
+    });
+
+    it.each(inheritedNames)('avec une colonne nommée %s', (name) => {
+      const file = JSON.stringify(backup).replace('"spaces":[{', `"spaces":[{"${name}":"x",`);
+
+      expect(readError(file)).toMatchObject(refusedFile(`Table « spaces », ligne 1 : la colonne « ${name} » est inconnue.`));
+      expect(({} as Record<string, unknown>).x).toBeUndefined();
+    });
+
+    it.each(['', '../settings', 'x?y=z#f', 'https://exemple.test/', 'X'.repeat(5000)])('avec un espace d’identifiant « %s »', (id) => {
+      const file = JSON.stringify(backup).split(backup.tables.spaces[0].id).join(id);
+
+      expect(readError(file)).toMatchObject(refusedFile("Un identifiant parmi les espaces n'est pas valable."));
+    });
+
+    it('avec un jardin dont l’identifiant n’est pas un UUID', () => {
+      const file = JSON.stringify(backup).split(backup.tables.gardens[0].id).join('../settings');
+
+      expect(readError(file)).toMatchObject(refusedFile("L'identifiant du jardin n'est pas valable."));
+    });
+
     const space = (file: any, kind: string) => file.tables.spaces.find((row: any) => row.kind === kind);
     const pile = (file: any) => file.tables.garden_items.find((row: any) => row.item_type === 'WoodPile');
 
@@ -293,6 +321,8 @@ describe('sauvegarde', () => {
       ['deux espaces du même nom', (file: any) => (file.tables.spaces[1].name = file.tables.spaces[0].name), /existe déjà/],
       ['une tâche reportée à un jour mal écrit', (file: any) => (file.tables.garden_tasks[0].postponed_until = '2026-13-01'), /« Reporter au » n'est pas un jour/],
       ['une tâche ouverte un jour mal écrit', (file: any) => (file.tables.garden_tasks[0].opened_on = '2026-02-30'), /« Ouverte le » n'est pas un jour/],
+      ['une intervention notée en l’an 9999', (file: any) => (file.tables.journal_entries[0].date = '9999-12-31'), /« Date » n'est pas un jour/],
+      ['une tâche partie en l’an 1', (file: any) => (file.tables.garden_tasks[0].start_date = '0001-01-01'), /« Date de départ » n'est pas un jour/],
       [
         'une plante dans le bois de chauffage',
         (file: any) => {
@@ -354,6 +384,20 @@ describe('sauvegarde', () => {
     ])('qui contient %s', (_, change, detail) => {
       expect(readError(tampered(backup, change))).toMatchObject(refusedFile(detail));
     });
+  });
+
+  it('garde lisibles des dates aux bornes de ce qu’il accepte', async () => {
+    const { backup } = await exampleBackup();
+    const extreme = tampered(backup, (file) => {
+      file.tables.journal_entries.forEach((entry: any) => (entry.date = '8999-12-31'));
+      file.tables.garden_tasks.forEach((task: any) => (task.start_date = '1000-01-01'));
+    });
+    const target = await createTestDb();
+    const service = createBackupService(target, clock);
+
+    await service.replace(service.read(extreme));
+
+    expect((await createTaskService(target, clock).getAll()).length).toBe(backup.tables.garden_tasks.length);
   });
 
   it('ne modifie rien si une écriture de l’import échoue', async () => {

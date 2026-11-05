@@ -13,8 +13,10 @@ export function optionalText(value: string | null | undefined): string | null {
 
 const isDateOnly = (value: string) => {
   try {
-    yearOf(value);
-    return true;
+    // Hors de ces années, le calcul des échéances casse : au-delà de 9999, `addDays` sort du format
+    // AAAA-MM-JJ et chaque lecture des tâches lève ; sous 100, `Date.UTC` lit une année en 19xx.
+    const year = yearOf(value);
+    return year >= 1000 && year < 9000;
   } catch {
     return false;
   }
