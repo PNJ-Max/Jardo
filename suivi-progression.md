@@ -63,6 +63,11 @@ d'exemple, les tests et les docs disent maintenant « parcelle ». « Zone » et
 changent pas, pas plus que « mètre carré » ni la méthode du « jardin en carrés ». Les noms déjà
 enregistrés dans un jardin restent ce qu'ils sont : ils appartiennent à l'utilisateur.
 
+**Audit de sécurité : plus de plan des écrans par lien (05/11/2026).** Expo Router génère une route
+`_sitemap`, joignable par n'importe quel lien `jardo:///_sitemap`. Son code lit `window.location`, absent
+sur un téléphone : sous Jest, l'écran lève une `TypeError`. `app.json` passe `sitemap: false`, et le lien
+mène à l'écran « route introuvable », en anglais, qui existait déjà. Reste à constater sur l'APK.
+
 **Catalogue d'espèces, PR 4 : choisir l'espèce (04/11/2026).** Le champ « Espèce » du formulaire de
 plante ouvre une feuille de recherche dans le catalogue, qui propose sans imposer.
 - **Feuille** : avant la frappe, « En ce moment » (semis ou plantation cette quinzaine ou la suivante,
