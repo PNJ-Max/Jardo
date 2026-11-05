@@ -42,7 +42,7 @@ describe('écran Jardin sans carte', () => {
   it('liste les espaces avec leur contenu et leur pastille de tâches', async () => {
     const services = await setup();
     const potager = await addSpace(services, 'Potager du bas');
-    for (const name of ['Carré 1', 'Carré 2']) await services.zones.create(potager.id, { name });
+    for (const name of ['Parcelle 1', 'Parcelle 2']) await services.zones.create(potager.id, { name });
     for (const name of ['Tomates', 'Basilic', 'Carottes', 'Radis', 'Laitues']) {
       await services.plants.create({ name, quantity: 1, quantityUnit: 'Plants', spaceId: potager.id });
     }
@@ -99,12 +99,12 @@ describe('écran Jardin sans carte', () => {
 });
 
 describe('écran Jardin avec carte', () => {
-  /** Le potager et son carré 1 sur la carte, son carré 5 hors carte ; le verger posé, la serre non. */
+  /** Le potager et sa parcelle 1 sur la carte, sa parcelle 5 hors carte ; le verger posé, la serre non. */
   async function withMap() {
     const services = await setup();
     const potager = await addSpace(services, 'Potager');
-    const carre1 = await services.zones.create(potager.id, { name: 'Carré 1' });
-    const carre5 = await services.zones.create(potager.id, { name: 'Carré 5' });
+    const parcelle1 = await services.zones.create(potager.id, { name: 'Parcelle 1' });
+    const parcelle5 = await services.zones.create(potager.id, { name: 'Parcelle 5' });
     const verger = await addSpace(services, 'Verger', 'Orchard');
     const serre = await addSpace(services, 'Serre', 'Greenhouse');
     const tunnel = await addSpace(services, 'Tunnel', 'Greenhouse');
@@ -112,35 +112,35 @@ describe('écran Jardin avec carte', () => {
     await services.gardenMap.replace({
       layout: 'country-house',
       slots: [
-        { slotKey: 'bed-1', spaceId: potager.id, zoneId: carre1.id },
+        { slotKey: 'bed-1', spaceId: potager.id, zoneId: parcelle1.id },
         { slotKey: 'orchard', spaceId: verger.id },
         { slotKey: 'vegetable', spaceId: potager.id },
       ],
     });
-    return { services, carre1, carre5, verger, serre };
+    return { services, parcelle1, parcelle5, verger, serre };
   }
 
   it("ouvre l'espace ou la zone de l'emplacement touché", async () => {
-    const { services, carre1, verger } = await withMap();
+    const { services, parcelle1, verger } = await withMap();
     await renderScreen(<GardenScreen />, services);
 
     await fireEvent.press(await screen.findByText('Verger'));
     expect(router.push).toHaveBeenCalledWith(`/space/${verger.id}`);
 
-    await fireEvent.press(screen.getByText('Carré 1'));
-    expect(router.push).toHaveBeenCalledWith(`/zone/${carre1.id}`);
+    await fireEvent.press(screen.getByText('Parcelle 1'));
+    expect(router.push).toHaveBeenCalledWith(`/zone/${parcelle1.id}`);
   });
 
-  it('liste hors carte les espaces actifs et les carrés sans emplacement', async () => {
-    const { services, carre5, serre } = await withMap();
+  it('liste hors carte les espaces actifs et les parcelles sans emplacement', async () => {
+    const { services, parcelle5, serre } = await withMap();
     await renderScreen(<GardenScreen />, services);
 
     expect(await screen.findByText('Hors carte')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Ouvrir Serre' }));
     expect(router.push).toHaveBeenCalledWith(`/space/${serre.id}`);
 
-    await fireEvent.press(await screen.findByRole('button', { name: 'Ouvrir Carré 5, Potager' }));
-    expect(router.push).toHaveBeenCalledWith(`/zone/${carre5.id}`);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Ouvrir Parcelle 5, Potager' }));
+    expect(router.push).toHaveBeenCalledWith(`/zone/${parcelle5.id}`);
     // L'espace archivé n'est ni sur la carte ni hors carte : la liste le montre à la demande.
     expect(screen.queryByText('Tunnel')).not.toBeOnTheScreen();
   });

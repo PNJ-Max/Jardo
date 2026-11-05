@@ -56,7 +56,7 @@ function targetNoun({ itemId, itemKind, zoneId }: Target) {
 type TaskGroup = { key: string; name: string; kind?: string; tasks: GardenTask[]; showTarget: boolean };
 
 /**
- * Le service renvoie avec les tâches d'une cible celles de ce qui la contient (un arrosage du carré vaut
+ * Le service renvoie avec les tâches d'une cible celles de ce qui la contient (un arrosage de la parcelle vaut
  * pour ses plantes) et, pour un espace ou une zone, celles de ce qu'ils contiennent. La fiche sépare
  * ce qui appartient à la cible de ce qui vient d'ailleurs, rangé par provenance.
  */

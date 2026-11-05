@@ -57,7 +57,7 @@ C'est ce que l'utilisateur cherche et ce qui change les dates.
 | Unité de récolte par défaut : kilos, grammes, pièces | Préremplit la récolte (courgette en pièces) | « Fait » précisé, intervention | **Tout de suite** |
 | Rappels proposés | Voir le tableau suivant | Formulaire, fiche | **Tout de suite** |
 | Arrosage selon le stade : levée, reprise, plante installée | Arroser plus souvent les premières semaines, puis espacer | Proposition de changer le rythme d'une tâche | Plus tard, avec les stades de croissance |
-| Famille botanique | Rotation des cultures par carré | Contenu d'un espace | Plus tard, avec la rotation |
+| Famille botanique | Rotation des cultures par parcelle | Contenu d'un espace | Plus tard, avec la rotation |
 | Durée de culture (jours jusqu'à la récolte) | Récolte prévue à partir de la date de semis | Rappels | Plus tard |
 | Sensibilité au gel | Alerte avant une gelée | Météo | Plus tard, avec la météo |
 | Associations favorables ou à éviter | Voisins conseillés | Fiche | Plus tard : les sources ouvertes sont de qualité faible (voir [section 4](#4-source-des-données-et-licence)) |
@@ -443,7 +443,7 @@ catalogue est choisie :
 
 - Une ligne par rappel, qui dit exactement ce qui sera créé, avec un interrupteur **non coché**.
   Un toucher suffit, et c'est un accord explicite. Les rappels cochés sont créés avec la plante.
-- Les rappels déjà couverts (l'arrosage du carré, par exemple) n'apparaissent pas.
+- Les rappels déjà couverts (l'arrosage de la parcelle, par exemple) n'apparaissent pas.
 - À la modification d'une plante, la même section propose ce qui manque encore.
 
 Sur la fiche de la plante, l'onglet **Tâches** montre sous les tâches un groupe « Proposé pour la

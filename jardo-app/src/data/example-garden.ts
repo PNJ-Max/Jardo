@@ -17,7 +17,7 @@ type Item = { id: string; zoneId: string | null };
 
 /**
  * Remplit la base avec le jardin d'exemple de DbSeeder, en développement seulement : un potager en
- * carrés, un verger, des petits fruits par rang, une serre et un espace bois de chauffage avec
+ * parcelles, un verger, des petits fruits par rang, une serre et un espace bois de chauffage avec
  * trois tas ; quelques semaines de journal et des tâches. Les dates sont relatives à `today` pour
  * qu'il y ait toujours des tâches à jour, à faire aujourd'hui et en retard. Sans effet si le
  * jardin a déjà des espaces.
@@ -60,7 +60,7 @@ export async function seedExampleGarden(db: Db, today: DateOnly, now: string): P
       return { id };
     };
 
-    const potager = await newSpace('Potager', 'VegetableGarden', 'Quatre carrés en planches de douglas, plein sud.');
+    const potager = await newSpace('Potager', 'VegetableGarden', 'Quatre parcelles bordées de planches de douglas, plein sud.');
     const verger = await newSpace('Verger', 'Orchard', 'Fond du terrain, en pente douce vers le ruisseau.');
     const petitsFruits = await newSpace('Petits fruits', 'SmallFruit', 'Le long de la clôture est, deux rangs palissés.');
     const bois = await newSpace('Bois de chauffage', 'Firewood', 'Abri ouvert contre le mur nord du garage.');
@@ -73,10 +73,10 @@ export async function seedExampleGarden(db: Db, today: DateOnly, now: string): P
       return { id };
     };
 
-    const carre1 = await newZone(potager, 'Carré 1', 'Solanacées.');
-    const carre2 = await newZone(potager, 'Carré 2', 'Racines.');
-    const carre3 = await newZone(potager, 'Carré 3', 'Cucurbitacées, paillage épais.');
-    const carre4 = await newZone(potager, 'Carré 4', 'Feuilles et poireaux.');
+    const parcelle1 = await newZone(potager, 'Parcelle 1', 'Solanacées.');
+    const parcelle2 = await newZone(potager, 'Parcelle 2', 'Racines.');
+    const parcelle3 = await newZone(potager, 'Parcelle 3', 'Cucurbitacées, paillage épais.');
+    const parcelle4 = await newZone(potager, 'Parcelle 4', 'Feuilles et poireaux.');
     const rang1 = await newZone(petitsFruits, 'Rang 1', 'Framboisiers.');
     const rang2 = await newZone(petitsFruits, 'Rang 2', 'Groseilliers et cassissiers.');
     const tablette = await newZone(serre, 'Tablette', 'Semis et jeunes plants.');
@@ -86,10 +86,10 @@ export async function seedExampleGarden(db: Db, today: DateOnly, now: string): P
       ['orchard', verger],
       ['small-fruit', petitsFruits],
       ['vegetable', potager],
-      ['bed-1', potager, carre1],
-      ['bed-2', potager, carre2],
-      ['bed-3', potager, carre3],
-      ['bed-4', potager, carre4],
+      ['bed-1', potager, parcelle1],
+      ['bed-2', potager, parcelle2],
+      ['bed-3', potager, parcelle3],
+      ['bed-4', potager, parcelle4],
       ['greenhouse', serre],
       ['firewood', bois],
     ];
@@ -134,14 +134,14 @@ export async function seedExampleGarden(db: Db, today: DateOnly, now: string): P
       return { id, zoneId: zone?.id ?? null };
     };
 
-    const tomates = await newPlant(potager, carre1, 'Tomates', 'Solanum lycopersicum', 'Cœur de bœuf', 6, 'Plants', 100, 45);
-    const basilic = await newPlant(potager, carre1, 'Basilic', 'Ocimum basilicum', 'Grand vert', 4, 'Plants', null, 30);
-    const carottes = await newPlant(potager, carre2, 'Carottes', 'Daucus carota', 'Nantaise', 2, 'Rows', 60, null);
-    // Culture finie : archivée, elle reste dans l'historique du carré 2.
-    const radis = await newPlant(potager, carre2, 'Radis de printemps', 'Raphanus sativus', 'National', 1, 'Rows', 150, null, true);
-    const courgettes = await newPlant(potager, carre3, 'Courgettes', 'Cucurbita pepo', 'Black Beauty', 2, 'Plants', null, 40);
-    const laitues = await newPlant(potager, carre4, 'Laitues', 'Lactuca sativa', 'Batavia blonde', 12, 'Plants', null, 20);
-    await newPlant(potager, carre4, 'Poireaux', 'Allium porrum', 'Bleu de Solaise', 1.5, 'SquareMeters', 120, 50);
+    const tomates = await newPlant(potager, parcelle1, 'Tomates', 'Solanum lycopersicum', 'Cœur de bœuf', 6, 'Plants', 100, 45);
+    const basilic = await newPlant(potager, parcelle1, 'Basilic', 'Ocimum basilicum', 'Grand vert', 4, 'Plants', null, 30);
+    const carottes = await newPlant(potager, parcelle2, 'Carottes', 'Daucus carota', 'Nantaise', 2, 'Rows', 60, null);
+    // Culture finie : archivée, elle reste dans l'historique de la parcelle 2.
+    const radis = await newPlant(potager, parcelle2, 'Radis de printemps', 'Raphanus sativus', 'National', 1, 'Rows', 150, null, true);
+    const courgettes = await newPlant(potager, parcelle3, 'Courgettes', 'Cucurbita pepo', 'Black Beauty', 2, 'Plants', null, 40);
+    const laitues = await newPlant(potager, parcelle4, 'Laitues', 'Lactuca sativa', 'Batavia blonde', 12, 'Plants', null, 20);
+    await newPlant(potager, parcelle4, 'Poireaux', 'Allium porrum', 'Bleu de Solaise', 1.5, 'SquareMeters', 120, 50);
     const rhubarbe = await newPlant(potager, null, 'Rhubarbe', 'Rheum rhabarbarum', null, 1, 'Plants', null, 900);
 
     // Trois arbres identiques suivis ensemble ; les autres arbres du verger sont suivis seuls.
@@ -224,20 +224,20 @@ export async function seedExampleGarden(db: Db, today: DateOnly, now: string): P
     // Les derniers de chaque cible fixent l'état des tâches d'arrosage, donné plus bas.
     const waterings: [number, Target, string?][] = [
       [25, { space: potager }, 'Grand arrosage de tout le potager au jet.'],
-      [14, { space: potager, zone: carre1 }],
+      [14, { space: potager, zone: parcelle1 }],
       [12, { space: potager }, 'Tout le potager, après trois jours de canicule.'],
-      [11, { space: potager, zone: carre1 }],
-      [10, { space: potager, zone: carre2 }],
+      [11, { space: potager, zone: parcelle1 }],
+      [10, { space: potager, zone: parcelle2 }],
       [9, { space: serre, zone: bac }],
-      [8, { space: potager, zone: carre1 }],
+      [8, { space: potager, zone: parcelle1 }],
       [7, { space: serre, zone: tablette }],
-      [6, { space: potager, zone: carre1 }, 'Paillage ajouté au pied des tomates.'],
-      [6, { space: potager, zone: carre2 }],
-      [4, { space: potager, zone: carre1 }],
+      [6, { space: potager, zone: parcelle1 }, 'Paillage ajouté au pied des tomates.'],
+      [6, { space: potager, zone: parcelle2 }],
+      [4, { space: potager, zone: parcelle1 }],
       [0, { space: potager, item: basilic }],
-      [3, { space: potager, zone: carre2 }],
+      [3, { space: potager, zone: parcelle2 }],
       [5, { space: potager, item: courgettes }],
-      [1, { space: potager, zone: carre4 }],
+      [1, { space: potager, zone: parcelle4 }],
       [3, { space: potager, item: rhubarbe }],
       [20, { space: verger }, 'Arrosage de reprise après la sécheresse.'],
       [10, { space: verger, item: poirier }],
@@ -262,7 +262,7 @@ export async function seedExampleGarden(db: Db, today: DateOnly, now: string): P
     await entry('Pruning', 35, { space: verger }, {
       note: 'Taille en vert de tous les arbres : gourmands et branches qui se croisent.',
     });
-    await entry('Fertilizing', 30, { space: potager, zone: carre3 }, {
+    await entry('Fertilizing', 30, { space: potager, zone: parcelle3 }, {
       note: 'Deux seaux de compost mûr avant le paillage.',
     });
     await entry('Harvest', 25, { space: potager, item: radis }, {
@@ -354,16 +354,16 @@ export async function seedExampleGarden(db: Db, today: DateOnly, now: string): P
       task('Watering', 'EveryNDays', ago(startedDaysAgo), target, { intervalDays: everyDays, title });
 
     // L'état de chaque tâche, d'après le journal ci-dessus, est donné en commentaire.
-    // En retard de 2 jours : le carré 1 a été arrosé il y a 4 jours.
+    // En retard de 2 jours : la parcelle 1 a été arrosée il y a 4 jours.
     await wateringTask({ space: potager, item: tomates }, 2, 45);
-    // À jour : arrosé ce matin, malgré le carré arrosé il y a 4 jours.
+    // À jour : arrosé ce matin, malgré la parcelle arrosée il y a 4 jours.
     await wateringTask({ space: potager, item: basilic }, 2, 30);
     // À faire aujourd'hui.
     await wateringTask({ space: potager, item: carottes }, 3);
     // En retard de 2 jours.
     await wateringTask({ space: potager, item: courgettes }, 3, 40);
-    // Tout le carré 4, tous les jours : à faire aujourd'hui.
-    await wateringTask({ space: potager, zone: carre4 }, 1, 20, 'Laitues et poireaux');
+    // Toute la parcelle 4, tous les jours : à faire aujourd'hui.
+    await wateringTask({ space: potager, zone: parcelle4 }, 1, 20, 'Laitues et poireaux');
     // À jour, prochain arrosage dans 4 jours.
     await wateringTask({ space: potager, item: rhubarbe }, 7);
     // En retard de 6 jours : l'arrosage de tout le verger date de 20 jours.

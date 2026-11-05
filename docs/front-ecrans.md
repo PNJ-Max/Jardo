@@ -20,18 +20,18 @@ ni liste ni voyant ; les tâches restent dans Aujourd'hui.
 **Premier lancement.** Un jardin sans carte ni espace ouvre l'assistant de la carte avant
 d'afficher l'onglet : un accueil dessiné, le choix du modèle (campagne ou mitoyenne, sur leur
 aperçu), puis les espaces à cocher (potager, verger, petits fruits, serre, bois de chauffage),
-avec en option les quatre carrés du potager. L'app crée les espaces et les pose sur la carte.
+avec en option les quatre parcelles du potager. L'app crée les espaces et les pose sur la carte.
 « Passer », en haut de chaque page, mène à la liste ; l'assistant se relance depuis Réglages.
 
 **Carte**, quand le jardin a un modèle de carte (`MapLayout`) que l'app sait dessiner :
 
 - La scène du modèle, de jour en mode clair, de nuit en mode sombre. Pincer pour zoomer (jusqu'à
   ×5), glisser pour se déplacer, double-toucher pour zoomer, bouton pour recentrer.
-- Chaque emplacement occupé porte le nom de son espace ou de sa zone (celui des carrés à partir
-  d'un zoom de ×1,45). Toucher le dessin ou l'étiquette ouvre l'espace, ou la zone pour un carré.
+- Chaque emplacement occupé porte le nom de son espace ou de sa zone (celui des parcelles à partir
+  d'un zoom de ×1,45). Toucher le dessin ou l'étiquette ouvre l'espace, ou la zone pour une parcelle.
 - Un emplacement libre est voilé, sans étiquette, et ne réagit pas au toucher.
 - La bande **« Hors carte »**, sous la carte, liste les espaces actifs sans emplacement, puis les
-  zones d'un potager de la carte qui n'ont pas de carré (« Carré 5 · Potager »). Les espaces
+  zones d'un potager de la carte qui n'ont pas de parcelle (« Parcelle 5 · Potager »). Les espaces
   archivés n'y sont pas : la liste les montre à la demande.
 - Un bouton de l'en-tête affiche la **liste des espaces**, et inversement. La liste reste la voie
   des lecteurs d'écran.
@@ -69,7 +69,7 @@ navigation donne le type de fiche (Espace, Zone, Plante, Tas de bois), l'en-têt
   (à cette zone, à cet espace, à ce tas), qui crée toujours la tâche sur la cible de la fiche.
   Viennent ensuite, **repliées**, les tâches qui ne lui appartiennent pas en propre :
   - celles de ce qui la contient, sous « Valent aussi pour cette plante » : un groupe par
-    provenance (« Carré 4 · Zone », « Potager · Espace »), car un arrosage du carré vaut pour
+    provenance (« Parcelle 4 · Zone », « Potager · Espace »), car un arrosage de la parcelle vaut pour
     ses plantes ;
   - pour un espace ou une zone, celles de ce qu'ils contiennent (« Tâches des zones et des
     éléments », « Tâches des éléments »), chaque ligne nommant sa cible.
@@ -101,7 +101,7 @@ mais sa zone de toucher dépasse 48 dp.
 
 - En-tête : nom, espace, nombre d'éléments.
 - Onglets **Tâches** · **Plantes** (ou **Tas de bois**) · **Journal** · **Infos**.
-- Action sur toute la zone : noter une intervention (« arroser le carré 2 », « désherber »).
+- Action sur toute la zone : noter une intervention (« arroser la parcelle 2 », « désherber »).
 - Infos : description ; modifier, supprimer.
 
 ## 5. Fiche élément

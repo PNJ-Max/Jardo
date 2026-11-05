@@ -28,6 +28,12 @@ du catalogue suivent le climat choisi dans Réglages.
 - **Pas vérifié sur téléphone** : la migration sur une vraie base, le toucher de « Changer », TalkBack.
 - **Captures** : branche `captures/climat-jardin`.
 
+**Vocabulaire : « parcelle » plutôt que « carré » (04/11/2026).** « Carré » seul n'était pas assez
+explicite. Les textes de l'app, les noms par défaut (« Parcelle 1 » à « Parcelle 4 »), le jardin
+d'exemple, les tests et les docs disent maintenant « parcelle ». « Zone » et l'identifiant `Zone` ne
+changent pas, pas plus que « mètre carré » ni la méthode du « jardin en carrés ». Les noms déjà
+enregistrés dans un jardin restent ce qu'ils sont : ils appartiennent à l'utilisateur.
+
 **Catalogue d'espèces, PR 4 : choisir l'espèce (04/11/2026).** Le champ « Espèce » du formulaire de
 plante ouvre une feuille de recherche dans le catalogue, qui propose sans imposer.
 - **Feuille** : avant la frappe, « En ce moment » (semis ou plantation cette quinzaine ou la suivante,
@@ -76,7 +82,7 @@ première passe n'avait pas pu toucher, revérifiés sur le code actuel.
   tiennent lieu du glissement pour TalkBack ; le dessous du glissement reste caché.
 - **États** : le jour de la bande et « Dans le mois » passent en `aria-selected` / `aria-expanded`.
   Le lien de l'espace dit son nombre de tâches. Icônes décoratives cachées.
-- **Carte** : le canvas est caché ; les étiquettes de carrés masquées par le zoom sortent de l'arbre
+- **Carte** : le canvas est caché ; les étiquettes de parcelles masquées par le zoom sortent de l'arbre
   d'accessibilité et du clavier tant qu'elles sont invisibles ; chaque étiquette a 48 dp avec son
   `hitSlop`, comme « Recentrer la carte » et les puces « Hors carte » ; « Hors carte » est un titre.
 - **Grandes polices** : plus de `numberOfLines` sur ce qui nomme ou date (titre, détail, espace,
@@ -137,7 +143,7 @@ plantage du web :
 Un APK installé ne démarre plus sur une liste vide : un jardin sans carte ni espace ouvre
 l'assistant.
 - **Trois pages** : l'accueil dessiné, le modèle (campagne ou mitoyenne, sur leur aperçu), les
-  espaces à cocher, avec les quatre carrés du potager en option. L'app crée les espaces et les
+  espaces à cocher, avec les quatre parcelles du potager en option. L'app crée les espaces et les
   pose sur la carte en une transaction (`GardenMapService.setup`). « Passer » mène à la liste.
 - **Réglages → Carte du jardin** : relance l'assistant sur un jardin vide ; sinon choix du
   modèle et de ce qui occupe chaque emplacement, avec un premier placement proposé.
@@ -315,8 +321,8 @@ tête d'Aujourd'hui, animation du « Fait ». Validée par Maxime le 26/10 sur u
   enregistrées une fois en `SkPicture` par type et par thème (`components/vignettes/`). En tête de
   la fiche d'un espace (sur le ciel du jour, bouton retour rond, plus de barre de navigation) et
   dans la liste des espaces ; `SpaceVignette` servira aux groupes d'Aujourd'hui (étape 4) et au
-  choix du type (étape 8). Zones de l'onglet Contenu en tuiles : carré de terre bordé de bois
-  garni de 0 à 6 plantes, « Ajouter une zone » en pointillés. Sur le web, le canvas libère son
+  choix du type (étape 8). Zones de l'onglet Contenu en tuiles : parcelle bordée de bois
+  garnie de 0 à 6 plantes, « Ajouter une zone » en pointillés. Sur le web, le canvas libère son
   contexte WebGL après chaque rendu et n'existe que sur l'écran qui a le focus (même cause que
   l'écran dédoublé).
 - [x] 8. Formulaires (29/10/2026) : les sept formulaires (espace, zone, plante, tas de bois,
@@ -460,7 +466,7 @@ recréer la base de dev d'une branche plus ancienne si elle date d'avant le mod�
 affiche la carte du modèle du jardin, lue par `useGardenMap()` (aujourd'hui dans la base locale). Chaque
 emplacement occupé porte le nom de son espace ou de sa zone, et le toucher (dessin ou étiquette)
 ouvre sa fiche ; un emplacement libre est voilé, sans étiquette, et ne fait rien. La bande
-« Hors carte », sous la carte, liste les espaces actifs sans emplacement et les carrés d'un
+« Hors carte », sous la carte, liste les espaces actifs sans emplacement et les parcelles d'un
 potager de la carte qui n'en ont pas. Un bouton de l'en-tête bascule vers la liste des espaces,
 la voie des lecteurs d'écran. Sans carte configurée, ou pour un modèle que l'app ne dessine pas,
 l'onglet garde la liste. L'API accepte le modèle `country-house`, que prennent les jardins
@@ -481,7 +487,7 @@ zoom, et non plus par react-native-svg, qui est retiré. Coût : environ 4 Mo de
 **Carte du jardin : visuels et essai technique (étapes 1 et 3 de l'[étude](docs/etude-carte-potager.md)).**
 Deux scènes modèles sont dessinées dans l'app, dans la projection de l'étude : la **maison de
 campagne** (`country-house`), retenue par Maxime pour le MVP, et la maison mitoyenne
-(`terraced-long`). Chacune a ses 9 emplacements (verger, petits fruits, potager et carrés 1 à 4,
+(`terraced-long`). Chacune a ses 9 emplacements (verger, petits fruits, potager et parcelles 1 à 4,
 serre, bois de chauffage), tout son décor autour (voisins, route, champs, haies) et sa nuit
 (fenêtres et lampes allumées, lucioles). On les voit depuis Réglages, « Aperçu de la carte ». Les
 étiquettes signalent ce qui est cliquable, et toucher un emplacement le met en évidence. On peut
@@ -600,7 +606,7 @@ journal d'interventions, tâches). L'API l'implémente en entier, le front en a 
   tas sans code propre.
 - Le seeder produit quelques semaines de journal (arrosages de zones et d'espaces, semis,
   plantations, taille du verger, récoltes, oïdium constaté puis traité) et seize tâches :
-  arrosages de cultures, de carrés et d'une plante de verger, désherbage, taille d'hiver,
+  arrosages de cultures, de parcelles et d'une plante de verger, désherbage, taille d'hiver,
   compost annuel, traitement à renouveler, plantation faite ; les trois voyants y figurent. Trois tas
   de bois : un chêne sec en cours d'usage, un hêtre en séchage avec sa tâche « rentrer le bois », un
   bouleau épuisé et archivé.

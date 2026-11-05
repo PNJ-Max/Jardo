@@ -9,11 +9,11 @@ import { createTestServices, renderScreen } from '../../test/render';
 
 const inDays = (days: number) => addDays(today(), days);
 
-/** Les laitues du carré 4, avec une tâche à elles, une de leur carré et une de tout le potager. */
+/** Les laitues de la parcelle 4, avec une tâche à elles, une de leur parcelle et une de tout le potager. */
 async function setup({ onlyZoneTask = false } = {}) {
   const services = await createTestServices();
   const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
-  const carre = await services.zones.create(potager.id, { name: 'Carré 4' });
+  const parcelle = await services.zones.create(potager.id, { name: 'Parcelle 4' });
   const laitues = await services.plants.create({
     name: 'Laitues',
     species: 'Lactuca sativa',
@@ -22,7 +22,7 @@ async function setup({ onlyZoneTask = false } = {}) {
     quantityUnit: 'Plants',
     plantedDate: inDays(-30),
     spaceId: potager.id,
-    zoneId: carre.id,
+    zoneId: parcelle.id,
   });
 
   if (!onlyZoneTask) {
@@ -44,15 +44,15 @@ async function setup({ onlyZoneTask = false } = {}) {
   }
   await services.tasks.create({
     kind: 'Watering',
-    title: 'Arroser le carré',
+    title: 'Arroser la parcelle',
     recurrence: 'Once',
     startDate: today(),
     spaceId: potager.id,
-    zoneId: carre.id,
+    zoneId: parcelle.id,
   });
 
   jest.mocked(useLocalSearchParams).mockReturnValue({ id: laitues.id });
-  return { services, potager, carre, laitues };
+  return { services, potager, parcelle, laitues };
 }
 
 describe('fiche plante', () => {
@@ -61,7 +61,7 @@ describe('fiche plante', () => {
     await renderScreen(<PlantScreen />, services);
 
     expect(await screen.findByText('Laitues')).toBeOnTheScreen();
-    expect(screen.getByText('Carré 4 · Potager')).toBeOnTheScreen();
+    expect(screen.getByText('Parcelle 4 · Potager')).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Tâches', selected: true })).toBeOnTheScreen();
     expect(await screen.findByText('Pincer les fleurs')).toBeOnTheScreen();
   });
@@ -83,19 +83,19 @@ describe('fiche plante', () => {
     await renderScreen(<PlantScreen />, services);
 
     expect(await screen.findByText('Valent aussi pour cette plante')).toBeOnTheScreen();
-    expect(screen.getByText('Carré 4')).toBeOnTheScreen();
+    expect(screen.getByText('Parcelle 4')).toBeOnTheScreen();
     expect(screen.getByText(/1 aujourd'hui/)).toBeOnTheScreen();
     expect(screen.getByText(/1 en retard/)).toBeOnTheScreen();
-    expect(screen.queryByText('Arroser le carré')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Arroser la parcelle')).not.toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByText('Carré 4'));
+    await fireEvent.press(screen.getByText('Parcelle 4'));
 
-    expect(screen.getByText('Arroser le carré')).toBeOnTheScreen();
+    expect(screen.getByText('Arroser la parcelle')).toBeOnTheScreen();
     expect(screen.queryByText('Désherber les allées')).not.toBeOnTheScreen();
   });
 
   it('crée une nouvelle tâche sur la plante, pas sur sa zone', async () => {
-    const { services, potager, carre, laitues } = await setup({ onlyZoneTask: true });
+    const { services, potager, parcelle, laitues } = await setup({ onlyZoneTask: true });
     await renderScreen(<PlantScreen />, services);
 
     expect(await screen.findByText('Aucune tâche pour cette plante.')).toBeOnTheScreen();
@@ -103,7 +103,7 @@ describe('fiche plante', () => {
 
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/task/form',
-      params: expect.objectContaining({ itemId: laitues.id, itemKind: 'Plant', zoneId: carre.id, spaceId: potager.id }),
+      params: expect.objectContaining({ itemId: laitues.id, itemKind: 'Plant', zoneId: parcelle.id, spaceId: potager.id }),
     });
   });
 

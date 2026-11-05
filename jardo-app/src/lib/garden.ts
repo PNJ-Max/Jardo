@@ -113,7 +113,7 @@ export function parseDecimal(text: string): number | null {
 
 type Target = { spaceName: string; zoneName: string | null; itemName: string | null };
 
-/** « Tomates · Carré 1 · Potager » : du plus précis au plus large. */
+/** « Tomates · Parcelle 1 · Potager » : du plus précis au plus large. */
 export function targetLabel({ itemName, zoneName, spaceName }: Target): string {
   return [itemName, zoneName, spaceName].filter(Boolean).join(' · ');
 }

@@ -46,11 +46,11 @@ describe('assistant de la carte', () => {
     jest.mocked(useLocalSearchParams).mockReturnValue({ layout: 'terraced-long' });
     const { services } = await renderScreen(<SetupSpacesScreen />);
 
-    // Les carrés ne se proposent qu'avec le potager, et ne sont pas cochés d'office.
-    expect(screen.queryByRole('checkbox', { name: 'Ajouter quatre carrés' })).not.toBeOnTheScreen();
+    // Les parcelles ne se proposent qu'avec le potager, et ne sont pas cochées d'office.
+    expect(screen.queryByRole('checkbox', { name: 'Ajouter quatre parcelles' })).not.toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('checkbox', { name: 'Potager' }));
-    expect(screen.getByRole('checkbox', { name: 'Ajouter quatre carrés' })).not.toBeChecked();
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Ajouter quatre carrés' }));
+    expect(screen.getByRole('checkbox', { name: 'Ajouter quatre parcelles' })).not.toBeChecked();
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Ajouter quatre parcelles' }));
     await fireEvent.press(screen.getByRole('checkbox', { name: 'Verger' }));
     await fireEvent.press(screen.getByRole('checkbox', { name: 'Bois de chauffage' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Créer mon jardin' }));
@@ -59,10 +59,10 @@ describe('assistant de la carte', () => {
     const map = await services.gardenMap.get();
     expect(map.layout).toBe('terraced-long');
     expect(map.slots.map((slot) => [slot.slotKey, slot.zoneName ?? slot.spaceName])).toEqual([
-      ['bed-1', 'Carré 1'],
-      ['bed-2', 'Carré 2'],
-      ['bed-3', 'Carré 3'],
-      ['bed-4', 'Carré 4'],
+      ['bed-1', 'Parcelle 1'],
+      ['bed-2', 'Parcelle 2'],
+      ['bed-3', 'Parcelle 3'],
+      ['bed-4', 'Parcelle 4'],
       ['firewood', 'Bois de chauffage'],
       ['orchard', 'Verger'],
       ['vegetable', 'Potager'],

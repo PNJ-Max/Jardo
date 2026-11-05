@@ -13,16 +13,16 @@ const inDays = (days: number) => addDays(today(), days);
 /** Un arrosage dû aujourd'hui et un autre en retard au potager (donc « Tout arroser »), et une taille dans le mois. */
 async function addGarden(services: Services) {
   const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
-  const carre = await services.zones.create(potager.id, { name: 'Carré 1' });
+  const parcelle = await services.zones.create(potager.id, { name: 'Parcelle 1' });
   const verger = await services.spaces.create({ name: 'Verger', kind: 'Orchard' });
   await services.tasks.create({
     kind: 'Watering',
-    title: 'Arroser le carré',
+    title: 'Arroser la parcelle',
     recurrence: 'EveryNDays',
     intervalDays: 3,
     startDate: today(),
     spaceId: potager.id,
-    zoneId: carre.id,
+    zoneId: parcelle.id,
   });
   await services.tasks.create({
     kind: 'Watering',

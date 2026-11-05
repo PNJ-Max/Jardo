@@ -115,11 +115,11 @@ describe('comingThisMonth', () => {
     const tasks = [
       task(12, { ...verger, title: 'Tailler les pommiers' }),
       task(20, { ...verger, kind: 'Treatment', title: "Traitement d'hiver du verger" }),
-      task(25, { kind: 'Sowing', zoneName: 'Carré 1' }),
+      task(25, { kind: 'Sowing', zoneName: 'Parcelle 1' }),
     ];
 
-    expect(monthSummary(tasks)).toBe("Tailler les pommiers, traitement d'hiver du verger, semer (Carré 1)");
-    expect(monthSummary(tasks.slice(2))).toBe('Semer (Carré 1)');
+    expect(monthSummary(tasks)).toBe("Tailler les pommiers, traitement d'hiver du verger, semer (Parcelle 1)");
+    expect(monthSummary(tasks.slice(2))).toBe('Semer (Parcelle 1)');
   });
 });
 
@@ -184,23 +184,23 @@ describe('lastHarvest', () => {
   });
 
   it("prend la plus récente chiffrée qui vaut pour la cible : l'élément, sa zone ou son espace", () => {
-    const tomatoes = task(0, { kind: 'Harvest', zoneId: 'carre', itemId: 'tomates' });
+    const tomatoes = task(0, { kind: 'Harvest', zoneId: 'parcelle', itemId: 'tomates' });
     const entries = [
-      harvest('2026-10-27', { itemId: 'courgettes', zoneId: 'carre', quantity: 9 }),
-      harvest('2026-10-26', { itemId: 'tomates', zoneId: 'carre', quantity: null }),
-      harvest('2026-10-25', { zoneId: 'carre', quantity: 2 }),
-      harvest('2026-10-20', { itemId: 'tomates', zoneId: 'carre', quantity: 3 }),
+      harvest('2026-10-27', { itemId: 'courgettes', zoneId: 'parcelle', quantity: 9 }),
+      harvest('2026-10-26', { itemId: 'tomates', zoneId: 'parcelle', quantity: null }),
+      harvest('2026-10-25', { zoneId: 'parcelle', quantity: 2 }),
+      harvest('2026-10-20', { itemId: 'tomates', zoneId: 'parcelle', quantity: 3 }),
     ];
 
     expect(lastHarvest(entries, tomatoes)?.date).toBe('2026-10-25');
   });
 
   it("ne compte pas la récolte d'un élément pour sa zone", () => {
-    const carre = task(0, { kind: 'Harvest', zoneId: 'carre' });
-    const entries = [harvest('2026-10-27', { itemId: 'tomates', zoneId: 'carre' }), harvest('2026-10-20', {})];
+    const parcelle = task(0, { kind: 'Harvest', zoneId: 'parcelle' });
+    const entries = [harvest('2026-10-27', { itemId: 'tomates', zoneId: 'parcelle' }), harvest('2026-10-20', {})];
 
-    expect(lastHarvest(entries, carre)?.date).toBe('2026-10-20');
-    expect(lastHarvest(entries.slice(0, 1), carre)).toBeUndefined();
+    expect(lastHarvest(entries, parcelle)?.date).toBe('2026-10-20');
+    expect(lastHarvest(entries.slice(0, 1), parcelle)).toBeUndefined();
   });
 });
 
@@ -208,7 +208,7 @@ describe('dueWaterings', () => {
   it("garde les arrosages dus de l'espace, retards compris", () => {
     const tasks = [
       task(-2, { kind: 'Watering', itemId: 'tomates' }),
-      task(0, { kind: 'Watering', zoneId: 'carre' }),
+      task(0, { kind: 'Watering', zoneId: 'parcelle' }),
       task(2, { kind: 'Watering' }),
       task(0),
       task(0, { kind: 'Watering', ...verger }),

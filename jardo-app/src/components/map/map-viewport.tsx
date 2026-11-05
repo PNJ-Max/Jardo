@@ -25,7 +25,7 @@ type SceneView = { scale: number; x: number; y: number };
 const MAX_ZOOM = 5;
 /** Le cadrage de départ remplit la largeur, quitte à rogner un peu les coins du jardin. */
 const FIT_OVERFLOW = 1.1;
-/** Les étiquettes des carrés n'apparaissent qu'à partir de ce zoom (étude de la carte). */
+/** Les étiquettes des parcelles n'apparaissent qu'à partir de ce zoom (étude de la carte). */
 const ZONE_LABEL_ZOOM = 1.45;
 
 type Size = { width: number; height: number };

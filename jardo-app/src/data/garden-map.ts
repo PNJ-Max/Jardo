@@ -29,7 +29,7 @@ export type GardenMap = {
   slots: GardenMapSlot[];
 };
 
-/** L'espace, ou la zone d'un espace, posé sur un emplacement. `zoneId` : obligatoire pour un carré du potager, interdit pour les autres. */
+/** L'espace, ou la zone d'un espace, posé sur un emplacement. `zoneId` : obligatoire pour une parcelle du potager, interdit pour les autres. */
 export type GardenMapSlotInput = { slotKey: string; spaceId: Id; zoneId?: Id | null };
 
 /** Le modèle et toutes les affectations. Ce qui n'est pas listé est libéré. */
@@ -39,7 +39,7 @@ export type GardenMapInput = {
   slots: GardenMapSlotInput[];
 };
 
-/** Un espace à créer et son emplacement ; ses zones vont sur des carrés. Son type doit être celui de l'emplacement. */
+/** Un espace à créer et son emplacement ; ses zones vont sur des parcelles. Son type doit être celui de l'emplacement. */
 export type GardenSetupSpace = {
   slotKey: string;
   name: string;

@@ -7,7 +7,7 @@ import { decorPalette } from './scenes';
 
 const SQUARE = 52;
 
-/** Places des plantes dans le carré, en fractions de la terre, selon leur nombre. */
+/** Places des plantes dans la parcelle, en fractions de la terre, selon leur nombre. */
 const LAYOUTS: [number, number][][] = [
   [],
   [[0.5, 0.5]],
@@ -21,7 +21,7 @@ const LAYOUTS: [number, number][][] = [
 type PlantStyle = 'tomato' | 'lettuce' | 'leafy';
 const PLANT_STYLES: PlantStyle[] = ['tomato', 'lettuce', 'leafy'];
 
-/** Un style de plantes stable pour une zone donnée, pour que les carrés ne se ressemblent pas tous. */
+/** Un style de plantes stable pour une zone donnée, pour que les parcelles ne se ressemblent pas toutes. */
 function plantStyleOf(seed: string): PlantStyle {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
@@ -30,7 +30,7 @@ function plantStyleOf(seed: string): PlantStyle {
 
 const at = (fraction: number, size: number): DimensionValue => `${fraction * 100 - (size / 40) * 50}%`;
 
-/** Un carré de terre vu de dessus, bordé de bois, garni d'autant de plantes que la zone en compte (six au plus). */
+/** Une parcelle vue de dessus, bordée de bois, garnie d'autant de plantes que la zone en compte (six au plus). */
 function ZoneSquare({ seed, plants }: { seed: string; plants: number }) {
   const { scheme } = useTheme();
   const pal = decorPalette(scheme);
@@ -61,7 +61,7 @@ function ZoneSquare({ seed, plants }: { seed: string; plants: number }) {
 
 type ZoneTileProps = { name: string; caption: string; seed: string; plants: number; onPress: () => void };
 
-/** Une zone dans le contenu d'un espace : son carré, son nom et ce qu'elle contient. */
+/** Une zone dans le contenu d'un espace : sa parcelle, son nom et ce qu'elle contient. */
 export function ZoneTile({ name, caption, seed, plants, onPress }: ZoneTileProps) {
   const styles = useStyles();
 
@@ -80,7 +80,7 @@ export function ZoneTile({ name, caption, seed, plants, onPress }: ZoneTileProps
   );
 }
 
-/** « Ajouter une zone » : un carré vide en pointillés. */
+/** « Ajouter une zone » : une parcelle vide en pointillés. */
 export function AddZoneTile({ onPress }: { onPress: () => void }) {
   const { colors } = useTheme();
   const styles = useStyles();

@@ -8,17 +8,17 @@ import { today } from '@/lib/dates';
 
 import { createTestServices, renderScreen } from '../../test/render';
 
-/** Le potager, son carré 4 et ses laitues ; une tâche sur tout l'espace, une sur les laitues. */
+/** Le potager, sa parcelle 4 et ses laitues ; une tâche sur tout l'espace, une sur les laitues. */
 async function setup() {
   const services = await createTestServices();
   const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
-  const carre = await services.zones.create(potager.id, { name: 'Carré 4' });
+  const parcelle = await services.zones.create(potager.id, { name: 'Parcelle 4' });
   const laitues = await services.plants.create({
     name: 'Laitues',
     quantity: 12,
     quantityUnit: 'Plants',
     spaceId: potager.id,
-    zoneId: carre.id,
+    zoneId: parcelle.id,
   });
   await services.tasks.create({
     kind: 'Other',
@@ -37,7 +37,7 @@ async function setup() {
   });
 
   jest.mocked(useLocalSearchParams).mockReturnValue({ id: potager.id });
-  return { services, carre };
+  return { services, parcelle };
 }
 
 describe('fiche espace', () => {
@@ -51,7 +51,7 @@ describe('fiche espace', () => {
     await fireEvent.press(screen.getByText('Tâches des zones et des éléments'));
 
     expect(screen.getByText('Arroser')).toBeOnTheScreen();
-    expect(screen.getByText('Laitues · Carré 4 · Potager')).toBeOnTheScreen();
+    expect(screen.getByText('Laitues · Parcelle 4 · Potager')).toBeOnTheScreen();
   });
 
   it("montre zones et plantes dans l'onglet Contenu", async () => {
@@ -60,7 +60,7 @@ describe('fiche espace', () => {
     await fireEvent.press(await screen.findByRole('tab', { name: 'Contenu' }));
 
     expect(await screen.findByText('Laitues')).toBeOnTheScreen();
-    expect(screen.getAllByText('Carré 4').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Parcelle 4').length).toBeGreaterThan(0);
     expect(screen.getByText('Ajouter une zone')).toBeOnTheScreen();
   });
 
@@ -94,15 +94,15 @@ describe('fiche espace', () => {
   });
 
   it('ouvre une zone depuis sa tuile, et en ajoute une depuis la tuile vide', async () => {
-    const { services, carre } = await setup();
+    const { services, parcelle } = await setup();
     await renderScreen(<SpaceScreen />, services);
 
     await fireEvent.press(await screen.findByRole('tab', { name: 'Contenu' }));
-    await fireEvent.press(await screen.findByRole('button', { name: 'Carré 4, 1 élément' }));
-    expect(router.push).toHaveBeenCalledWith(`/zone/${carre.id}`);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Parcelle 4, 1 élément' }));
+    expect(router.push).toHaveBeenCalledWith(`/zone/${parcelle.id}`);
 
     await fireEvent.press(screen.getByRole('button', { name: 'Ajouter une zone' }));
-    expect(router.push).toHaveBeenCalledWith({ pathname: '/zone/form', params: { spaceId: carre.spaceId } });
+    expect(router.push).toHaveBeenCalledWith({ pathname: '/zone/form', params: { spaceId: parcelle.spaceId } });
   });
 
   describe('zones et grande police', () => {
@@ -114,7 +114,7 @@ describe('fiche espace', () => {
       const { services } = await setup();
       await renderScreen(<SpaceScreen />, services);
       await fireEvent.press(await screen.findByRole('tab', { name: 'Contenu' }));
-      return [await screen.findByRole('button', { name: 'Carré 4, 1 élément' }), screen.getByRole('button', { name: 'Ajouter une zone' })];
+      return [await screen.findByRole('button', { name: 'Parcelle 4, 1 élément' }), screen.getByRole('button', { name: 'Ajouter une zone' })];
     }
 
     it("range deux tuiles par ligne à la taille de police par défaut", async () => {
