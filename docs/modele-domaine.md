@@ -27,7 +27,8 @@ erDiagram
 
 ### Garden (jardin)
 
-Nom, date de création. Un seul jardin au MVP, sans sélecteur dans l'app. L'entité existe dès
+Nom, date de création, climat (l'un des cinq du [catalogue](etude-catalogue-especes.md#3-climat),
+vide tant que l'utilisateur n'a rien choisi). Un seul jardin au MVP, sans sélecteur dans l'app. L'entité existe dès
 le départ pour accueillir plus tard plusieurs jardins et le partage au sein d'un foyer (le
 propriétaire et les membres se rattacheront au jardin).
 

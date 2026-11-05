@@ -1,4 +1,5 @@
 import { createGardenService } from '@/data/garden';
+import type { Climate } from '@/domain/species';
 
 import { createTestDb } from '../../test/db';
 
@@ -34,5 +35,30 @@ describe('GardenService', () => {
       });
     }
     expect((await service.get()).name).toBe('Mon jardin');
+  });
+
+  it("Le climat reste vide tant que l'utilisateur n'a rien choisi", async () => {
+    const service = createGardenService(await createTestDb());
+
+    expect((await service.get()).climate).toBeNull();
+  });
+
+  it('Choisir le climat le garde, et renommer le jardin ne le perd pas', async () => {
+    const service = createGardenService(await createTestDb());
+
+    await expect(service.setClimate('Mountain')).resolves.toMatchObject({ climate: 'Mountain' });
+    await service.update({ name: 'Le chalet' });
+
+    expect(await service.get()).toMatchObject({ name: 'Le chalet', climate: 'Mountain' });
+  });
+
+  it('Un climat inconnu est refusé sur le champ', async () => {
+    const service = createGardenService(await createTestDb());
+
+    await expect(service.setClimate('Tropical' as Climate)).rejects.toMatchObject({
+      status: 400,
+      problem: { errors: { Climate: expect.any(Array) } },
+    });
+    expect((await service.get()).climate).toBeNull();
   });
 });

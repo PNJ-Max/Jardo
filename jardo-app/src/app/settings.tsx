@@ -13,6 +13,7 @@ import {
   useSpaces,
 } from '@/api/queries';
 import type { Garden, GardenBackup } from '@/api/types';
+import { ClimateSection } from '@/components/climate';
 import { RemindersSection } from '@/components/reminders';
 import { fieldError, Button, Card, ChipSelect, Field, FormError, screenStyles, SectionTitle } from '@/components/ui';
 import { WeatherSection } from '@/components/weather';
@@ -50,6 +51,8 @@ export default function SettingsScreen() {
           <GardenName key={imports} garden={garden.data} />
         )}
       </View>
+
+      <ClimateSection />
 
       <GardenMapSection />
 

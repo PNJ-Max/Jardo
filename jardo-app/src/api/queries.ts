@@ -3,6 +3,7 @@ import { useMutation, useQueries, useQuery, useQueryClient, type QueryClient } f
 import { useServices } from '@/data/services';
 import type { DateOnly } from '@/domain/dates';
 import type { ReminderProposal } from '@/domain/reminder-proposals';
+import { referenceClimate, type Climate } from '@/domain/species';
 import { pickBackupFile, saveBackupFile } from '@/lib/backup-file';
 import { toDateOnly } from '@/lib/dates';
 import { proposalTask } from '@/lib/species';
@@ -98,6 +99,21 @@ export function useSaveGarden() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: GardenInput) => garden.update(input),
+    onSuccess: (saved) => queryClient.setQueryData(keys.garden, saved),
+  });
+}
+
+/** Le climat des dates du catalogue : celui du jardin, ou la référence des fiches tant que rien n'est choisi. */
+export function useGardenClimate(): Climate {
+  return useGarden().data?.climate ?? referenceClimate;
+}
+
+/** Les dates se calculent à l'affichage depuis le jardin, que le service renvoie : pas de relecture. */
+export function useSaveGardenClimate() {
+  const { garden } = useServices();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (climate: Climate) => garden.setClimate(climate),
     onSuccess: (saved) => queryClient.setQueryData(keys.garden, saved),
   });
 }

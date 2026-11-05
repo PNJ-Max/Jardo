@@ -185,7 +185,7 @@ qui échoue n'est pas retentée (`retry: false`), elle échouerait encore.
 
 | Module | Équivalent .NET |
 |---|---|
-| `garden.ts` | `GardenService` |
+| `garden.ts` | `GardenService` : le nom et le climat du jardin. `useGardenClimate` donne le climat de référence tant que rien n'est choisi |
 | `garden-map.ts`, `garden-layouts.ts` | `GardenMapService`, `GardenLayouts` |
 | `spaces.ts` | `SpaceService` |
 | `zones.ts` | `ZoneService` |

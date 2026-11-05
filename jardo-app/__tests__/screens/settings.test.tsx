@@ -42,6 +42,48 @@ describe('réglages', () => {
     expect(screen.queryByText('Enregistrer le nom')).not.toBeOnTheScreen();
   });
 
+  it("dit les dates de référence tant qu'aucun climat n'est choisi, et donne les repères de chacun", async () => {
+    await renderScreen(<SettingsScreen />, await setup());
+
+    expect(await screen.findByRole('header', { name: 'Climat du jardin' })).toBeOnTheScreen();
+    expect(await screen.findByText(/En attendant, les dates sont celles d'un climat tempéré/)).toBeOnTheScreen();
+    const climateName = /^(Méditerranéen|Doux|Tempéré|Frais|Montagne)\./;
+    expect(screen.getAllByRole('radio', { name: climateName })).toHaveLength(5);
+    expect(screen.queryByRole('radio', { name: climateName, checked: true })).not.toBeOnTheScreen();
+    for (const landmark of ['Provence, Languedoc', 'Bretagne', 'Bassin parisien', 'Massif central', 'Au-dessus de 800 m']) {
+      expect(screen.getByText(new RegExp(landmark))).toBeOnTheScreen();
+    }
+  });
+
+  it('enregistre le climat choisi et le coche', async () => {
+    const services = await setup();
+    await renderScreen(<SettingsScreen />, services);
+
+    await fireEvent.press(await screen.findByRole('radio', { name: /^Montagne\. .*800 m/ }));
+
+    expect(await screen.findByRole('radio', { name: /^Montagne\./, checked: true })).toBeOnTheScreen();
+    expect(screen.getByText(/suivent ce climat/)).toBeOnTheScreen();
+    expect(screen.queryByText(/En attendant/)).not.toBeOnTheScreen();
+    await expect(services.garden.get()).resolves.toMatchObject({ climate: 'Mountain' });
+
+    await fireEvent.press(screen.getByRole('radio', { name: /^Frais\./ }));
+
+    expect(await screen.findByRole('radio', { name: /^Frais\./, checked: true })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: /^Montagne\./, checked: false })).toBeOnTheScreen();
+    await expect(services.garden.get()).resolves.toMatchObject({ climate: 'Cool' });
+  });
+
+  it("affiche l'erreur si le climat ne s'enregistre pas", async () => {
+    const services = await setup();
+    jest.spyOn(services.garden, 'setClimate').mockRejectedValue(new Error('Base indisponible'));
+    await renderScreen(<SettingsScreen />, services);
+
+    await fireEvent.press(await screen.findByRole('radio', { name: /^Doux\./ }));
+
+    expect(await screen.findByText(/Base indisponible/)).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: /^Doux\./, checked: false })).toBeOnTheScreen();
+  });
+
   it("affiche sous le champ l'erreur de validation du service", async () => {
     await renderScreen(<SettingsScreen />, await setup());
 
@@ -89,6 +131,19 @@ describe('réglages', () => {
     );
     expect(screen.getByDisplayValue('Jardin du voisin')).toBeOnTheScreen();
     await expect(services.spaces.getAll()).resolves.toEqual([expect.objectContaining({ name: 'Verger du voisin' })]);
+  });
+
+  it('coche le climat du jardin importé', async () => {
+    const services = await setup();
+    const neighbour = await createTestServices();
+    await neighbour.garden.setClimate('Mediterranean');
+    jest.mocked(pickBackupFile).mockResolvedValue(JSON.stringify(await neighbour.backup.export()));
+    jest.mocked(confirm).mockResolvedValue(true);
+    await renderScreen(<SettingsScreen />, services);
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Importer un jardin' }));
+
+    expect(await screen.findByRole('radio', { name: /^Méditerranéen\./, checked: true })).toBeOnTheScreen();
   });
 
   it('ne remplace rien si la confirmation est refusée', async () => {

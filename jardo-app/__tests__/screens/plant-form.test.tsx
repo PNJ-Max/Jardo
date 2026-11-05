@@ -97,6 +97,19 @@ describe('choisir l’espèce : les suggestions', () => {
     expect(names.indexOf('Ail')).toBeGreaterThanOrEqual(firstOfTheGarden);
   });
 
+  it('suit le climat du jardin : en montagne, la plantation de la tomate attend un mois de plus', async () => {
+    jest.setSystemTime(new Date(2026, 4, 20, 9));
+    const services = await createTestServices();
+    await services.garden.setClimate('Mountain');
+    const space = await services.spaces.create({ name: 'Le jardin', kind: 'VegetableGarden' });
+    jest.mocked(useLocalSearchParams).mockReturnValue({ spaceId: space.id });
+    await renderScreen(<PlantFormScreen />, services);
+    await screen.findByRole('button', { name: /^Espèce : / });
+    await openSheet();
+
+    expect(await screen.findByRole('button', { name: /^Tomate, Plantation de mi-juin à juillet/ })).toBeOnTheScreen();
+  });
+
   it('suggère selon le type d’espace : un verger voit les fruitiers, et la recherche couvre le reste', async () => {
     jest.setSystemTime(new Date(2026, 10, 4, 9));
     await openNewPlant('Orchard');
