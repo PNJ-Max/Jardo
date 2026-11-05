@@ -701,7 +701,8 @@ et le catalogue d'espèces complet (63 fiches, Conseils, climat, rappels propos�
    [l'étude du catalogue](docs/etude-catalogue-especes.md), fusionné sans cette relecture.
 5. **Écarter une proposition de rappel** : aujourd'hui, une proposition reste sur la fiche tant qu'elle
    n'est pas ajoutée.
-6. **Le compte Google Play** et le test interne, une fois l'APK validé.
+6. **Le compte Google Play** et le test interne, une fois l'APK validé et le statut tranché. Les premiers
+   testeurs peuvent recevoir l'APK par lien, sans compte Play.
 
 **Ensuite :**
 
@@ -710,9 +711,10 @@ et le catalogue d'espèces complet (63 fiches, Conseils, climat, rappels propos�
 
 ## À décider
 
-- **Gratuite ou payante, à terme ?** À trancher avant de créer le compte Play. Avec un achat, un
-  abonnement ou de la publicité, Maxime devient « professionnel » pour Google : un compte personnel
-  affiche alors son adresse et son téléphone. Voir l'[étude légale](docs/etude-legale.md#6-ce-qui-changerait-tout).
+- **Quel modèle payant ?** Maxime veut gagner de l'argent si l'app marche, par exemple une version
+  gratuite limitée et une version premium. Le modèle se choisira après les retours des testeurs.
+  Avant le compte Play, faire trancher le statut « professionnel » : un compte personnel affiche alors
+  son adresse et son téléphone. Voir l'[étude légale](docs/etude-legale.md#une-offre-payante).
 
 - **Météo pour une version commerciale.** L'API gratuite d'Open-Meteo exclut les apps avec
   abonnement ou publicité. Avant une telle version : un abonnement Open-Meteo (API Standard, environ

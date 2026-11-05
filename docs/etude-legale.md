@@ -8,8 +8,10 @@ de la politique de confidentialité est dans [`politique-de-confidentialite.md`]
 le 05/11/2026 sur `main` (`6ef859f`), et les conditions de Google et d'Open-Meteo lues le même jour.
 Les points marqués « à confirmer » sont à faire relire avant la fiche publique.
 
-**Hypothèses, à confirmer par Maxime :** l'éditeur est un particulier établi en Belgique ; l'app est
-gratuite, sans publicité ni achat ; elle vise des jardiniers francophones d'Europe.
+**Hypothèses :** l'éditeur est un particulier établi en Belgique (à confirmer par Maxime) ; l'app reste
+gratuite, sans publicité ni achat, pendant la phase de test ; elle vise des jardiniers francophones
+d'Europe. **Maxime veut en tirer un revenu si elle marche**, par exemple gratuite jusqu'à un certain
+nombre de plantes, puis premium. Le modèle n'est pas choisi : voir [une offre payante](#une-offre-payante).
 
 ## 1. La réponse courte
 
@@ -84,7 +86,7 @@ trancher. L'adresse IP est traitée comme une donnée personnelle (C-582/14).
 | Exigence | Pour Jardo |
 |---|---|
 | Compte | 25 USD une seule fois, pièce d'identité et carte de crédit au nom du titulaire. Un compte personnel doit aussi prouver l'accès à un appareil Android |
-| Statut professionnel ou non | À déclarer à la création du compte. Sans activité commerciale ni revenus prévus, on n'est en principe pas professionnel, mais Google renvoie à un juriste en cas de doute. Une fausse déclaration peut entraîner un retrait de l'app |
+| Statut professionnel ou non | À déclarer à la création du compte. Sans activité commerciale ni revenus prévus, on n'est en principe pas professionnel. **Or Google cite l'intention d'en tirer des revenus parmi ses critères, et Maxime en prévoit : « non-professionnel » n'est donc pas acquis.** Google renvoie à un juriste en cas de doute, et une fausse déclaration peut entraîner un retrait de l'app. Un APK envoyé par lien n'exige ni compte Play ni déclaration |
 | Coordonnées publiques | Un compte personnel déclaré professionnel affiche son adresse et son téléphone à partir du 01/03/2027 |
 | Politique de confidentialité | Obligatoire même sans données sensibles, **dans la console et dans l'app**. En ligne, pas en PDF, à une adresse publique, active et sans blocage géographique. Elle donne un contact, les tiers destinataires, la sécurité, la conservation et la suppression, et nomme l'entité de la fiche |
 | Formulaire « Sécurité des données » | Obligatoire. Réponses proposées ci-dessous |
@@ -128,16 +130,34 @@ exposée. Le détail des risques est dans
 
 | Si l'app… | Alors |
 |---|---|
-| devient payante, avec achat, abonnement ou publicité | Statut professionnel, donc adresse et téléphone publics pour un compte personnel. Droit de la consommation. Abonnement Open-Meteo payant. Règlement européen sur la cyber-résilience à étudier : d'après des sources secondaires, le logiciel gratuit hors activité commerciale en est exclu, et les obligations complètes s'appliquent au 11/12/2027 |
+| devient payante, avec achat, abonnement ou publicité | Voir [une offre payante](#une-offre-payante) |
 | envoie des statistiques ou des rapports de plantage | Formulaire de Google à refaire, et consentement à étudier |
 | reçoit un serveur ou une synchronisation | Comptes et leur suppression, contrat avec l'hébergeur, notification des violations, sécurité d'une API |
 | stocke des photos | Coordonnées GPS possibles dans les fichiers, et sauvegarde automatique à revoir |
+
+### Une offre payante
+
+**Recommandation : ne rien construire pour le paiement avant les retours des testeurs.** Le test reste
+gratuit, en leur disant que des options payantes pourront arriver. Rien de ce qui existe n'empêche d'en
+ajouter : le catalogue est fait de nos propres fiches, sans clause non commerciale ni de partage à
+l'identique.
+
+| Sujet | Ce que ça change |
+|---|---|
+| Serveur | L'achat d'une version premium passe par Google Play Billing et ne demande pas de serveur. Sans serveur, il se contourne plus facilement : acceptable au début. Point tiré de la documentation connue, à vérifier au moment de le construire |
+| Statut | Professionnel : un compte personnel affiche son adresse et son téléphone à partir du 01/03/2027. Un compte d'organisation affiche ses propres coordonnées et son numéro D-U-N-S, et n'est pas soumis au test fermé |
+| Entreprise et impôts | Revenus à déclarer. En Belgique : activité d'indépendant complémentaire, numéro d'entreprise, TVA, et clauses du contrat de travail de Maxime. Non étudié ici : à voir avec un comptable |
+| Commission de Google | Dans l'EEE, depuis le 30/06/2026 : 10 % plus 5 % de frais de facturation sur un abonnement, d'après une page peu lisible. À confirmer, comme le taux d'un achat unique |
+| Météo | L'offre gratuite d'Open-Meteo exclut les apps avec abonnement ou publicité. Un abonnement, annoncé vers 29 $ par mois, a une clé à protéger, donc sans doute un petit relais : **le seul serveur que le payant pourrait imposer**, sans aucune donnée de jardin. MET Norway n'est pas une issue simple : ses conditions demandent que les apps mobiles ne l'appellent pas directement. Autres pistes : une autre source, ou la météo réservée au premium |
+| Publicité | La plus lourde : un SDK publicitaire change le formulaire de Google, demande sans doute un consentement et casse l'argument « pas de publicité ». Une version premium est préférable |
+| Consommateurs | Conditions de vente et droit de rétractation à faire rédiger |
+| Cyber-résilience | Règlement européen à étudier : d'après des sources secondaires, le logiciel gratuit hors activité commerciale en est exclu, et les obligations complètes s'appliquent au 11/12/2027 |
 
 ## 7. À faire, dans l'ordre
 
 | # | Action | Qui | Quand |
 |---|---|---|---|
-| 1 | Décider si l'app restera gratuite et sans publicité | Maxime | Avant le compte Play |
+| 1 | Faire trancher le statut professionnel ou non et ce qu'il implique en Belgique, par un comptable ou un guichet d'entreprises | Maxime | Avant le compte Play |
 | 2 | Compléter les champs entre crochets de la politique : nom, pays, contact | Maxime | Avant les testeurs |
 | 3 | Publier la politique sur une page publique (GitHub Pages ou Google Sites, gratuits) | Claude, puis Maxime | Avant les testeurs |
 | 4 | Dans l'app : lien « Confidentialité » et phrase sous la météo, écran « À propos » avec les licences des bibliothèques | Une session | Avant les testeurs |
