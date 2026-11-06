@@ -69,9 +69,10 @@ export function replaceReminders(reminders: readonly Reminder[]): Promise<void> 
 
 /** Appelle `open` avec l'écran d'un rappel touché, y compris celui qui a lancé l'app. */
 export function onReminderOpened(open: (href: Href) => void): () => void {
+  // `data` ne vient pas forcément d'un de nos rappels : expo-notifications fait une réponse de tout
+  // intent qui porte `google.message_id`, et n'importe quelle app peut en envoyer un à l'activité.
   const handle = (response: Notifications.NotificationResponse | null) => {
-    const href = response?.notification.request.content.data?.href;
-    if (typeof href === 'string') open(href as Href);
+    if (response?.notification.request.content.data?.href === reminderHref) open(reminderHref);
   };
 
   handle(Notifications.getLastNotificationResponse());
