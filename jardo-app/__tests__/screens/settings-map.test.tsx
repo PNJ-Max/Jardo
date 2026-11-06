@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import GardenMapScreen from '@/app/garden-map';
@@ -11,6 +11,9 @@ import { createTestServices, renderScreen } from '../../test/render';
 // d'un espace portent souvent le même nom que son emplacement.
 const slot = (name: string) =>
   within(screen.getAllByLabelText(name).find((element) => element.props.accessibilityRole === 'radiogroup')!);
+
+// Le formulaire s'affiche dès que les espaces sont là ; les parcelles n'apparaissent qu'avec les zones, qui arrivent après.
+const parcelsShown = () => screen.findAllByLabelText('Parcelle 1 du potager');
 
 /** Un jardin sans carte : un potager et ses deux parcelles, un verger, une serre. */
 async function gardenWithoutMap() {
@@ -53,10 +56,10 @@ describe('réglages, carte du jardin', () => {
     await renderScreen(<GardenMapScreen />, services);
 
     // Chaque espace est proposé sur l'emplacement de son type, les parcelles sur ceux du potager.
-    await screen.findByText('Emplacements');
+    await parcelsShown();
     expect(slot('Verger').getByRole('radio', { name: 'Verger' })).toBeChecked();
     expect(slot('Potager').getByRole('radio', { name: 'Potager du bas' })).toBeChecked();
-    expect(await slot('Parcelle 1 du potager').findByRole('radio', { name: 'Parcelle A' })).toBeChecked();
+    expect(slot('Parcelle 1 du potager').getByRole('radio', { name: 'Parcelle A' })).toBeChecked();
     expect(slot('Parcelle 2 du potager').getByRole('radio', { name: 'Parcelle B' })).toBeChecked();
     expect(slot('Petits fruits').getByRole('radio', { name: 'Libre' })).toBeChecked();
     // Ni petits fruits ni bois de chauffage dans ce jardin.
@@ -70,7 +73,7 @@ describe('réglages, carte du jardin', () => {
     await fireEvent.press(screen.getByRole('radio', { name: /^Maison mitoyenne/ }));
     await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer la carte' }));
 
-    expect(router.back).toHaveBeenCalled();
+    await waitFor(() => expect(router.back).toHaveBeenCalled());
     expect((await services.gardenMap.get()).layout).toBe('terraced-long');
     await expect(slotsOf(services)).resolves.toEqual([
       ['bed-2', 'Parcelle B'],
@@ -100,6 +103,7 @@ describe('réglages, carte du jardin', () => {
     // Le placement en place, sans suggestion : la serre et les parcelles restent libres.
     expect(await screen.findByRole('radio', { name: /^Maison mitoyenne/ })).toBeChecked();
     expect(slot('Serre').getByRole('radio', { name: 'Libre' })).toBeChecked();
+    await parcelsShown();
     expect(slot('Parcelle 1 du potager').getByRole('radio', { name: 'Libre' })).toBeChecked();
 
     await fireEvent.press(screen.getByRole('radio', { name: /^Maison de campagne/ }));
@@ -107,7 +111,7 @@ describe('réglages, carte du jardin', () => {
     await fireEvent.press(slot('Serre').getByRole('radio', { name: 'Serre tunnel' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer la carte' }));
 
-    expect(router.back).toHaveBeenCalled();
+    await waitFor(() => expect(router.back).toHaveBeenCalled());
     expect((await services.gardenMap.get()).layout).toBe('country-house');
     await expect(slotsOf(services)).resolves.toEqual([
       ['greenhouse', 'Serre tunnel'],
