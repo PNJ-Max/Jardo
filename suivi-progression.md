@@ -48,6 +48,9 @@ fichier d'un bloc, et son contrôle du stock de bois relisait tout le journal po
 - **Plafond de 20 Mo** : `ensureBackupSize` refuse un fichier plus gros avant de le lire, sur le
   téléphone et sur le web. La copie dans le cache par `expo-document-picker` reste faite avant ce
   contrôle.
+- **Plafond de 30 000 espaces et éléments** : 33 000 espaces tiennent dans 8,5 Mo, et leur lecture lève
+  `too many SQL variables` : SQLite refuse plus de 32 766 paramètres. L'accueil sans carte, les fiches
+  et les tas restaient sur ce message jusqu'au prochain import.
 - **Stock de bois en temps linéaire** : 23 Mo de tas et d'entrées prenaient 23 s sur un PC, et 26 Mo
   en prennent 1,8 s. Le JavaScript d'un téléphone reste bien plus lent, d'où le plafond.
 

@@ -58,8 +58,18 @@ const woodPileColumns = ['wood_species', 'initial_steres', 'log_length_cm', 'cut
 const itemLabel = (item: Item) =>
   `${item.item_type === 'WoodPile' ? 'Tas de bois' : item.item_type === 'Plant' ? 'Plante' : 'Élément'} « ${item.name} »`;
 
+/**
+ * Les lectures lient un paramètre par espace et par tas de bois, et SQLite en refuse plus de 32 766 :
+ * au-delà, ces écrans échoueraient jusqu'au prochain import. 20 Mo suffisent à dépasser ce nombre.
+ */
+export const maxBoundRows = 30_000;
+
 /** Vérifie tout le contenu d'un export ; la première règle enfreinte refuse le fichier entier. */
 export function checkBackupRules(tables: BackupTables): void {
+  if (tables.spaces.length > maxBoundRows || tables.garden_items.length > maxBoundRows) {
+    throw invalidBackup("Ce fichier contient trop d'espaces ou d'éléments pour être un export de Jardo.");
+  }
+
   const [garden, ...otherGardens] = tables.gardens;
   if (!garden || otherGardens.length > 0) throw invalidBackup('Le fichier doit contenir un et un seul jardin.');
 
