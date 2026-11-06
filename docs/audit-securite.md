@@ -356,4 +356,5 @@ Après le premier passage et les PR, tout a été repris en contradicteur, sans 
 
 **Instabilité repérée en passant** : des suites `today*` ont échoué deux fois quand Jest démarrait à froid sur une machine
 chargée, et passent dès que le cache est chaud. Une suite a aussi échoué une fois sur `main`, avant toute modification. La
-cause probable est le délai d'une seconde de `findBy*`. À traiter à part.
+cause probable est le délai d'une seconde de `findBy*`. À traiter à part. `settings-map` a aussi échoué une fois sur la CI de cette PR :
+c'est la course que #74 corrige, sans rapport avec l'audit.
