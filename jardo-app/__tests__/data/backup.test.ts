@@ -297,7 +297,15 @@ describe('sauvegarde', () => {
       expect(({} as Record<string, unknown>).x).toBeUndefined();
     });
 
-    it.each(['', '../settings', 'x?y=z#f', 'https://exemple.test/', 'X'.repeat(5000)])('avec un espace d’identifiant « %s »', (id) => {
+    it.each([
+      '',
+      '../settings',
+      'x?y=z#f',
+      'https://exemple.test/',
+      'X'.repeat(5000),
+      '11111111-2222-4333-8444-555555555555/../../settings',
+      '../11111111-2222-4333-8444-555555555555',
+    ])('avec un espace d’identifiant « %s »', (id) => {
       const file = JSON.stringify(backup).split(backup.tables.spaces[0].id).join(id);
 
       expect(readError(file)).toMatchObject(refusedFile("Un identifiant parmi les espaces n'est pas valable."));
@@ -322,7 +330,6 @@ describe('sauvegarde', () => {
       ['une tâche reportée à un jour mal écrit', (file: any) => (file.tables.garden_tasks[0].postponed_until = '2026-13-01'), /« Reporter au » n'est pas un jour/],
       ['une tâche ouverte un jour mal écrit', (file: any) => (file.tables.garden_tasks[0].opened_on = '2026-02-30'), /« Ouverte le » n'est pas un jour/],
       ['une intervention notée en l’an 9999', (file: any) => (file.tables.journal_entries[0].date = '9999-12-31'), /« Date » n'est pas un jour/],
-      ['une tâche partie en l’an 1', (file: any) => (file.tables.garden_tasks[0].start_date = '0001-01-01'), /« Date de départ » n'est pas un jour/],
       [
         'une plante dans le bois de chauffage',
         (file: any) => {
@@ -386,11 +393,11 @@ describe('sauvegarde', () => {
     });
   });
 
-  it('garde lisibles des dates aux bornes de ce qu’il accepte', async () => {
+  it('garde lisibles les dates les plus extrêmes qu’il accepte', async () => {
     const { backup } = await exampleBackup();
     const extreme = tampered(backup, (file) => {
       file.tables.journal_entries.forEach((entry: any) => (entry.date = '8999-12-31'));
-      file.tables.garden_tasks.forEach((task: any) => (task.start_date = '1000-01-01'));
+      file.tables.garden_tasks.forEach((task: any) => (task.start_date = '0001-01-01'));
     });
     const target = await createTestDb();
     const service = createBackupService(target, clock);
