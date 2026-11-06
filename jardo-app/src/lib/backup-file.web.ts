@@ -1,5 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 
+import { ensureBackupSize } from '@/data/backup';
+
 // Sur le web, la feuille de partage ne partage pas un fichier local (doc d'expo-sharing) et
 // expo-file-system n'existe pas : l'export se télécharge, l'import se lit depuis le File du navigateur.
 
@@ -17,5 +19,7 @@ export async function saveBackupFile(name: string, content: string): Promise<voi
 export async function pickBackupFile(): Promise<string | null> {
   const result = await DocumentPicker.getDocumentAsync({ type: 'application/json', base64: false });
   if (result.canceled) return null;
-  return result.assets[0].file!.text();
+  const file = result.assets[0].file!;
+  ensureBackupSize(file.size);
+  return file.text();
 }

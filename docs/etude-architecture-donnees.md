@@ -315,7 +315,9 @@ un nouveau téléphone redonne le même jardin, ce qu'une future synchronisation
 
 **L'import.** « Importer un jardin » choisit un fichier
 ([`expo-document-picker`](https://docs.expo.dev/versions/v57.0.0/sdk/document-picker/)) et le
-vérifie en entier avant d'écrire quoi que ce soit (`readBackup`, `src/data/backup.ts`) :
+vérifie en entier avant d'écrire quoi que ce soit (`readBackup`, `src/data/backup.ts`). Au-delà
+de 20 Mo, il est refusé sans être lu : l'export du jardin d'exemple fait 55 Ko. Au-delà de 30 000
+espaces ou éléments aussi : SQLite n'en lirait plus la liste. Sinon :
 
 1. du JSON, au format `jardo`, d'une version connue. Un fichier d'une version plus récente de
    l'app est refusé (« mettez l'app à jour ») ;
