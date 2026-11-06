@@ -16,7 +16,7 @@ function isIgnored(path: string) {
 describe('.gitignore du dépôt public', () => {
   it.each([
     'credentials.json',
-    'credentials/android/keystore.jks',
+    'credentials/android/keystore.properties',
     'jardo-release.keystore',
     'jardo-release.jks',
     'google-services.json',
