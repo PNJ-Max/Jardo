@@ -5,7 +5,8 @@ proches. Code audité : `main` à `56f08a5`. Les fichiers et lignes cités s'y r
 référence : [OWASP MASVS 2.1](https://mas.owasp.org/MASVS/).
 
 Ce rapport vit dans un dépôt public. Il ne contient aucun secret : aucun n'a été trouvé. Les adresses
-e-mail y sont volontairement masquées.
+e-mail y sont volontairement masquées. Les correctifs cités sont dans des PR ouvertes, que Maxime reste libre de
+fusionner : rien n'a été fusionné.
 
 ## Résumé en dix lignes
 
@@ -137,6 +138,7 @@ Chaque point a été vérifié, et la méthode est indiquée.
   Un écran ajouté plus tard y entre tout seul, et un témoin vérifie que le test échoue si un écran écrit.
 - **Suppressions** : elles passent toutes par un bouton puis une confirmation, et il faudrait connaître un UUID.
 - **Paramètres hostiles** : affichés comme du texte. `isDrawn` utilise déjà `Object.hasOwn`.
+- **URL mal formées** : `%`, `%E0%A4%A`, `%00`, `[` ou 400 000 caractères ne lèvent aucune exception dans le vrai routeur.
 - **Intents de partage** : `expo-sharing` lit les `ACTION_SEND`, mais ne fait rien sans `share_into_scheme`, absent ici.
 
 **Réseau**
@@ -350,6 +352,7 @@ Après le premier passage et les PR, tout a été repris en contradicteur, sans 
 - **PR ensemble** : les cinq fusionnées localement sans conflit, tous les tests verts.
 - **Historique** : entropie de tous les blobs, commentaires de PR et de commit, wiki, artefacts, formats d'image atypiques.
 - **Intents** : les écouteurs d'activité de toutes les bibliothèques, `expo-sharing` compris.
+- **Liens** : des URL mal formées sur le vrai routeur.
 
 **Instabilité repérée en passant** : des suites `today*` ont échoué deux fois quand Jest démarrait à froid sur une machine
 chargée, et passent dès que le cache est chaud. Une suite a aussi échoué une fois sur `main`, avant toute modification. La
