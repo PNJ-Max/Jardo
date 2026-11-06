@@ -39,7 +39,7 @@ charte, pas la charte elle-même :
 1. **Un seul dessin.** Tout ce qui est illustré vient du pinceau de la carte (`Painter` et
    fonctions `draw*` de [`jardo-app/src/map/decor.ts`](../jardo-app/src/map/decor.ts)) : même
    projection, même lumière, mêmes matières. De jour en mode clair, de nuit en mode sombre.
-2. **Le vert parle, la terre décore.** Texte et actions restent dans les jetons de la charte v2.
+2. **Le vert parle, la terre décore.** La nuit, c'est l'ambre qui parle. Texte et actions restent dans les jetons de la charte.
    Les tons chauds de la carte servent au décor ; seul `soil`, assez contrasté, porte du texte.
 3. **La hiérarchie par la surface, pas par la bordure.** Les lignes d'une même section partagent
    une surface. La carte isolée devient l'exception : une vignette, une tuile de zone.
@@ -60,13 +60,13 @@ calculés selon WCAG 2.1.
 
 | Jeton | Clair | Sombre | Rôle | Contraste |
 |---|---|---|---|---|
-| `surfaceSunken` | `#EAF2E8` | `#0C2E32` | Fond des champs remplis, du bouton fermer | `text` 11 / 12,9:1 ; `textMuted` 5,2 / 6,6:1 |
-| `tile` | `#E4F0DE` | `#164441` | Tuile des pictogrammes, type choisi | `primary` 6,7 / 5:1 |
-| `soil` | `#694B34` | `#D9B98F` | « À faire aujourd'hui » hors arrosage | 7,5:1 sur le fond, 7,9:1 sur blanc / 8,8:1 et 6,7:1 |
-| `soilTint` | `#F2EADF` | `#3A2F24` | Fond du voyant `soil` | `soil` 6,6 / 7:1 |
+| `surfaceSunken` | `#EAF2E8` | `#11141A` | Fond des champs remplis, du bouton fermer | `text` 11 / 16,1:1 ; `textMuted` 5,2 / 8:1 |
+| `tile` | `#E4F0DE` | `#232832` | Tuile des pictogrammes, type choisi | `primary` 6,7 / 9,3:1 |
+| `soil` | `#694B34` | `#DCC3A2` | « À faire aujourd'hui » hors arrosage | 7,5:1 sur le fond, 7,9:1 sur blanc / 11,4:1 et 10,2:1 |
+| `soilTint` | `#F2EADF` | `#332B22` | Fond du voyant `soil` | `soil` 6,6 / 8,2:1 |
 | `glow` | `#F6C76E` | `#F4C76F` | Lueur des fenêtres : « Fait », focus, lucioles. Décor | |
-| `lawn` | `#B3D6A9` | `#1D4A41` | Sol des vignettes, onglet actif. Décor | |
-| `skyTop` | `#D3EAEE` | `#03141A` | Haut du ciel d'Aujourd'hui, fondu vers `background` | `textMuted` 4,7 / 8,6:1 |
+| `lawn` | `#B3D6A9` | `#3A3220` | Sol des vignettes, onglet actif. Décor | |
+| `skyTop` | `#D3EAEE` | `#05070B` | Haut du ciel d'Aujourd'hui, fondu vers `background` | `textMuted` 4,7 / 8,8:1 |
 
 Les vignettes et pictogrammes utilisent en plus la palette du décor (`decor.ts` : bois, tuile,
 verre, fruits) et sa variante de nuit : ce ne sont pas des jetons du thème.
@@ -196,7 +196,7 @@ scène par ligne de liste. Les tuiles de zone, simples, peuvent rester des forme
 ## Pictogrammes
 
 Un pictogramme maison par type d'intervention (`entryKinds` de `lib/garden.ts`), en 32 × 32,
-trait `ink` (`#2E4A31` / `#CFE3D1`) de 1,6 et remplissages du décor :
+trait `ink` (`#2E4A31` / `#E6E0D2`) de 1,6 et remplissages du décor :
 
 | Intervention | Pictogramme |
 |---|---|

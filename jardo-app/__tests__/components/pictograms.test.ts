@@ -29,7 +29,7 @@ describe('pictogrammes', () => {
   it("trace à l'encre du thème, la nuit plus claire que le jour", () => {
     const strokes = (scheme: 'light' | 'dark') => new Set(paths(kindMarks('Other', scheme)).flatMap((m) => m.stroke ?? []));
     expect(strokes('light')).toEqual(new Set(['#2E4A31']));
-    expect(strokes('dark')).toEqual(new Set(['#CFE3D1']));
+    expect(strokes('dark')).toEqual(new Set(['#E6E0D2']));
   });
 
   it('ne fait luire que le feu, et seulement la nuit', () => {
