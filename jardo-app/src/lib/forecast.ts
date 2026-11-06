@@ -55,12 +55,14 @@ async function getJson(url: string) {
 // récente : un nom qui n'est pas un texte ou un code `__proto__` y ferait tomber l'écran.
 const isNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 const isWithin = (value: unknown, limit: number): value is number => isNumber(value) && Math.abs(value) <= limit;
-const textOrNull = (value: unknown) => (typeof value === 'string' ? value : null);
+const isText = (value: unknown): value is string => typeof value === 'string' && value.length <= 200;
+const isDay = (value: unknown): value is string => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+const textOrNull = (value: unknown) => (isText(value) ? value : null);
 
 type GeocodingResult = { name: unknown; latitude: unknown; longitude: unknown; admin1?: unknown; country?: unknown };
 
 function toPlace(result: GeocodingResult | null): WeatherPlace | null {
-  if (typeof result?.name !== 'string' || !isWithin(result.latitude, 90) || !isWithin(result.longitude, 180)) return null;
+  if (!isText(result?.name) || !isWithin(result.latitude, 90) || !isWithin(result.longitude, 180)) return null;
   return {
     name: result.name,
     region: textOrNull(result.admin1),
@@ -118,7 +120,7 @@ export async function fetchForecast(place: WeatherPlace, clock: Clock): Promise<
       daily.precipitation_sum[index],
     ];
     // Un jour que le modèle ne couvre pas encore arrive vide : il est omis.
-    if (typeof date !== 'string' || !isNumber(code) || !isNumber(min) || !isNumber(max)) return;
+    if (!isDay(date) || !isNumber(code) || !isNumber(min) || !isNumber(max)) return;
     days.push({ date, code, min, max, rainMm: isNumber(rain) ? rain : 0 });
   });
   return { latitude: place.latitude, longitude: place.longitude, fetchedAt: clock().toISOString(), days };

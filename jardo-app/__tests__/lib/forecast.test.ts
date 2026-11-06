@@ -117,6 +117,7 @@ describe('réponse inattendue du réseau', () => {
     ['une température en texte', (body: any) => (body.daily.temperature_2m_min[1] = 'x')],
     ['une température infinie', (body: any) => (body.daily.temperature_2m_max[1] = Infinity)],
     ['une date qui n’est pas un texte', (body: any) => (body.daily.time[1] = 12)],
+    ['une date mal écrite', (body: any) => (body.daily.time[1] = 'x'.repeat(5000))],
   ])('omet le jour qui porte %s', async (_, change) => {
     const forecast = await answered(change);
 
@@ -167,6 +168,7 @@ describe('ville', () => {
           { name: 'Hors du globe', latitude: 95, longitude: 2 },
           { name: 'Sans longitude', latitude: 1 },
           { name: { fr: 'Objet' }, latitude: 1, longitude: 2 },
+          { name: 'x'.repeat(5000), latitude: 1, longitude: 2 },
           null,
           { name: 'Namur', latitude: 50.4669, longitude: 4.86746, admin1: 3, country: 'Belgique' },
         ],
