@@ -13,8 +13,8 @@ export function optionalText(value: string | null | undefined): string | null {
 
 const isDateOnly = (value: string) => {
   try {
-    yearOf(value);
-    return true;
+    // Au-delà, `addDays` sort du format AAAA-MM-JJ après l'an 9999, et chaque lecture des tâches lève.
+    return yearOf(value) < 9000;
   } catch {
     return false;
   }

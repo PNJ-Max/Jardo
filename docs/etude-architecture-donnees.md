@@ -320,7 +320,9 @@ vérifie en entier avant d'écrire quoi que ce soit (`readBackup`, `src/data/bac
 1. du JSON, au format `jardo`, d'une version connue. Un fichier d'une version plus récente de
    l'app est refusé (« mettez l'app à jour ») ;
 2. chaque table et chaque colonne du schéma, rien de plus, et des valeurs du bon type ;
-3. les règles des services, rejouées sur le contenu (`src/data/backup-rules.ts`) : un seul jardin,
+3. des identifiants en UUID, ce que l'app écrit toujours : un identifiant finit dans le chemin d'un
+   écran, où `../settings` en ouvrirait un autre ;
+4. les règles des services, rejouées sur le contenu (`src/data/backup-rules.ts`) : un seul jardin,
    identifiants uniques, noms d'espaces et de zones uniques, champs validés comme dans les
    formulaires, types acceptés par chaque espace, cohérence des cibles (la zone dans l'espace,
    l'élément dans sa zone), champs selon le type d'intervention, rythme des tâches, stock de bois

@@ -38,9 +38,14 @@ function apply(where: string, check: () => void) {
   }
 }
 
+// L'app n'écrit que des UUID, et un identifiant finit dans le chemin d'un écran (`/space/${id}`) :
+// `../settings` y ouvrirait un autre écran.
+const isUuid = (id: Id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
 function indexById<T extends { id: Id }>(label: string, rows: readonly T[]): Map<Id, T> {
   const index = new Map<Id, T>();
   for (const row of rows) {
+    if (!isUuid(row.id)) throw invalidBackup(`Un identifiant parmi les ${label} n'est pas valable.`);
     if (index.has(row.id)) throw invalidBackup(`L'identifiant ${row.id} apparaît deux fois parmi les ${label}.`);
     index.set(row.id, row);
   }
@@ -62,6 +67,7 @@ const itemLabel = (item: Item) =>
 export function checkBackupRules(tables: BackupTables): void {
   const [garden, ...otherGardens] = tables.gardens;
   if (!garden || otherGardens.length > 0) throw invalidBackup('Le fichier doit contenir un et un seul jardin.');
+  if (!isUuid(garden.id)) throw invalidBackup("L'identifiant du jardin n'est pas valable.");
 
   apply('Jardin', () => {
     new Validation()
