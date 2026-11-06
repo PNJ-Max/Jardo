@@ -17,7 +17,7 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 presque noir, des boutons ambre, la couleur des fenêtres allumées de la carte.
 - **Changé** : les jetons sombres (`src/theme/colors.ts`), la nuit de la carte et des vignettes, celle
   des pictogrammes, l'écran de démarrage sombre. [La charte](docs/charte-graphique.md) donne les contrastes, tous au-dessus de 6,5:1.
-- **Pas changé** : le thème clair, dont le vert reste tant que Maxime n'a pas demandé autre chose.
+- **Pas changé** : le thème clair, qui garde son vert : Maxime l'a confirmé le 06/11.
 - **Reste à vérifier** : le rendu sur un vrai téléphone, surtout dans le noir, et le splash sombre, qui n'a été vu qu'en image.
 
 **Benchmark des concurrents mis à jour (05/11/2026).** [`docs/benchmark-concurrents.md`](docs/benchmark-concurrents.md)
