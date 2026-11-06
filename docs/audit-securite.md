@@ -44,7 +44,7 @@ test ou une commande. **Théorique** : déduit du code, et ce qui manque est dit
 | C9 | Faible | Confirmé | `src/data/garden-map.ts:195`, `src/app/setup/spaces.tsx:45` | Sur un jardin avec carte, ouvrir `/setup/spaces?layout=terraced-long` et toucher « Afficher la carte » : le modèle change, et les 9 emplacements sont effacés | [#72](https://github.com/PNJ-Max/Jardo/pull/72) |
 | C10 | Faible | Confirmé sous Jest avec le vrai routeur. À constater sur l'APK | `jardo-app/app.json:33` | `renderRouter` sur `/_sitemap` : `TypeError` sur `window.location.origin` (`expo-router/build/views/Sitemap.js:120`) | [#72](https://github.com/PNJ-Max/Jardo/pull/72) |
 | C11 | Information | Confirmé | `src/data/backup-rules.ts:41`, `src/data/backup.ts:163`, `:173` | Un identifiant `../settings` est accepté, et le vrai routeur ouvre alors Réglages au toucher de l'espace. Une table `__proto__` est acceptée, sans aucun effet | [#69](https://github.com/PNJ-Max/Jardo/pull/69) |
-| C12 | Information | Théorique : embarqué, jamais appelé | `decode-uri-component` 0.2.2, via `query-string` et `expo-router` | `npm audit` le classe haut. Sur le chemin d'un lien, un test avec un espion compte 0 appel, car `queryString.parse` n'est pas utilisé par le routeur d'Expo | Passer au SDK 58 le moment venu. Ne pas forcer |
+| C12 | Information | Théorique : embarqué, jamais appelé | `decode-uri-component` 0.2.2, via `query-string` et `expo-router` | `npm audit` le classe haut. Sur le chemin d'un lien, un test avec un espion compte 0 appel : seul `react-navigation/core/getStateFromPath.js` appelle `queryString.parse`, et Expo Router passe par son propre `fork/getStateFromPath.js` | Passer au SDK 58 le moment venu. Ne pas forcer |
 
 Chaque PR contient ses tests, qui échouent sans le correctif. Elles sont indépendantes : les fusionner toutes
 sur une branche locale ne crée aucun conflit, et tous les tests y passent.
@@ -86,8 +86,8 @@ ni espace, ni tâche, ni journal.
 
 Aucun réglage GitHub n'a été changé et aucun historique n'a été réécrit.
 
-**C1, la chaîne de publication.** Une app sans serveur n'a qu'un chemin d'attaque à distance : le code qui part
-dans l'APK. GitHub et Expo sont donc les vrais points sensibles, et Expo garde la clé de signature.
+**C1, la chaîne de publication.** Une app sans serveur n'a qu'un chemin sérieux d'attaque à distance : le code qui
+part dans l'APK. GitHub et Expo sont donc les vrais points sensibles, et Expo garde la clé de signature.
 
 - **Protéger `main`** : interdire le force-push et la suppression, exiger le contrôle `Front` de la CI. Cela
   compte d'autant plus que des sessions d'agents travaillent ici avec un jeton aux droits `repo` et `workflow`.
@@ -108,7 +108,7 @@ de 250 une adresse personnelle. Quatre sont sur `main`, et les deux autres sont 
 - **Option simple** : accepter l'existant, et utiliser dès maintenant l'adresse `noreply` de GitHub pour les
   prochains commits.
 - **À faire avant de fusionner #67** : relire ce que `docs/etude-legale.md` dit de la situation personnelle de
-  Maxime. Le texte est déjà public sur sa branche, mais il l'est moins une fois hors de `main`, et le modifier
+  Maxime. Le texte est déjà public sur sa branche, mais il le serait bien davantage sur `main`, et le modifier
   aujourd'hui ne coûte rien. La session d'organisation a le détail.
 
 ## Ce qui est sain
@@ -128,7 +128,7 @@ Chaque point a été vérifié, et la méthode est indiquée.
 **Base SQLite**
 - **Pas d'injection** : toutes les valeurs passent par des paramètres. Ce qui est concaténé ne vient que de
   constantes du code ou de listes de `?`.
-- **Base plus récente** : `NewerDatabaseError`, sans rien écrire, et un message clair à l'écran.
+- **Base plus récente** : `NewerDatabaseError`, sans toucher aux données, et un message clair à l'écran.
 - **Base abîmée** : `file is not a database`, et le fichier reste intact. Aucune réinitialisation automatique
   n'efface le jardin.
 
@@ -213,8 +213,8 @@ final fusionne celui de l'app avec ceux des bibliothèques, dont `firebase-messa
 aapt dump permissions jardo.apk
 ```
 Attendu : `INTERNET`, `VIBRATE`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, plus ce qu'ajoute Firebase
-(probablement `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `c2dm.permission.RECEIVE`). **`AD_ID` ne devrait pas y être** : le POM
-de `firebase-messaging` 25.0.1 ne liste ni `play-services-measurement` ni `play-services-ads-identifier`. S'il y est,
+(probablement `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `c2dm.permission.RECEIVE`). **`AD_ID` ne devrait pas y être** : à son
+premier niveau, le POM de `firebase-messaging` 25.0.1 ne liste ni `play-services-measurement` ni `play-services-ads-identifier`. S'il y est,
 l'ajouter à `android.blockedPermissions` dans `app.json`.
 
 ```bash
@@ -246,8 +246,8 @@ adb shell am start -n com.pnjmax.jardo/.MainActivity --es google.message_id 1 --
 Attendu avec #72 : rien ne s'ouvre. Sans #72, le navigateur s'ouvrirait : c'est le constat C8 sur le vrai téléphone.
 
 À essayer ensuite à la main :
-- **Réseau** : sans ville, aucun appel, y compris vers `exp.host` ou Firebase. Le code de ces deux services est dans le
-  bundle, sans être appelé.
+- **Réseau** : sans ville, aucun appel, y compris vers `exp.host` ou Firebase. Le code de ces deux services est dans
+  l'app, sans être appelé.
 - **Interception** : avec un certificat ajouté par l'utilisateur, la météo doit échouer.
 - **Import** : un fichier de 19 Mo (temps de lecture sous Hermes) et un de 1 Go (refus propre). `File.size` est simulé
   dans les tests.
@@ -277,8 +277,8 @@ Attendu avec #72 : rien ne s'ouvre. Sans #72, le navigateur s'ouvrirait : c'est 
   lire plus tard.
 - Un écran `+not-found` en français, à la place d'« Unmatched Route ».
 - **Si la démo web est un jour hébergée** : une origine dédiée, car OPFS appartient à l'origine et `pnj-max.github.io/jardo`
-  la partagerait avec tout autre projet du compte. Une CSP aussi, à mettre au point, avec au moins `wasm-unsafe-eval` pour SQLite et Skia. Et prévenir que vider
-  les données du site efface le jardin.
+  la partagerait avec tout autre projet du compte. Une CSP aussi, à mettre au point, avec au moins `wasm-unsafe-eval`
+  pour SQLite et Skia. Et prévenir que vider les données du site efface le jardin.
 
 ## Grille MASVS
 
@@ -342,14 +342,14 @@ Après le premier passage et les PR, tout a été repris en contradicteur, sans 
 - **C10** : `window.location` existe-t-il sur un téléphone ? Le bundle de production contient un polyfill, mais il ne
   s'installe qu'avec une `origin` configurée ou générée pour un export serveur. Jardo n'a ni l'une ni l'autre.
 - **C12** : `decode-uri-component` est bien embarqué, mais jamais appelé sur le chemin d'un lien.
-- **Toutes les gravités « faible »** : aucune ne permet de lire des données ni d'agir hors de l'app.
+- **Toutes les gravités « faible »** : aucune ne permet de lire des données, ni d'écrire sans un geste de l'utilisateur.
 
 **Contrôlé en plus, sans rien trouver**
 - **Fuzz de l'import** : 42 000 fichiers modifiés au hasard avant les correctifs, une seule cause trouvée (C4). 60 000 après,
   aucune. Sur 150 fichiers acceptés, 1950 rendus d'écran, aucun plantage ; un écran témoin prouve que le test en attraperait un.
 - **Mutations** : 45 lignes des correctifs retirées ou altérées une à une. 42 font échouer un test du premier coup, 2 ont révélé
   les tests cités plus haut, et la dernière ne change rien, car une entrée qui n'est pas du bois ne porte pas de quantité sur un tas.
-- **PR ensemble** : les cinq fusionnées localement sans conflit, tous les tests verts.
+- **PR ensemble** : les six fusionnées localement sans conflit, 1873 tests verts, lint et typage compris.
 - **Historique** : entropie de tous les blobs, commentaires de PR et de commit, wiki, artefacts, formats d'image atypiques.
 - **Intents** : les écouteurs d'activité de toutes les bibliothèques, `expo-sharing` compris.
 - **Liens** : des URL mal formées sur le vrai routeur.
