@@ -160,17 +160,19 @@ function fits(value: unknown, type: ColumnType): boolean {
 }
 
 function checkColumns(tables: LooseTables): BackupTables {
-  const unknownTable = Object.keys(tables).find((name) => !(name in backupColumns));
+  // Pas `in` : il dirait connus `constructor` ou `__proto__`, hérités d'Object.prototype.
+  const unknownTable = Object.keys(tables).find((name) => !tableNames.includes(name as BackupTable));
   if (unknownTable) throw invalidBackup(`La table « ${unknownTable} » est inconnue.`);
 
   for (const table of tableNames) {
     const columns: Record<string, ColumnType> = backupColumns[table];
+    const columnNames = Object.keys(columns);
     const rows = tables[table];
     if (!rows) throw invalidBackup(`La table « ${table} » manque.`);
 
     rows.forEach((row, index) => {
       const where = `Table « ${table} », ligne ${index + 1}`;
-      const unknownColumn = Object.keys(row).find((name) => !(name in columns));
+      const unknownColumn = Object.keys(row).find((name) => !columnNames.includes(name));
       if (unknownColumn) throw invalidBackup(`${where} : la colonne « ${unknownColumn} » est inconnue.`);
 
       for (const [column, type] of Object.entries(columns)) {
