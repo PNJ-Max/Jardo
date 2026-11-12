@@ -10,7 +10,14 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (05/11/2026)
+## Où on en est (06/11/2026)
+
+**Test instable de la carte stabilisé (06/11/2026).** `settings-map.test.tsx` lisait les emplacements
+de parcelle avant l'arrivée des zones, ce qui faisait échouer la CI sur une machine lente.
+- **Correctif** : les deux tests du formulaire attendent ces emplacements, puis la fin de
+  l'enregistrement. Aucun changement de l'écran.
+- **Défaut à corriger, signalé dans la PR** : la carte des réglages perd ses parcelles si on enregistre
+  avant l'arrivée des zones ou si leur lecture échoue (`toMapInput` ignore les zones inconnues).
 
 **Benchmark des concurrents mis à jour (05/11/2026).** [`docs/benchmark-concurrents.md`](docs/benchmark-concurrents.md)
 situe Jardo tel qu'il est, avant la V1 des testeurs. Doc seule, aucun changement de code.
