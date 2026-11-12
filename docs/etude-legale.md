@@ -8,7 +8,7 @@ de la politique de confidentialité est dans [`politique-de-confidentialite.md`]
 le 05/11/2026 sur `main` (`6ef859f`), et les conditions de Google et d'Open-Meteo lues le même jour.
 Les points marqués « à confirmer » sont à faire relire avant la fiche publique.
 
-**Hypothèses :** l'éditeur est un particulier établi en Belgique (à confirmer par Maxime) ; l'app reste
+**Hypothèses :** l'éditeur est un particulier établi dans l'Union européenne ; l'app reste
 gratuite, sans publicité ni achat, pendant la phase de test ; elle vise des jardiniers francophones
 d'Europe. **Maxime veut en tirer un revenu si elle marche**, par exemple gratuite jusqu'à un certain
 nombre de plantes, puis premium. Le modèle n'est pas choisi : voir [une offre payante](#une-offre-payante).
@@ -146,7 +146,7 @@ l'identique.
 |---|---|
 | Serveur | L'achat d'une version premium passe par Google Play Billing et ne demande pas de serveur. Sans serveur, il se contourne plus facilement : acceptable au début. Point tiré de la documentation connue, à vérifier au moment de le construire |
 | Statut | Professionnel : un compte personnel affiche son adresse et son téléphone à partir du 01/03/2027. Un compte d'organisation affiche ses propres coordonnées et son numéro D-U-N-S, et n'est pas soumis au test fermé |
-| Entreprise et impôts | Revenus à déclarer. En Belgique : activité d'indépendant complémentaire, numéro d'entreprise, TVA, et clauses du contrat de travail de Maxime. Non étudié ici : à voir avec un comptable |
+| Entreprise et impôts | Revenus à déclarer, statut social, numéro d'entreprise et TVA selon le pays de l'éditeur. Non étudié ici : à voir avec un comptable |
 | Commission de Google | Dans l'EEE, depuis le 30/06/2026 : 10 % plus 5 % de frais de facturation sur un abonnement, d'après une page peu lisible. À confirmer, comme le taux d'un achat unique |
 | Météo | L'offre gratuite d'Open-Meteo exclut les apps avec abonnement ou publicité. Un abonnement, annoncé vers 29 $ par mois, a une clé à protéger, donc sans doute un petit relais : **le seul serveur que le payant pourrait imposer**, sans aucune donnée de jardin. MET Norway n'est pas une issue simple : ses conditions demandent que les apps mobiles ne l'appellent pas directement. Autres pistes : une autre source, ou la météo réservée au premium |
 | Publicité | La plus lourde : un SDK publicitaire change le formulaire de Google, demande sans doute un consentement et casse l'argument « pas de publicité ». Une version premium est préférable |
@@ -162,7 +162,7 @@ météo, envoyée à Open-Meteo.
 
 | # | Action | Qui | Quand |
 |---|---|---|---|
-| 1 | Faire trancher le statut professionnel ou non et ce qu'il implique en Belgique, par un comptable ou un guichet d'entreprises | Maxime | Avant le compte Play |
+| 1 | Faire trancher le statut professionnel ou non et ce qu'il implique, par un comptable ou un guichet d'entreprises | Maxime | Avant le compte Play |
 | 2 | Compléter les champs entre crochets de la politique : nom, pays, contact | Maxime | Avant le Play Store |
 | 3 | Publier la politique sur une page publique (GitHub Pages ou Google Sites, gratuits) | Claude, puis Maxime | Avant le Play Store |
 | 4 | Dans l'app : lien « Confidentialité » et phrase sous la météo, écran « À propos » avec les licences des bibliothèques | Une session | Avant le Play Store |
