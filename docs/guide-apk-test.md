@@ -74,6 +74,9 @@ npx eas-cli@latest build --platform android --profile preview
   `npx eas-cli@latest build:list` ou le tableau de bord sur <https://expo.dev>).
 - À la fin, EAS affiche l'adresse de la page du build, avec le lien de téléchargement de l'APK.
 
+Avant de l'envoyer à quelqu'un, passer le premier APK à la
+[liste de contrôle de l'audit de sécurité](audit-securite.md#à-vérifier-sur-un-apk).
+
 ## 5. L'installer chez les proches
 
 1. Envoie-leur le **lien de la page du build** (message, e-mail). Par défaut, [toute personne qui a

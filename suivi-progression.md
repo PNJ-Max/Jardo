@@ -27,6 +27,15 @@ presque noir, des boutons ambre, la couleur des fenêtres allumées de la carte.
 - **Pas changé** : le thème clair, qui garde son vert : Maxime l'a confirmé le 06/11.
 - **Reste à vérifier** : le rendu sur un vrai téléphone, surtout dans le noir, et le splash sombre, qui n'a été vu qu'en image.
 
+**Audit de sécurité (06/11/2026).** [`docs/audit-securite.md`](docs/audit-securite.md), selon OWASP MASVS : rien de grave, et
+rien qui empêche d'envoyer l'APK à des proches une fois sa liste de contrôle passée.
+- **Vérifié** : aucun secret dans tout l'historique, aucune injection, aucune écriture sans geste de
+  l'utilisateur. `__tests__/screens/deep-links.test.tsx` le garde pour chaque écran, y compris les prochains.
+- **Corrigé, chacun dans sa PR** : un fichier importé piégé (#69, #70), une réponse hostile d'Open-Meteo (#71), ce
+  qu'une autre app peut déclencher (#72), les fichiers de signature que Git ne couvrait pas (#73).
+- **À décider** : protéger `main`, et que faire de l'adresse professionnelle dans l'historique. Voir « À décider ».
+- **Limite** : ni téléphone ni Hermes. Une liste de contrôle attend le premier APK.
+
 **Benchmark des concurrents mis à jour (05/11/2026).** [`docs/benchmark-concurrents.md`](docs/benchmark-concurrents.md)
 situe Jardo tel qu'il est, avant la V1 des testeurs. Doc seule, aucun changement de code.
 - **Relevés** : six fiches Google Play du jour (Jardingue, Mon Potager, Grainly, Planter, Gardroid,
@@ -800,4 +809,9 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   [conditions](docs/front-architecture.md#conditions-dutilisation-dopen-meteo).
 
 - **E-mail pro dans l'historique Git.** Le dépôt est public et ses premiers commits portent
-  l'adresse professionnelle. Option : réécrire l'historique puis forcer le push.
+  l'adresse professionnelle. Réécrire l'historique ne suffit pas : deux commits orphelins depuis le force-push du
+  17/10/2026 se lisent encore, et les `refs/pull/*` restent. Voir [l'audit](docs/audit-securite.md#ce-que-maxime-doit-décider).
+
+- **Protéger `main`.** Aucune règle ne protège la branche, et des agents y travaillent avec un jeton aux droits
+  étendus. Interdire le force-push, exiger la CI, et activer la double authentification sur GitHub et Expo :
+  voir [l'audit](docs/audit-securite.md#ce-que-maxime-doit-décider).
