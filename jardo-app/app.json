@@ -43,7 +43,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "dark": {
-            "backgroundColor": "#092328",
+            "backgroundColor": "#0B0E13",
             "image": "./assets/images/splash-icon-dark.png"
           }
         }

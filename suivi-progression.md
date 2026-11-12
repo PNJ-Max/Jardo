@@ -19,6 +19,14 @@ de parcelle avant l'arrivée des zones, ce qui faisait échouer la CI sur une ma
 - **Défaut à corriger, signalé dans la PR** : la carte des réglages perd ses parcelles si on enregistre
   avant l'arrivée des zones ou si leur lecture échoue (`toMapInput` ignore les zones inconnues).
 
+**Thème de nuit : Lanterne.** Maxime n'aimait ni le sombre sarcelle ni son vert. Parmi
+[trois directions](https://claude.ai/artifact/5ai51S4zeZPKyM1DnUXTNY), il a retenu Lanterne : un fond
+presque noir, des boutons ambre, la couleur des fenêtres allumées de la carte.
+- **Changé** : les jetons sombres (`src/theme/colors.ts`), la nuit de la carte et des vignettes, celle
+  des pictogrammes, l'écran de démarrage sombre. [La charte](docs/charte-graphique.md) donne les contrastes, tous au-dessus de 6,5:1.
+- **Pas changé** : le thème clair, qui garde son vert : Maxime l'a confirmé le 06/11.
+- **Reste à vérifier** : le rendu sur un vrai téléphone, surtout dans le noir, et le splash sombre, qui n'a été vu qu'en image.
+
 **Benchmark des concurrents mis à jour (05/11/2026).** [`docs/benchmark-concurrents.md`](docs/benchmark-concurrents.md)
 situe Jardo tel qu'il est, avant la V1 des testeurs. Doc seule, aucun changement de code.
 - **Relevés** : six fiches Google Play du jour (Jardingue, Mon Potager, Grainly, Planter, Gardroid,
