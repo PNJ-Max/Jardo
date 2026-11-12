@@ -97,6 +97,17 @@ d'exemple, les tests et les docs disent maintenant « parcelle ». « Zone » et
 changent pas, pas plus que « mètre carré » ni la méthode du « jardin en carrés ». Les noms déjà
 enregistrés dans un jardin restent ce qu'ils sont : ils appartiennent à l'utilisateur.
 
+**Audit de sécurité : ce qu'une autre app peut déclencher (05/11/2026).** Aucune écriture sans geste, mais
+trois portes à fermer. Reste à constater sur l'APK.
+- **Le plan des écrans** : Expo Router génère une route `_sitemap`, joignable par `jardo:///_sitemap`. Son
+  code lit `window.location`, absent sur un téléphone : sous Jest, l'écran lève une `TypeError`. `app.json`
+  passe `sitemap: false`, et le lien mène à l'écran « route introuvable », en anglais, qui existait déjà.
+- **Le toucher d'un rappel** : expo-notifications fait une réponse de tout intent qui porte
+  `google.message_id`, et ses extras en deviennent les données. `onReminderOpened` naviguait vers le `href`
+  reçu, y compris vers une adresse externe. Il n'ouvre plus qu'Aujourd'hui.
+- **L'assistant** : un lien `jardo:///setup/spaces` l'ouvrait sur un jardin déjà rempli, où un toucher
+  remplaçait le modèle et effaçait tout le placement. `setup` refuse quand une carte est posée.
+
 **Catalogue d'espèces, PR 4 : choisir l'espèce (04/11/2026).** Le champ « Espèce » du formulaire de
 plante ouvre une feuille de recherche dans le catalogue, qui propose sans imposer.
 - **Feuille** : avant la frappe, « En ce moment » (semis ou plantation cette quinzaine ou la suivante,
