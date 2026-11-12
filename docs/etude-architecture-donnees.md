@@ -129,7 +129,8 @@ mais il ne sauvegarde rien. Et dans tous les cas, l'app ne marche pas sans rése
    comptes.
 2. Le hors-connexion fait partie de la structure, au lieu d'être une couche de cache ajoutée
    au-dessus.
-3. « Aucune donnée collectée » devient un argument, comme chez Jardingue.
+3. « Aucune donnée collectée » devient un argument, comme chez Jardingue. La météo a depuis changé la
+   réponse : voir l'[étude légale](etude-legale.md).
 4. Tout un chantier disparaît : hébergement, comptes, suppression de compte, sécurité d'une API
    exposée, migrations sur un serveur, surveillance.
 5. Les notifications, prochaine étape de la [feuille de route](vision-produit.md#étapes-suivantes),
@@ -216,7 +217,7 @@ renvoient.
 | Export partagé à n'importe qui | L'envoi est voulu par l'utilisateur, donc exempté de la déclaration de partage. Le fichier contient tout le jardin : l'écran d'export le dit |
 | Import d'un fichier abîmé ou trafiqué | Vérifier la version, le schéma et les règles métier avant d'écrire ; tout dans une transaction, refus en bloc |
 | Secret dans l'APK | Aucun n'est nécessaire. Toute variable `EXPO_PUBLIC_*` est lisible dans l'APK |
-| Formulaire « sécurité des données » | « Aucune donnée collectée ni partagée » tant que rien ne quitte l'appareil : ni statistiques d'usage, ni rapport de plantage envoyé (Sentry ou Crashlytics changeraient la réponse). L'export est un envoi voulu par l'utilisateur, vers son propre espace : Google l'exempte explicitement. La sauvegarde automatique, l'app n'y accède pas, mais l'[aide de Google](https://support.google.com/googleplay/android-developer/answer/10787469) n'en parle pas : à confirmer en remplissant le formulaire. La politique de confidentialité reste exigée |
+| Formulaire « sécurité des données » | **Dépassé depuis la météo : voir l'[étude légale](etude-legale.md#4-ce-que-google-demande).** « Aucune donnée collectée ni partagée » tant que rien ne quitte l'appareil : ni statistiques d'usage, ni rapport de plantage envoyé (Sentry ou Crashlytics changeraient la réponse). L'export est un envoi voulu par l'utilisateur, vers son propre espace : Google l'exempte explicitement. La sauvegarde automatique, l'app n'y accède pas, mais l'[aide de Google](https://support.google.com/googleplay/android-developer/answer/10787469) n'en parle pas : à confirmer en remplissant le formulaire. La politique de confidentialité reste exigée |
 
 ### Quand la synchronisation viendra
 
