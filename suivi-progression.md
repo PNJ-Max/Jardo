@@ -36,6 +36,12 @@ rien qui empêche d'envoyer l'APK à des proches une fois sa liste de contrôle 
 - **À décider** : protéger `main`, et que faire de l'adresse professionnelle dans l'historique. Voir « À décider ».
 - **Limite** : ni téléphone ni Hermes. Une liste de contrôle attend le premier APK.
 
+**Étude légale (05/11/2026).** Une app sans serveur est légale, et le choix reste bon pour une V1 :
+[étude](docs/etude-legale.md) et [brouillon de politique de confidentialité](docs/politique-de-confidentialite.md),
+sans relecture d'un juriste. Depuis la météo, « aucune donnée collectée » n'est plus exact : la ville,
+ses coordonnées et l'adresse IP partent vers Open-Meteo quand l'utilisateur choisit une ville. La
+feuille de route ci-dessous est réécrite autour de la V1 pour les testeurs.
+
 **Benchmark des concurrents mis à jour (05/11/2026).** [`docs/benchmark-concurrents.md`](docs/benchmark-concurrents.md)
 situe Jardo tel qu'il est, avant la V1 des testeurs. Doc seule, aucun changement de code.
 - **Relevés** : six fiches Google Play du jour (Jardingue, Mon Potager, Grainly, Planter, Gardroid,
@@ -757,50 +763,40 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 ## Feuille de route
 
-**Phase 0 : socle**
-- `CLAUDE.md`, poste de développement (.NET 10, Rider, GitHub CLI), lancement API + front.
+**Fait.** L'app locale sur le téléphone, le jardin et ses espaces, le journal, les tâches, la carte
+isométrique et son assistant, le design « jardin dessiné », la météo, les rappels locaux, la sauvegarde
+et le catalogue d'espèces complet (63 fiches, Conseils, climat, rappels proposés).
 
-**Phase 1 : en parallèle**
-- A. Nettoyage professionnel de l'API (commentaires, README).
-- B. Charte graphique : 2-3 directions, choix, puis `docs/charte-graphique.md` et `theme.ts`. Fait.
+**Avant la V1 pour les testeurs, dans l'ordre :**
 
-**Phase 2 : fondations du front**
-- Application de la charte, composants, mode sombre, icône et splash, retrait des
-  dépendances inutiles. Fait. Sélecteur de date fait avec le socle des écrans.
+1. **Premier APK sur un vrai téléphone**, le plus gros risque : rien n'a encore tourné sur un appareil.
+   Maxime crée son compte Expo ([guide](docs/guide-apk-test.md)), puis on corrige ce qu'on découvre.
+2. **Le thème de nuit**, demandé par Maxime : plus sombre, qui évoque la nuit. Trois directions attendent
+   son choix.
+3. **La relecture du catalogue** par un jardinier, et les décisions de
+   [l'étude du catalogue](docs/etude-catalogue-especes.md), fusionné sans cette relecture.
+4. **Écarter une proposition de rappel** : aujourd'hui, une proposition reste sur la fiche tant qu'elle
+   n'est pas ajoutée.
 
-**Phase 3 : vision et modèle du jardin**
-- Vision produit et proposition de modèle du domaine. Fait.
-- API, une PR par étape ([détail](docs/modele-domaine.md#stratégie-de-migration)) :
-  1. jardin, espaces typés, zones, plantes avec variété et quantité. Fait ;
-  2. journal d'interventions unifié. Fait ;
-  3. tâches récurrentes et calculateur d'échéance générique (l'arrosage en devient une). Fait ;
-  4. tas de bois de chauffage, stock et séchage calculés. Fait. La phase est terminée.
+Les testeurs sont des proches : ils reçoivent l'APK par lien, sans compte Play et sans rien payer.
 
-**Phase 4 : écrans du nouveau MVP**
-- Refonte des écrans sur la charte actuelle (le design est repris en phase 6) : onglets Jardin (accueil) · Aujourd'hui · Journal, espaces, fiches,
-  formulaires avec sélecteur de date. Socle fait (B1) ; restent les fiches détaillées et les
-  formulaires complets.
+**Avant le Play Store :**
 
-**Phase 5 : qualité**
-- CI GitHub Actions. Fait.
-- Types du front générés depuis l'OpenAPI. Fait.
-- Tests du front.
+- **Le légal** ([étude](docs/etude-legale.md#7-à-faire-dans-lordre)) : statut professionnel ou non,
+  politique publiée, lien dans l'app, vérification des permissions sur l'APK.
+- **Le compte Google Play** et le test interne.
 
-**Phase 6 : après le MVP**
-- Refonte du design en premier : charte (couleurs, mode sombre), typographie, boutons, une
-  interface plus vivante, avec des skills de design (frontend-design). Direction fixée le 26/10
-  ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)) ; mise en œuvre en neuf PR.
-- Carte isométrique dans l'onglet Jardin (premier chantier, [étapes](docs/etude-carte-potager.md#étapes-livrables)),
-  notifications, récoltes chiffrées, photos,
-  catalogue d'espèces ([étude](docs/etude-catalogue-especes.md#7-plan-de-mise-en-œuvre)), autres
-  types d'espaces, météo, foyer partagé.
+**Ensuite :**
 
-**Phase 7 : vers le Play Store**
-- Test sur téléphone (Expo Go), données sur le téléphone ([migration en sept PR](docs/etude-architecture-donnees.md#plan-de-migration)),
-  APK pour la famille par EAS ([dépôt prêt, guide](docs/guide-apk-test.md) ; premier build à lancer par Maxime),
-  puis fiche Play Store.
+- Le test fermé (12 testeurs pendant 14 jours), puis la fiche publique et sa relecture par un juriste.
+- Selon les retours : photos, récoltes chiffrées, grille de plantation, foyer partagé, iOS.
 
 ## À décider
+
+- **Quel modèle payant ?** Maxime veut gagner de l'argent si l'app marche, par exemple une version
+  gratuite limitée et une version premium. Le modèle se choisira après les retours des testeurs.
+  Avant le compte Play, faire trancher le statut « professionnel » : un compte personnel affiche alors
+  son adresse et son téléphone. Voir l'[étude légale](docs/etude-legale.md#une-offre-payante).
 
 - **Météo pour une version commerciale.** L'API gratuite d'Open-Meteo exclut les apps avec
   abonnement ou publicité. Avant une telle version : un abonnement Open-Meteo (API Standard, environ
