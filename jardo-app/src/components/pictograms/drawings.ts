@@ -15,13 +15,13 @@ export type Mark =
   /** Halo de nuit, comme celui des fenêtres allumées de la carte. */
   | { kind: 'glow'; cx: number; cy: number; r: number; color: string };
 
-const INK: Record<ColorScheme, string> = { light: '#2E4A31', dark: '#CFE3D1' };
+const INK: Record<ColorScheme, string> = { light: '#2E4A31', dark: '#E6E0D2' };
 const INK_WIDTH = 1.6;
 
 const day = createKit(false).pal;
 // La nuit de la carte est trop profonde pour un objet de 32 posé sur une tuile sombre : ses
 // remplissages s'y éteignaient. Même teinte nocturne, moins appuyée.
-const dusk = (c: string) => mix(desaturate(c, 0.2), '#0A2B31', 0.3);
+const dusk = (c: string) => mix(desaturate(c, 0.25), '#14171D', 0.25);
 const palettes: Record<ColorScheme, Palette> = {
   light: day,
   dark: Object.fromEntries(Object.entries(day).map(([k, v]) => [k, dusk(v)])) as Palette,

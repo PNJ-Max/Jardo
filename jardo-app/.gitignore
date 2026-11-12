@@ -17,6 +17,19 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.keystore
+
+# Signing and publishing credentials: credentials.json holds passwords in clear text
+credentials.json
+credentials/
+google-services.json
+GoogleService-Info.plist
+*service-account*.json
+pc-api-*.json
+
+# Build outputs
+*.apk
+*.aab
 
 # Metro
 .metro-health-check*
@@ -32,6 +45,8 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo

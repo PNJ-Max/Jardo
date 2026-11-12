@@ -193,6 +193,20 @@ describe('toucher un rappel', () => {
     expect(router.navigate).toHaveBeenCalledWith('/today');
   });
 
+  // expo-notifications fait une « réponse » de tout intent qui porte `google.message_id`, ses extras
+  // devenant `data` : n'importe quelle app, ou une page web par un lien intent://, en choisit le contenu.
+  it.each(['https://exemple.test/', 'tel:+3200000000', '/settings', '/space/../settings', 42, null])(
+    "n'ouvre rien d'autre qu'Aujourd'hui, même si la réponse le demande (%s)",
+    async (href) => {
+      await renderScreen(<Reminders />);
+      const [[listener]] = (Notifications.addNotificationResponseReceivedListener as jest.Mock).mock.calls;
+
+      await act(async () => listener({ notification: { request: { content: { data: { href } } } } }));
+
+      expect(router.navigate).not.toHaveBeenCalled();
+    },
+  );
+
   it("ouvre Aujourd'hui quand le rappel a lancé l'app", async () => {
     (Notifications.getLastNotificationResponse as jest.Mock).mockReturnValueOnce(response);
 

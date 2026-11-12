@@ -67,10 +67,15 @@ npx eas-cli@latest build --platform android --profile preview
 - À la **première** build Android, EAS propose de **générer une clé de signature** (keystore) :
   accepte. Elle est gardée sur les serveurs d'Expo. **C'est elle qui identifie ton app** : un APK
   signé avec une autre clé ne peut pas mettre à jour un APK déjà installé. Pour la télécharger en
-  sauvegarde : `npx eas-cli@latest credentials`. Ne la commite jamais dans le dépôt.
+  sauvegarde : `npx eas-cli@latest credentials`. Ne la commite jamais dans le dépôt : Git ignore les
+  fichiers de clé et `credentials.json`, qui porte les mots de passe en clair. Range la copie hors du
+  dossier du projet.
 - Le build se déroule dans le cloud ; la commande attend la fin (tu peux l'interrompre, il continue :
   `npx eas-cli@latest build:list` ou le tableau de bord sur <https://expo.dev>).
 - À la fin, EAS affiche l'adresse de la page du build, avec le lien de téléchargement de l'APK.
+
+Avant de l'envoyer à quelqu'un, passer le premier APK à la
+[liste de contrôle de l'audit de sécurité](audit-securite.md#à-vérifier-sur-un-apk).
 
 ## 5. L'installer chez les proches
 

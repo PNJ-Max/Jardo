@@ -200,6 +200,10 @@ export function createGardenMapService(db: Db, clock: Clock) {
       }
 
       await db.transaction(async () => {
+        // L'assistant ne s'offre qu'à un jardin sans carte, mais un lien l'ouvre sur n'importe lequel :
+        // un seul toucher y effacerait tout le placement.
+        if ((await get()).layout !== null) throw businessRule('La carte est déjà dessinée : elle se modifie dans Réglages.');
+
         const garden = await gardenId(db);
         const createdAt = clock().toISOString();
         const slots: GardenMapSlotInput[] = [];

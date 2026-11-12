@@ -50,6 +50,16 @@ describe('réglages, météo', () => {
     await expect(AsyncStorage.getItem('jardo.weatherPlace')).resolves.toBeNull();
   });
 
+  it('reste debout quand le géocodage renvoie un nom qui n’est pas un texte', async () => {
+    fetchMock.mockImplementationOnce(respond({ results: [{ name: { fr: 'Objet' }, latitude: 1, longitude: 2 }] }));
+    await renderScreen(<SettingsScreen />);
+
+    await fireEvent.changeText(await screen.findByLabelText('Ville'), 'Xyzzy');
+    await fireEvent.press(screen.getByText('Chercher la ville'));
+
+    expect(await screen.findByText('Aucune ville trouvée pour « Xyzzy ».')).toBeOnTheScreen();
+  });
+
   it('dit quand aucune ville ne correspond, et quand le réseau manque', async () => {
     fetchMock.mockImplementationOnce(respond({}));
     await renderScreen(<SettingsScreen />);
