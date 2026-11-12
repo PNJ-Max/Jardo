@@ -63,8 +63,18 @@ const woodPileColumns = ['wood_species', 'initial_steres', 'log_length_cm', 'cut
 const itemLabel = (item: Item) =>
   `${item.item_type === 'WoodPile' ? 'Tas de bois' : item.item_type === 'Plant' ? 'Plante' : 'Élément'} « ${item.name} »`;
 
+/**
+ * Les lectures lient un paramètre par espace et par tas de bois, et SQLite en refuse plus de 32 766 :
+ * au-delà, ces écrans échoueraient jusqu'au prochain import. 20 Mo suffisent à dépasser ce nombre.
+ */
+export const maxBoundRows = 30_000;
+
 /** Vérifie tout le contenu d'un export ; la première règle enfreinte refuse le fichier entier. */
 export function checkBackupRules(tables: BackupTables): void {
+  if (tables.spaces.length > maxBoundRows || tables.garden_items.length > maxBoundRows) {
+    throw invalidBackup("Ce fichier contient trop d'espaces ou d'éléments pour être un export de Jardo.");
+  }
+
   const [garden, ...otherGardens] = tables.gardens;
   if (!garden || otherGardens.length > 0) throw invalidBackup('Le fichier doit contenir un et un seul jardin.');
   if (!isUuid(garden.id)) throw invalidBackup("L'identifiant du jardin n'est pas valable.");
@@ -201,11 +211,17 @@ export function checkBackupRules(tables: BackupTables): void {
     });
   }
 
+  const movementsByPile = new Map<Id, { kind: JournalEntryKind; steres: number }[]>();
+  for (const entry of tables.journal_entries) {
+    const kind = entry.kind as JournalEntryKind;
+    if (entry.item_id === null || !isWoodKind(kind)) continue;
+    const movements = movementsByPile.get(entry.item_id) ?? [];
+    movements.push({ kind, steres: entry.quantity ?? 0 });
+    movementsByPile.set(entry.item_id, movements);
+  }
+
   for (const pile of tables.garden_items.filter((item) => item.item_type === 'WoodPile')) {
-    const movements = tables.journal_entries
-      .filter((entry) => entry.item_id === pile.id && isWoodKind(entry.kind as JournalEntryKind))
-      .map((entry) => ({ kind: entry.kind as JournalEntryKind, steres: entry.quantity ?? 0 }));
-    const stock = remainingSteres(pile.initial_steres as number, movements);
+    const stock = remainingSteres(pile.initial_steres as number, movementsByPile.get(pile.id) ?? []);
     if (stock < 0) {
       throw invalidBackup(`${itemLabel(pile)} : le journal fait passer son stock sous zéro, à ${stock} stères.`);
     }
