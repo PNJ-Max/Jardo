@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Clock } from '@/data/clock';
 import { loadForecast, readPlace, requestTimeoutMs, savePlace, searchPlaces } from '@/lib/forecast';
-import { forecastAge } from '@/lib/weather';
+import { forecastAge, todayWeather } from '@/lib/weather';
 
 import { goOffline, namur, openMeteoDaily, respond } from '../../test/weather';
 
@@ -102,6 +102,49 @@ describe('prévision', () => {
   });
 });
 
+describe('réponse inattendue du réseau', () => {
+  const clock = at('2026-10-30T09:00:00');
+  const answered = async (change: (body: any) => void) => {
+    const body = openMeteoDaily('2026-10-29');
+    change(body);
+    fetchMock.mockImplementationOnce(respond(body));
+    return (await loadForecast(namur, clock))!;
+  };
+
+  it.each([
+    ['un code de temps __proto__', (body: any) => (body.daily.weather_code[1] = '__proto__')],
+    ['un code de temps constructor', (body: any) => (body.daily.weather_code[1] = 'constructor')],
+    ['une température en texte', (body: any) => (body.daily.temperature_2m_min[1] = 'x')],
+    ['une température infinie', (body: any) => (body.daily.temperature_2m_max[1] = Infinity)],
+    ['une date qui n’est pas un texte', (body: any) => (body.daily.time[1] = 12)],
+    ['une date mal écrite', (body: any) => (body.daily.time[1] = 'x'.repeat(5000))],
+  ])('omet le jour qui porte %s', async (_, change) => {
+    const forecast = await answered(change);
+
+    expect(forecast.days).toHaveLength(7);
+    expect(() => todayWeather(forecast, clock)).not.toThrow();
+    expect(JSON.parse((await AsyncStorage.getItem('jardo.forecast'))!).days).toHaveLength(7);
+  });
+
+  it('compte sans pluie un cumul qui n’est pas un nombre', async () => {
+    const forecast = await answered((body) => (body.daily.precipitation_sum[1] = { mm: 8 }));
+
+    expect(forecast.days[1].rainMm).toBe(0);
+  });
+
+  it('ne garde pas plus que les huit jours demandés', async () => {
+    const forecast = await answered((body) => {
+      body.daily.time = Array.from({ length: 5000 }, () => '2026-10-30');
+      body.daily.weather_code = body.daily.time.map(() => 0);
+      body.daily.temperature_2m_min = body.daily.time.map(() => 1);
+      body.daily.temperature_2m_max = body.daily.time.map(() => 2);
+      body.daily.precipitation_sum = body.daily.time.map(() => 0);
+    });
+
+    expect(forecast.days).toHaveLength(8);
+  });
+});
+
 describe('ville', () => {
   it('cherche les villes en français, avec leur région et leur pays', async () => {
     fetchMock.mockImplementationOnce(
@@ -115,6 +158,36 @@ describe('ville', () => {
   it("sans résultat, la liste est vide", async () => {
     fetchMock.mockImplementationOnce(respond({ generationtime_ms: 0.4 }));
     await expect(searchPlaces('Xyzzy')).resolves.toEqual([]);
+  });
+
+  it('écarte une ville illisible, sans perdre les autres', async () => {
+    fetchMock.mockImplementationOnce(
+      respond({
+        results: [
+          { name: 'Piège', latitude: '1&past_days=92', longitude: 2 },
+          { name: 'Hors du globe', latitude: 95, longitude: 2 },
+          { name: 'Sans longitude', latitude: 1 },
+          { name: { fr: 'Objet' }, latitude: 1, longitude: 2 },
+          { name: 'x'.repeat(5000), latitude: 1, longitude: 2 },
+          null,
+          { name: 'Namur', latitude: 50.4669, longitude: 4.86746, admin1: 3, country: 'Belgique' },
+        ],
+      }),
+    );
+
+    await expect(searchPlaces('x')).resolves.toEqual([{ ...namur, region: null }]);
+  });
+
+  it.each([[{ results: { length: 2 } }], [{ results: 'Namur' }], [null]])('ne voit aucune ville dans la réponse %j', async (body) => {
+    fetchMock.mockImplementationOnce(respond(body));
+
+    await expect(searchPlaces('x')).resolves.toEqual([]);
+  });
+
+  it('ne garde pas plus de villes que demandé', async () => {
+    fetchMock.mockImplementationOnce(respond({ results: Array.from({ length: 5000 }, () => ({ name: 'Namur', latitude: 50, longitude: 4 })) }));
+
+    await expect(searchPlaces('x')).resolves.toHaveLength(8);
   });
 
   it('retirer la ville retire sa prévision gardée', async () => {

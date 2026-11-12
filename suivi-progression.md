@@ -84,6 +84,13 @@ du catalogue suivent le climat choisi dans Réglages.
 - **Pas vérifié sur téléphone** : la migration sur une vraie base, le toucher de « Changer », TalkBack.
 - **Captures** : branche `captures/climat-jardin`.
 
+**Audit de sécurité : les réponses d'Open-Meteo (05/11/2026).** `lib/forecast.ts` croyait la réponse
+sur parole. Un code de temps `__proto__` faisait tomber Aujourd'hui, et restait gardé trois heures ; un
+nom de ville qui n'est pas un texte faisait tomber Réglages ; une latitude en texte s'ajoutait telle
+quelle à l'URL suivante. Ce qui n'a pas la forme attendue est désormais écarté, ville par ville et jour
+par jour, sans perdre le reste : au plus 8 villes et 8 jours, les nombres sont des nombres finis, les
+coordonnées restent sur le globe.
+
 **Vocabulaire : « parcelle » plutôt que « carré » (04/11/2026).** « Carré » seul n'était pas assez
 explicite. Les textes de l'app, les noms par défaut (« Parcelle 1 » à « Parcelle 4 »), le jardin
 d'exemple, les tests et les docs disent maintenant « parcelle ». « Zone » et l'identifiant `Zone` ne
