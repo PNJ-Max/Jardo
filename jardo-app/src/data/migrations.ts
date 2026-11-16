@@ -162,14 +162,32 @@ export class NewerDatabaseError extends Error {
   }
 }
 
-/** Amène la base à la dernière version, une migration par transaction. */
+/**
+ * Amène la base à la dernière version, une migration par transaction.
+ *
+ * Les clés étrangères sont coupées le temps des migrations, comme SQLite le demande pour recréer
+ * une table : actives, `DROP TABLE` supprime d'abord les lignes, ce qui emporte celles des tables
+ * filles (CASCADE) ou échoue (RESTRICT). Le réglage ne change pas dans une transaction : il se fait
+ * avant, et l'appelant les réactive ensuite. En échange, une migration qui laisse une ligne sans son
+ * parent est annulée.
+ */
 export async function migrate(db: Db, scripts: readonly string[] = migrations): Promise<void> {
   const current = (await db.first<{ user_version: number }>('PRAGMA user_version'))?.user_version ?? 0;
   if (current > scripts.length) throw new NewerDatabaseError(current, scripts.length);
+  if (current === scripts.length) return;
+
+  await db.exec('PRAGMA foreign_keys = OFF');
 
   for (let version = current + 1; version <= scripts.length; version++) {
     await db.transaction(async () => {
       await db.exec(scripts[version - 1]);
+
+      const orphans = await db.all<{ table: string }>('PRAGMA foreign_key_check');
+      if (orphans.length > 0) {
+        const tables = [...new Set(orphans.map((orphan) => orphan.table))].join(', ');
+        throw new Error(`La migration ${version} laisse des lignes sans leur parent dans : ${tables}.`);
+      }
+
       await db.exec(`PRAGMA user_version = ${version}`);
     });
   }
