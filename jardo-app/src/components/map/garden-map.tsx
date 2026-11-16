@@ -68,7 +68,7 @@ function OffMapBand({ map }: { map: GardenMap }) {
   const styles = useStyles();
   const spaces = useSpaces(true);
   const zones = useZonesOf(mappedVegetableGardens(map));
-  const targets = spaces.data ? offMapTargets(map, spaces.data, zones) : [];
+  const targets = spaces.data ? offMapTargets(map, spaces.data, zones.data ?? []) : [];
 
   if (targets.length === 0) return null;
 

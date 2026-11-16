@@ -28,24 +28,25 @@ export default function GardenMapScreen() {
   const vegetableGardens = (spaces.data ?? []).filter((space) => space.kind === 'VegetableGarden').map((space) => space.id);
   const zones = useZonesOf(vegetableGardens);
 
-  if (!map.data || !spaces.data) {
+  // Les zones aussi : enregistrer sans elles retirerait de la carte les parcelles déjà placées.
+  if (!map.data || !spaces.data || !zones.data) {
     return (
       <FormPending
         title={title}
-        error={map.error ?? spaces.error}
-        onRetry={() => Promise.all([map.refetch(), spaces.refetch()])}
+        error={map.error ?? spaces.error ?? zones.error}
+        onRetry={() => Promise.all([map.refetch(), spaces.refetch(), zones.refetch()])}
       />
     );
   }
 
-  return <GardenMapForm map={map.data} spaces={spaces.data} zones={zones} />;
+  return <GardenMapForm map={map.data} spaces={spaces.data} zones={zones.data} />;
 }
 
 function GardenMapForm({ map, spaces, zones }: { map: GardenMap; spaces: Space[]; zones: Zone[] }) {
   const styles = useStyles();
   const save = useSaveGardenMap();
   const [layout, setLayout] = useState<DrawnLayout>(isDrawn(map.layout) ? map.layout : countryHouse);
-  // Les zones arrivent après les espaces : tant qu'on n'a rien touché, le placement suit les données.
+  // Tant qu'on n'a rien touché, le placement suit les données.
   const [edited, setEdited] = useState<Placement | null>(null);
   const placement = edited ?? (map.layout === null ? suggestPlacement(spaces, zones) : placementOf(map));
   const choices = slotChoices(spaces, zones);
