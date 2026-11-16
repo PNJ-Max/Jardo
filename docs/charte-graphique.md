@@ -7,18 +7,18 @@ téléphone, ou celui choisi dans les réglages de l'app.
 
 ## Intention
 
-Un jardin vivant et bien tenu : des verts francs le jour, un sarcelle profond la nuit. L'app doit
+Un jardin vivant et bien tenu : des verts francs le jour, la nuit un fond presque noir éclairé par la lueur des fenêtres. L'app doit
 être claire, douce et lisible d'un coup d'œil, avec une seule famille de police, ronde et
-chaleureuse. Charte validée par Maxime le 19/10/2026 sur le [nuancier](https://claude.ai/artifact/H354z7w8rjn3QVyyTvAeAv).
+chaleureuse. Charte validée par Maxime le 19/10/2026 sur le [nuancier](https://claude.ai/artifact/H354z7w8rjn3QVyyTvAeAv). Le thème de nuit, Lanterne, a été choisi par Maxime le 05/11/2026 parmi [trois directions](https://claude.ai/artifact/5ai51S4zeZPKyM1DnUXTNY).
 
 ## Palettes d'origine
 
-Deux palettes Color Hunt : une verte pour le thème clair, une sarcelle pour le thème sombre.
+Le thème clair part d'une palette Color Hunt verte. Le thème sombre part de la lueur des fenêtres de la carte.
 
 | Thème | Couleurs | Usage |
 |---|---|---|
 | Clair | `#E8F5E9` · `#A5D6A7` · `#66BB6A` · `#1B5E20` | Le vert foncé porte le texte et les actions ; les deux verts moyens (2,4:1 sur blanc) restent décoratifs |
-| Sombre | `#092328` · `#12544F` · `#2A835F` · `#8BBB92` | Fond sarcelle presque noir, cartes et bordures sarcelle, sauge pour les actions |
+| Sombre | `#0B0E13` · `#171B22` · `#2C323C` · `#F4C76F` | Fond presque noir, cartes et bordures à peine plus claires, ambre pour les actions ; le vert ne dit plus que « à jour » |
 
 ## Jetons du thème clair
 
@@ -110,7 +110,7 @@ produit les SVG. Pas de texte : la silhouette doit rester lisible à 48 dp.
 | Grande feuille | `#5EA864` (`leaf`) |
 | Petite feuille | `#A5D6A7` (`leafLight`, le vert moyen de la palette claire) |
 | Fond du splash clair | `#F6FAF6`, le `background` clair |
-| Fond du splash sombre | `#092328`, le `background` sombre ; le motif y garde les teintes du jour, passées de 15 % vers ce fond |
+| Fond du splash sombre | `#0B0E13`, le `background` sombre ; le motif y garde les teintes du jour, passées de 15 % vers ce fond |
 
 - Sources SVG dans [`jardo-app/assets/source/`](../jardo-app/assets/source/), avec la commande de régénération des PNG
   et un [aperçu](../jardo-app/assets/source/apercu.png) sous les masques des lanceurs.
@@ -124,31 +124,45 @@ produit les SVG. Pas de texte : la silhouette doit rester lisible à 48 dp.
 L'app suit le réglage du téléphone (`userInterfaceStyle: "automatic"`), sauf si l'on choisit
 Clair ou Sombre dans ses réglages. Contrastes mesurés
 sur le fond et sur la carte. Les aplats (`primary`, `water`, `danger`) y sont clairs : le
-texte posé dessus est le fond sarcelle (`primaryText`), pas du blanc.
+texte posé dessus est le fond (`primaryText`), pas du blanc.
 
 | Jeton | Valeur | Contraste |
 |---|---|---|
-| `background` | `#092328` | |
-| `card` | `#0F3A3C` | |
-| `border` | `#12544F` | |
-| `text` | `#E8F5E9` | 14,6:1 / 11:1 |
-| `textMuted` | `#8BBB92` | 7,5:1 / 5,7:1 |
-| `primary` | `#8BBB92` | 7,5:1 avec `primaryText` |
-| `primaryText` | `#092328` | 7:1 sur `water`, 6,1:1 sur `danger`, 8,8:1 sur `soil` |
-| `leaf` · `leafPale` | `#2A835F` · `#12544F` | Décor |
-| `success` | `#8BBB92` | 5,3:1 sur `successTint` |
-| `successTint` | `#123F3E` | |
-| `water` | `#7FB0CC` | 7:1 / 5,3:1, 5,1:1 sur `waterTint` |
-| `waterTint` | `#133B4C` | |
-| `danger` | `#E8826F` | 6,1:1 / 4,6:1, 4,9:1 sur `dangerTint` |
-| `dangerTint` | `#4A2620` | |
-| `surfaceSunken` | `#0C2E32` | `text` 12,9:1, `textMuted` 6,6:1 |
-| `tile` | `#164441` | 5:1 avec `primary` |
-| `soil` | `#D9B98F` | 8,8:1 sur le fond, 6,7:1 sur la carte, 7:1 sur `soilTint` |
-| `soilTint` | `#3A2F24` | |
-| `glow` | `#F4C76F` | Décor |
-| `lawn` | `#1D4A41` | Décor, 4,6:1 avec `primary` |
-| `skyTop` | `#03141A` | 8,6:1 avec `textMuted` |
+| `background` | `#0B0E13` | |
+| `card` | `#171B22` | |
+| `border` | `#2C323C` | |
+| `text` | `#F4EFE4` | 16,9:1 / 15,1:1 |
+| `textMuted` | `#B0AB9D` | 8,4:1 / 7,5:1 |
+| `primary` | `#F4C76F` | 12,2:1 / 10,9:1, 12,2:1 avec `primaryText` |
+| `primaryText` | `#0B0E13` | 10,3:1 sur `water`, 8,7:1 sur `danger`, 11,4:1 sur `soil` |
+| `leaf` · `leafPale` | `#B08A3E` · `#2C323C` | Décor |
+| `success` | `#8FD3A5` | 11,1:1 / 9,9:1, 8,1:1 sur `successTint` |
+| `successTint` | `#16302A` | |
+| `water` | `#8CC4E8` | 10,3:1 / 9,2:1, 7,3:1 sur `waterTint` |
+| `waterTint` | `#15303F` | |
+| `danger` | `#FF8F7F` | 8,7:1 / 7,8:1, 6,6:1 sur `dangerTint` |
+| `dangerTint` | `#40201C` | |
+| `surfaceSunken` | `#11141A` | `text` 16,1:1, `textMuted` 8:1 |
+| `tile` | `#232832` | 9,3:1 avec `primary` |
+| `soil` | `#DCC3A2` | 11,4:1 sur le fond, 10,2:1 sur la carte, 8,2:1 sur `soilTint` |
+| `soilTint` | `#332B22` | |
+| `glow` | `#F4C76F` | Décor, la même teinte que `primary` |
+| `lawn` | `#3A3220` | Décor, 8:1 avec `primary` |
+| `skyTop` | `#05070B` | 8,8:1 avec `textMuted` |
+
+### La carte et les pictogrammes, la nuit
+
+Les teintes de la carte se dérivent du jour par programme (`night` dans `map/decor.ts`), et celles
+des pictogrammes par `dusk` (`pictograms/drawings.ts`) :
+
+| Dessin | Saturation retirée | Mélange vers | Part du mélange |
+|---|---|---|---|
+| Jardin | 60 % | `#0B0E13` | 68 % |
+| Décor autour du jardin | 45 % de plus | `#0B0E13` | 55 % de plus |
+| Pictogrammes | 25 % | `#14171D` | 25 % |
+
+Le jardin s'efface et la maison éclairée sert de repère : fenêtres et lucioles gardent leur ambre.
+Les pictogrammes restent plus clairs que la carte, pour rester lisibles sur leur tuile, avec une encre `#E6E0D2`.
 
 ## Accessibilité
 

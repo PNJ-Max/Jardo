@@ -129,7 +129,8 @@ mais il ne sauvegarde rien. Et dans tous les cas, l'app ne marche pas sans rése
    comptes.
 2. Le hors-connexion fait partie de la structure, au lieu d'être une couche de cache ajoutée
    au-dessus.
-3. « Aucune donnée collectée » devient un argument, comme chez Jardingue.
+3. « Aucune donnée collectée » devient un argument, comme chez Jardingue. La météo a depuis changé la
+   réponse : voir l'[étude légale](etude-legale.md).
 4. Tout un chantier disparaît : hébergement, comptes, suppression de compte, sécurité d'une API
    exposée, migrations sur un serveur, surveillance.
 5. Les notifications, prochaine étape de la [feuille de route](vision-produit.md#étapes-suivantes),
@@ -216,7 +217,7 @@ renvoient.
 | Export partagé à n'importe qui | L'envoi est voulu par l'utilisateur, donc exempté de la déclaration de partage. Le fichier contient tout le jardin : l'écran d'export le dit |
 | Import d'un fichier abîmé ou trafiqué | Vérifier la version, le schéma et les règles métier avant d'écrire ; tout dans une transaction, refus en bloc |
 | Secret dans l'APK | Aucun n'est nécessaire. Toute variable `EXPO_PUBLIC_*` est lisible dans l'APK |
-| Formulaire « sécurité des données » | « Aucune donnée collectée ni partagée » tant que rien ne quitte l'appareil : ni statistiques d'usage, ni rapport de plantage envoyé (Sentry ou Crashlytics changeraient la réponse). L'export est un envoi voulu par l'utilisateur, vers son propre espace : Google l'exempte explicitement. La sauvegarde automatique, l'app n'y accède pas, mais l'[aide de Google](https://support.google.com/googleplay/android-developer/answer/10787469) n'en parle pas : à confirmer en remplissant le formulaire. La politique de confidentialité reste exigée |
+| Formulaire « sécurité des données » | **Dépassé depuis la météo : voir l'[étude légale](etude-legale.md#4-ce-que-google-demande).** « Aucune donnée collectée ni partagée » tant que rien ne quitte l'appareil : ni statistiques d'usage, ni rapport de plantage envoyé (Sentry ou Crashlytics changeraient la réponse). L'export est un envoi voulu par l'utilisateur, vers son propre espace : Google l'exempte explicitement. La sauvegarde automatique, l'app n'y accède pas, mais l'[aide de Google](https://support.google.com/googleplay/android-developer/answer/10787469) n'en parle pas : à confirmer en remplissant le formulaire. La politique de confidentialité reste exigée |
 
 ### Quand la synchronisation viendra
 
@@ -315,12 +316,16 @@ un nouveau téléphone redonne le même jardin, ce qu'une future synchronisation
 
 **L'import.** « Importer un jardin » choisit un fichier
 ([`expo-document-picker`](https://docs.expo.dev/versions/v57.0.0/sdk/document-picker/)) et le
-vérifie en entier avant d'écrire quoi que ce soit (`readBackup`, `src/data/backup.ts`) :
+vérifie en entier avant d'écrire quoi que ce soit (`readBackup`, `src/data/backup.ts`). Au-delà
+de 20 Mo, il est refusé sans être lu : l'export du jardin d'exemple fait 55 Ko. Au-delà de 30 000
+espaces ou éléments aussi : SQLite n'en lirait plus la liste. Sinon :
 
 1. du JSON, au format `jardo`, d'une version connue. Un fichier d'une version plus récente de
    l'app est refusé (« mettez l'app à jour ») ;
 2. chaque table et chaque colonne du schéma, rien de plus, et des valeurs du bon type ;
-3. les règles des services, rejouées sur le contenu (`src/data/backup-rules.ts`) : un seul jardin,
+3. des identifiants en UUID, ce que l'app écrit toujours : un identifiant finit dans le chemin d'un
+   écran, où `../settings` en ouvrirait un autre ;
+4. les règles des services, rejouées sur le contenu (`src/data/backup-rules.ts`) : un seul jardin,
    identifiants uniques, noms d'espaces et de zones uniques, champs validés comme dans les
    formulaires, types acceptés par chaque espace, cohérence des cibles (la zone dans l'espace,
    l'élément dans sa zone), champs selon le type d'intervention, rythme des tâches, stock de bois

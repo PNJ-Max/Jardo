@@ -30,9 +30,9 @@ export const WINDOW_LIT = '#F6C76E';
 export const GLOW = '#F4C76F';
 const FIREFLY = '#F7E39A';
 
-const night = (c: string) => mix(desaturate(c, 0.35), '#0A2B31', 0.55);
+const night = (c: string) => mix(desaturate(c, 0.6), '#0B0E13', 0.68);
 const context = (c: string) => mix(desaturate(c, 0.45), '#EEF4EC', 0.3);
-const contextNight = (c: string) => mix(night(desaturate(c, 0.45)), '#08222A', 0.45);
+const contextNight = (c: string) => mix(night(desaturate(c, 0.45)), '#0B0E13', 0.55);
 
 const mapPalette = (convert: (c: string) => string) =>
   Object.fromEntries(Object.entries(DAY).map(([k, v]) => [k, convert(v)])) as Palette;
@@ -41,7 +41,7 @@ export type Kit = { p: Painter; pal: Palette; ctx: Palette; isNight: boolean };
 
 export function createKit(isNight: boolean): Kit {
   return {
-    p: new Painter(isNight ? '#04161A' : '#24321F', isNight ? '#031013' : '#1F2A1A'),
+    p: new Painter(isNight ? '#030407' : '#24321F', isNight ? '#020305' : '#1F2A1A'),
     pal: mapPalette(isNight ? night : (c) => c),
     ctx: mapPalette(isNight ? contextNight : context),
     isNight,

@@ -322,6 +322,18 @@ describe("GardenMapService.setup (l'assistant du premier lancement)", () => {
     await expect(counts(db)).resolves.toEqual({ spaces: 0, zones: 0 });
   });
 
+  it("ne redessine pas une carte déjà posée : un lien ouvre l'assistant sur n'importe quel jardin", async () => {
+    const { service, addSpace, map, slot } = await setup();
+    const verger = await addSpace('Verger', 'Orchard');
+    await service.replace(map(slot('orchard', verger)));
+
+    await expect(service.setup({ layout: countryHouse, spaces: [] })).rejects.toMatchObject({
+      problem: { detail: 'La carte est déjà dessinée : elle se modifie dans Réglages.' },
+    });
+
+    await expect(service.get()).resolves.toMatchObject({ layout, slots: [{ slotKey: 'orchard', spaceId: verger.id }] });
+  });
+
   it("refuse un nom d'espace déjà pris, sans toucher à la carte en place", async () => {
     const { service, db, addSpace, map, slot } = await setup();
     const verger = await addSpace('Verger', 'Orchard');

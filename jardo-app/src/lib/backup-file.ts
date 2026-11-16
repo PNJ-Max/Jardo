@@ -2,6 +2,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
+import { ensureBackupSize } from '@/data/backup';
+
 /** Écrit le fichier dans le cache de l'app et l'ouvre dans la feuille de partage du téléphone. */
 export async function saveBackupFile(name: string, content: string): Promise<void> {
   const file = new File(Paths.cache, name);
@@ -17,5 +19,7 @@ export async function saveBackupFile(name: string, content: string): Promise<voi
 export async function pickBackupFile(): Promise<string | null> {
   const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
   if (result.canceled) return null;
-  return new File(result.assets[0].uri).text();
+  const file = new File(result.assets[0].uri);
+  ensureBackupSize(file.size);
+  return file.text();
 }

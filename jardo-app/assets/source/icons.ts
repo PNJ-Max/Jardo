@@ -11,7 +11,7 @@ import { depth, desaturate, mix, project, solid, type Shape } from '../../src/ma
 /** Fond de l'icône adaptative, de l'icône carrée et du favicon : le `primary` clair. */
 const ICON_BACKGROUND = '#1B5E20';
 /** Le fond sombre de l'app, celui du splash sombre (app.json). */
-const SPLASH_DARK_BACKGROUND = '#092328';
+const SPLASH_DARK_BACKGROUND = '#0B0E13';
 
 type Point = [number, number];
 type Vec3 = [number, number, number];
@@ -118,7 +118,7 @@ function placed({ shapes, points }: Motif) {
 }
 
 const day = createKit(false).pal;
-// La nuit de la carte éteindrait le pot sur le fond sarcelle : le splash sombre garde les teintes
+// La nuit de la carte éteindrait le pot sur le fond de nuit : le splash sombre garde les teintes
 // du jour, à peine passées vers ce fond.
 const dusk = Object.fromEntries(
   Object.entries(day).map(([key, color]) => [key, mix(desaturate(color, 0.15), SPLASH_DARK_BACKGROUND, 0.15)]),

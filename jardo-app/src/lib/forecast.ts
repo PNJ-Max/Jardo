@@ -51,31 +51,53 @@ async function getJson(url: string) {
   }
 }
 
-type GeocodingResult = { name: string; latitude: number; longitude: number; admin1?: string; country?: string };
+// Une réponse vient de l'extérieur, et ce qu'on en garde reste affiché tant que la prévision est
+// récente : un nom qui n'est pas un texte ou un code `__proto__` y ferait tomber l'écran.
+const isNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+const isWithin = (value: unknown, limit: number): value is number => isNumber(value) && Math.abs(value) <= limit;
+const isText = (value: unknown): value is string => typeof value === 'string' && value.length <= 200;
+const isDay = (value: unknown): value is string => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+const textOrNull = (value: unknown) => (isText(value) ? value : null);
+
+type GeocodingResult = { name: unknown; latitude: unknown; longitude: unknown; admin1?: unknown; country?: unknown };
+
+function toPlace(result: GeocodingResult | null): WeatherPlace | null {
+  if (!isText(result?.name) || !isWithin(result.latitude, 90) || !isWithin(result.longitude, 180)) return null;
+  return {
+    name: result.name,
+    region: textOrNull(result.admin1),
+    country: textOrNull(result.country),
+    latitude: result.latitude,
+    longitude: result.longitude,
+  };
+}
+
+const placesAsked = 8;
 
 /** Les villes dont le nom commence par `name`, recherchées par le géocodage d'Open-Meteo. */
 export async function searchPlaces(name: string): Promise<WeatherPlace[]> {
-  const body: { results?: GeocodingResult[] } = await getJson(
-    `${geocodingUrl}?name=${encodeURIComponent(name)}&count=8&language=fr&format=json`,
+  const body: { results?: unknown } | null = await getJson(
+    `${geocodingUrl}?name=${encodeURIComponent(name)}&count=${placesAsked}&language=fr&format=json`,
   );
-  return (body.results ?? []).map((result) => ({
-    name: result.name,
-    region: result.admin1 ?? null,
-    country: result.country ?? null,
-    latitude: result.latitude,
-    longitude: result.longitude,
-  }));
+  const results: (GeocodingResult | null)[] = Array.isArray(body?.results) ? body.results : [];
+  return results
+    .slice(0, placesAsked)
+    .map(toPlace)
+    .filter((place) => place !== null);
 }
 
 type DailyResponse = {
   daily: {
-    time: string[];
-    weather_code: (number | null)[];
-    temperature_2m_min: (number | null)[];
-    temperature_2m_max: (number | null)[];
-    precipitation_sum: (number | null)[];
+    time: unknown[];
+    weather_code: unknown[];
+    temperature_2m_min: unknown[];
+    temperature_2m_max: unknown[];
+    precipitation_sum: unknown[];
   };
 };
+
+/** La veille, aujourd'hui et six jours. */
+const daysAsked = 8;
 
 /** La prévision quotidienne du lieu, dans son fuseau : la veille, aujourd'hui et six jours. */
 export async function fetchForecast(place: WeatherPlace, clock: Clock): Promise<Forecast> {
@@ -90,11 +112,16 @@ export async function fetchForecast(place: WeatherPlace, clock: Clock): Promise<
   const { daily }: DailyResponse = await getJson(`${forecastUrl}?${query}`);
 
   const days: DayForecast[] = [];
-  daily.time.forEach((date, index) => {
-    const [code, min, max] = [daily.weather_code[index], daily.temperature_2m_min[index], daily.temperature_2m_max[index]];
+  daily.time.slice(0, daysAsked).forEach((date, index) => {
+    const [code, min, max, rain] = [
+      daily.weather_code[index],
+      daily.temperature_2m_min[index],
+      daily.temperature_2m_max[index],
+      daily.precipitation_sum[index],
+    ];
     // Un jour que le modèle ne couvre pas encore arrive vide : il est omis.
-    if (code === null || min === null || max === null) return;
-    days.push({ date, code, min, max, rainMm: daily.precipitation_sum[index] ?? 0 });
+    if (!isDay(date) || !isNumber(code) || !isNumber(min) || !isNumber(max)) return;
+    days.push({ date, code, min, max, rainMm: isNumber(rain) ? rain : 0 });
   });
   return { latitude: place.latitude, longitude: place.longitude, fetchedAt: clock().toISOString(), days };
 }

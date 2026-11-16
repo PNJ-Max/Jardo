@@ -14,7 +14,7 @@ Grille des icônes adaptatives Android : calque de 108 unités, 72 visibles, zon
 | `icon-background.svg` | `images/android-icon-background.png` |
 | `icon-monochrome.svg` | `images/android-icon-monochrome.png` (silhouette, jour sous le bord du pot) |
 | `splash-icon.svg` | `images/splash-icon.png` (sur `#F6FAF6`) |
-| `splash-icon-dark.svg` | `images/splash-icon-dark.png` (sur `#092328`, teintes du jour passées vers ce fond) |
+| `splash-icon-dark.svg` | `images/splash-icon-dark.png` (sur `#0B0E13`, teintes du jour passées vers ce fond) |
 | `favicon.svg` | `images/favicon.png` (48) |
 
 Régénération, depuis `jardo-app/assets/` (la taille de sortie vient des attributs `width`/`height` de chaque SVG) :

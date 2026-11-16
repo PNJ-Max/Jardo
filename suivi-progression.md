@@ -10,7 +10,37 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (05/11/2026)
+## Où on en est (06/11/2026)
+
+**Test instable de la carte stabilisé (06/11/2026).** `settings-map.test.tsx` lisait les emplacements
+de parcelle avant l'arrivée des zones, ce qui faisait échouer la CI sur une machine lente.
+- **Correctif** : les deux tests du formulaire attendent ces emplacements, puis la fin de
+  l'enregistrement. Aucun changement de l'écran.
+- **Défaut à corriger, signalé dans la PR** : la carte des réglages perd ses parcelles si on enregistre
+  avant l'arrivée des zones ou si leur lecture échoue (`toMapInput` ignore les zones inconnues).
+
+**Thème de nuit : Lanterne.** Maxime n'aimait ni le sombre sarcelle ni son vert. Parmi
+[trois directions](https://claude.ai/artifact/5ai51S4zeZPKyM1DnUXTNY), il a retenu Lanterne : un fond
+presque noir, des boutons ambre, la couleur des fenêtres allumées de la carte.
+- **Changé** : les jetons sombres (`src/theme/colors.ts`), la nuit de la carte et des vignettes, celle
+  des pictogrammes, l'écran de démarrage sombre. [La charte](docs/charte-graphique.md) donne les contrastes, tous au-dessus de 6,5:1.
+- **Pas changé** : le thème clair, qui garde son vert : Maxime l'a confirmé le 06/11.
+- **Reste à vérifier** : le rendu sur un vrai téléphone, surtout dans le noir, et le splash sombre, qui n'a été vu qu'en image.
+
+**Audit de sécurité (06/11/2026).** [`docs/audit-securite.md`](docs/audit-securite.md), selon OWASP MASVS : rien de grave, et
+rien qui empêche d'envoyer l'APK à des proches une fois sa liste de contrôle passée.
+- **Vérifié** : aucun secret dans tout l'historique, aucune injection, aucune écriture sans geste de
+  l'utilisateur. `__tests__/screens/deep-links.test.tsx` le garde pour chaque écran, y compris les prochains.
+- **Corrigé, chacun dans sa PR** : un fichier importé piégé (#69, #70), une réponse hostile d'Open-Meteo (#71), ce
+  qu'une autre app peut déclencher (#72), les fichiers de signature que Git ne couvrait pas (#73).
+- **À décider** : protéger `main`, et que faire de l'adresse professionnelle dans l'historique. Voir « À décider ».
+- **Limite** : ni téléphone ni Hermes. Une liste de contrôle attend le premier APK.
+
+**Étude légale (05/11/2026).** Une app sans serveur est légale, et le choix reste bon pour une V1 :
+[étude](docs/etude-legale.md) et [brouillon de politique de confidentialité](docs/politique-de-confidentialite.md),
+sans relecture d'un juriste. Depuis la météo, « aucune donnée collectée » n'est plus exact : la ville,
+ses coordonnées et l'adresse IP partent vers Open-Meteo quand l'utilisateur choisit une ville. La
+feuille de route ci-dessous est réécrite autour de la V1 pour les testeurs.
 
 **Benchmark des concurrents mis à jour (05/11/2026).** [`docs/benchmark-concurrents.md`](docs/benchmark-concurrents.md)
 situe Jardo tel qu'il est, avant la V1 des testeurs. Doc seule, aucun changement de code.
@@ -21,6 +51,15 @@ situe Jardo tel qu'il est, avant la V1 des testeurs. Doc seule, aucun changement
 - **V1 pour des testeurs** : APK sur de vrais téléphones, premier lancement jusqu'au premier rappel,
   recueil des retours, mentions légales. Un positionnement pour la fiche Play Store est proposé.
 - **Limite** : les fiches sont des déclarations de développeurs, aucune app n'a été installée.
+
+**Audit de sécurité : import plus strict (05/11/2026).** Un fichier piégé pouvait passer la lecture
+d'une sauvegarde, puis faire échouer les écrans qui lisent les tâches. `readBackup` refuse désormais :
+- **les dates trop lointaines** : une entrée en 9999 et une tâche partie en 0001 laissaient Aujourd'hui et
+  les fiches d'espace sur un message d'erreur, jusqu'au prochain import. `Validation.date` refuse les
+  années à partir de 9000, pour les formulaires comme pour l'import ;
+- **les identifiants qui ne sont pas des UUID** : `../settings` ouvrait Réglages au toucher d'un espace ;
+- **les noms hérités** : `__proto__` ou `constructor`, en table ou en colonne, n'étaient pas refusés.
+  Sans effet réel, aucune pollution de prototype, mais le contrôle mentait.
 
 **Catalogue d'espèces, PR 6 : les rappels proposés (05/11/2026).** Une plante liée au catalogue se
 voit proposer ses rappels, sans qu'aucun soit créé sans un geste de l'utilisateur.
@@ -43,6 +82,17 @@ voit proposer ses rappels, sans qu'aucun soit créé sans un geste de l'utilisat
   de large, clair et sombre. Pas d'essai sur un téléphone : interrupteurs natifs, TalkBack et appui
   long sur « Fait » restent à passer sur l'APK.
 
+**Audit de sécurité : la taille d'un fichier importé (05/11/2026).** L'import lisait n'importe quel
+fichier d'un bloc, et son contrôle du stock de bois relisait tout le journal pour chaque tas.
+- **Plafond de 20 Mo** : `ensureBackupSize` refuse un fichier plus gros avant de le lire, sur le
+  téléphone et sur le web. La copie dans le cache par `expo-document-picker` reste faite avant ce
+  contrôle.
+- **Plafond de 30 000 espaces et éléments** : 33 000 espaces tiennent dans 8,5 Mo, et leur lecture lève
+  `too many SQL variables` : SQLite refuse plus de 32 766 paramètres. L'accueil sans carte et Réglages
+  affichaient ce message jusqu'au prochain import, et la lecture de 33 000 tas de bois échouait de même.
+- **Stock de bois en temps linéaire** : 23 Mo de tas et d'entrées prenaient 23 s sur un PC, et 26 Mo
+  en prennent 1,8 s. Le JavaScript d'un téléphone reste bien plus lent, d'où le plafond.
+
 **Catalogue d'espèces, PR 7 : le climat du jardin (04/11/2026).** Le calendrier et les suggestions
 du catalogue suivent le climat choisi dans Réglages.
 - **Base** : migration 5, `gardens.climate`, vide tant que l'utilisateur n'a rien choisi. Les dates
@@ -57,11 +107,29 @@ du catalogue suivent le climat choisi dans Réglages.
 - **Pas vérifié sur téléphone** : la migration sur une vraie base, le toucher de « Changer », TalkBack.
 - **Captures** : branche `captures/climat-jardin`.
 
+**Audit de sécurité : les réponses d'Open-Meteo (05/11/2026).** `lib/forecast.ts` croyait la réponse
+sur parole. Un code de temps `__proto__` faisait tomber Aujourd'hui, et restait gardé trois heures ; un
+nom de ville qui n'est pas un texte faisait tomber Réglages ; une latitude en texte s'ajoutait telle
+quelle à l'URL suivante. Ce qui n'a pas la forme attendue est désormais écarté, ville par ville et jour
+par jour, sans perdre le reste : au plus 8 villes et 8 jours, les nombres sont des nombres finis, les
+coordonnées restent sur le globe.
+
 **Vocabulaire : « parcelle » plutôt que « carré » (04/11/2026).** « Carré » seul n'était pas assez
 explicite. Les textes de l'app, les noms par défaut (« Parcelle 1 » à « Parcelle 4 »), le jardin
 d'exemple, les tests et les docs disent maintenant « parcelle ». « Zone » et l'identifiant `Zone` ne
 changent pas, pas plus que « mètre carré » ni la méthode du « jardin en carrés ». Les noms déjà
 enregistrés dans un jardin restent ce qu'ils sont : ils appartiennent à l'utilisateur.
+
+**Audit de sécurité : ce qu'une autre app peut déclencher (05/11/2026).** Aucune écriture sans geste, mais
+trois portes à fermer. Reste à constater sur l'APK.
+- **Le plan des écrans** : Expo Router génère une route `_sitemap`, joignable par `jardo:///_sitemap`. Son
+  code lit `window.location`, absent sur un téléphone : sous Jest, l'écran lève une `TypeError`. `app.json`
+  passe `sitemap: false`, et le lien mène à l'écran « route introuvable », en anglais, qui existait déjà.
+- **Le toucher d'un rappel** : expo-notifications fait une réponse de tout intent qui porte
+  `google.message_id`, et ses extras en deviennent les données. `onReminderOpened` naviguait vers le `href`
+  reçu, y compris vers une adresse externe. Il n'ouvre plus qu'Aujourd'hui.
+- **L'assistant** : un lien `jardo:///setup/spaces` l'ouvrait sur un jardin déjà rempli, où un toucher
+  remplaçait le modèle et effaçait tout le placement. `setup` refuse quand une carte est posée.
 
 **Catalogue d'espèces, PR 4 : choisir l'espèce (04/11/2026).** Le champ « Espèce » du formulaire de
 plante ouvre une feuille de recherche dans le catalogue, qui propose sans imposer.
@@ -86,6 +154,11 @@ plante ouvre une feuille de recherche dans le catalogue, qui propose sans impose
 - **Vérifications** : tests Jest (domaine, libellés, écran), parcours complet dans Chrome à 375 de
   large, clair et sombre. Pas d'essai sur un téléphone : l'évitement du clavier dans la feuille et
   TalkBack restent à passer sur l'APK.
+
+**Audit de sécurité : ce que Git ignore (05/11/2026).** Le dépôt est public, et `.gitignore` laissait
+passer `credentials.json` (mots de passe de signature en clair, à ignorer selon la doc d'Expo), `*.keystore`,
+`.env.production`, `google-services.json`, une clé de service Google et les APK. Tous sont ignorés, et un
+test le vérifie avec `git check-ignore`. Aucun de ces fichiers n'a jamais été commité.
 
 **Catalogue d'espèces, PR 5 : l'onglet Conseils (04/11/2026).** La fiche d'une plante liée au
 catalogue gagne un onglet entre Journal et Infos. Sans espèce, ou avec un identifiant absent du
@@ -690,50 +763,40 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
 
 ## Feuille de route
 
-**Phase 0 : socle**
-- `CLAUDE.md`, poste de développement (.NET 10, Rider, GitHub CLI), lancement API + front.
+**Fait.** L'app locale sur le téléphone, le jardin et ses espaces, le journal, les tâches, la carte
+isométrique et son assistant, le design « jardin dessiné », la météo, les rappels locaux, la sauvegarde
+et le catalogue d'espèces complet (63 fiches, Conseils, climat, rappels proposés).
 
-**Phase 1 : en parallèle**
-- A. Nettoyage professionnel de l'API (commentaires, README).
-- B. Charte graphique : 2-3 directions, choix, puis `docs/charte-graphique.md` et `theme.ts`. Fait.
+**Avant la V1 pour les testeurs, dans l'ordre :**
 
-**Phase 2 : fondations du front**
-- Application de la charte, composants, mode sombre, icône et splash, retrait des
-  dépendances inutiles. Fait. Sélecteur de date fait avec le socle des écrans.
+1. **Premier APK sur un vrai téléphone**, le plus gros risque : rien n'a encore tourné sur un appareil.
+   Maxime crée son compte Expo ([guide](docs/guide-apk-test.md)), puis on corrige ce qu'on découvre.
+2. **Le thème de nuit**, demandé par Maxime : plus sombre, qui évoque la nuit. Trois directions attendent
+   son choix.
+3. **La relecture du catalogue** par un jardinier, et les décisions de
+   [l'étude du catalogue](docs/etude-catalogue-especes.md), fusionné sans cette relecture.
+4. **Écarter une proposition de rappel** : aujourd'hui, une proposition reste sur la fiche tant qu'elle
+   n'est pas ajoutée.
 
-**Phase 3 : vision et modèle du jardin**
-- Vision produit et proposition de modèle du domaine. Fait.
-- API, une PR par étape ([détail](docs/modele-domaine.md#stratégie-de-migration)) :
-  1. jardin, espaces typés, zones, plantes avec variété et quantité. Fait ;
-  2. journal d'interventions unifié. Fait ;
-  3. tâches récurrentes et calculateur d'échéance générique (l'arrosage en devient une). Fait ;
-  4. tas de bois de chauffage, stock et séchage calculés. Fait. La phase est terminée.
+Les testeurs sont des proches : ils reçoivent l'APK par lien, sans compte Play et sans rien payer.
 
-**Phase 4 : écrans du nouveau MVP**
-- Refonte des écrans sur la charte actuelle (le design est repris en phase 6) : onglets Jardin (accueil) · Aujourd'hui · Journal, espaces, fiches,
-  formulaires avec sélecteur de date. Socle fait (B1) ; restent les fiches détaillées et les
-  formulaires complets.
+**Avant le Play Store :**
 
-**Phase 5 : qualité**
-- CI GitHub Actions. Fait.
-- Types du front générés depuis l'OpenAPI. Fait.
-- Tests du front.
+- **Le légal** ([étude](docs/etude-legale.md#7-à-faire-dans-lordre)) : statut professionnel ou non,
+  politique publiée, lien dans l'app, vérification des permissions sur l'APK.
+- **Le compte Google Play** et le test interne.
 
-**Phase 6 : après le MVP**
-- Refonte du design en premier : charte (couleurs, mode sombre), typographie, boutons, une
-  interface plus vivante, avec des skills de design (frontend-design). Direction fixée le 26/10
-  ([`docs/direction-visuelle.md`](docs/direction-visuelle.md)) ; mise en œuvre en neuf PR.
-- Carte isométrique dans l'onglet Jardin (premier chantier, [étapes](docs/etude-carte-potager.md#étapes-livrables)),
-  notifications, récoltes chiffrées, photos,
-  catalogue d'espèces ([étude](docs/etude-catalogue-especes.md#7-plan-de-mise-en-œuvre)), autres
-  types d'espaces, météo, foyer partagé.
+**Ensuite :**
 
-**Phase 7 : vers le Play Store**
-- Test sur téléphone (Expo Go), données sur le téléphone ([migration en sept PR](docs/etude-architecture-donnees.md#plan-de-migration)),
-  APK pour la famille par EAS ([dépôt prêt, guide](docs/guide-apk-test.md) ; premier build à lancer par Maxime),
-  puis fiche Play Store.
+- Le test fermé (12 testeurs pendant 14 jours), puis la fiche publique et sa relecture par un juriste.
+- Selon les retours : photos, récoltes chiffrées, grille de plantation, foyer partagé, iOS.
 
 ## À décider
+
+- **Quel modèle payant ?** Maxime veut gagner de l'argent si l'app marche, par exemple une version
+  gratuite limitée et une version premium. Le modèle se choisira après les retours des testeurs.
+  Avant le compte Play, faire trancher le statut « professionnel » : un compte personnel affiche alors
+  son adresse et son téléphone. Voir l'[étude légale](docs/etude-legale.md#une-offre-payante).
 
 - **Météo pour une version commerciale.** L'API gratuite d'Open-Meteo exclut les apps avec
   abonnement ou publicité. Avant une telle version : un abonnement Open-Meteo (API Standard, environ
@@ -742,4 +805,9 @@ une conversation « QG » planifie, rédige les prompts et relit les PR.
   [conditions](docs/front-architecture.md#conditions-dutilisation-dopen-meteo).
 
 - **E-mail pro dans l'historique Git.** Le dépôt est public et ses premiers commits portent
-  l'adresse professionnelle. Option : réécrire l'historique puis forcer le push.
+  l'adresse professionnelle. Réécrire l'historique ne suffit pas : deux commits orphelins depuis le force-push du
+  17/10/2026 se lisent encore, et les `refs/pull/*` restent. Voir [l'audit](docs/audit-securite.md#ce-que-maxime-doit-décider).
+
+- **Protéger `main`.** Aucune règle ne protège la branche, et des agents y travaillent avec un jeton aux droits
+  étendus. Interdire le force-push, exiger la CI, et activer la double authentification sur GitHub et Expo :
+  voir [l'audit](docs/audit-securite.md#ce-que-maxime-doit-décider).
