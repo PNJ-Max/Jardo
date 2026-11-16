@@ -10,9 +10,11 @@ export const databaseName = 'jardo.db';
 
 /** À chaque ouverture : réglages de connexion, migrations, puis le jardin d'exemple s'il est demandé. */
 export async function prepareDatabase(db: Db, { exampleGarden }: { exampleGarden: boolean }): Promise<void> {
-  // Réglés par connexion et hors transaction : sans foreign_keys, SQLite ignore les clés étrangères.
-  await db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+  await db.exec('PRAGMA journal_mode = WAL');
   await migrate(db);
+  // Réglé par connexion et hors transaction : sans lui, SQLite ignore les clés étrangères. Après les
+  // migrations, qui les coupent.
+  await db.exec('PRAGMA foreign_keys = ON');
   if (exampleGarden) await seedExampleGarden(db, today(), new Date().toISOString());
 }
 
