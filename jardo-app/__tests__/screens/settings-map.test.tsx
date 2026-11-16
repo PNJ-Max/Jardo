@@ -118,4 +118,65 @@ describe('réglages, carte du jardin', () => {
       ['vegetable', 'Potager du bas'],
     ]);
   });
+
+  /** Une carte en place : le potager et ses deux parcelles. */
+  async function gardenWithParcels() {
+    const garden = await gardenWithoutMap();
+    const [first, second] = garden.parcelles;
+    await garden.services.gardenMap.replace({
+      layout: 'country-house',
+      slots: [
+        { slotKey: 'vegetable', spaceId: garden.potager.id },
+        { slotKey: 'bed-1', spaceId: garden.potager.id, zoneId: first.id },
+        { slotKey: 'bed-2', spaceId: garden.potager.id, zoneId: second.id },
+      ],
+    });
+    return garden;
+  }
+
+  const placedParcels = [
+    ['bed-1', 'Parcelle A'],
+    ['bed-2', 'Parcelle B'],
+    ['vegetable', 'Potager du bas'],
+  ];
+
+  it("n'enregistre rien tant que les zones ne sont pas lues : les parcelles placées restent sur la carte", async () => {
+    const { services } = await gardenWithParcels();
+    const readZones = services.zones.getBySpace;
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    jest.spyOn(services.zones, 'getBySpace').mockImplementation(async (spaceId) => {
+      await held;
+      return readZones(spaceId);
+    });
+    await renderScreen(<GardenMapScreen />, services);
+
+    await waitFor(() => expect(services.zones.getBySpace).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: 'Enregistrer la carte' })).toBeNull();
+
+    release();
+    await parcelsShown();
+    await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer la carte' }));
+
+    await waitFor(() => expect(router.back).toHaveBeenCalled());
+    await expect(slotsOf(services)).resolves.toEqual(placedParcels);
+  });
+
+  it('dit que les zones ne se lisent pas, sans proposer d’enregistrer une carte qui perdrait ses parcelles', async () => {
+    const { services } = await gardenWithParcels();
+    const readZones = services.zones.getBySpace;
+    jest.spyOn(services.zones, 'getBySpace').mockRejectedValueOnce(new Error('Les zones ne se lisent pas.'));
+    await renderScreen(<GardenMapScreen />, services);
+
+    expect(await screen.findByText('Les zones ne se lisent pas.')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Enregistrer la carte' })).toBeNull();
+
+    jest.spyOn(services.zones, 'getBySpace').mockImplementation(readZones);
+    await fireEvent.press(screen.getByRole('button', { name: 'Réessayer' }));
+    await parcelsShown();
+    await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer la carte' }));
+
+    await waitFor(() => expect(router.back).toHaveBeenCalled());
+    await expect(slotsOf(services)).resolves.toEqual(placedParcels);
+  });
 });
