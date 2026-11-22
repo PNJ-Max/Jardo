@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import { UndoProvider } from '@/components/undo';
 import { createServices, ServicesProvider, type Services } from '@/data/services';
@@ -30,6 +31,21 @@ export async function renderScreen(ui: ReactElement, services?: Services) {
     </ServicesProvider>,
   );
   return { ...utils, queryClient, services: resolved };
+}
+
+/**
+ * `action`, puis l'app quitte le premier plan (téléphone verrouillé, autre app ouverte) : seules
+ * les écoutes d'AppState posées pendant `action` l'apprennent, pas celles des tests précédents.
+ */
+export async function thenLeaveForeground(action: () => Promise<unknown>) {
+  const addListener = jest.mocked(AppState.addEventListener);
+  const since = addListener.mock.calls.length;
+  await action();
+  await act(async () => {
+    addListener.mock.calls
+      .slice(since)
+      .forEach(([type, listener]) => type === 'change' && (listener as (state: AppStateStatus) => void)('background'));
+  });
 }
 
 type RenderedNode = { props?: { source?: { uri?: string } }; children?: (RenderedNode | string)[] | null };

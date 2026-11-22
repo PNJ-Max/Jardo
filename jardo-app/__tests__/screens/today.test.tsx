@@ -12,7 +12,7 @@ import { addDays } from '@/domain/dates';
 import { formatDate, today } from '@/lib/dates';
 import { palettes } from '@/theme/colors';
 
-import { createTestServices, pictogramsOnScreen, renderScreen } from '../../test/render';
+import { createTestServices, pictogramsOnScreen, renderScreen, thenLeaveForeground } from '../../test/render';
 
 const inDays = (days: number) => addDays(today(), days);
 
@@ -246,6 +246,17 @@ describe("écran Aujourd'hui", () => {
 
       gate.resolve();
       expect(await screen.findByText(noted)).toBeOnTheScreen();
+    });
+
+    it("note la tâche tout de suite si l'app quitte le premier plan pendant l'animation", async () => {
+      const services = await setup();
+      await renderScreen(<TodayScreen />, services);
+
+      await thenLeaveForeground(async () => fireEvent.press(await screen.findByLabelText(doneLabel)));
+
+      await waitFor(async () => expect(await services.journal.getAll()).toHaveLength(1));
+      await letRowFold();
+      await expect(services.journal.getAll()).resolves.toHaveLength(1);
     });
 
     it('note la tâche aussitôt quand le téléphone réduit les animations', async () => {

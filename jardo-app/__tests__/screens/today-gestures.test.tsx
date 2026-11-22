@@ -12,7 +12,7 @@ import type { Services } from '@/data/services';
 import { addDays } from '@/domain/dates';
 import { formatDate, today } from '@/lib/dates';
 
-import { createTestServices, renderScreen } from '../../test/render';
+import { createTestServices, renderScreen, thenLeaveForeground } from '../../test/render';
 
 const inDays = (days: number) => addDays(today(), days);
 
@@ -189,6 +189,18 @@ describe('« Tout arroser »', () => {
     ]);
     const due = await services.tasks.getDue('Today');
     expect(due.map((task) => task.kind)).toEqual(['Pruning']);
+  });
+
+  it("note l'arrosage tout de suite si l'app quitte le premier plan pendant l'animation", async () => {
+    const services = await createTestServices();
+    await addPotager(services);
+    await renderScreen(<TodayScreen />, services);
+
+    await thenLeaveForeground(async () => fireEvent.press(await screen.findByRole('button', { name: button })));
+
+    await waitFor(async () => expect(await services.journal.getAll()).toHaveLength(1));
+    await letRowFold();
+    await expect(services.journal.getAll()).resolves.toHaveLength(1);
   });
 
   it('se défait par « Annuler » : les arrosages reviennent', async () => {

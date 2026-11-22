@@ -14,6 +14,7 @@ import { SpaceVignette } from '@/components/vignettes/space-vignette';
 import { RainNote } from '@/components/weather';
 import type { DateOnly } from '@/domain/dates';
 import { formatDate, parseDateOnly } from '@/lib/dates';
+import { writeAfter } from '@/lib/deferred-writes';
 import { targetHref, targetLabel } from '@/lib/garden';
 import { dueWaterings, lateness, monthSummary, rhythm, type SpaceGroup, type WeekDay } from '@/lib/today';
 import { describeWeather, rainNoteApplies, spokenWeather, type DayForecast } from '@/lib/weather';
@@ -165,7 +166,7 @@ export function useTaskRow(): { row: RenderTask; waterAll: WaterAll; watering: b
     doneFeedback();
     const note = () => waterAll(group, tasks, () => setLeaving(new Set()));
     if (reduceMotion) note();
-    else setTimeout(note, celebrateMs + foldMs);
+    else writeAfter(celebrateMs + foldMs, note);
   };
 
   return { row, waterAll: waterAllRows, watering: leaving.size > 0 };

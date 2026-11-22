@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui';
 import { addDays } from '@/domain/dates';
 import { notify } from '@/lib/confirm';
 import { formatDate, today } from '@/lib/dates';
+import { writeAfter } from '@/lib/deferred-writes';
 import { targetLabel, taskPhrase, taskTitle } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
 
@@ -271,7 +272,7 @@ export function TaskRow({
     if (leavesOnDone && !reduceMotion) {
       open.set(withDelay(celebrateMs, withTiming(0, { duration: foldMs, easing: Easing.inOut(Easing.quad) })));
       // Pas annulé au démontage : la tâche doit être notée même si l'on quitte l'écran entre-temps.
-      setTimeout(() => {
+      writeAfter(celebrateMs + foldMs, () => {
         onDone();
         // La ligne quitte d'ordinaire la liste. Si elle est encore là (l'écriture refusée a remis
         // la tâche avant que la liste ne l'ait retirée), elle se rouvre.
@@ -279,7 +280,7 @@ export function TaskRow({
           setDone(false);
           open.set(withTiming(1, { duration: 300 }));
         }, 500);
-      }, celebrateMs + foldMs);
+      });
       return;
     }
     onDone();
@@ -302,7 +303,7 @@ export function TaskRow({
     };
     if (reduceMotion) return write();
     open.set(withTiming(0, { duration: foldMs, easing: Easing.inOut(Easing.quad) }));
-    setTimeout(write, foldMs);
+    writeAfter(foldMs, write);
   };
 
   const accessibilityActions =
