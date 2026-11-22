@@ -223,7 +223,10 @@ export function useZones(spaceId: Id) {
   return useQuery({ queryKey: keys.spaceZones(spaceId), queryFn: () => zones.getBySpace(spaceId) });
 }
 
-/** Les zones de plusieurs espaces, dans le même cache que `useZones`. */
+/**
+ * Les zones de plusieurs espaces, dans le même cache que `useZones`. `data` manque tant qu'un
+ * espace n'a pas rendu les siennes : une liste partielle ferait passer ses zones pour supprimées.
+ */
 export function useZonesOf(spaceIds: Id[]) {
   const { zones } = useServices();
   return useQueries({
@@ -231,7 +234,11 @@ export function useZonesOf(spaceIds: Id[]) {
       queryKey: keys.spaceZones(spaceId),
       queryFn: () => zones.getBySpace(spaceId),
     })),
-    combine: (results) => results.flatMap((result) => result.data ?? []),
+    combine: (results) => ({
+      data: results.every((result) => result.data) ? results.flatMap((result) => result.data ?? []) : undefined,
+      error: results.find((result) => result.error)?.error ?? null,
+      refetch: () => Promise.all(results.map((result) => result.refetch())),
+    }),
   });
 }
 
