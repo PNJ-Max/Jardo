@@ -149,6 +149,70 @@ describe('migrations', () => {
     expect(await db.first("SELECT 1 FROM sqlite_schema WHERE name = 'photos'")).toBeNull();
   });
 
+  // La seule façon de changer une contrainte dans SQLite : recréer la table, copier, supprimer
+  // l'ancienne, renommer. Clés étrangères actives, supprimer l'ancienne emporterait ses tables filles.
+  const rebuildSpaces = `
+CREATE TABLE spaces_new (
+  id TEXT PRIMARY KEY NOT NULL,
+  garden_id TEXT NOT NULL REFERENCES gardens (id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  description TEXT,
+  is_archived INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  UNIQUE (garden_id, name)
+) STRICT;
+INSERT INTO spaces_new SELECT id, garden_id, name, kind, description, is_archived, created_at FROM spaces;
+DROP TABLE spaces;
+ALTER TABLE spaces_new RENAME TO spaces;`;
+
+  const tables = ['gardens', 'spaces', 'zones', 'garden_items', 'journal_entries', 'garden_tasks', 'garden_map_slots'];
+
+  async function dump(db: Db) {
+    const rows: Record<string, unknown[]> = {};
+    for (const table of tables) rows[table] = await db.all(`SELECT * FROM ${table} ORDER BY rowid`);
+    return rows;
+  }
+
+  it('gardent tout le jardin quand une migration recrée une table', async () => {
+    const db = await createTestDb({ exampleGarden: true });
+    const before = await dump(db);
+    expect(before.journal_entries.length).toBeGreaterThan(0);
+
+    await migrate(db, [...migrations, rebuildSpaces]);
+
+    expect(await version(db)).toBe(migrations.length + 1);
+    expect(await dump(db)).toEqual(before);
+  });
+
+  it('gardent le journal et les tâches d’un espace sans élément quand une migration recrée sa table', async () => {
+    const db = await createTestDb();
+    const garden = (await db.first<{ id: string }>('SELECT id FROM gardens'))!.id;
+    await db.run("INSERT INTO spaces (id, garden_id, name, kind, created_at) VALUES ('s', ?, 'Verger', 'Orchard', '2026-01-01T00:00:00.000Z')", [garden]);
+    await db.run("INSERT INTO zones (id, space_id, name, created_at) VALUES ('z', 's', 'Rang 1', '2026-01-01T00:00:00.000Z')");
+    await db.run(
+      "INSERT INTO journal_entries (id, kind, date, space_id, zone_id, created_at) VALUES ('e', 'Pruning', '2026-02-01', 's', 'z', '2026-02-01T00:00:00.000Z')",
+    );
+    await db.run(
+      "INSERT INTO garden_tasks (id, kind, recurrence, start_date, space_id, created_at) VALUES ('t', 'Pruning', 'Yearly', '2026-02-01', 's', '2026-01-01T00:00:00.000Z')",
+    );
+    const before = await dump(db);
+
+    await migrate(db, [...migrations, rebuildSpaces]);
+
+    expect(await dump(db)).toEqual(before);
+  });
+
+  it('annulent une migration qui laisse une ligne sans son parent', async () => {
+    const db = await createTestDb({ exampleGarden: true });
+    const before = await dump(db);
+
+    await expect(migrate(db, [...migrations, 'DELETE FROM zones;'])).rejects.toThrow(/garden_items|garden_map_slots|journal_entries|garden_tasks/);
+
+    expect(await version(db)).toBe(migrations.length);
+    expect(await dump(db)).toEqual(before);
+  });
+
   it("refusent une base plus récente que l'app", async () => {
     const db = await createTestDb();
     await db.exec(`PRAGMA user_version = ${migrations.length + 1}`);

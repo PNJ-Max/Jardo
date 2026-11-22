@@ -141,15 +141,20 @@ affiché jusque-là. Tous les écrans la lisent, par les services (étapes 3 et 
   tourne dans une transaction, version comprise. **Une migration publiée ne se modifie plus** :
   on en ajoute une à la fin, et le test « migrent une base de chaque version précédente » la
   couvre aussitôt. Une base plus récente que l'app est refusée.
+- **Recréer une table dans une migration** (changer une contrainte : créer la nouvelle, copier,
+  `DROP TABLE`, renommer) est sûr : `migrate` coupe les clés étrangères avant ses transactions.
+  Actives, `DROP TABLE spaces` emporterait zones, journal et tâches, ou échouerait dès qu'un espace
+  a un élément. Une migration qui laisse une ligne sans son parent (`PRAGMA foreign_key_check`) est
+  annulée.
 - **Conventions du schéma** : tables et colonnes en `snake_case` (les services feront la
   correspondance avec les DTO en camelCase), tables `STRICT` (une valeur du mauvais type est
   refusée), identifiants UUID v4 en texte (`randomUUID()` d'`expo-crypto`), jours `YYYY-MM-DD`,
   instants ISO 8601 UTC (`toISOString()`), booléens en 0 ou 1. Le jardin unique est créé par la
   première migration, avec un UUID tiré au hasard. Pour départager deux lignes au même instant
   (l'API utilisait l'identifiant entier), le `rowid` de SQLite suit l'ordre d'insertion.
-- **`database.ts` : `prepareDatabase`**, à chaque ouverture : `PRAGMA foreign_keys = ON` (réglé
-  par connexion, sans lui SQLite ignore les clés étrangères), migrations, puis le jardin
-  d'exemple si demandé. `initDatabase` est le `onInit` du `SQLiteProvider`.
+- **`database.ts` : `prepareDatabase`**, à chaque ouverture : migrations, `PRAGMA foreign_keys = ON`
+  (réglé par connexion, sans lui SQLite ignore les clés étrangères), puis le jardin d'exemple si
+  demandé. `initDatabase` est le `onInit` du `SQLiteProvider`.
 - **`example-garden.ts` : le jardin d'exemple** de `DbSeeder`, carte comprise, daté par rapport
   au jour. Seulement en développement (`__DEV__`) et seulement si le jardin n'a aucun espace : une
   installation publiée démarre sur un jardin vide.
