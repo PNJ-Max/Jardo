@@ -4,9 +4,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { useSpaces, useZonesOf } from '@/api/queries';
+import { useDueTasks, useSpaces, useZonesOf } from '@/api/queries';
 import type { GardenMap, GardenMapSlot } from '@/api/types';
-import { mappedVegetableGardens, offMapTargets } from '@/lib/garden-map';
+import { mappedVegetableGardens, offMapTargets, waitingBySlot } from '@/lib/garden-map';
 import { spaceKinds } from '@/lib/garden';
 import { SLOT_KEYS, type SlotKey } from '@/map/layouts';
 import { sceneOf, type DrawnLayout } from '@/map/scenes';
@@ -17,14 +17,15 @@ import { MapViewport } from './map-viewport';
 const isSlotKey = (key: string): key is SlotKey => (SLOT_KEYS as readonly string[]).includes(key);
 
 /**
- * La carte du jardin : chaque emplacement occupé ouvre son espace ou sa zone, et la bande
- * « Hors carte » donne accès à ce qui n'a pas d'emplacement.
+ * La carte du jardin : chaque emplacement occupé ouvre son espace ou sa zone, et dit ce qui y attend
+ * aujourd'hui ; la bande « Hors carte » donne accès à ce qui n'a pas d'emplacement.
  */
 export function GardenMapView({ map, layout }: { map: GardenMap; layout: DrawnLayout }) {
   const theme = useTheme();
   const styles = useStyles();
   const scene = useMemo(() => sceneOf(layout, theme.scheme), [layout, theme.scheme]);
   const [recenter, setRecenter] = useState(0);
+  const due = useDueTasks('Today');
 
   const { slots, labels, free } = useMemo(() => {
     const occupied = new Map<SlotKey, GardenMapSlot>();
@@ -35,6 +36,7 @@ export function GardenMapView({ map, layout }: { map: GardenMap; layout: DrawnLa
       free: SLOT_KEYS.filter((key) => !occupied.has(key)),
     };
   }, [map.slots]);
+  const waiting = Object.fromEntries(due.data ? waitingBySlot(map, due.data) : []);
 
   // Un emplacement libre, comme le décor, ne fait rien.
   const open = useCallback(
@@ -48,7 +50,15 @@ export function GardenMapView({ map, layout }: { map: GardenMap; layout: DrawnLa
   return (
     <GestureHandlerRootView style={[styles.screen, { backgroundColor: scene.background }]}>
       <View style={styles.map}>
-        <MapViewport scene={scene} labels={labels} free={free} selected={null} onSelect={open} recenter={recenter} />
+        <MapViewport
+          scene={scene}
+          labels={labels}
+          waiting={waiting}
+          free={free}
+          selected={null}
+          onSelect={open}
+          recenter={recenter}
+        />
         <Pressable
           onPress={() => setRecenter((n) => n + 1)}
           accessibilityRole="button"

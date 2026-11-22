@@ -5,7 +5,7 @@ import type { Space } from '@/api/types';
 import { ArchivedBadge } from '@/components/items';
 import { Badge, Card } from '@/components/ui';
 import { SpaceVignette } from '@/components/vignettes/space-vignette';
-import { spaceKinds } from '@/lib/garden';
+import { spaceKinds, tasksToDo } from '@/lib/garden';
 import { createStyles, useTheme } from '@/theme';
 
 function plural(count: number, singular: string, pluralForm: string) {
@@ -36,11 +36,7 @@ export function SpaceRow({ space, onPress }: { space: Space; onPress: () => void
         {space.isArchived ? (
           <ArchivedBadge />
         ) : space.dueTaskCount > 0 ? (
-          <Badge
-            {...due.DueSoon}
-            icon="calendar-outline"
-            text={plural(space.dueTaskCount, 'tâche à faire', 'tâches à faire')}
-          />
+          <Badge {...due.DueSoon} icon="calendar-outline" text={tasksToDo(space.dueTaskCount)} />
         ) : (
           <Badge {...due.Ok} icon="checkmark-circle-outline" text="À jour" />
         )}

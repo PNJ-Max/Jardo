@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 
-import type { GardenMap, GardenMapInput, GardenSetupInput, Id, Space, SpaceKind, Zone } from '@/api/types';
+import type { GardenMap, GardenMapInput, GardenSetupInput, GardenTask, Id, Space, SpaceKind, Zone } from '@/api/types';
 import { gardenLayouts, type MapSlotDefinition } from '@/data/garden-layouts';
 import { SLOT_KEYS, type SlotKey } from '@/map/layouts';
 import type { DrawnLayout } from '@/map/scenes';
@@ -53,6 +53,19 @@ export function offMapTargets(map: GardenMap, spaces: Space[], zones: Zone[]): O
   });
 
   return [...offSpaces, ...offZones];
+}
+
+/**
+ * Le nombre de tâches qui attendent sur chaque emplacement : toutes celles de l'espace, ou celles de
+ * la seule parcelle, éléments compris. `due` : les tâches dues aujourd'hui, retards compris.
+ */
+export function waitingBySlot(map: GardenMap, due: readonly GardenTask[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const slot of map.slots) {
+    const count = due.filter((task) => (slot.zoneId !== null ? task.zoneId === slot.zoneId : task.spaceId === slot.spaceId)).length;
+    if (count > 0) counts.set(slot.slotKey, count);
+  }
+  return counts;
 }
 
 /** Au premier lancement, un jardin sans carte ni espace, même archivé, ouvre l'assistant. */
