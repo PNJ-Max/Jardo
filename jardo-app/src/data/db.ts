@@ -32,7 +32,9 @@ export function withTransactions(statements: Statements): Db {
           await statements.exec('COMMIT');
           return value;
         } catch (error) {
-          await statements.exec('ROLLBACK');
+          // Après certaines erreurs (disque plein, mémoire), SQLite a déjà annulé la transaction et
+          // ce ROLLBACK échoue : son erreur masquerait la vraie cause.
+          await statements.exec('ROLLBACK').catch(() => undefined);
           throw error;
         }
       });

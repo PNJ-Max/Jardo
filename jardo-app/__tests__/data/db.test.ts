@@ -36,6 +36,23 @@ describe("l'accès à la base", () => {
     expect(await value(db)).toBe(0);
   });
 
+  it("laisse passer l'erreur du travail quand SQLite a déjà annulé la transaction", async () => {
+    const db = await counterDb();
+
+    // Ce que fait SQLite sur un disque plein : il annule de lui-même, et le ROLLBACK qui suit échoue.
+    await expect(
+      db.transaction(async () => {
+        await db.run('UPDATE counters SET value = value + 1');
+        await db.exec('ROLLBACK');
+        throw new Error('disque plein');
+      }),
+    ).rejects.toThrow('disque plein');
+
+    expect(await value(db)).toBe(0);
+    await db.transaction(() => db.run('UPDATE counters SET value = value + 1'));
+    expect(await value(db)).toBe(1);
+  });
+
   it("passe les transactions lancées ensemble l'une après l'autre", async () => {
     const db = await counterDb();
     const increment = () =>
