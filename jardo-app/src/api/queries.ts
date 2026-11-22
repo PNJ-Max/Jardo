@@ -6,7 +6,7 @@ import type { ReminderProposal } from '@/domain/reminder-proposals';
 import { referenceClimate, type Climate } from '@/domain/species';
 import { pickBackupFile, saveBackupFile } from '@/lib/backup-file';
 import { toDateOnly } from '@/lib/dates';
-import { proposalTask } from '@/lib/species';
+import { proposalReminder } from '@/lib/species';
 import { isDueWatering } from '@/lib/today';
 import { useToday } from '@/lib/use-today';
 
@@ -278,17 +278,14 @@ export function usePlant(id: Id) {
   return useQuery({ queryKey: keys.plant(id), queryFn: () => plants.getById(id) });
 }
 
-/** Enregistre la plante, puis crée les rappels acceptés dans son formulaire. */
+/** Enregistre la plante et les rappels acceptés dans son formulaire, d'un seul tenant. */
 export function useSavePlant() {
-  const { plants, tasks } = useServices();
+  const { plants } = useServices();
   const invalidate = useInvalidate(afterStructureWrite);
   return useMutation({
-    mutationFn: async ({ id, input, reminders = [] }: { id?: Id; input: PlantInput; reminders?: ReminderProposal[] }) => {
-      const plant = await (id ? plants.update(id, input) : plants.create(input));
-      for (const reminder of reminders) {
-        await tasks.create(proposalTask(reminder, { spaceId: plant.spaceId, zoneId: plant.zoneId, itemId: plant.id }));
-      }
-      return plant;
+    mutationFn: ({ id, input, reminders = [] }: { id?: Id; input: PlantInput; reminders?: ReminderProposal[] }) => {
+      const tasks = reminders.map(proposalReminder);
+      return id ? plants.update(id, input, tasks) : plants.create(input, tasks);
     },
     onSuccess: invalidate,
   });

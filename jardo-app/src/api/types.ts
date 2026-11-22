@@ -17,7 +17,7 @@ export type { GardenBackup } from '@/data/backup';
 export type { Garden, GardenInput } from '@/data/garden';
 export type { GardenMap, GardenMapInput, GardenMapSlot, GardenSetupInput } from '@/data/garden-map';
 export type { JournalEntry, JournalEntryInput } from '@/data/journal';
-export type { Plant, PlantInput } from '@/data/plants';
+export type { Plant, PlantInput, PlantReminder } from '@/data/plants';
 export type { ProblemDetails } from '@/data/problem';
 export type { Space, SpaceInput } from '@/data/spaces';
 export type { CompleteTaskInput, DueHorizon, GardenTask, TaskCompletion, TaskInput, TaskPostponement } from '@/data/tasks';

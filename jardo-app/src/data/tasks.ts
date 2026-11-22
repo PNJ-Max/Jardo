@@ -117,6 +117,52 @@ const orderByDueDate = (tasks: GardenTask[]) =>
 
 type TaskTarget = { id: Id; kind: JournalEntryKind; title: string | null } & InterventionTarget;
 
+/** Les règles d'une tâche avant son écriture, dans la transaction de celle-ci. */
+async function prepare(db: Db, input: TaskInput, current: InterventionTarget | null) {
+  const title = optionalText(input.title);
+  const intervalDays = input.intervalDays ?? null;
+  ensureTaskFields(input.kind, input.recurrence, intervalDays, title);
+
+  const target = await resolveInterventionTarget(
+    db,
+    { spaceId: input.spaceId, zoneId: input.zoneId ?? null, itemId: input.itemId ?? null },
+    input.kind,
+    current,
+    'prévoir une tâche',
+  );
+  return { title, intervalDays, target };
+}
+
+/**
+ * Valide et insère une tâche. Hors transaction : l'appelant l'ouvre, pour qu'une plante et ses
+ * rappels s'enregistrent d'un seul tenant.
+ */
+export async function insertTask(db: Db, clock: Clock, input: TaskInput): Promise<Id> {
+  validate(input);
+  const id = randomUUID();
+  const { title, intervalDays, target } = await prepare(db, input, null);
+
+  await db.run(
+    `INSERT INTO garden_tasks (id, kind, recurrence, start_date, interval_days, title, space_id, zone_id, item_id,
+       created_at, opened_on)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.kind,
+      input.recurrence,
+      input.startDate,
+      intervalDays,
+      title,
+      target.spaceId,
+      target.zoneId,
+      target.itemId,
+      clock().toISOString(),
+      toDateOnly(clock()),
+    ],
+  );
+  return id;
+}
+
 /** Les tâches du jardin et leur échéance (`TaskService`). Faire une tâche, c'est noter l'intervention au journal. */
 export function createTaskService(db: Db, clock: Clock) {
   const today = () => toDateOnly(clock());
@@ -135,22 +181,6 @@ export function createTaskService(db: Db, clock: Clock) {
     );
     if (!row) throw notFound('Task', id);
     return { id: row.id, kind: row.kind, title: row.title, spaceId: row.space_id, zoneId: row.zone_id, itemId: row.item_id };
-  }
-
-  /** Les règles d'une tâche avant son écriture, dans la transaction de celle-ci. */
-  async function prepare(input: TaskInput, current: InterventionTarget | null) {
-    const title = optionalText(input.title);
-    const intervalDays = input.intervalDays ?? null;
-    ensureTaskFields(input.kind, input.recurrence, intervalDays, title);
-
-    const target = await resolveInterventionTarget(
-      db,
-      { spaceId: input.spaceId, zoneId: input.zoneId ?? null, itemId: input.itemId ?? null },
-      input.kind,
-      current,
-      'prévoir une tâche',
-    );
-    return { title, intervalDays, target };
   }
 
   return {
@@ -189,32 +219,7 @@ export function createTaskService(db: Db, clock: Clock) {
     getById,
 
     async create(input: TaskInput): Promise<GardenTask> {
-      validate(input);
-      const id = randomUUID();
-
-      await db.transaction(async () => {
-        const { title, intervalDays, target } = await prepare(input, null);
-
-        await db.run(
-          `INSERT INTO garden_tasks (id, kind, recurrence, start_date, interval_days, title, space_id, zone_id, item_id,
-             created_at, opened_on)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            id,
-            input.kind,
-            input.recurrence,
-            input.startDate,
-            intervalDays,
-            title,
-            target.spaceId,
-            target.zoneId,
-            target.itemId,
-            clock().toISOString(),
-            today(),
-          ],
-        );
-      });
-
+      const id = await db.transaction(() => insertTask(db, clock, input));
       return getById(id);
     },
 
@@ -227,7 +232,7 @@ export function createTaskService(db: Db, clock: Clock) {
 
       await db.transaction(async () => {
         const task = await getById(id);
-        const { title, intervalDays, target } = await prepare(input, task);
+        const { title, intervalDays, target } = await prepare(db, input, task);
         const asksTheSame =
           input.kind === task.kind &&
           input.recurrence === task.recurrence &&
