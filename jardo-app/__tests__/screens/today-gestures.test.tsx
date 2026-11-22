@@ -17,8 +17,8 @@ import { createTestServices, renderScreen } from '../../test/render';
 const inDays = (days: number) => addDays(today(), days);
 
 /**
- * Le potager : un arrosage du Parcelle 1 dû aujourd'hui, un arrosage des tomates en retard de deux
- * jours, et une taille du jour qui n'est pas un arrosage.
+ * Le potager : un arrosage de la Parcelle 1 dû aujourd'hui, un arrosage des tomates à faire depuis
+ * deux jours, et une taille du jour qui n'est pas un arrosage.
  */
 async function addPotager(services: Services) {
   const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
@@ -162,14 +162,14 @@ describe('« Tout arroser »', () => {
   const button = 'Tout arroser : Potager, 2 arrosages';
   const noted = "Noté au journal : arroser tout l'espace, Potager";
 
-  it("note un seul arrosage sur l'espace, qui vaut pour sa zone et ses éléments, retards compris", async () => {
+  it("note un seul arrosage sur l'espace, qui vaut pour sa zone et ses éléments, échus compris", async () => {
     const services = await createTestServices();
     const { potager } = await addPotager(services);
     await renderScreen(<TodayScreen />, services);
 
     await fireEvent.press(await screen.findByRole('button', { name: button }));
 
-    // Les deux lignes célèbrent ensemble, en retard comme du jour, avant l'écriture.
+    // Les deux lignes célèbrent ensemble, échue comme du jour, avant l'écriture.
     expect(screen.getAllByText('Noté')).toHaveLength(2);
     expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
     await expect(services.journal.getAll()).resolves.toEqual([]);
@@ -350,7 +350,7 @@ describe('« Reporter à demain »', () => {
     ]);
   });
 
-  it('sort la tâche en retard jusqu\'à demain, sans rien noter, et « Annuler » la remet', async () => {
+  it('sort la tâche échue jusqu\'à demain, sans rien noter, et « Annuler » la remet', async () => {
     const services = await createTestServices();
     const { tomatoWatering } = await addPotager(services);
     await renderScreen(<TodayScreen />, services);
@@ -365,15 +365,13 @@ describe('« Reporter à demain »', () => {
 
     expect(await screen.findByText(reported)).toBeOnTheScreen();
     await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
-    expect(screen.queryByText(/^En retard/)).not.toBeOnTheScreen();
     await expect(services.tasks.getById(tomatoWatering.id)).resolves.toMatchObject({ postponedUntil: inDays(1), status: 'Ok' });
     await expect(services.journal.getAll()).resolves.toEqual([]);
 
     await fireEvent.press(screen.getByText('Annuler'));
 
     expect(await screen.findByText('Arroser les tomates')).toBeOnTheScreen();
-    expect(screen.getByText(/^En retard/)).toBeOnTheScreen();
-    await expect(services.tasks.getById(tomatoWatering.id)).resolves.toMatchObject({ postponedUntil: null, status: 'Overdue' });
+    await expect(services.tasks.getById(tomatoWatering.id)).resolves.toMatchObject({ postponedUntil: null, status: 'DueSoon', daysOverdue: 2 });
   });
 
   it("n'est pas proposé pour une tâche qui n'est pas encore due", async () => {

@@ -39,10 +39,10 @@ describe('échéance des tâches', () => {
     [3, 1],
     [5, 3],
     [30, 28],
-  ])('une échéance dépassée donne le nombre de jours de retard (faite il y a %i jours, %i de retard)', (doneDaysAgo, expectedDaysOverdue) => {
+  ])('une tâche régulière dépassée reste à faire, sans retard, et compte les jours écoulés (faite il y a %i jours, échue depuis %i)', (doneDaysAgo, expectedDaysOverdue) => {
     const state = everyNDays(2, ago(doneDaysAgo));
 
-    expect(state.status).toBe('Overdue');
+    expect(state.status).toBe('DueSoon');
     expect(state.daysOverdue).toBe(expectedDaysOverdue);
     expect(state.lastDoneOn).toBe(ago(doneDaysAgo));
   });
@@ -52,7 +52,7 @@ describe('échéance des tâches', () => {
 
     const late = everyNDays(3, null, ago(4));
 
-    expect(late.status).toBe('Overdue');
+    expect(late.status).toBe('DueSoon');
     expect(late.daysOverdue).toBe(4);
   });
 
@@ -174,8 +174,14 @@ describe('report des tâches', () => {
   });
 
   it('un report arrivé à son jour rend la tâche due ce jour-là, puis en retard depuis ce jour', () => {
-    expect(postponed({ lastDoneOn: ago(9) }, today)).toMatchObject({ status: 'DueSoon', nextDueDate: today });
-    expect(postponed({ lastDoneOn: ago(9) }, ago(2))).toMatchObject({ status: 'Overdue', daysOverdue: 2 });
+    const yearlyTask = { recurrence: 'Yearly' as const, startDate: '2026-02-01', intervalDays: null, lastDoneOn: '2025-02-01' };
+
+    expect(postponed(yearlyTask, today)).toMatchObject({ status: 'DueSoon', nextDueDate: today });
+    expect(postponed(yearlyTask, ago(2))).toMatchObject({ status: 'Overdue', daysOverdue: 2 });
+  });
+
+  it('un report passé laisse à faire, sans retard, une tâche régulière', () => {
+    expect(postponed({ lastDoneOn: ago(9) }, ago(2))).toMatchObject({ status: 'DueSoon', daysOverdue: 2 });
   });
 
   it("ne rapproche jamais l'échéance", () => {

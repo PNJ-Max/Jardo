@@ -40,7 +40,7 @@ export type GardenTask = {
   /** Null pour une tâche ponctuelle faite. */
   nextDueDate: DateOnly | null;
   status: DueStatus;
-  /** Jours de retard, 0 si l'échéance n'est pas dépassée. */
+  /** Jours écoulés depuis l'échéance, 0 si elle n'est pas dépassée. */
   daysOverdue: number;
   /** Vrai pour une tâche ponctuelle faite. */
   isCompleted: boolean;

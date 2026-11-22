@@ -21,7 +21,7 @@ import { SkyWeather } from '@/components/weather';
 import { systemClock } from '@/data/clock';
 import { addDays, type DateOnly } from '@/domain/dates';
 import { usePullToRefresh } from '@/lib/refresh';
-import { bySpace, comingThisMonth, overdueTasks, skyPhrase, tasksOn, weekDays } from '@/lib/today';
+import { bySpace, comingThisMonth, dueToday, overdueTasks, skyPhrase, tasksOn, weekDays } from '@/lib/today';
 import { useToday } from '@/lib/use-today';
 import { isSunny, rainNote, todayWeather } from '@/lib/weather';
 import { createStyles } from '@/theme';
@@ -93,7 +93,7 @@ function TodayTasks({
   rainNote,
 }: DayProps & { nothingLate: boolean; water: Water; rainNote: string | null }) {
   const styles = useStyles();
-  const due = tasksOn(tasks, today);
+  const due = dueToday(tasks);
   const tomorrow = tasksOn(tasks, addDays(today, 1));
 
   if (due.length > 0) {

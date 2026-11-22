@@ -25,7 +25,6 @@ const schedule = Notifications.scheduleNotificationAsync as jest.Mock;
 const cancelAll = Notifications.cancelAllScheduledNotificationsAsync as jest.Mock;
 
 const today = '2026-10-28';
-const late = '1 chose en retard au jardin : arroser (Potager).';
 const due = "1 chose au jardin aujourd'hui : arroser (Potager).";
 
 /** Les rappels programmés depuis le dernier remplacement : le jour et la phrase. */
@@ -40,12 +39,9 @@ function programmed() {
 const daily = (from: number, body: string) =>
   Array.from({ length: reminderDays - from }, (_, index) => ({ day: addDays(today, from + index), body }));
 
-/** L'arrosage dû ce jour-là, puis en retard les jours suivants : rien n'est fait d'ici là. */
-const dueOn = (day: number) => [{ day: addDays(today, day), body: due }, ...daily(day + 1, late)];
-
 type Garden = { services: Services; potager: Id; verger: Id; watering: Id };
 
-/** Un arrosage du potager tous les trois jours, en retard depuis hier. */
+/** Un arrosage du potager tous les trois jours, à faire depuis hier : il n'est jamais en retard. */
 async function createGarden(): Promise<Garden> {
   const services = await createTestServices();
   const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
@@ -82,9 +78,9 @@ describe('programmation des rappels', () => {
     const { services } = await createGarden();
     await renderScreen(<Reminders />, services);
 
-    await waitFor(() => expect(programmed()).toEqual(daily(0, late)));
+    await waitFor(() => expect(programmed()).toEqual(daily(0, due)));
     expect(schedule).toHaveBeenCalledWith({
-      content: { body: late, data: { href: '/today' } },
+      content: { body: due, data: { href: '/today' } },
       trigger: { type: 'date', date: new Date(2026, 9, 28, 8, 0), channelId: 'reminders' },
     });
   });
@@ -106,7 +102,7 @@ describe('programmation des rappels', () => {
         const complete = useCompleteTask();
         return () => complete.mutate({ id: watering });
       },
-      dueOn(3),
+      daily(3, due),
     ],
     [
       'Reporter',
@@ -114,7 +110,7 @@ describe('programmation des rappels', () => {
         const postpone = usePostponeTask();
         return () => postpone.mutate({ id: watering, until: addDays(today, 2) });
       },
-      dueOn(2),
+      daily(2, due),
     ],
     [
       'Tout arroser',
@@ -122,7 +118,7 @@ describe('programmation des rappels', () => {
         const water = useWaterSpace();
         return () => water.mutate({ spaceId: potager, date: today });
       },
-      dueOn(3),
+      daily(3, due),
     ],
     [
       'une intervention notée au journal',
@@ -130,7 +126,7 @@ describe('programmation des rappels', () => {
         const save = useSaveJournalEntry();
         return () => save.mutate({ input: { date: today, kind: 'Watering', spaceId: potager } });
       },
-      dueOn(3),
+      daily(3, due),
     ],
     [
       "la création d'une tâche",
@@ -139,8 +135,8 @@ describe('programmation des rappels', () => {
         return () => save.mutate({ input: { kind: 'Pruning', recurrence: 'Once', startDate: today, spaceId: verger } });
       },
       [
-        { day: today, body: "2 choses au jardin aujourd'hui, dont 1 en retard : arroser (Potager), tailler (Verger)." },
-        ...daily(1, '2 choses en retard au jardin : arroser (Potager), tailler (Verger).'),
+        { day: today, body: "2 choses au jardin aujourd'hui : arroser (Potager), tailler (Verger)." },
+        ...daily(1, "2 choses au jardin aujourd'hui, dont 1 en retard : tailler (Verger), arroser (Potager)."),
       ],
     ],
     [
@@ -160,7 +156,7 @@ describe('programmation des rappels', () => {
       </>,
       garden.services,
     );
-    await waitFor(() => expect(programmed()).toEqual(daily(0, late)));
+    await waitFor(() => expect(programmed()).toEqual(daily(0, due)));
 
     await fireEvent.press(screen.getByText('Écrire'));
 
@@ -170,14 +166,14 @@ describe('programmation des rappels', () => {
   it("reprogramme au retour sur l'app, à partir du nouveau jour", async () => {
     const { services } = await createGarden();
     await renderScreen(<Reminders />, services);
-    await waitFor(() => expect(programmed()).toEqual(daily(0, late)));
+    await waitFor(() => expect(programmed()).toEqual(daily(0, due)));
 
     // Le mock d'AppState de React Native garde les écouteurs inscrits.
     const listeners = (AppState.addEventListener as jest.Mock).mock.calls.map(([, listener]) => listener);
     jest.setSystemTime(new Date(2026, 9, 29, 7));
     await act(async () => listeners.forEach((listener: (state: AppStateStatus) => void) => listener('active')));
 
-    await waitFor(() => expect(programmed()).toEqual(daily(1, late).concat({ day: addDays(today, reminderDays), body: late })));
+    await waitFor(() => expect(programmed()).toEqual(daily(1, due).concat({ day: addDays(today, reminderDays), body: due })));
   });
 });
 
