@@ -4,14 +4,20 @@ import type { ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { remindersSupported } from '@/lib/notifications';
 import { createStyles, useTheme } from '@/theme';
 
 /** Quitte l'assistant, d'où qu'on l'ait ouvert, vers l'onglet Jardin : la carte, ou la liste si on a passé. */
 export const leaveSetup = () => router.dismissTo('/');
 
+/** « Étape 2 sur 3 » : le rappel du jour ajoute une étape, là où il existe. */
+export const setupStep = (step: number) => `Étape ${step} sur ${remindersSupported ? 3 : 2}`;
+
 type SetupPageProps = {
   /** « Étape 1 sur 2 » ; rien sur l'accueil, qui n'a pas de retour. */
   step?: string;
+  /** Faux quand l'étape d'avant a déjà écrit : y revenir créerait le jardin deux fois. */
+  back?: boolean;
   title: string;
   intro: string;
   /** Un dessin pleine largeur, sous la barre du haut. */
@@ -21,7 +27,7 @@ type SetupPageProps = {
 };
 
 /** Une page de l'assistant : retour et « Passer » en haut, le contenu qui défile, l'action ancrée en bas. */
-export function SetupPage({ step, title, intro, hero, footer, children }: SetupPageProps) {
+export function SetupPage({ step, back = true, title, intro, hero, footer, children }: SetupPageProps) {
   const { colors } = useTheme();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -29,7 +35,7 @@ export function SetupPage({ step, title, intro, hero, footer, children }: SetupP
   return (
     <View style={styles.page}>
       <View style={[styles.bar, { paddingTop: insets.top + 4 }]}>
-        {step ? (
+        {step && back ? (
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
