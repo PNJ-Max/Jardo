@@ -1,7 +1,9 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Switch, Text, View } from 'react-native';
+import { Pressable, Switch, Text, View } from 'react-native';
 
+import { useSetProposalDismissed } from '@/api/proposal-queries';
 import { useDeleteTask, useSaveTask } from '@/api/queries';
 import type { JournalEntryKind, Plant } from '@/api/types';
 import { KindIcon } from '@/components/pictograms';
@@ -72,10 +74,15 @@ export function FormProposals({ proposals, on, accepted, onChange }: FormProposa
 
 type PlantProposalsProps = { plant: Plant; species: Species; proposals: ReminderProposal[]; on: DateOnly };
 
-/** Sur la fiche : ce qui n'a pas été coché à la création reste à portée, à ajouter d'un toucher. */
+/**
+ * Sur la fiche : ce qui n'a pas été coché à la création reste à portée, à ajouter d'un toucher, ou
+ * à écarter quand il ne convient pas (« Planter » pour un arbre déjà en place).
+ */
 export function PlantProposals({ plant, species, proposals, on }: PlantProposalsProps) {
+  const { colors } = useTheme();
   const styles = useStyles();
   const save = useSaveTask();
+  const setDismissed = useSetProposalDismissed();
   const remove = useDeleteTask();
   const showUndo = useShowUndo();
   if (proposals.length === 0) return null;
@@ -97,6 +104,19 @@ export function PlantProposals({ plant, species, proposals, on }: PlantProposals
       },
     );
 
+  const dismiss = (proposal: ReminderProposal) =>
+    setDismissed.mutate(
+      { plantId: plant.id, kind: proposal.kind, dismissed: true },
+      {
+        onSuccess: () =>
+          showUndo({
+            message: `Proposition écartée : ${lowerFirst(proposalTitle(proposal))}`,
+            onUndo: () => setDismissed.mutate({ plantId: plant.id, kind: proposal.kind, dismissed: false }),
+          }),
+        onError: (e) => notify("La proposition n'a pas été écartée", e.message),
+      },
+    );
+
   return (
     <View style={styles.section}>
       <SectionTitle>Proposé pour {speciesWithArticle(species)}</SectionTitle>
@@ -110,6 +130,15 @@ export function PlantProposals({ plant, species, proposals, on }: PlantProposals
               disabled={save.isPending}
               onPress={() => add(proposal)}
             />
+            <Pressable
+              onPress={() => dismiss(proposal)}
+              disabled={setDismissed.isPending}
+              accessibilityRole="button"
+              accessibilityLabel={`Écarter : ${proposalLabel(proposal, on)}`}
+              hitSlop={4}
+              style={({ pressed }) => [styles.dismiss, pressed && { opacity: 0.6 }]}>
+              <Ionicons aria-hidden name="close" size={22} color={colors.textMuted} />
+            </Pressable>
           </ProposalRow>
         ))}
       </Group>
@@ -131,4 +160,5 @@ const useStyles = createStyles(({ colors, fonts, typography, spacing, radius }) 
   text: { flex: 1, gap: 2 },
   title: { fontFamily: fonts.bodySemiBold, fontSize: 16, lineHeight: 21, color: colors.text },
   start: { ...typography.caption, color: colors.textMuted },
+  dismiss: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center', marginLeft: -spacing.xs },
 }));

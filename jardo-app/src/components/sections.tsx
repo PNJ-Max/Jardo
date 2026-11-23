@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { useDismissedProposals } from '@/api/proposal-queries';
 import { useGardenClimate, useJournal, useTasks } from '@/api/queries';
 import type { GardenTask, Id, ItemKind, Plant } from '@/api/types';
 import { JournalEntryRow } from '@/components/journal';
@@ -102,6 +103,7 @@ export function TasksSection({ target, plant }: { target: Target; plant?: Plant 
   const { markDone } = useMarkDone();
   const day = useToday();
   const climate = useGardenClimate();
+  const dismissed = useDismissedProposals().data;
   const noun = targetNoun(target);
 
   if (tasks.isPending) return <SectionLoading />;
@@ -110,8 +112,10 @@ export function TasksSection({ target, plant }: { target: Target; plant?: Plant 
   const { own, contained, inherited } = splitTasks(target, tasks.data);
   const species = plant?.speciesId ? findSpecies(plant.speciesId) : undefined;
   const proposals =
-    plant && species && !plant.isArchived
-      ? proposeReminders({ species, plant, tasks: tasks.data, on: day, climate })
+    plant && species && !plant.isArchived && dismissed
+      ? proposeReminders({ species, plant, tasks: tasks.data, on: day, climate }).filter(
+          (proposal) => !dismissed[plant.id]?.includes(proposal.kind),
+        )
       : [];
   const renderTask = (task: GardenTask, showTarget: boolean) => (
     <TaskRow
