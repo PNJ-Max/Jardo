@@ -110,6 +110,29 @@ describe('rappels proposés', () => {
       expect(tasks).toHaveLength(2);
     });
 
+    it('un rappel refusé ne laisse pas la plante créée : l’appui suivant n’en crée qu’une', async () => {
+      const db = await createTestDb();
+      const services = createServices(db, fixedClock(day));
+      const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+      await db.exec("CREATE TRIGGER refuse_task BEFORE INSERT ON garden_tasks BEGIN SELECT RAISE(ABORT, 'Rappel refusé.'); END");
+      await openNewPlant(services, potager.id);
+      await pickSpecies('tomate', 'Tomate');
+      await fireEvent(await proposalSwitch("Arroser tous les 3 jours, à partir d'aujourd'hui"), 'valueChange', true);
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Créer la plante' }));
+
+      expect(await screen.findByText(/Rappel refusé/)).toBeOnTheScreen();
+      await expect(services.plants.getAll()).resolves.toEqual([]);
+
+      await db.exec('DROP TRIGGER refuse_task');
+      await fireEvent.press(screen.getByRole('button', { name: 'Créer la plante' }));
+
+      await waitFor(() => expect(router.back).toHaveBeenCalled());
+      const plants = await services.plants.getAll();
+      expect(plants).toHaveLength(1);
+      await expect(services.tasks.getAll({ itemId: plants[0].id })).resolves.toHaveLength(1);
+    });
+
     it('l’arrosage d’une autre zone ne couvre pas la plante, et la proposition suit la zone choisie', async () => {
       const { services, potager, parcelle } = await garden();
       const autre = await services.zones.create(potager.id, { name: 'Parcelle 2' });

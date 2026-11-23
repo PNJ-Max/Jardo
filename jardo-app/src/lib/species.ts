@@ -1,4 +1,4 @@
-import type { Id, JournalEntryKind, TaskInput } from '@/api/types';
+import type { Id, JournalEntryKind, PlantReminder, TaskInput } from '@/api/types';
 import { yearOf, type DateOnly } from '@/domain/dates';
 import type { ReminderProposal } from '@/domain/reminder-proposals';
 import {
@@ -196,14 +196,17 @@ export function proposalStart({ startDate }: ReminderProposal, on: DateOnly): st
   return `à partir ${fromText(rangeStart(fortnightOf(startDate)))}${year}`;
 }
 
-/** La tâche d'une proposition acceptée. Un semis garde « sous abri » ou « en place » dans son titre. */
-export function proposalTask(
-  { kind, window, recurrence, intervalDays, startDate }: ReminderProposal,
-  target: { spaceId: Id; zoneId: Id | null; itemId: Id },
-): TaskInput {
+/** Le rappel d'une proposition acceptée. Un semis garde « sous abri » ou « en place » dans son titre. */
+export function proposalReminder({ kind, window, recurrence, intervalDays, startDate }: ReminderProposal): PlantReminder {
   const title = kind === 'Sowing' ? windowKindLabels[window!].verb : null;
-  return { kind, title, recurrence, intervalDays, startDate, ...target };
+  return { kind, title, recurrence, intervalDays, startDate };
 }
+
+/** La tâche d'une proposition acceptée. */
+export const proposalTask = (proposal: ReminderProposal, target: { spaceId: Id; zoneId: Id | null; itemId: Id }): TaskInput => ({
+  ...proposalReminder(proposal),
+  ...target,
+});
 
 const formatLength = (cm: number) => (cm < 100 ? `${cm} cm` : `${String(cm / 100).replace('.', ',')} m`);
 

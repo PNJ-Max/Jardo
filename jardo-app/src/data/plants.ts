@@ -9,6 +9,7 @@ import type { Db, SqlValue } from './db';
 import { ensureValidPlacement, moveHistory, type Noun } from './item-placement';
 import { businessRule, notFound } from './problem';
 import { findSpecies } from './species';
+import { insertTask, type TaskInput } from './tasks';
 import { optionalText, Validation } from './validation';
 
 /**
@@ -50,6 +51,9 @@ export type PlantInput = {
   spaceId: Id;
   zoneId?: Id | null;
 };
+
+/** Un rappel accepté dans le formulaire de la plante : une tâche qui la vise. */
+export type PlantReminder = Omit<TaskInput, 'spaceId' | 'zoneId' | 'itemId'>;
 
 type PlantRow = {
   id: Id;
@@ -170,6 +174,12 @@ export function createPlantService(db: Db, clock: Clock) {
     return plant;
   }
 
+  async function insertReminders(id: Id, spaceId: Id, zoneId: Id | null, reminders: readonly PlantReminder[]) {
+    for (const reminder of reminders) {
+      await insertTask(db, clock, { ...reminder, spaceId, zoneId, itemId: id });
+    }
+  }
+
   return {
     /** Triées par espace, zone puis nom. Les archivées, et celles des espaces archivés, seulement sur demande. */
     async getAll({
@@ -210,7 +220,8 @@ export function createPlantService(db: Db, clock: Clock) {
       return (plant?.species_id && findSpecies(plant.species_id)?.harvestUnit) || 'Kilograms';
     },
 
-    async create(input: PlantInput): Promise<Plant> {
+    /** Avec les rappels acceptés dans son formulaire : un rappel refusé ne laisse pas la plante créée. */
+    async create(input: PlantInput, reminders: readonly PlantReminder[] = []): Promise<Plant> {
       validate(input);
       const id = randomUUID();
       const zoneId = input.zoneId ?? null;
@@ -223,12 +234,14 @@ export function createPlantService(db: Db, clock: Clock) {
            VALUES (?, 'Plant', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [id, input.spaceId, zoneId, clock().toISOString(), ...plantParams(input)],
         );
+        await insertReminders(id, input.spaceId, zoneId, reminders);
       });
 
       return getById(id);
     },
 
-    async update(id: Id, input: PlantInput): Promise<Plant> {
+    /** Avec les rappels acceptés dans son formulaire, d'un seul tenant comme à la création. */
+    async update(id: Id, input: PlantInput, reminders: readonly PlantReminder[] = []): Promise<Plant> {
       validate(input);
       const zoneId = input.zoneId ?? null;
 
@@ -247,6 +260,7 @@ export function createPlantService(db: Db, clock: Clock) {
            WHERE id = ?`,
           [input.spaceId, zoneId, ...params, id],
         );
+        await insertReminders(id, input.spaceId, zoneId, reminders);
       });
 
       return getById(id);

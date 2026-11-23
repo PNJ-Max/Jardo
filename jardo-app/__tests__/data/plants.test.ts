@@ -1,4 +1,5 @@
-import { createPlantService, type PlantInput } from '@/data/plants';
+import type { Db } from '@/data/db';
+import { createPlantService, type PlantInput, type PlantReminder } from '@/data/plants';
 import type { QuantityUnit, SpaceKind } from '@/domain/types';
 
 import { createGardenFixtures, fixedClock } from '../../test/garden-data';
@@ -428,5 +429,51 @@ describe('PlantService (espèce du catalogue)', () => {
       status: 400,
       problem: { errors: { SpeciesId: expect.any(Array) } },
     });
+  });
+});
+
+describe('PlantService (rappels du formulaire)', () => {
+  const watering: PlantReminder = { kind: 'Watering', recurrence: 'EveryNDays', intervalDays: 3, startDate: '2026-06-15' };
+  /** Une tâche « autre » sans titre : refusée. */
+  const untitled: PlantReminder = { kind: 'Other', recurrence: 'Once', startDate: '2026-06-20' };
+
+  const tasksOf = (db: Db) =>
+    db.all<{ kind: string; space_id: string; zone_id: string | null; item_id: string }>(
+      'SELECT kind, space_id, zone_id, item_id FROM garden_tasks',
+    );
+
+  it('crée la plante et ses rappels, qui la visent dans sa zone', async () => {
+    const { db, service, addSpace, addZone } = await setup();
+    const potager = await addSpace('Potager');
+    const parcelle = await addZone(potager, 'Parcelle 1');
+
+    const plant = await service.create(newPlant(potager.id, parcelle.id), [watering]);
+
+    await expect(tasksOf(db)).resolves.toEqual([
+      { kind: 'Watering', space_id: potager.id, zone_id: parcelle.id, item_id: plant.id },
+    ]);
+  });
+
+  it('un rappel refusé ne laisse ni la plante, ni les rappels déjà notés', async () => {
+    const { db, service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+
+    await expect(service.create(newPlant(potager.id), [watering, untitled])).rejects.toMatchObject(refused);
+
+    await expect(service.getAll()).resolves.toEqual([]);
+    await expect(tasksOf(db)).resolves.toEqual([]);
+  });
+
+  it('à la modification, un rappel refusé laisse la plante comme elle était', async () => {
+    const { db, service, addSpace } = await setup();
+    const potager = await addSpace('Potager');
+    const plant = await service.create(newPlant(potager.id));
+
+    await expect(service.update(plant.id, { ...newPlant(potager.id), name: 'Poireaux' }, [watering, untitled])).rejects.toMatchObject(
+      refused,
+    );
+
+    await expect(service.getById(plant.id)).resolves.toMatchObject({ name: 'Carottes' });
+    await expect(tasksOf(db)).resolves.toEqual([]);
   });
 });
