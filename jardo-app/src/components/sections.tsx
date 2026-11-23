@@ -282,13 +282,21 @@ function SectionLoading() {
 
 export type DetailTab = { key: string; label: string; render: () => ReactNode };
 
+type DetailScreenProps = {
+  cover?: ReactNode;
+  header: ReactNode;
+  tabs: DetailTab[];
+  /** L'onglet ouvert à l'arrivée ; le premier par défaut. */
+  initialTab?: string;
+};
+
 /**
  * Une fiche : l'en-tête et les onglets restent en place, seul le contenu de l'onglet défile. Un
  * onglet n'est rendu, et ses données chargées, qu'une fois ouvert.
  */
-export function DetailScreen({ cover, header, tabs }: { cover?: ReactNode; header: ReactNode; tabs: DetailTab[] }) {
+export function DetailScreen({ cover, header, tabs, initialTab = tabs[0].key }: DetailScreenProps) {
   const styles = useDetailStyles();
-  const [active, setActive] = useState(tabs[0].key);
+  const [active, setActive] = useState(initialTab);
   const current = tabs.find((tab) => tab.key === active) ?? tabs[0];
 
   return (
