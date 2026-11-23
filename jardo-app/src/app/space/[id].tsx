@@ -52,6 +52,8 @@ function SpaceDetail({ space }: { space: Space }) {
   return (
     <DetailScreen
       cover={<SpaceCover kind={space.kind} />}
+      // Un espace qu'on vient de créer n'a rien à faire : il s'ouvre là où l'on y met ses plantes.
+      initialTab={space.itemCount === 0 && space.dueTaskCount === 0 ? 'contents' : 'tasks'}
       header={
         <>
           <View style={styles.headerText}>

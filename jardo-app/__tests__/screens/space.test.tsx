@@ -82,19 +82,43 @@ describe('fiche espace', () => {
     expect(screen.getByText('Ajouter une zone')).toBeOnTheScreen();
   });
 
-  it("propose d'ajouter une plante ou une zone à un espace encore vide", async () => {
+  it("s'ouvre sur son contenu quand il est encore vide, et propose d'y ajouter une plante ou une zone", async () => {
     const services = await createTestServices();
     const verger = await services.spaces.create({ name: 'Verger', kind: 'Orchard' });
     jest.mocked(useLocalSearchParams).mockReturnValue({ id: verger.id });
     await renderScreen(<SpaceScreen />, services);
 
-    await fireEvent.press(await screen.findByRole('tab', { name: 'Contenu' }));
     expect(await screen.findByText("Rien n'y pousse encore")).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Contenu' })).toBeSelected();
+    expect(screen.queryByText(/^Aucune tâche/)).not.toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Ajouter une plante' }));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/plant/form', params: { spaceId: verger.id } });
     await fireEvent.press(screen.getByText('Ajouter une zone'));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/zone/form', params: { spaceId: verger.id } });
+  });
+
+  it("s'ouvre sur ses parcelles quand elles n'ont encore aucune plante", async () => {
+    const services = await createTestServices();
+    const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+    await services.zones.create(potager.id, { name: 'Parcelle 1' });
+    jest.mocked(useLocalSearchParams).mockReturnValue({ id: potager.id });
+    await renderScreen(<SpaceScreen />, services);
+
+    expect(await screen.findByText('Parcelle 1')).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Contenu' })).toBeSelected();
+    expect(screen.getByText('Ajouter une plante')).toBeOnTheScreen();
+  });
+
+  it("s'ouvre sur ses tâches, même sans élément, dès qu'une tâche y attend", async () => {
+    const services = await createTestServices();
+    const verger = await services.spaces.create({ name: 'Verger', kind: 'Orchard' });
+    await services.tasks.create({ kind: 'Pruning', title: 'Tailler la haie', recurrence: 'Once', startDate: today(), spaceId: verger.id });
+    jest.mocked(useLocalSearchParams).mockReturnValue({ id: verger.id });
+    await renderScreen(<SpaceScreen />, services);
+
+    expect(await screen.findByText('Tailler la haie')).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Tâches' })).toBeSelected();
   });
 
   it("garde l'accès aux éléments archivés d'un espace sans zone", async () => {
