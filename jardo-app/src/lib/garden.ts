@@ -122,6 +122,9 @@ export const taskTitle = (task: Pick<GardenTask, 'title' | 'kind'>) => task.titl
 
 export const lowerFirst = (text: string) => text.charAt(0).toLocaleLowerCase('fr') + text.slice(1);
 
+/** « 3 tâches à faire » : ce qui attend aujourd'hui dans un espace ou une parcelle. */
+export const tasksToDo = (count: number) => `${count} ${count > 1 ? 'tâches' : 'tâche'} à faire`;
+
 /** « arroser les tomates, Tomates » : l'intervention, puis la cible la plus précise. */
 export const taskPhrase = (task: GardenTask) =>
   `${lowerFirst(taskTitle(task))}, ${task.itemName ?? task.zoneName ?? task.spaceName}`;

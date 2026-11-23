@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { tasksToDo } from '@/lib/garden';
 import { slotAt, ZONE_SLOTS, type Scene, type SlotKey } from '@/map/layouts';
 import { BOUNCE_DURATION, BOUNCE_LEAD } from '@/map/motion';
 import type { Point } from '@/map/scene';
@@ -40,6 +41,8 @@ type MapViewportProps = {
   scene: Scene;
   /** Nom affiché sur chaque emplacement occupé. */
   labels: Partial<Record<SlotKey, string>>;
+  /** Tâches qui attendent aujourd'hui sur un emplacement : un repère sur son étiquette. */
+  waiting?: Partial<Record<SlotKey, number>>;
   /** Emplacements libres : dessinés en retrait. */
   free: SlotKey[];
   selected: SlotKey | null;
@@ -54,7 +57,7 @@ type MapViewportProps = {
  * chaque image sur le thread UI, sans repasser par React. Un emplacement occupé rebondit quand on
  * le touche, et n'est sélectionné qu'au sommet du rebond.
  */
-export function MapViewport({ scene, labels, free, selected, onSelect, recenter }: MapViewportProps) {
+export function MapViewport({ scene, labels, waiting = {}, free, selected, onSelect, recenter }: MapViewportProps) {
   const [size, setSize] = useState<Size | null>(null);
   const fit = useMemo(() => (size ? fitView(scene, size) : null), [scene, size]);
   const muted = useMemo<Point[][]>(() => free.map((key) => scene.slots[key].hit), [scene, free]);
@@ -193,6 +196,7 @@ export function MapViewport({ scene, labels, free, selected, onSelect, recenter 
             <MapLabel
               key={key}
               text={text}
+              waiting={waiting[key] ?? 0}
               anchor={scene.slots[key].anchor}
               minScale={ZONE_SLOTS.includes(key) ? fit.scale * ZONE_LABEL_ZOOM : 0}
               view={{ scale, x, y }}
@@ -211,6 +215,7 @@ const LABEL_HEIGHT = 40;
 
 type MapLabelProps = {
   text: string;
+  waiting: number;
   anchor: [number, number];
   /** Échelle en dessous de laquelle l'étiquette est cachée. */
   minScale: number;
@@ -220,7 +225,7 @@ type MapLabelProps = {
 };
 
 /** Étiquette d'un emplacement, de taille fixe, dont la pointe suit la carte. */
-function MapLabel({ text, anchor, minScale, view, selected, onPress }: MapLabelProps) {
+function MapLabel({ text, waiting, anchor, minScale, view, selected, onPress }: MapLabelProps) {
   const styles = useLabelStyles();
   // Une étiquette cachée par l'échelle reste dans l'arbre : sans ça, le lecteur d'écran et le clavier l'atteignent.
   const [visible, setVisible] = useState(minScale === 0);
@@ -254,12 +259,19 @@ function MapLabel({ text, anchor, minScale, view, selected, onPress }: MapLabelP
         onPress={onPress}
         tabIndex={visible ? 0 : -1}
         accessibilityRole="button"
-        accessibilityLabel={`Ouvrir ${text}`}
+        accessibilityLabel={waiting > 0 ? `Ouvrir ${text}, ${tasksToDo(waiting)}` : `Ouvrir ${text}`}
         hitSlop={{ top: 11, bottom: 11, left: 8, right: 8 }}
         style={[styles.pill, selected && styles.pillSelected]}>
         <Text style={[styles.text, selected && styles.textSelected]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
           {text}
         </Text>
+        {waiting > 0 && (
+          <View style={[styles.count, selected && styles.countSelected]}>
+            <Text style={[styles.countText, selected && styles.countTextSelected]} maxFontSizeMultiplier={1.3}>
+              {waiting}
+            </Text>
+          </View>
+        )}
       </Pressable>
       <View style={[styles.tip, selected && styles.tipSelected]} />
     </Animated.View>
@@ -286,6 +298,9 @@ const useLabelStyles = createStyles(({ colors, fonts, typography, spacing }) => 
     justifyContent: 'flex-end',
   },
   pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs + 2,
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: 3,
     borderRadius: 999,
@@ -296,6 +311,19 @@ const useLabelStyles = createStyles(({ colors, fonts, typography, spacing }) => 
   pillSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   text: { ...typography.caption, fontFamily: fonts.bodySemiBold, color: colors.text },
   textSelected: { color: colors.primaryText },
+  count: {
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 5,
+    marginRight: -spacing.xs,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+  },
+  countSelected: { backgroundColor: colors.primaryText },
+  countText: { ...typography.caption, fontSize: 11, lineHeight: 14, fontFamily: fonts.heading, color: colors.primaryText },
+  countTextSelected: { color: colors.primary },
   tip: {
     width: 8,
     height: 8,

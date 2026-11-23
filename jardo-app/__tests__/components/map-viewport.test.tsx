@@ -59,6 +59,27 @@ describe('MapViewport', () => {
       expect(top + bottom + 26).toBeGreaterThanOrEqual(48);
     });
 
+    it("signale sur l'étiquette ce qui attend aujourd'hui, et le dit dans son nom", async () => {
+      await render(
+        <MapViewport
+          scene={countryHouseScene('light')}
+          labels={{ orchard: 'Verger', vegetable: 'Potager', greenhouse: 'Serre' }}
+          waiting={{ orchard: 1, vegetable: 3 }}
+          free={[]}
+          selected={null}
+          onSelect={jest.fn()}
+          recenter={0}
+        />,
+      );
+      const [frame] = screen.container.queryAll((node) => node.props.collapsable === false && !!node.props.onLayout);
+      await fireEvent(frame, 'layout', layout(420, 747));
+
+      expect(screen.getByRole('button', { name: 'Ouvrir Verger, 1 tâche à faire' })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Ouvrir Potager, 3 tâches à faire' })).toBeOnTheScreen();
+      expect(screen.getByText('3')).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Ouvrir Serre' })).toBeOnTheScreen();
+    });
+
     it('cache le dessin de la carte, dont le nom des emplacements est dit par les étiquettes', async () => {
       const frame = await renderLabelled({ orchard: 'Verger' });
 
