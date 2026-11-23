@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { LayoutChoice } from '@/components/map/layout-choice';
-import { SetupPage } from '@/components/setup';
+import { SetupPage, setupStep } from '@/components/setup';
 import { Button } from '@/components/ui';
 import { countryHouse } from '@/data/garden-layouts';
 import type { DrawnLayout } from '@/map/scenes';
@@ -14,7 +14,7 @@ export default function SetupModelScreen() {
 
   return (
     <SetupPage
-      step="Étape 1 sur 2"
+      step={setupStep(1)}
       title="Votre maison"
       intro="Choisissez le dessin qui ressemble le plus à chez vous. Ce n'est pas un plan, juste le décor de vos espaces."
       footer={

@@ -1,16 +1,17 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { useSetupGardenMap } from '@/api/queries';
 import type { SpaceKind } from '@/api/types';
-import { leaveSetup, SetupPage } from '@/components/setup';
+import { leaveSetup, SetupPage, setupStep } from '@/components/setup';
 import { Button, FormError, Group } from '@/components/ui';
 import { SpaceVignette } from '@/components/vignettes/space-vignette';
 import { countryHouse } from '@/data/garden-layouts';
 import { spaceKindOptions } from '@/lib/garden';
 import { setupInput } from '@/lib/garden-map';
+import { remindersSupported } from '@/lib/notifications';
 import { isDrawn } from '@/map/scenes';
 import { createStyles, spacing, useTheme } from '@/theme';
 
@@ -25,6 +26,9 @@ export default function SetupSpacesScreen() {
   const [beds, setBeds] = useState(false);
   const hasVegetableGarden = kinds.includes('VegetableGarden');
 
+  // Sans espace, pas de tâche à rappeler : l'assistant s'arrête là.
+  const finish = () => (kinds.length > 0 && remindersSupported ? router.replace('/setup/reminder') : leaveSetup());
+
   const toggle = (kind: SpaceKind) => {
     setup.reset();
     setKinds((current) => (current.includes(kind) ? current.filter((other) => other !== kind) : [...current, kind]));
@@ -32,7 +36,7 @@ export default function SetupSpacesScreen() {
 
   return (
     <SetupPage
-      step="Étape 2 sur 2"
+      step={setupStep(2)}
       title="Vos espaces"
       intro="Cochez ce que vous avez : chaque espace prend sa place sur la carte. Vous pourrez ensuite en ajouter, en renommer ou en retirer."
       footer={
@@ -42,7 +46,7 @@ export default function SetupSpacesScreen() {
             title={kinds.length > 0 ? 'Créer mon jardin' : 'Afficher la carte'}
             icon="checkmark"
             loading={setup.isPending}
-            onPress={() => setup.mutate(setupInput(layout, kinds, hasVegetableGarden && beds), { onSuccess: leaveSetup })}
+            onPress={() => setup.mutate(setupInput(layout, kinds, hasVegetableGarden && beds), { onSuccess: finish })}
           />
         </>
       }>
