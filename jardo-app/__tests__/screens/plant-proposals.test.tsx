@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
@@ -52,6 +53,7 @@ async function openPlant(services: Services, id: string) {
 }
 
 const add = (name: string) => screen.findByRole('button', { name: `Ajouter : ${name}` });
+const dismiss = (name: string) => screen.findByRole('button', { name: `Écarter : ${name}` });
 
 describe('rappels proposés', () => {
   beforeEach(() => {
@@ -265,6 +267,55 @@ describe('rappels proposés', () => {
 
       expect(await add("Arroser tous les 3 jours, à partir d'aujourd'hui")).toBeOnTheScreen();
       await expect(services.tasks.getAll({ itemId: plant.id })).resolves.toEqual([]);
+    });
+
+    describe('écarter une proposition', () => {
+      beforeEach(() => AsyncStorage.clear());
+
+      const wateringProposal = "Arroser tous les 3 jours, à partir d'aujourd'hui";
+
+      it('retire la ligne sans rien créer, annonce « Proposition écartée », et le choix tient à la réouverture', async () => {
+        const { services, potager } = await garden();
+        const plant = await services.plants.create({ name: 'Mes plants', speciesId: 'tomato', spaceId: potager.id });
+        const view = await openPlant(services, plant.id);
+
+        await fireEvent.press(await dismiss(wateringProposal));
+
+        expect(await screen.findByText('Proposition écartée : arroser tous les 3 jours')).toBeOnTheScreen();
+        await waitFor(() => expect(screen.queryByText('Arroser tous les 3 jours')).not.toBeOnTheScreen());
+        expect(await add('Récolter, à partir de mi-juillet 2027')).toBeOnTheScreen();
+        await expect(services.tasks.getAll({ itemId: plant.id })).resolves.toEqual([]);
+
+        await view.unmount();
+        await openPlant(services, plant.id);
+        expect(await add('Récolter, à partir de mi-juillet 2027')).toBeOnTheScreen();
+        expect(screen.queryByText('Arroser tous les 3 jours')).not.toBeOnTheScreen();
+      });
+
+      it('« Annuler » rend la proposition', async () => {
+        const { services, potager } = await garden();
+        const plant = await services.plants.create({ name: 'Mes plants', speciesId: 'tomato', spaceId: potager.id });
+        await openPlant(services, plant.id);
+
+        await fireEvent.press(await dismiss(wateringProposal));
+        await fireEvent.press(await screen.findByText('Annuler'));
+
+        expect(await add(wateringProposal)).toBeOnTheScreen();
+      });
+
+      it("ne vaut que pour cette plante : une autre tomate garde la proposition", async () => {
+        const { services, potager } = await garden();
+        const first = await services.plants.create({ name: 'Tomates du haut', speciesId: 'tomato', spaceId: potager.id });
+        const second = await services.plants.create({ name: 'Tomates du bas', speciesId: 'tomato', spaceId: potager.id });
+        const view = await openPlant(services, first.id);
+        await fireEvent.press(await dismiss(wateringProposal));
+        await screen.findByText('Proposition écartée : arroser tous les 3 jours');
+
+        await view.unmount();
+        await openPlant(services, second.id);
+
+        expect(await add(wateringProposal)).toBeOnTheScreen();
+      });
     });
 
     it('garde les tâches au-dessus des propositions', async () => {
