@@ -8,7 +8,7 @@ import { lowerFirst, taskPhrase, taskTitle } from './garden';
 
 export type WeekDay = {
   date: DateOnly;
-  /** Quelque chose est prévu ce jour-là ; aujourd'hui, les retards comptent. */
+  /** Quelque chose est prévu ce jour-là ; aujourd'hui, tout ce qui attend compte. */
   planned: boolean;
   /** Aujourd'hui seulement : il y a du retard. */
   overdue: boolean;
@@ -19,7 +19,8 @@ export function weekDays(tasks: readonly GardenTask[], today: DateOnly): WeekDay
   return Array.from({ length: 7 }, (_, offset) => {
     const date = addDays(today, offset);
     const overdue = offset === 0 && tasks.some((task) => task.status === 'Overdue');
-    return { date, planned: overdue || tasks.some((task) => task.nextDueDate === date), overdue };
+    const planned = offset === 0 ? tasks.some((task) => task.status !== 'Ok') : tasks.some((task) => task.nextDueDate === date);
+    return { date, planned, overdue };
   });
 }
 
@@ -27,9 +28,15 @@ export function weekDays(tasks: readonly GardenTask[], today: DateOnly): WeekDay
 export const overdueTasks = (tasks: readonly GardenTask[]) =>
   tasks.filter((task) => task.status === 'Overdue').sort((a, b) => b.daysOverdue - a.daysOverdue);
 
-/** Ce qui est prévu ce jour-là, retards à part. */
+/**
+ * Ce qui est à faire aujourd'hui, retards à part : ce qui tombe ce jour, et les tâches régulières
+ * dont l'échéance est passée, qui ne sont jamais en retard.
+ */
+export const dueToday = (tasks: readonly GardenTask[]) => tasks.filter((task) => task.status === 'DueSoon');
+
+/** Ce qui est prévu un jour à venir. */
 export const tasksOn = (tasks: readonly GardenTask[], date: DateOnly) =>
-  tasks.filter((task) => task.status !== 'Overdue' && task.nextDueDate === date);
+  tasks.filter((task) => task.status === 'Ok' && task.nextDueDate === date);
 
 export type SpaceGroup = { spaceId: Id; spaceName: string; spaceKind: SpaceKind; tasks: GardenTask[] };
 
@@ -76,7 +83,7 @@ const things =(count: number) => `${count} ${count > 1 ? 'choses' : 'chose'}`;
  */
 export function skyPhrase(tasks: readonly GardenTask[], today: DateOnly): string {
   const overdue = overdueTasks(tasks).length;
-  const waiting = overdue + tasksOn(tasks, today).length;
+  const waiting = overdue + dueToday(tasks).length;
 
   if (waiting > 0) {
     if (overdue === waiting) return `${things(overdue)} en retard au jardin`;

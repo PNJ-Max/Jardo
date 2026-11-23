@@ -108,7 +108,7 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
     const due = await service.getDue('Today');
 
     expect(due.map((task) => task.id)).toEqual([neverPruned, lateByTwo, treatment, dueToday]);
-    expect(due.map((task) => task.status)).toEqual(['Overdue', 'Overdue', 'Overdue', 'DueSoon']);
+    expect(due.map((task) => task.status)).toEqual(['Overdue', 'DueSoon', 'Overdue', 'DueSoon']);
     expect(due.some((task) => task.id === upToDate)).toBe(false);
   });
 
@@ -223,7 +223,7 @@ describe('TaskService (port de TaskServiceTests.cs)', () => {
 
     const done = (await service.complete(task, { date: addDays(today, -4), note: 'Oublié de le noter' })).task;
 
-    expect(done).toMatchObject({ status: 'Overdue', daysOverdue: 1 });
+    expect(done).toMatchObject({ status: 'DueSoon', daysOverdue: 1 });
     expect((await db.all<{ note: string }>('SELECT note FROM journal_entries')).map((row) => row.note)).toEqual(['Oublié de le noter']);
   });
 
@@ -528,7 +528,7 @@ describe('TaskService : reporter', () => {
 
     expect(previous).toBe(addDays(today, -1));
     expect(restored).toEqual(before);
-    expect(restored).toMatchObject({ status: 'Overdue', daysOverdue: 1 });
+    expect(restored).toMatchObject({ status: 'DueSoon', daysOverdue: 1 });
   });
 
   it.each([

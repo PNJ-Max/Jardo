@@ -28,15 +28,16 @@ export type Reminder = { date: Date; body: string };
 const things = (count: number) => `${count} ${count > 1 ? 'choses' : 'chose'}`;
 
 /**
- * Ce qui attend ce jour-là si rien n'est fait d'ici là : ce qui y tombe et tout ce qui est en
- * retard à cette date. Le report est déjà dans l'échéance calculée par le service.
+ * Ce qui attend ce jour-là si rien n'est fait d'ici là : ce qui y tombe et tout ce dont l'échéance
+ * est passée à cette date. Seule une tâche annuelle ou ponctuelle est alors en retard : une tâche
+ * régulière reste à faire. Le report est déjà dans l'échéance calculée par le service.
  */
 function waitingOn(tasks: readonly GardenTask[], date: DateOnly) {
-  const late = tasks
-    .filter((task) => task.nextDueDate !== null && task.nextDueDate < date)
-    .sort((a, b) => a.nextDueDate!.localeCompare(b.nextDueDate!));
-  const onDay = bySpace(tasks.filter((task) => task.nextDueDate === date)).flatMap((group) => group.tasks);
-  return { late, all: [...late, ...onDay] };
+  const waiting = tasks.filter((task) => task.nextDueDate !== null && task.nextDueDate <= date);
+  const isLate = (task: GardenTask) => task.nextDueDate! < date && task.recurrence !== 'EveryNDays';
+  const late = waiting.filter(isLate).sort((a, b) => a.nextDueDate!.localeCompare(b.nextDueDate!));
+  const toDo = bySpace(waiting.filter((task) => !isLate(task))).flatMap((group) => group.tasks);
+  return { late, all: [...late, ...toDo] };
 }
 
 /**

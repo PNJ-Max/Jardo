@@ -16,15 +16,14 @@ import { createTestServices, pictogramsOnScreen, renderScreen } from '../../test
 
 const inDays = (days: number) => addDays(today(), days);
 
-/** En retard de deux jours, sur les tomates du potager ; « Fait » la renvoie à dix jours, hors de la semaine. */
+/** En retard de deux jours, sur les tomates du potager ; « Fait » la renvoie à l'an prochain, hors de la semaine. */
 async function addOverdue(services: Services) {
   const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
   const tomates = await services.plants.create({ name: 'Tomates', quantity: 3, quantityUnit: 'Plants', spaceId: potager.id });
   return services.tasks.create({
-    kind: 'Watering',
-    title: 'Arroser les tomates',
-    recurrence: 'EveryNDays',
-    intervalDays: 10,
+    kind: 'Treatment',
+    title: 'Traiter les tomates',
+    recurrence: 'Yearly',
     startDate: inDays(-2),
     spaceId: potager.id,
     itemId: tomates.id,
@@ -73,6 +72,19 @@ describe("écran Aujourd'hui", () => {
     ]);
     expect(screen.getByText(/^Tomates · Potager,/)).toBeOnTheScreen();
     expect(screen.queryByText(/^Aujourd'hui/)).not.toBeOnTheScreen();
+  });
+
+  it("laisse à faire, sans retard ni rouge, un arrosage régulier dont l'échéance est passée", async () => {
+    const services = await createTestServices();
+    const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
+    await services.tasks.create({ kind: 'Watering', recurrence: 'EveryNDays', intervalDays: 3, startDate: inDays(-6), spaceId: potager.id });
+    await renderScreen(<TodayScreen />, services);
+
+    expect(await screen.findByText('1 chose à faire au jardin')).toBeOnTheScreen();
+    expect(screen.getByText(/^Aujourd'hui/)).toBeOnTheScreen();
+    expect(screen.getByText('Arroser')).toBeOnTheScreen();
+    expect(screen.queryByText(/retard/i)).not.toBeOnTheScreen();
+    expect(screen.getAllByRole('tab')[0]).toHaveAccessibleName("Aujourd'hui, quelque chose de prévu");
   });
 
   it("range aujourd'hui par espace, le plus chargé d'abord et l'arrosage en tête, avec la cible et le rythme", async () => {
@@ -127,7 +139,7 @@ describe("écran Aujourd'hui", () => {
     expect(screen.getByText('Traiter')).toBeOnTheScreen();
     expect(screen.queryByText('Tailler')).not.toBeOnTheScreen();
     // Les retards restent en tête, quel que soit le jour.
-    expect(screen.getByText('Arroser les tomates')).toBeOnTheScreen();
+    expect(screen.getByText('Traiter les tomates')).toBeOnTheScreen();
 
     await fireEvent.press(days[1]);
     expect(screen.getByText(/^Demain/)).toBeOnTheScreen();
@@ -190,8 +202,8 @@ describe("écran Aujourd'hui", () => {
     await renderScreen(<TodayScreen />, services);
 
     expect(await screen.findByText('Tailler')).toBeOnTheScreen();
-    expect(pictogramsOnScreen().filter((key) => !key.startsWith('done-'))).toEqual(['Watering:light', 'Pruning:light']);
-    expect(screen.getByRole('button', { name: 'Fait : Arroser les tomates, Tomates · Potager' })).toBeOnTheScreen();
+    expect(pictogramsOnScreen().filter((key) => !key.startsWith('done-'))).toEqual(['Treatment:light', 'Pruning:light']);
+    expect(screen.getByRole('button', { name: 'Fait : Traiter les tomates, Tomates · Potager' })).toBeOnTheScreen();
   });
 
   it("affiche l'erreur de lecture et permet de réessayer", async () => {
@@ -206,8 +218,8 @@ describe("écran Aujourd'hui", () => {
   });
 
   describe('« Fait »', () => {
-    const doneLabel = /^Fait : Arroser les tomates/;
-    const noted = 'Noté au journal : arroser les tomates, Tomates';
+    const doneLabel = /^Fait : Traiter les tomates/;
+    const noted = 'Noté au journal : traiter les tomates, Tomates';
 
     // La ligne célèbre puis se replie avant que la tâche soit notée : le test fait passer ce temps.
     beforeEach(() => jest.useFakeTimers());
@@ -233,14 +245,14 @@ describe("écran Aujourd'hui", () => {
 
       await fireEvent.press(await screen.findByLabelText(doneLabel));
 
-      expect(screen.getByText('Arroser les tomates')).toBeOnTheScreen();
+      expect(screen.getByText('Traiter les tomates')).toBeOnTheScreen();
       expect(screen.getByLabelText(doneLabel)).toBeDisabled();
       expect(screen.getByText('Noté')).toBeOnTheScreen();
       expect(services.tasks.complete).not.toHaveBeenCalled();
 
       await letRowFold();
 
-      await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
+      await waitFor(() => expect(screen.queryByText('Traiter les tomates')).not.toBeOnTheScreen());
       expect(screen.queryByText(/^En retard/)).not.toBeOnTheScreen();
       expect(screen.getByText('Tailler')).toBeOnTheScreen();
 
@@ -256,7 +268,7 @@ describe("écran Aujourd'hui", () => {
 
         await fireEvent.press(await screen.findByLabelText(doneLabel));
 
-        await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
+        await waitFor(() => expect(screen.queryByText('Traiter les tomates')).not.toBeOnTheScreen());
         expect(await screen.findByText(noted)).toBeOnTheScreen();
       } finally {
         jest.mocked(useReducedMotion).mockReturnValue(false);
@@ -280,12 +292,12 @@ describe("écran Aujourd'hui", () => {
       await letRowFold();
 
       expect(await screen.findByText(noted)).toBeOnTheScreen();
-      await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
+      await waitFor(() => expect(screen.queryByText('Traiter les tomates')).not.toBeOnTheScreen());
       await expect(services.journal.getAll()).resolves.toHaveLength(1);
 
       await fireEvent.press(screen.getByText('Annuler'));
 
-      expect(await screen.findByText('Arroser les tomates')).toBeOnTheScreen();
+      expect(await screen.findByText('Traiter les tomates')).toBeOnTheScreen();
       await expect(services.journal.getAll()).resolves.toEqual([]);
       expect(screen.queryByText(/^Noté/)).not.toBeOnTheScreen();
     });
@@ -301,7 +313,7 @@ describe("écran Aujourd'hui", () => {
       const [entry] = await services.journal.getAll();
       expect(router.push).toHaveBeenCalledWith({ pathname: '/entry/form', params: { id: String(entry.id) } });
       expect(screen.queryByText(noted)).not.toBeOnTheScreen();
-      await waitFor(() => expect(screen.queryByText('Arroser les tomates')).not.toBeOnTheScreen());
+      await waitFor(() => expect(screen.queryByText('Traiter les tomates')).not.toBeOnTheScreen());
       await expect(services.journal.getAll()).resolves.toHaveLength(1);
     });
 
@@ -333,7 +345,7 @@ describe("écran Aujourd'hui", () => {
       await letRowFold();
 
       await waitFor(() => expect(alert).toHaveBeenCalledWith("La tâche n'a pas été notée", 'Refusé.'));
-      expect(await screen.findByText('Arroser les tomates')).toBeOnTheScreen();
+      expect(await screen.findByText('Traiter les tomates')).toBeOnTheScreen();
       await waitFor(() => expect(screen.getByLabelText(doneLabel)).toBeEnabled());
       expect(screen.queryByText(/^Noté/)).not.toBeOnTheScreen();
     });

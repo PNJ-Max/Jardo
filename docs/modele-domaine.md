@@ -212,13 +212,15 @@ d'application du journal :
   lendemain : que la tâche soit faite par « Fait », par une entrée notée au journal ou par un
   arrosage de tout l'espace, le report à demain n'a plus d'effet. Une intervention datée d'avant
   le report ne l'annule pas. Un report arrivé à son jour sans que la tâche soit faite la rend due
-  ce jour-là, puis en retard depuis ce jour. Une tâche ne se reporte qu'à un jour à venir, après
+  ce jour-là, puis en retard depuis ce jour (à faire, pour une tâche tous les N jours). Une tâche ne se reporte qu'à un jour à venir, après
   son échéance : ni une tâche ponctuelle close, ni un report qui ne repousse rien. L'app ne
   propose que « demain », pour une tâche due ; un report plus lointain que le rythme de la tâche
   tiendrait jusqu'à sa date, même faite avant. Annuler un report remet le précédent tel quel.
 
 Le voyant vaut pour toute tâche : `Ok` (échéance future ou tâche ponctuelle close), `DueSoon`
-(échéance aujourd'hui), `Overdue` (échéance passée, avec le nombre de jours de retard). Faire
+(à faire : échéance aujourd'hui, ou passée pour une tâche tous les N jours), `Overdue` (échéance
+passée d'une tâche annuelle ou ponctuelle, avec le nombre de jours de retard). Un arrosage n'est
+jamais « en retard de 6 jours » : il est à faire ; le retard est gardé pour ce qui a une vraie date. Faire
 une tâche, c'est noter l'intervention au journal : il n'y a pas de statut « faite » à tenir à
 jour. L'action « Fait » note l'entrée sur la cible de la tâche, à la date du jour ou à une date
 passée, avec le titre de la tâche pour note à défaut d'une autre. Les tâches d'un élément ou

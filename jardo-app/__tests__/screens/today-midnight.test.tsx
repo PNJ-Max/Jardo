@@ -54,7 +54,8 @@ describe("Aujourd'hui, au changement de jour", () => {
 
     expect(await screen.findByText('Dimanche 1 novembre')).toBeOnTheScreen();
     expect(await screen.findByLabelText(/^Fait : Planter l'ail/)).toBeOnTheScreen();
-    expect(await screen.findByText('en retard de 1 jour')).toBeOnTheScreen();
+    // L'arrosage de la veille reste à faire, sans passer en retard.
+    expect(screen.getByText('2 choses à faire au jardin')).toBeOnTheScreen();
   });
 
   it("relit le jour au retour sur l'app, après une nuit en arrière-plan", async () => {

@@ -3,6 +3,7 @@ import { addDays, daysBetween } from '@/domain/dates';
 import {
   bySpace,
   comingThisMonth,
+  dueToday,
   dueWaterings,
   lastHarvest,
   lateness,
@@ -18,15 +19,19 @@ import {
 const today = '2026-10-28';
 let nextId = 0;
 
-/** Une tâche due dans `inDays` jours (négatif : en retard), telle que le service la renvoie. */
+/**
+ * Une tâche due dans `inDays` jours (négatif : échue, en retard seulement si elle a une vraie date),
+ * telle que le service la renvoie.
+ */
 function task(inDays: number, extra: Partial<GardenTask> = {}): GardenTask {
   const nextDueDate = addDays(today, inDays);
   const daysLate = daysBetween(nextDueDate, today);
+  const recurrence = extra.recurrence ?? 'EveryNDays';
   return {
     id: `t${++nextId}`,
     kind: 'Pruning',
     title: null,
-    recurrence: 'EveryNDays',
+    recurrence,
     intervalDays: 3,
     startDate: nextDueDate,
     createdAt: '2026-01-01T12:00:00.000Z',
@@ -42,7 +47,7 @@ function task(inDays: number, extra: Partial<GardenTask> = {}): GardenTask {
     itemKind: null,
     lastDoneOn: null,
     nextDueDate,
-    status: daysLate > 0 ? 'Overdue' : daysLate === 0 ? 'DueSoon' : 'Ok',
+    status: daysLate > 0 && recurrence !== 'EveryNDays' ? 'Overdue' : daysLate >= 0 ? 'DueSoon' : 'Ok',
     daysOverdue: Math.max(0, daysLate),
     isCompleted: false,
     ...extra,
@@ -51,6 +56,7 @@ function task(inDays: number, extra: Partial<GardenTask> = {}): GardenTask {
 
 const verger = { spaceId: 'verger', spaceName: 'Verger', spaceKind: 'Orchard' } as const;
 const serre = { spaceId: 'serre', spaceName: 'Serre', spaceKind: 'Greenhouse' } as const;
+const dated = { recurrence: 'Yearly', intervalDays: null } as const;
 
 describe('weekDays', () => {
   it("compte sept jours depuis aujourd'hui, avec un point sous ceux qui ont quelque chose de prévu", () => {
@@ -62,20 +68,24 @@ describe('weekDays', () => {
   });
 
   it("marque le retard sur aujourd'hui seulement", () => {
-    const days = weekDays([task(-3)], today);
+    const days = weekDays([task(-3, dated)], today);
 
     expect(days[0]).toEqual({ date: today, planned: true, overdue: true });
     expect(days.slice(1).every((day) => !day.planned && !day.overdue)).toBe(true);
   });
+
+  it("compte aujourd'hui, sans retard, une tâche régulière échue", () => {
+    expect(weekDays([task(-3)], today)[0]).toEqual({ date: today, planned: true, overdue: false });
+  });
 });
 
-describe('overdueTasks et tasksOn', () => {
-  it('range les retards à part, les plus en retard d\'abord', () => {
-    const tasks = [task(-1), task(-5), task(0), task(2)];
+describe('overdueTasks, dueToday et tasksOn', () => {
+  it("range les retards à part, les plus en retard d'abord, et laisse à faire les tâches régulières échues", () => {
+    const tasks = [task(-1, dated), task(-5, dated), task(0), task(-4), task(2)];
 
     expect(overdueTasks(tasks).map((t) => t.daysOverdue)).toEqual([5, 1]);
-    expect(tasksOn(tasks, today)).toEqual([tasks[2]]);
-    expect(tasksOn(tasks, addDays(today, 2))).toEqual([tasks[3]]);
+    expect(dueToday(tasks)).toEqual([tasks[2], tasks[3]]);
+    expect(tasksOn(tasks, addDays(today, 2))).toEqual([tasks[4]]);
   });
 });
 
@@ -125,9 +135,13 @@ describe('comingThisMonth', () => {
 
 describe('skyPhrase', () => {
   it('dit combien de choses attendent, dont combien en retard', () => {
-    expect(skyPhrase([task(-1), task(0), task(0), task(3)], today)).toBe('3 choses à faire au jardin, dont 1 en retard');
+    expect(skyPhrase([task(-1, dated), task(0), task(0), task(3)], today)).toBe('3 choses à faire au jardin, dont 1 en retard');
     expect(skyPhrase([task(0)], today)).toBe('1 chose à faire au jardin');
-    expect(skyPhrase([task(-2), task(-1)], today)).toBe('2 choses en retard au jardin');
+    expect(skyPhrase([task(-2, dated), task(-1, dated)], today)).toBe('2 choses en retard au jardin');
+  });
+
+  it('ne dit pas en retard une tâche régulière échue', () => {
+    expect(skyPhrase([task(-6), task(-1, { kind: 'Watering' })], today)).toBe('2 choses à faire au jardin');
   });
 
   it('annonce demain quand tout est fait', () => {

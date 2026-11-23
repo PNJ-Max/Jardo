@@ -7,15 +7,19 @@ const today = '2026-10-28';
 const at8 = { enabled: true, hour: 8, minute: 0 };
 let nextId = 0;
 
-/** Une tâche due dans `inDays` jours (négatif : en retard), telle que le service la renvoie. */
+/**
+ * Une tâche due dans `inDays` jours (négatif : échue, en retard seulement si elle a une vraie date),
+ * telle que le service la renvoie.
+ */
 function task(inDays: number, extra: Partial<GardenTask> = {}): GardenTask {
   const nextDueDate = addDays(today, inDays);
   const daysLate = daysBetween(nextDueDate, today);
+  const recurrence = extra.recurrence ?? 'EveryNDays';
   return {
     id: `t${++nextId}`,
     kind: 'Pruning',
     title: null,
-    recurrence: 'EveryNDays',
+    recurrence,
     intervalDays: 3,
     startDate: nextDueDate,
     createdAt: '2026-01-01T12:00:00.000Z',
@@ -31,7 +35,7 @@ function task(inDays: number, extra: Partial<GardenTask> = {}): GardenTask {
     itemKind: null,
     lastDoneOn: null,
     nextDueDate,
-    status: daysLate > 0 ? 'Overdue' : daysLate === 0 ? 'DueSoon' : 'Ok',
+    status: daysLate > 0 && recurrence !== 'EveryNDays' ? 'Overdue' : daysLate >= 0 ? 'DueSoon' : 'Ok',
     daysOverdue: Math.max(0, daysLate),
     isCompleted: false,
     ...extra,
@@ -39,6 +43,7 @@ function task(inDays: number, extra: Partial<GardenTask> = {}): GardenTask {
 }
 
 const verger = { spaceId: 'verger', spaceName: 'Verger', spaceKind: 'Orchard' } as const;
+const dated = { recurrence: 'Yearly', intervalDays: null } as const;
 
 describe('reminderSentence', () => {
   it("dit combien de choses attendent et nomme les premières, l'arrosage d'abord", () => {
@@ -50,15 +55,24 @@ describe('reminderSentence', () => {
   });
 
   it('mentionne le retard, les plus anciens en tête', () => {
-    const tasks = [task(0, { kind: 'Harvest', itemName: 'Framboisiers' }), task(-1, { kind: 'Watering' }), task(-4)];
+    const tasks = [task(0, { kind: 'Harvest', itemName: 'Framboisiers' }), task(-1, dated), task(-4, dated)];
 
     expect(reminderSentence(tasks, today)).toBe(
-      "3 choses au jardin aujourd'hui, dont 2 en retard : tailler (Potager), arroser (Potager), récolter (Framboisiers).",
+      "3 choses au jardin aujourd'hui, dont 2 en retard : tailler (Potager), tailler (Potager), récolter (Framboisiers).",
     );
   });
 
   it("ne parle que du retard quand rien d'autre n'attend", () => {
-    expect(reminderSentence([task(-2, { kind: 'Watering' })], today)).toBe('1 chose en retard au jardin : arroser (Potager).');
+    expect(reminderSentence([task(-2, dated)], today)).toBe('1 chose en retard au jardin : tailler (Potager).');
+  });
+
+  it('ne dit pas en retard une tâche régulière échue', () => {
+    const tasks = [task(0, { kind: 'Harvest', itemName: 'Framboisiers' }), task(-3, { kind: 'Watering' }), task(-1, dated)];
+
+    expect(reminderSentence([task(-2, { kind: 'Watering' })], today)).toBe("1 chose au jardin aujourd'hui : arroser (Potager).");
+    expect(reminderSentence(tasks, today)).toBe(
+      "3 choses au jardin aujourd'hui, dont 1 en retard : tailler (Potager), arroser (Potager), récolter (Framboisiers).",
+    );
   });
 
   it('nomme trois tâches au plus, puis des points de suspension', () => {
@@ -75,8 +89,11 @@ describe('reminderSentence', () => {
   });
 
   it('compte en retard, un jour à venir, ce qui tombe avant sans être fait', () => {
-    expect(reminderSentence([task(1), task(3)], addDays(today, 3))).toBe(
+    expect(reminderSentence([task(1, dated), task(3, dated)], addDays(today, 3))).toBe(
       "2 choses au jardin aujourd'hui, dont 1 en retard : tailler (Potager), tailler (Potager).",
+    );
+    expect(reminderSentence([task(1), task(3)], addDays(today, 3))).toBe(
+      "2 choses au jardin aujourd'hui : tailler (Potager), tailler (Potager).",
     );
   });
 });
@@ -85,15 +102,17 @@ describe('planReminders', () => {
   const morning = new Date(2026, 9, 28, 7, 30);
 
   it("programme les jours où quelque chose attend, à l'heure choisie", () => {
-    const reminders = planReminders([task(2), task(5)], morning, { enabled: true, hour: 18, minute: 30 });
+    const reminders = planReminders([task(2), task(5, dated)], morning, { enabled: true, hour: 18, minute: 30 });
 
     expect(reminders.map((reminder) => toDateOnly(reminder.date))).toEqual(
       [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((days) => addDays(today, days)),
     );
     expect(reminders.every((reminder) => reminder.date.getHours() === 18 && reminder.date.getMinutes() === 30)).toBe(true);
-    // Rien de fait d'ici là : la tâche du surlendemain reste en retard les jours suivants.
-    expect(reminders[1].body).toBe("1 chose en retard au jardin : tailler (Potager).");
-    expect(reminders[3].body).toBe("2 choses au jardin aujourd'hui, dont 1 en retard : tailler (Potager), tailler (Potager).");
+    // Rien de fait d'ici là : la tâche régulière reste à faire les jours suivants, la tâche annuelle
+    // passe en retard.
+    expect(reminders[1].body).toBe("1 chose au jardin aujourd'hui : tailler (Potager).");
+    expect(reminders[3].body).toBe("2 choses au jardin aujourd'hui : tailler (Potager), tailler (Potager).");
+    expect(reminders[4].body).toBe("2 choses au jardin aujourd'hui, dont 1 en retard : tailler (Potager), tailler (Potager).");
   });
 
   it("ne programme rien quand rien n'attend sur les deux semaines", () => {

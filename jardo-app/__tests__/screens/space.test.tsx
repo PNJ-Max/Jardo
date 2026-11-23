@@ -5,6 +5,7 @@ import { Dimensions } from 'react-native';
 import SpaceScreen from '@/app/space/[id]';
 import { addDays } from '@/domain/dates';
 import { today } from '@/lib/dates';
+import { palettes } from '@/theme/colors';
 
 import { createTestServices, renderScreen } from '../../test/render';
 
@@ -52,6 +53,23 @@ describe('fiche espace', () => {
 
     expect(screen.getByText('Arroser')).toBeOnTheScreen();
     expect(screen.getByText('Laitues · Parcelle 4 · Potager')).toBeOnTheScreen();
+  });
+
+  it("dit en retard ce qui a une vraie date, et à faire, sans rouge, un arrosage régulier échu", async () => {
+    const { services } = await setup();
+    const potager = (await services.spaces.getAll())[0];
+    await services.tasks.create({
+      kind: 'Watering',
+      recurrence: 'EveryNDays',
+      intervalDays: 3,
+      startDate: addDays(today(), -5),
+      spaceId: potager.id,
+    });
+    await renderScreen(<SpaceScreen />, services);
+
+    expect(await screen.findByText('En retard de 4 j')).toHaveStyle({ color: palettes.light.danger });
+    expect(screen.getByText("À arroser aujourd'hui")).toHaveStyle({ color: palettes.light.water });
+    expect(screen.getAllByText(/^En retard/)).toHaveLength(1);
   });
 
   it("montre zones et plantes dans l'onglet Contenu", async () => {

@@ -10,7 +10,7 @@ import { createTestServices, renderScreen } from '../../test/render';
 
 const inDays = (days: number) => addDays(today(), days);
 
-/** Un arrosage dû aujourd'hui et un autre en retard au potager (donc « Tout arroser »), et une taille dans le mois. */
+/** Deux arrosages dus aujourd'hui et un échu depuis deux jours au potager (donc « Tout arroser »), et une taille dans le mois. */
 async function addGarden(services: Services) {
   const potager = await services.spaces.create({ name: 'Potager', kind: 'VegetableGarden' });
   const parcelle = await services.zones.create(potager.id, { name: 'Parcelle 1' });
@@ -47,6 +47,7 @@ async function addGarden(services: Services) {
     startDate: inDays(12),
     spaceId: verger.id,
   });
+  return { verger: verger.id };
 }
 
 const row = (title: string) => screen.findByRole('button', { name: new RegExp(`^${title}`) });
@@ -59,15 +60,17 @@ const letRowFold = () => act(() => jest.advanceTimersByTime(1200));
 describe("Aujourd'hui, lecteur d'écran", () => {
   it('nomme chaque ligne par son titre et sa cible, sans bouton imbriqué', async () => {
     const services = await createTestServices();
-    await addGarden(services);
+    const { verger } = await addGarden(services);
+    await services.tasks.create({ kind: 'Treatment', title: 'Traiter les pommiers', recurrence: 'Yearly', startDate: inDays(-2), spaceId: verger });
     await renderScreen(<TodayScreen />, services);
 
-    const line = await row('Arroser les tomates');
+    const line = await row('Traiter les pommiers');
 
-    expect(line).toHaveAccessibleName(/Arroser les tomates.*en retard de 2 jours/);
+    expect(line).toHaveAccessibleName(/Traiter les pommiers.*en retard de 2 jours/);
     expect(line).toHaveProp('accessibilityHint', expect.stringContaining('Ouvre la feuille de la tâche'));
     expect(within(line).queryByRole('button')).not.toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: /^Fait : Arroser les tomates/ })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: /^Fait : Traiter les pommiers/ })).toBeOnTheScreen();
+    expect(await row('Arroser les tomates')).not.toHaveAccessibleName(/retard/);
   });
 
   it("propose « Fait » et « Reporter à demain » sur la ligne d'une tâche due", async () => {
@@ -145,7 +148,7 @@ describe("Aujourd'hui, lecteur d'écran", () => {
     await addGarden(services);
     await renderScreen(<TodayScreen />, services);
 
-    expect(await screen.findByRole('link', { name: 'Potager, 2 tâches' })).toBeOnTheScreen();
+    expect(await screen.findByRole('link', { name: 'Potager, 3 tâches' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Tout arroser : Potager, 3 arrosages' })).toHaveProp(
       'accessibilityHint',
       expect.stringContaining('un seul arrosage'),

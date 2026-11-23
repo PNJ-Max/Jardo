@@ -164,8 +164,8 @@ Il s'applique à toute tâche ; l'arrosage en est le premier cas. Statuts calcul
 | Statut | Couleur | Texte |
 |---|---|---|
 | `Ok` | sauge foncée | « Prochain : {date} » |
-| `DueSoon` | brun terre ; bleu eau pour l'arrosage | « À faire aujourd'hui » (« À arroser aujourd'hui ») |
-| `Overdue` | brique | « En retard de {daysOverdue} j » |
+| `DueSoon` | brun terre ; bleu eau pour l'arrosage | « À faire aujourd'hui » (« À arroser aujourd'hui »), aussi pour une tâche tous les N jours dont l'échéance est passée |
+| `Overdue` | brique | « En retard de {daysOverdue} j », pour une tâche annuelle ou ponctuelle seulement |
 
 Hors arrosage, `DueSoon` est brun terre avec une icône soleil ; le voyant n'a pas de bordure
 ([direction visuelle](direction-visuelle.md#voyant-déchéance)).

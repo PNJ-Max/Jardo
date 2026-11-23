@@ -14,8 +14,12 @@ export type DueState = {
   lastDoneOn: DateOnly | null;
   /** La prochaine échéance ; null pour une tâche ponctuelle faite. */
   nextDueDate: DateOnly | null;
+  /**
+   * `Overdue` ne vaut que pour une tâche qui a une vraie date, annuelle ou ponctuelle. Une tâche
+   * qui revient tous les N jours n'est jamais en retard : échéance passée, elle reste à faire.
+   */
   status: DueStatus;
-  /** Jours de retard. 0 si l'échéance n'est pas dépassée. */
+  /** Jours écoulés depuis l'échéance. 0 si elle n'est pas dépassée. */
   daysOverdue: number;
 };
 
@@ -64,7 +68,8 @@ export function calculateDueState({
   const nextDueDate = postponedUntil !== null && postponedUntil > calculated ? postponedUntil : calculated;
 
   const daysLate = daysBetween(nextDueDate, today);
-  const status: DueStatus = daysLate > 0 ? 'Overdue' : daysLate === 0 ? 'DueSoon' : 'Ok';
+  const late = daysLate > 0 && recurrence !== 'EveryNDays';
+  const status: DueStatus = late ? 'Overdue' : daysLate >= 0 ? 'DueSoon' : 'Ok';
 
   return { lastDoneOn, nextDueDate, status, daysOverdue: Math.max(0, daysLate) };
 }
