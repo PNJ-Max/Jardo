@@ -12,6 +12,17 @@ app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-p
 
 ## Où on en est (23/11/2026)
 
+**Parcours testeur terminé (23/11/2026).** Les quatre derniers raccords du parcours, du premier
+lancement au premier rappel :
+- l'assistant propose le rappel du jour en dernière étape, sur téléphone seulement : rien ne s'active
+  sans « Oui », et l'autorisation des notifications n'est demandée qu'après (#87) ;
+- un espace vide s'ouvre sur son contenu, là où l'on ajoute ses plantes (#88) ;
+- une proposition de rappel s'écarte d'un toucher sur la fiche, avec « Annuler ». Le choix est rangé
+  dans AsyncStorage, sans migration ni place dans la sauvegarde (#89) ;
+- l'écran « page introuvable » est en français et ramène au jardin (#90).
+
+Le code prévu pour la V1 est fait. Reste à l'essayer sur un vrai téléphone.
+
 **Revue de Fable, fiabilité et premiers pas du parcours testeur (16 au 23/11/2026).**
 - **Revue du code et du produit** par Fable ([`docs/revue-fable.md`](docs/revue-fable.md)) : le code
   n'a pas besoin d'être réécrit, le risque est l'absence d'essai sur un téléphone. Ses avis sur le
@@ -789,13 +800,11 @@ et le catalogue d'espèces complet (63 fiches, Conseils, climat, rappels propos�
 
 1. **Premier APK sur un vrai téléphone**, le plus gros risque : rien n'a encore tourné sur un appareil.
    Maxime crée son compte Expo ([guide](docs/guide-apk-test.md)), puis on corrige ce qu'on découvre.
-2. **La fin du parcours testeur** (en cours) : le rappel du jour proposé à la fin de l'assistant, un
-   espace vide qui s'ouvre sur son contenu, écarter une proposition de rappel, la page introuvable en
-   français.
-3. **La relecture du catalogue** par un jardinier, et les décisions de
+2. **La relecture du catalogue** par un jardinier, et les décisions de
    [l'étude du catalogue](docs/etude-catalogue-especes.md), fusionné sans cette relecture.
 
-Fait depuis : le thème de nuit Lanterne, l'audit de sécurité et ses correctifs, la fiabilité des écritures.
+Fait depuis : le thème de nuit Lanterne, l'audit de sécurité et ses correctifs, la fiabilité des écritures,
+le parcours du testeur.
 
 Les testeurs sont des proches : ils reçoivent l'APK par lien, sans compte Play et sans rien payer.
 
