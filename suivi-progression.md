@@ -10,7 +10,25 @@ une app Expo dont les données vivent sur le téléphone, sans serveur. On y org
 le jardin ; le rappel d'arrosage est le premier service parmi d'autres. Objectif : une vraie
 app, publiable un jour sur le Play Store. Voir la [vision produit](docs/vision-produit.md).
 
-## Où on en est (06/11/2026)
+## Où on en est (23/11/2026)
+
+**Revue de Fable, fiabilité et premiers pas du parcours testeur (16 au 23/11/2026).**
+- **Revue du code et du produit** par Fable ([`docs/revue-fable.md`](docs/revue-fable.md)) : le code
+  n'a pas besoin d'être réécrit, le risque est l'absence d'essai sur un téléphone. Ses avis sur le
+  produit ont mené aux décisions de Maxime du 16/11 ci-dessous.
+- **Parcours d'un testeur** ([`docs/parcours-testeur.md`](docs/parcours-testeur.md)) : décrire son
+  jardin se fait sans aide, ajouter une plante avec une hésitation, recevoir un rappel non.
+- **Migrations** (#79) : les clés étrangères sont coupées le temps des migrations. La première qui
+  recréerait une table aurait sinon effacé journal et tâches, ou bloqué l'app au démarrage.
+- **Carte des réglages** (#80) : elle attend les zones avant de proposer d'enregistrer, et ne perd
+  plus ses parcelles quand leur lecture échoue.
+- **Écritures fiables** : « Fait » s'écrit dès que l'app quitte le premier plan, sans attendre la fin
+  de l'animation (#81) ; une plante et ses rappels s'enregistrent d'un seul tenant (#82) ; un
+  `ROLLBACK` qui échoue ne masque plus l'erreur d'origine (#83).
+- **Décisions de Maxime (16/11)** : une tâche qui revient tous les N jours n'est plus « en retard »
+  mais « à faire », sans rouge (#84) ; la carte reste l'accueil et compte sur chaque étiquette les
+  tâches du jour (#85) ; le rappel du jour se proposera à la fin de l'assistant (en cours) ; pas de
+  lien « Donner mon avis » pour l'instant.
 
 **Test instable de la carte stabilisé (06/11/2026).** `settings-map.test.tsx` lisait les emplacements
 de parcelle avant l'arrivée des zones, ce qui faisait échouer la CI sur une machine lente.
@@ -771,14 +789,19 @@ et le catalogue d'espèces complet (63 fiches, Conseils, climat, rappels propos�
 
 1. **Premier APK sur un vrai téléphone**, le plus gros risque : rien n'a encore tourné sur un appareil.
    Maxime crée son compte Expo ([guide](docs/guide-apk-test.md)), puis on corrige ce qu'on découvre.
-2. **Le thème de nuit**, demandé par Maxime : plus sombre, qui évoque la nuit. Trois directions attendent
-   son choix.
+2. **La fin du parcours testeur** (en cours) : le rappel du jour proposé à la fin de l'assistant, un
+   espace vide qui s'ouvre sur son contenu, écarter une proposition de rappel, la page introuvable en
+   français.
 3. **La relecture du catalogue** par un jardinier, et les décisions de
    [l'étude du catalogue](docs/etude-catalogue-especes.md), fusionné sans cette relecture.
-4. **Écarter une proposition de rappel** : aujourd'hui, une proposition reste sur la fiche tant qu'elle
-   n'est pas ajoutée.
+
+Fait depuis : le thème de nuit Lanterne, l'audit de sécurité et ses correctifs, la fiabilité des écritures.
 
 Les testeurs sont des proches : ils reçoivent l'APK par lien, sans compte Play et sans rien payer.
+
+**Ensuite, sans décision à prendre** ([revue de Fable](docs/revue-fable.md#améliorations-par-rapport-impact-sur-effort)) :
+noter une intervention depuis l'onglet Journal, une note de gel sur Aujourd'hui, un délai d'« Annuler »
+adapté au lecteur d'écran, une règle ESLint qui garde `src/domain` pur.
 
 **Avant le Play Store :**
 
